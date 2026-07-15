@@ -13,7 +13,7 @@ import { allPhasesConflictHits } from '@/domain/signal/phaseConflictView'
 import { SignalCharts, TimingCompareCharts } from '@/ui/charts/ChartPanels'
 import { SignalTimingPanel, ControlMatrixPanel, PhaseFacePanel } from '@/ui/charts/ProfessionalPanels'
 import { vcHeatColor } from '@/ui/charts/svgCharts'
-import { conflictHitsMarkdown, conflictMatrixExportSvg } from '@/ui/charts/conflictExport'
+import { conflictHitsMarkdown, conflictMatrixExportSvg, conflictDiagramExportSvg } from '@/ui/charts/conflictExport'
 import { exportSvgFile } from '@/io/exportCharts'
 import { downloadText } from '@/io/download'
 
@@ -312,6 +312,21 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
             }}
           >
             导出冲突矩阵
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              exportSvgFile(
+                `${projectName}-conflict-points.svg`,
+                conflictDiagramExportSvg(
+                  channel.approaches,
+                  signal,
+                  focusPhaseId ?? signal.phases[0]?.id,
+                ),
+              )
+            }}
+          >
+            导出冲突点图
           </button>
         </div>
       )}

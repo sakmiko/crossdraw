@@ -4,6 +4,7 @@
  */
 import type { Approach, SignalScheme } from '@/domain/types'
 import { buildPhaseConflictReport, phaseConflictSummaryText } from '@/domain/signal/phaseConflictView'
+import { buildConflictDiagram, conflictDiagramSvg } from '@/domain/signal/conflictDiagram'
 import { conflictMatrixSvg } from './svgCharts'
 
 export function conflictMatrixExportSvg(
@@ -61,4 +62,18 @@ export function conflictHitsMarkdown(
   }
   lines.push('## 说明', '', '- 规则与 detectPhaseConflicts / 冲突矩阵同源', '')
   return lines.join('\n')
+}
+
+
+export function conflictDiagramExportSvg(
+  approaches: Approach[],
+  signal: SignalScheme,
+  phaseId?: string | null,
+): string {
+  const model = buildConflictDiagram(approaches, signal, phaseId ?? null)
+  const phaseName =
+    signal.phases.find((p) => p.id === (phaseId ?? signal.phases[0]?.id))?.name ?? '—'
+  return conflictDiagramSvg(model, {
+    title: `冲突点示意图 · ${signal.name} · ${phaseName}`,
+  })
 }

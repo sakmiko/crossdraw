@@ -21,6 +21,7 @@ export type ChartKindId =
   | 'print-a4'
   | 'band-corridor-compare'
   | 'conflict-matrix'
+  | 'conflict-points'
 
 export type ChartRegistryEntry = {
   id: ChartKindId
@@ -147,6 +148,14 @@ export const CHART_REGISTRY: ChartRegistryEntry[] = [
     dataSource: 'phaseConflictView + conflictMatrixSvg',
     modes: ['signal'],
     exportIds: ['conflict-matrix-svg'],
+  },
+  {
+    id: 'conflict-points',
+    title: '冲突点示意图',
+    dataSource: 'conflictDiagram + classifyPair',
+    modes: ['signal'],
+    exportIds: ['conflict-matrix-svg'],
+    notes: '路径几何示意，规则与矩阵同源',
   },
 ]
 

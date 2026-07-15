@@ -26,6 +26,7 @@ import type {
 } from '@/domain/types'
 import { buildConflictMatrix } from '@/domain/signal/conflictMatrix'
 import { buildPhaseConflictReport, phaseConflictSummaryText } from '@/domain/signal/phaseConflictView'
+import { buildConflictDiagram, conflictDiagramSvg } from '@/domain/signal/conflictDiagram'
 import { useAppStore } from '@/state/store'
 import {
   collectSchemeSnapshots,
@@ -230,6 +231,12 @@ export function SignalCharts({
     return themeSvg(raw, colors)
   }, [report, colors])
 
+  const diagram = useMemo(() => {
+    if (!approaches?.length) return ''
+    const model = buildConflictDiagram(approaches, signal, phaseId)
+    return themeSvg(conflictDiagramSvg(model, { width: 360, height: 300 }), colors)
+  }, [approaches, signal, phaseId, colors])
+
   return (
     <div className="chart-card">
       <div className="chart-title">
@@ -256,6 +263,15 @@ export function SignalCharts({
             ))}
           </div>
           <div dangerouslySetInnerHTML={{ __html: matrix }} />
+          {diagram && (
+            <>
+              <div className="chart-title" style={{ marginTop: 12 }}>
+                <span>冲突点示意图</span>
+                <small>路径几何 · 与矩阵规则同源</small>
+              </div>
+              <div dangerouslySetInnerHTML={{ __html: diagram }} />
+            </>
+          )}
           {report.activeHits.length > 0 ? (
             <div className="table-wrap" style={{ marginTop: 8, maxHeight: 140 }}>
               <table className="table">

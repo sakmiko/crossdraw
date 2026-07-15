@@ -24,7 +24,7 @@ import { BandCorridorSidebar } from '@/ui/layout/BandCorridorSidebar'
 import { PrintPreviewModal } from '@/ui/common/PrintPreview'
 import { buildA4PrintSheet, printSheetHtml, type PrintPanel } from '@/io/printSheet'
 import { collectCorridorKpis, corridorKpiCompareSvg, multiBandMarkdown } from '@/ui/charts/bandCorridorCompare'
-import { conflictHitsMarkdown, conflictMatrixExportSvg } from '@/ui/charts/conflictExport'
+import { conflictHitsMarkdown, conflictMatrixExportSvg, conflictDiagramExportSvg } from '@/ui/charts/conflictExport'
 import { checkAnalysisIntegrity } from '@/domain/analysis/integrity'
 import { buildFlowAlignment, flowChartsAlignWithTable, type FlowDisplayMode } from '@/domain/flow/flowAlign'
 import { buildSignalTimingAlignment } from '@/domain/signal/timingAlign'
@@ -2061,7 +2061,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.35</span>
+        <span>Crossdraw v0.5.36</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -2128,6 +2128,10 @@ export default function App() {
             exportSvgFile(
               `${project.name}-conflict.svg`,
               conflictMatrixExportSvg(channel.approaches, signal, focusPhaseId ?? signal.phases[0]?.id),
+            )
+            exportSvgFile(
+              `${project.name}-conflict-points.svg`,
+              conflictDiagramExportSvg(channel.approaches, signal, focusPhaseId ?? signal.phases[0]?.id),
             )
             downloadText(
               `${project.name}-conflict.md`,

@@ -207,7 +207,7 @@ export const EXPORT_CATALOG: ExportItem[] = [
     category: 'signal',
     title: '冲突矩阵图',
     format: 'SVG+MD',
-    description: '转向冲突矩阵与全相位审查简报',
+    description: '冲突矩阵 + 冲突点示意图 + 全相位审查简报',
     modes: ['signal'],
     requires: ['channel', 'signal'],
   },
