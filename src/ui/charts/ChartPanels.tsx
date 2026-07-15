@@ -27,6 +27,8 @@ import type {
 import { buildConflictMatrix } from '@/domain/signal/conflictMatrix'
 import { buildPhaseConflictReport, phaseConflictSummaryText } from '@/domain/signal/phaseConflictView'
 import { buildConflictDiagram, conflictDiagramSvg } from '@/domain/signal/conflictDiagram'
+import { pedestrianPhaseStripSvg } from './pedestrianDiagram'
+import { countPedIntervals } from '@/domain/signal/pedestrian'
 import { useAppStore } from '@/state/store'
 import {
   collectSchemeSnapshots,
@@ -212,6 +214,11 @@ export function SignalCharts({
     return buildPhaseConflictReport(approaches, signal, phaseId)
   }, [approaches, signal, phaseId])
 
+  const pedStrip = useMemo(() => {
+    if (!approaches?.length) return ''
+    return themeSvg(pedestrianPhaseStripSvg(signal, approaches, { width: 360 }), colors)
+  }, [approaches, signal, colors])
+
   const matrix = useMemo(() => {
     if (!report) return ''
     const levels = report.cells.map((row) => row.map((c) => c.level))
@@ -244,6 +251,15 @@ export function SignalCharts({
         <small>轴=C · 与相位表 G/Y/AR 同源</small>
       </div>
       <div dangerouslySetInnerHTML={{ __html: ring }} />
+      {pedStrip && (
+        <>
+          <div className="chart-title" style={{ marginTop: 12 }}>
+            <span>行人过街</span>
+            <small>{countPedIntervals(signal)} 处进口面 · Walk/FDW</small>
+          </div>
+          <div dangerouslySetInnerHTML={{ __html: pedStrip }} />
+        </>
+      )}
       {matrix && report && (
         <>
           <div className="chart-title" style={{ marginTop: 12 }}>

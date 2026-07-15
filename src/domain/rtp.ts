@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import type { Project, ProjectFile } from './types'
 import { normalizeBandCorridors } from './band/corridors'
+// pedestrian defaults applied in parseRtp
 import { normalizeNewlines } from '@/shared/math'
 
 const turnSchema = z.object({ U: z.number(), L: z.number(), T: z.number(), R: z.number() })
@@ -82,6 +83,16 @@ const phaseSchema = z.object({
   allRedSec: z.number(),
   releases: z.record(z.array(z.enum(['U', 'L', 'T', 'R']))),
   isOverlap: z.boolean().optional(),
+  pedestrian: z
+    .array(
+      z.object({
+        approachId: z.string(),
+        exclusive: z.boolean().optional(),
+      }),
+    )
+    .optional(),
+  pedWalkSec: z.number().optional(),
+  pedFdwSec: z.number().optional(),
 })
 
 const signalSchema = z.object({
@@ -296,6 +307,7 @@ export function parseRtp(text: string): ProjectFile {
   }
   normalizeProjectApproaches(file.project)
   normalizeBandCorridors(file.project as Project)
+  normalizeProjectPedestrian(file.project as Project)
   return file
 }
 
@@ -311,3 +323,16 @@ export function wrapProject(project: Project, appVersion = '0.2.0'): ProjectFile
     project,
   }
 }
+
+function normalizeProjectPedestrian(project: Project) {
+  for (const ch of project.channelizationSchemes) {
+    for (const fl of ch.flowSchemes) {
+      for (const sg of fl.signalSchemes) {
+        for (const ph of sg.phases) {
+          if (!ph.pedestrian) ph.pedestrian = []
+        }
+      }
+    }
+  }
+}
+

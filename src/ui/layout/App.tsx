@@ -89,6 +89,7 @@ export default function App() {
   const mergeLaneGroup = useAppStore((s) => s.mergeLaneGroup)
   const splitLaneGroupAt = useAppStore((s) => s.splitLaneGroupAt)
   const togglePhaseRelease = useAppStore((s) => s.togglePhaseRelease)
+  const togglePhasePedestrian = useAppStore((s) => s.togglePhasePedestrian)
   const updateBand = useAppStore((s) => s.updateBand)
   const updateBandNode = useAppStore((s) => s.updateBandNode)
   const addBandNode = useAppStore((s) => s.addBandNode)
@@ -1468,6 +1469,7 @@ export default function App() {
               onCycle={setCycle}
               onUpdatePhaseTiming={updatePhaseTiming}
               onToggleRelease={togglePhaseRelease}
+              onTogglePedestrian={togglePhasePedestrian}
               onAddPhase={addPhase}
               onAddOverlap={addOverlapPhase}
               onRunOptimize={runWebster}
@@ -2061,7 +2063,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.36</span>
+        <span>Crossdraw v0.5.37</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

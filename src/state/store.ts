@@ -55,6 +55,8 @@ export type AppState = {
     patch: { greenSec?: number; yellowSec?: number; allRedSec?: number; name?: string; isOverlap?: boolean },
   ) => void
   togglePhaseRelease: (phaseId: string, approachId: string, movement: Movement) => void
+  togglePhasePedestrian: (phaseId: string, approachId: string) => void
+  setPhasePedExclusive: (phaseId: string, approachId: string, exclusive: boolean) => void
   addPhase: () => void
   addOverlapPhase: () => void
   setProjectName: (name: string) => void
@@ -266,6 +268,28 @@ export const useAppStore = create<AppState>()(
           else delete ph.releases[approachId]
           s.dirty = true
         }),
+      togglePhasePedestrian: (phaseId, approachId) =>
+        set((s) => {
+          const sg = activeSignal(s.project)
+          const ph = sg?.phases.find((p) => p.id === phaseId)
+          if (!ph) return
+          const list = [...(ph.pedestrian ?? [])]
+          const i = list.findIndex((p) => p.approachId === approachId)
+          if (i >= 0) list.splice(i, 1)
+          else list.push({ approachId, exclusive: false })
+          ph.pedestrian = list
+          s.dirty = true
+        }),
+      setPhasePedExclusive: (phaseId, approachId, exclusive) =>
+        set((s) => {
+          const sg = activeSignal(s.project)
+          const ph = sg?.phases.find((p) => p.id === phaseId)
+          if (!ph) return
+          ph.pedestrian = (ph.pedestrian ?? []).map((p) =>
+            p.approachId === approachId ? { ...p, exclusive } : p,
+          )
+          s.dirty = true
+        }),
       addPhase: () =>
         set((s) => {
           const sg = activeSignal(s.project)
@@ -278,6 +302,7 @@ export const useAppStore = create<AppState>()(
             allRedSec: 2,
             releases: {},
             isOverlap: false,
+            pedestrian: [],
           })
           s.dirty = true
         }),

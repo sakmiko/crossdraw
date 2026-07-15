@@ -38,6 +38,7 @@ export type SignalWorkspaceProps = {
     patch: Partial<{ name: string; greenSec: number; yellowSec: number; allRedSec: number; isOverlap: boolean }>,
   ) => void
   onToggleRelease: (phaseId: string, approachId: string, m: Movement) => void
+  onTogglePedestrian: (phaseId: string, approachId: string) => void
   onAddPhase: () => void
   onAddOverlap: () => void
   onRunOptimize: () => void
@@ -64,6 +65,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
     onCycle,
     onUpdatePhaseTiming,
     onToggleRelease,
+    onTogglePedestrian,
     onAddPhase,
     onAddOverlap,
     onRunOptimize,
@@ -143,7 +145,9 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
             <div className="hint" style={{ marginTop: 6 }}>
               放行矩阵
             </div>
-            {channel?.approaches.map((ap: Approach) => (
+            {channel?.approaches.map((ap: Approach) => {
+              const pedOn = (ph.pedestrian ?? []).some((p) => p.approachId === ap.id)
+              return (
               <div key={ap.id} style={{ marginTop: 4 }}>
                 <span className="hint">{ap.name}</span>
                 <div className="toolbar" style={{ gap: 4, marginTop: 2 }}>
@@ -161,9 +165,19 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
                       </button>
                     )
                   })}
+                  <button
+                    type="button"
+                    className={pedOn ? 'primary' : 'ghost'}
+                    style={{ padding: '2px 6px', fontSize: 11 }}
+                    title="该进口斑马线行人过街"
+                    onClick={() => onTogglePedestrian(ph.id, ap.id)}
+                  >
+                    行人
+                  </button>
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         ))}
       </div>

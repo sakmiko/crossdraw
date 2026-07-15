@@ -144,6 +144,14 @@ export interface FlowScheme {
   signalSchemes: SignalScheme[]
 }
 
+/** Pedestrian crossings released with a phase (by approach face / crosswalk). */
+export type PedestrianCrossing = {
+  /** approach id whose stop-line face has the crosswalk */
+  approachId: string
+  /** exclusive ped (no concurrent vehicle conflict on that face) */
+  exclusive?: boolean
+}
+
 export interface Phase {
   id: string
   name: string
@@ -153,6 +161,14 @@ export interface Phase {
   /** approachId -> movements released */
   releases: Record<string, Movement[]>
   isOverlap?: boolean
+  /**
+   * Pedestrian walk intervals concurrent with this phase.
+   * If omitted/empty: no dedicated ped indication (vehicle-only).
+   */
+  pedestrian?: PedestrianCrossing[]
+  /** optional walk / FDW split inside greenSec (engineering note) */
+  pedWalkSec?: number
+  pedFdwSec?: number
 }
 
 export interface SignalScheme {
