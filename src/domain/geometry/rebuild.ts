@@ -25,6 +25,7 @@ export const THEME = {
   text: '#0f172a',
   accent: '#0ea5e9',
   curb: '#1e293b',
+  stop: '#f8fafc',
 }
 
 type Vec = [number, number]
@@ -751,86 +752,185 @@ function drawFlowArrows(mesh: Mesh, approaches: Approach[], flow: FlowScheme, co
 
 
 function drawLegend(mesh: Mesh, scheme: ChannelizationScheme) {
-  const x0 = -155
-  const y0 = 95
-  const rows: { color: string; label: string; stroke?: string }[] = [
+  // CAD-style legend block (upper-left outside carriageway)
+  const x0 = -152
+  const y0 = 78
+  const rows: { color: string; label: string; stroke?: string; line?: boolean }[] = [
     { color: THEME.laneFill, label: '机动车道', stroke: THEME.asphaltEdge },
-    { color: THEME.island, label: '渠化岛/中分', stroke: THEME.islandEdge },
-    { color: THEME.sidewalk, label: '人行道' },
-    { color: THEME.bike, label: '非机动车道' },
-    { color: THEME.flow, label: '流量箭头' },
+    { color: THEME.island, label: '导流岛/中分带', stroke: THEME.islandEdge },
+    { color: THEME.sidewalk, label: '人行道', stroke: '#94a3b8' },
+    { color: THEME.bike, label: '非机动车道', stroke: '#64748b' },
+    { color: THEME.crosswalk, label: '人行横道', stroke: '#e2e8f0' },
+    { color: THEME.flow, label: '流量示意', stroke: THEME.flow },
+    { color: 'none', label: '停止线', stroke: THEME.stop, line: true },
   ]
+  const boxH = rows.length * 6.2 + 14
+  const boxW = 46
+  // legend panel (fill + outer stroke loop)
   pushPoly(mesh, {
     layer: 'ANNO',
     points: [
-      [x0 - 2, y0 - 6],
-      [x0 + 48, y0 - 6],
-      [x0 + 48, y0 + rows.length * 7 + 6],
-      [x0 - 2, y0 + rows.length * 7 + 6],
+      [x0 - 1, y0 - 5],
+      [x0 + boxW + 1, y0 - 5],
+      [x0 + boxW + 1, y0 + boxH],
+      [x0 - 1, y0 + boxH],
     ],
     fill: '#f8fafc',
-    stroke: '#94a3b8',
-    strokeWidth: 0.3,
-    alpha: 0.92,
+    stroke: '#0f172a',
+    strokeWidth: 0.45,
+    alpha: 0.96,
   })
-  pushLabel(mesh, { text: '图例', at: [x0 + 22, y0 - 2], color: THEME.text, size: 2.6, align: 'center' })
-  rows.forEach((r, i) => {
-    const y = y0 + 4 + i * 7
-    pushPoly(mesh, {
-      layer: 'ANNO',
-      points: [
-        [x0 + 2, y - 2],
-        [x0 + 10, y - 2],
-        [x0 + 10, y + 2],
-        [x0 + 2, y + 2],
-      ],
-      fill: r.color,
-      stroke: r.stroke ?? r.color,
-      strokeWidth: 0.2,
-    })
-    pushLabel(mesh, { text: r.label, at: [x0 + 12, y + 0.8], color: '#334155', size: 2.1, align: 'left' })
+  pushLine(mesh, {
+    layer: 'ANNO',
+    points: [
+      [x0 + 0.8, y0 - 3.4],
+      [x0 + boxW - 0.8, y0 - 3.4],
+      [x0 + boxW - 0.8, y0 + boxH - 1.4],
+      [x0 + 0.8, y0 + boxH - 1.4],
+      [x0 + 0.8, y0 - 3.4],
+    ],
+    stroke: '#94a3b8',
+    strokeWidth: 0.2,
   })
   pushLabel(mesh, {
-    text: `类型 ${scheme.intersectionType} · ${scheme.approaches.length} 进口`,
-    at: [x0 + 22, y0 + rows.length * 7 + 3],
-    color: '#64748b',
-    size: 1.9,
+    text: '图  例',
+    at: [x0 + boxW / 2, y0 - 0.5],
+    color: '#0f172a',
+    size: 2.5,
+    align: 'center',
+  })
+  // title underline
+  pushLine(mesh, {
+    layer: 'ANNO',
+    points: [
+      [x0 + 4, y0 + 1.5],
+      [x0 + boxW - 4, y0 + 1.5],
+    ],
+    stroke: '#94a3b8',
+    strokeWidth: 0.2,
+  })
+  rows.forEach((r, i) => {
+    const y = y0 + 6 + i * 6.2
+    if (r.line) {
+      pushLine(mesh, {
+        layer: 'ANNO',
+        points: [
+          [x0 + 3, y],
+          [x0 + 11, y],
+        ],
+        stroke: r.stroke ?? THEME.stop,
+        strokeWidth: 0.7,
+      })
+    } else {
+      pushPoly(mesh, {
+        layer: 'ANNO',
+        points: [
+          [x0 + 3, y - 1.8],
+          [x0 + 11, y - 1.8],
+          [x0 + 11, y + 1.8],
+          [x0 + 3, y + 1.8],
+        ],
+        fill: r.color === 'none' ? '#fff' : r.color,
+        stroke: r.stroke ?? '#334155',
+        strokeWidth: 0.2,
+      })
+    }
+    pushLabel(mesh, {
+      text: r.label,
+      at: [x0 + 13, y + 0.7],
+      color: '#1e293b',
+      size: 2.05,
+      align: 'left',
+    })
+  })
+  pushLabel(mesh, {
+    text: `${typeLabel(scheme.intersectionType)} · ${scheme.approaches.length}进口`,
+    at: [x0 + boxW / 2, y0 + boxH - 3.2],
+    color: '#475569',
+    size: 1.85,
     align: 'center',
   })
 }
 
+function typeLabel(t: string): string {
+  const map: Record<string, string> = {
+    cross: '十字',
+    t: 'T型',
+    y: 'Y型',
+    skewed: '斜交',
+    roundabout: '环形',
+    custom: '自定义',
+  }
+  return map[t] ?? t
+}
+
 function drawAnnotations(mesh: Mesh, scheme: ChannelizationScheme) {
+  // —— North arrow (classic engineering style) ——
   if (scheme.display.northArrow) {
-    pushLine(mesh, {
-      layer: 'ANNO',
-      points: [
-        [125, -118],
-        [125, -138],
-      ],
-      stroke: THEME.text,
-      strokeWidth: 0.9,
-    })
+    const nx = 132
+    const ny = -128
+    // circle
+    const segs = 20
+    const ring: [number, number][] = []
+    for (let i = 0; i <= segs; i++) {
+      const a = (i / segs) * Math.PI * 2
+      ring.push([nx + Math.cos(a) * 9, ny + Math.sin(a) * 9])
+    }
+    pushLine(mesh, { layer: 'ANNO', points: ring, stroke: '#0f172a', strokeWidth: 0.35 })
+    // N triangle up
     pushPoly(mesh, {
       layer: 'ANNO',
       points: [
-        [125, -138],
-        [121.5, -132],
-        [128.5, -132],
+        [nx, ny - 11],
+        [nx - 4.2, ny + 2],
+        [nx + 4.2, ny + 2],
       ],
-      fill: THEME.text,
+      fill: '#0f172a',
     })
-    pushLabel(mesh, { text: 'N', at: [125, -143], color: THEME.text, size: 5, align: 'center' })
+    // white half cut for contrast
+    pushPoly(mesh, {
+      layer: 'ANNO',
+      points: [
+        [nx, ny - 11],
+        [nx, ny + 2],
+        [nx + 4.2, ny + 2],
+      ],
+      fill: '#f8fafc',
+      stroke: '#0f172a',
+      strokeWidth: 0.25,
+    })
+    pushLabel(mesh, { text: 'N', at: [nx, ny + 8], color: '#0f172a', size: 3.4, align: 'center' })
   }
 
+  // drawing title (top center)
   pushLabel(mesh, {
     text: scheme.name,
     at: [0, -158],
-    color: THEME.text,
-    size: 5.2,
+    color: '#0f172a',
+    size: 5.0,
+    align: 'center',
+  })
+  pushLabel(mesh, {
+    text: `${typeLabel(scheme.intersectionType)}交叉口渠化示意`,
+    at: [0, -152],
+    color: '#475569',
+    size: 2.4,
     align: 'center',
   })
 
-  // drawing frame
+  // outer + inner drawing frame
+  pushLine(mesh, {
+    layer: 'FRAME',
+    points: [
+      [-158, -158],
+      [158, -158],
+      [158, 158],
+      [-158, 158],
+      [-158, -158],
+    ],
+    stroke: '#0f172a',
+    strokeWidth: 0.75,
+  })
   pushLine(mesh, {
     layer: 'FRAME',
     points: [
@@ -840,40 +940,110 @@ function drawAnnotations(mesh: Mesh, scheme: ChannelizationScheme) {
       [-155, 155],
       [-155, -155],
     ],
-    stroke: '#475569',
-    strokeWidth: 0.5,
+    stroke: '#64748b',
+    strokeWidth: 0.3,
   })
-  // title block
+
+  // title block (lower-right) — multi-row CAD style
+  const tb = { x0: 72, y0: 118, w: 78, h: 34 }
   pushPoly(mesh, {
     layer: 'FRAME',
     points: [
-      [70, 125],
-      [150, 125],
-      [150, 150],
-      [70, 150],
+      [tb.x0, tb.y0],
+      [tb.x0 + tb.w, tb.y0],
+      [tb.x0 + tb.w, tb.y0 + tb.h],
+      [tb.x0, tb.y0 + tb.h],
     ],
     fill: '#f8fafc',
-    stroke: '#334155',
-    strokeWidth: 0.3,
+    stroke: '#0f172a',
+    strokeWidth: 0.4,
   })
-  pushLabel(mesh, { text: 'CROSSDRAW', at: [110, 132], color: '#0f172a', size: 2.6, align: 'center' })
-  pushLabel(mesh, { text: '交叉口渠化图', at: [110, 139], color: '#334155', size: 2.4, align: 'center' })
-  pushLabel(mesh, { text: '比例示意 1:1000', at: [110, 145], color: '#64748b', size: 2.1, align: 'center' })
+  // horizontal rules
+  for (const yy of [tb.y0 + 8, tb.y0 + 16, tb.y0 + 24]) {
+    pushLine(mesh, {
+      layer: 'FRAME',
+      points: [
+        [tb.x0, yy],
+        [tb.x0 + tb.w, yy],
+      ],
+      stroke: '#94a3b8',
+      strokeWidth: 0.2,
+    })
+  }
+  pushLabel(mesh, { text: 'CROSSDRAW', at: [tb.x0 + tb.w / 2, tb.y0 + 5.5], color: '#0f172a', size: 2.3, align: 'center' })
+  pushLabel(mesh, { text: '交叉口渠化图', at: [tb.x0 + tb.w / 2, tb.y0 + 13.2], color: '#1e293b', size: 2.15, align: 'center' })
+  pushLabel(mesh, {
+    text: `方案 ${scheme.name.slice(0, 12)}`,
+    at: [tb.x0 + tb.w / 2, tb.y0 + 21.2],
+    color: '#334155',
+    size: 1.9,
+    align: 'center',
+  })
+  pushLabel(mesh, {
+    text: '比例示意 · 单位 m',
+    at: [tb.x0 + tb.w / 2, tb.y0 + 29.5],
+    color: '#64748b',
+    size: 1.85,
+    align: 'center',
+  })
 
-  // scale bar
+  // dual-band scale bar (0–25–50 m)
+  const sx = -145
+  const sy = 142
   pushLine(mesh, {
     layer: 'ANNO',
     points: [
-      [-140, 140],
-      [-90, 140],
+      [sx, sy],
+      [sx + 50, sy],
     ],
-    stroke: THEME.text,
-    strokeWidth: 0.8,
+    stroke: '#0f172a',
+    strokeWidth: 0.55,
   })
-  pushLine(mesh, { layer: 'ANNO', points: [[-140, 138], [-140, 142]], stroke: THEME.text, strokeWidth: 0.5 })
-  pushLine(mesh, { layer: 'ANNO', points: [[-90, 138], [-90, 142]], stroke: THEME.text, strokeWidth: 0.5 })
-  pushLabel(mesh, { text: '0', at: [-140, 145], color: THEME.text, size: 2.2, align: 'center' })
-  pushLabel(mesh, { text: '50m', at: [-90, 145], color: THEME.text, size: 2.2, align: 'center' })
+  // filled alternating segments
+  pushPoly(mesh, {
+    layer: 'ANNO',
+    points: [
+      [sx, sy - 1.6],
+      [sx + 25, sy - 1.6],
+      [sx + 25, sy + 1.6],
+      [sx, sy + 1.6],
+    ],
+    fill: '#0f172a',
+  })
+  pushPoly(mesh, {
+    layer: 'ANNO',
+    points: [
+      [sx + 25, sy - 1.6],
+      [sx + 50, sy - 1.6],
+      [sx + 50, sy + 1.6],
+      [sx + 25, sy + 1.6],
+    ],
+    fill: '#f8fafc',
+    stroke: '#0f172a',
+    strokeWidth: 0.25,
+  })
+  for (const [d, lab] of [
+    [0, '0'],
+    [25, '25'],
+    [50, '50m'],
+  ] as const) {
+    pushLine(mesh, {
+      layer: 'ANNO',
+      points: [
+        [sx + d, sy - 2.4],
+        [sx + d, sy + 2.4],
+      ],
+      stroke: '#0f172a',
+      strokeWidth: 0.35,
+    })
+    pushLabel(mesh, {
+      text: lab,
+      at: [sx + d, sy + 5.5],
+      color: '#0f172a',
+      size: 2.0,
+      align: 'center',
+    })
+  }
 }
 
 export function meshAreaRoad(mesh: Mesh): number {

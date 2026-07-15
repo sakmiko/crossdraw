@@ -1,3 +1,4 @@
+import { losLegendSvg as losLegendSvgImpl } from './losLegend'
 import { niceCeil as niceCeilStd, fmtNum, vcHeatAccurate } from './chartStandards'
 /** Lightweight SVG charts — data-linked, no external chart lib */
 
@@ -308,24 +309,10 @@ export function losGaugeSvg(
   delaySec: number,
   opts: { width?: number; height?: number } = {},
 ): string {
-  const width = opts.width ?? 340
-  const height = opts.height ?? 72
-  const order = ['A', 'B', 'C', 'D', 'E', 'F']
-  const colors = ['#22c55e', '#4ade80', '#a3e635', '#fbbf24', '#f97316', '#ef4444']
-  const idx = Math.max(0, order.indexOf(los.toUpperCase()))
-  const bw = (width - 24) / 6
-  let body = ''
-  order.forEach((L, i) => {
-    const x = 12 + i * bw
-    body += `<rect x="${x}" y="28" width="${bw - 4}" height="18" rx="3" fill="${colors[i]}" opacity="${i === idx ? 1 : 0.35}"/>`
-    body += `<text x="${x + (bw - 4) / 2}" y="41" text-anchor="middle" fill="#0f172a" font-size="10" font-weight="700">${L}</text>`
-  })
-  return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" class="chart-svg">
-    <rect width="100%" height="100%" fill="#0a1020"/>
-    <text x="12" y="16" fill="#8494ab" font-size="9">服务水平色带 · 当前 ${escape(los)} · 延误 ${fmt(delaySec)}s</text>
-    ${body}
-  </svg>`
+  // Delegate to losLegendSvg so thresholds stay aligned with domain LOS.
+  return losLegendSvgImpl(los, delaySec, opts)
 }
+
 
 export function crossSectionBarSvg(
   components: { label: string; widthM: number; color: string }[],
