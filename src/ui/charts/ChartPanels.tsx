@@ -32,6 +32,7 @@ import {
   schemeTimingStripSvg,
 } from './schemeCompareDiagrams'
 import { analyzeIntersection } from '@/domain/analysis'
+import { professionalCrossSectionSvg, crossSectionShareSvg } from './crossSectionDiagram'
 
 function useChartColors() {
   const theme = useAppStore((s) => s.theme)
@@ -302,12 +303,24 @@ export function BandCharts({ corridor }: { corridor: BandCorridor }) {
   )
 }
 
-export function CrossSectionCharts({ section }: { section: CrossSection }) {
+export function CrossSectionCharts({
+  section,
+  approach,
+}: {
+  section: CrossSection
+  approach?: import('@/domain/types').Approach
+}) {
   const colors = useChartColors()
+  const theme = colors.bg === '#ffffff' ? 'light' : 'dark'
+  const pro = useMemo(() => {
+    if (!approach) return null
+    return professionalCrossSectionSvg(section, approach, { theme: theme as 'dark' | 'light' })
+  }, [section, approach, theme])
+  const share = useMemo(() => themeSvg(crossSectionShareSvg(section), colors), [section, colors])
   const svg = useMemo(() => {
     const raw = crossSectionBarSvg(
       section.components.map((c) => ({ label: c.label, widthM: c.widthM, color: c.color })),
-      { height: 120 },
+      { height: 100 },
     )
     return themeSvg(raw, colors)
   }, [section, colors])
@@ -315,11 +328,19 @@ export function CrossSectionCharts({ section }: { section: CrossSection }) {
   return (
     <div className="chart-card">
       <div className="chart-title">
-        <span>断面组成图</span>
-        <small>总宽 {total.toFixed(2)} m</small>
+        <span>标准横断面图</span>
+        <small>总宽 {total.toFixed(2)} m · 数据联动</small>
       </div>
-      <div dangerouslySetInnerHTML={{ __html: svg }} />
-      <div className="table-wrap" style={{ maxHeight: 140, marginTop: 8 }}>
+      {pro ? (
+        <div className="xsection-pro" dangerouslySetInnerHTML={{ __html: pro }} />
+      ) : (
+        <div dangerouslySetInnerHTML={{ __html: svg }} />
+      )}
+      <div className="chart-title" style={{ marginTop: 10 }}>
+        <span>类型占比</span>
+      </div>
+      <div dangerouslySetInnerHTML={{ __html: share }} />
+      <div className="table-wrap" style={{ maxHeight: 160, marginTop: 8 }}>
         <table className="table">
           <thead>
             <tr>
@@ -332,7 +353,10 @@ export function CrossSectionCharts({ section }: { section: CrossSection }) {
             {section.components.map((c, i) => (
               <tr key={i}>
                 <td>
-                  <span className="legend-swatch" style={{ background: c.color, display: 'inline-block', marginRight: 6 }} />
+                  <span
+                    className="legend-swatch"
+                    style={{ background: c.color, display: 'inline-block', marginRight: 6 }}
+                  />
                   {c.label}
                 </td>
                 <td>{c.widthM.toFixed(2)}</td>

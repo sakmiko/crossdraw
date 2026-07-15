@@ -25,6 +25,7 @@ import { vcHeatColor } from '@/ui/charts/svgCharts'
 import { analysisMarkdown, bandMarkdown, exportJsonFile, exportSvgFile } from '@/io/exportCharts'
 import { buildAnalysisReportSvg } from '@/io/analysisReportSvg'
 import { collectSchemeSnapshots, schemeTimingStripSvg, schemeMetricsCompareSvg } from '@/ui/charts/schemeCompareDiagrams'
+import { professionalCrossSectionSvg } from '@/ui/charts/crossSectionDiagram'
 import {
   controlMatrixSvg,
   flowMovementDiagramSvg,
@@ -1024,19 +1025,54 @@ export default function App() {
 
           {mode === 'xsection' && xsection && selected && (
             <div className="card" style={{ marginTop: 12 }}>
-              <h2>横断面 · {selected.name}</h2>
-              <div className="xsection">
+              <div className="panel-header">
+                <h2 style={{ margin: 0 }}>横断面 · {selected.name}</h2>
+                <span className="hint">
+                  总宽 {xsection.components.reduce((s, c) => s + c.widthM, 0).toFixed(2)} m
+                  {markStaleIfNeeded(xsection, selected).stale ? ' · 参数已变需重绘' : ' · 已同步渠化'}
+                </span>
+              </div>
+              <div className="metric-grid band-kpi" style={{ marginTop: 8 }}>
+                <div className="metric">
+                  <div className="label">总宽 B</div>
+                  <div className="value">{xsection.components.reduce((s, c) => s + c.widthM, 0).toFixed(2)}<small> m</small></div>
+                </div>
+                <div className="metric">
+                  <div className="label">进口车道</div>
+                  <div className="value">{selected.entryLanes.length}</div>
+                </div>
+                <div className="metric">
+                  <div className="label">出口车道</div>
+                  <div className="value">{selected.exitLanes.length}</div>
+                </div>
+                <div className="metric">
+                  <div className="label">中分带</div>
+                  <div className="value">{selected.median.widthM.toFixed(1)}<small> m</small></div>
+                </div>
+              </div>
+              <div className="xsection" style={{ marginTop: 8 }}>
                 {xsection.components.map((c, i) => (
                   <div key={i} style={{ flex: c.widthM, background: c.color }} title={`${c.label} ${c.widthM}m`}>
-                    {c.widthM >= 2 ? `${c.label}\n${c.widthM}m` : ''}
+                    {c.widthM >= 2 ? `${c.label} ${c.widthM}m` : ''}
                   </div>
                 ))}
               </div>
-              <p className="hint">
-                总宽 {xsection.components.reduce((s, c) => s + c.widthM, 0).toFixed(2)} m
-                {markStaleIfNeeded(xsection, selected).stale ? ' · 需刷新' : ' · 已同步'}
-              </p>
-              <CrossSectionCharts section={xsection} />
+              <CrossSectionCharts section={xsection} approach={selected} />
+              <div className="toolbar" style={{ marginTop: 8 }}>
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={() => {
+                    exportSvgFile(
+                      `${project.name}-${selected.name}-xsection.svg`,
+                      professionalCrossSectionSvg(xsection, selected, { theme }),
+                    )
+                  }}
+                >
+                  导出标准断面图
+                </button>
+              </div>
+              <p className="hint">修改渠化车道宽/中分带/人行道后，本图与 KPI 立即联动刷新。</p>
             </div>
           )}
 
@@ -1518,7 +1554,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.10</span>
+        <span>Crossdraw v0.5.11</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

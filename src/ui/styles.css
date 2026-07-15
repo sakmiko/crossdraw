@@ -832,3 +832,34 @@ tr.row-recommend td {
 .scheme-compare-board {
   margin-top: 10px;
 }
+
+.xsection-pro {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  padding: 4px;
+}
+.xsection-pro svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.xsection {
+  display: flex;
+  height: 36px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  font-size: 10px;
+  color: #0f172a;
+  font-weight: 600;
+}
+.xsection > div {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  padding: 0 2px;
+  text-align: center;
+  overflow: hidden;
+}
