@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 0.5.40 — 2026-07-16
+
+- ChannelWorkspace：渠化底图 + 进口编辑从 App 拆出
+- App.tsx 再减约 600 行，可维护性提升
+
+# CHANGELOG
+
 ## 0.5.39 — 2026-07-16
 
 - 阶段复盘 docs/plans/phase-review-0.5.38.md
