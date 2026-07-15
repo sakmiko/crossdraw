@@ -78,3 +78,50 @@ export function analysisMarkdown(
   lines.push('')
   return lines.join('\n')
 }
+
+
+export function bandMarkdown(
+  projectName: string,
+  corridorName: string,
+  kpis: {
+    method: string
+    speedKmh: number
+    halfCycleDistanceM: number
+    bandwidthRatio: number
+    bandwidthSec: number
+    forwardSec: number
+    backwardSec: number
+    standardSpeedKmh: number
+    nodes: { name: string; distanceM: number; greenRatio: number; cycleSec: number; offsetSec: number }[]
+  },
+): string {
+  const lines = [
+    `# ${projectName} — 干道绿波简报`,
+    '',
+    `走廊：**${corridorName}** · 方法：**${kpis.method}**`,
+    '',
+    '## KPI',
+    '',
+    `| 指标 | 值 |`,
+    `|---|---|`,
+    `| 设计带速 | ${kpis.speedKmh} km/h |`,
+    `| 标准带速 | ${kpis.standardSpeedKmh.toFixed(1)} km/h |`,
+    `| 半周期距离 a | ${kpis.halfCycleDistanceM.toFixed(0)} m |`,
+    `| 带宽比 | ${(kpis.bandwidthRatio * 100).toFixed(1)} % |`,
+    `| 综合带宽 | ${kpis.bandwidthSec.toFixed(1)} s |`,
+    `| 上行带宽 | ${kpis.forwardSec.toFixed(1)} s |`,
+    `| 下行带宽 | ${kpis.backwardSec.toFixed(1)} s |`,
+    '',
+    '## 节点相位差',
+    '',
+    '| 路口 | 桩号 m | λ | C | 相位差 s |',
+    '|---|---:|---:|---:|---:|',
+  ]
+  for (const n of kpis.nodes) {
+    lines.push(
+      `| ${n.name} | ${n.distanceM.toFixed(0)} | ${n.greenRatio.toFixed(2)} | ${n.cycleSec} | ${n.offsetSec.toFixed(1)} |`,
+    )
+  }
+  lines.push('', '依据：干道协调数解/图解教材方法；MAXBAND 为启发扫描非完整 MIP。', '')
+  return lines.join('\n')
+}

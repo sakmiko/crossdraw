@@ -17,12 +17,12 @@ import { persistAutosave, redo, undo, useAppStore } from '@/state/store'
 import { CommandPalette } from '@/ui/common/CommandPalette'
 import { AnalysisCharts, BandCharts, CompareCharts, CrossSectionCharts, FlowCharts, SignalCharts, TimingCompareCharts } from '@/ui/charts/ChartPanels'
 import { ControlMatrixPanel, FlowDirectionPanel, PhaseFacePanel, SignalTimingPanel, TimeSpacePanel } from '@/ui/charts/ProfessionalPanels'
-import { InteractiveTimeSpace } from '@/ui/charts/InteractiveTimeSpace'
+import { InteractiveTimeSpace, buildTimeSpaceExportSvg } from '@/ui/charts/InteractiveTimeSpace'
 import { corridorSegments } from '@/domain/analysis/corridor'
 import { optimizeSignalTiming, criticalFlowRatios, TIMING_METHOD_LABELS, type TimingMethod } from '@/domain/analysis/timing'
 import { compareTimingMethods, recommendTimingRow, type TimingCompareRow } from '@/domain/analysis/timingCompare'
 import { vcHeatColor } from '@/ui/charts/svgCharts'
-import { analysisMarkdown, exportJsonFile, exportSvgFile } from '@/io/exportCharts'
+import { analysisMarkdown, bandMarkdown, exportJsonFile, exportSvgFile } from '@/io/exportCharts'
 import {
   controlMatrixSvg,
   flowMovementDiagramSvg,
@@ -1207,11 +1207,29 @@ export default function App() {
                   </select>
                 </label>
               </div>
-              <p className="hint">
-                半周期距离 {band.halfCycleDistanceM.toFixed(0)} m · 带宽比 {(band.bandwidthRatio * 100).toFixed(1)}% ·
-                带宽 {band.bandwidthSec.toFixed(1)} s · 上行 {band.forwardBandwidthSec?.toFixed(1) ?? '—'} s · 下行{' '}
-                {band.backwardBandwidthSec?.toFixed(1) ?? '—'} s · 标准带速 {band.standardSpeedKmh.toFixed(1)} km/h
-              </p>
+              <div className="metric-grid band-kpi" style={{ marginTop: 8 }}>
+                <div className="metric">
+                  <div className="label">带宽比</div>
+                  <div className="value">{(band.bandwidthRatio * 100).toFixed(1)}%</div>
+                </div>
+                <div className="metric">
+                  <div className="label">上行带宽</div>
+                  <div className="value">{(band.forwardBandwidthSec ?? band.bandwidthSec).toFixed(1)}<small> s</small></div>
+                </div>
+                <div className="metric">
+                  <div className="label">下行带宽</div>
+                  <div className="value">{(band.backwardBandwidthSec ?? 0).toFixed(1)}<small> s</small></div>
+                </div>
+                <div className="metric">
+                  <div className="label">半周期 a</div>
+                  <div className="value">{band.halfCycleDistanceM.toFixed(0)}<small> m</small></div>
+                </div>
+                <div className="metric">
+                  <div className="label">标准带速</div>
+                  <div className="value">{band.standardSpeedKmh.toFixed(1)}<small> km/h</small></div>
+                </div>
+              </div>
+              <p className="hint">指标与下方时距图色带联动；优化相位差后自动刷新。</p>
               <table className="table">
                 <thead>
                   <tr>
@@ -1298,6 +1316,33 @@ export default function App() {
                 <button type="button" className="primary" onClick={() => optimizeBand()}>
                   优化相位差
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    exportSvgFile(
+                      `${project.name}-timespace.svg`,
+                      buildTimeSpaceExportSvg(project.bandCorridor, band, theme),
+                    )
+                    exportJsonFile(`${project.name}-band.json`, { corridor: project.bandCorridor, result: band })
+                    downloadText(
+                      `${project.name}-band.md`,
+                      bandMarkdown(project.name, project.bandCorridor.name, {
+                        method: String(band.method),
+                        speedKmh: project.bandCorridor.speedKmh,
+                        halfCycleDistanceM: band.halfCycleDistanceM,
+                        bandwidthRatio: band.bandwidthRatio,
+                        bandwidthSec: band.bandwidthSec,
+                        forwardSec: band.forwardBandwidthSec ?? band.bandwidthSec,
+                        backwardSec: band.backwardBandwidthSec ?? 0,
+                        standardSpeedKmh: band.standardSpeedKmh,
+                        nodes: project.bandCorridor.nodes,
+                      }),
+                      'text/markdown',
+                    )
+                  }}
+                >
+                  导出时距图/简报
+                </button>
               </div>
               <InteractiveTimeSpace corridor={project.bandCorridor} result={band} />
               <BandCharts corridor={project.bandCorridor} />
@@ -1319,7 +1364,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.5</span>
+        <span>Crossdraw v0.5.6</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

@@ -663,7 +663,7 @@ function drawAnnotations(mesh: Mesh, scheme: ChannelizationScheme) {
       ],
       fill: THEME.text,
     })
-    pushLabel(mesh, { text: 'N', at: [125, -143], color: THEME.text, size: 4, align: 'center' })
+    pushLabel(mesh, { text: 'N', at: [125, -143], color: THEME.text, size: 5, align: 'center' })
   }
 
   pushLabel(mesh, {
