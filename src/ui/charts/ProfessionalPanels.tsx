@@ -7,6 +7,7 @@ import {
   timeSpaceDiagramSvg,
 } from './professionalDiagrams'
 import type { Approach, BandCorridor, FlowScheme, SignalScheme } from '@/domain/types'
+import { buildFlowAlignment, flowChartsAlignWithTable, type FlowDisplayMode } from '@/domain/flow/flowAlign'
 import { buildSignalTimingAlignment, signalChartsAlignWithTable } from '@/domain/signal/timingAlign'
 import {
   buildReleaseMatrix,
@@ -185,25 +186,52 @@ export function PhaseFacePanel({
 export function FlowDirectionPanel({
   approaches,
   flow,
+  mode = 'natural',
 }: {
   approaches: Approach[]
   flow: FlowScheme
+  mode?: FlowDisplayMode
 }) {
   const colors = useChartColors()
-  const svg = useMemo(() => {
-    const data = approaches.map((a) => {
-      const v = flow.volumes[a.id] ?? { L: 0, T: 0, R: 0, U: 0 }
-      return { name: a.name.replace('进口', ''), bearingDeg: a.bearingDeg, L: v.L, T: v.T, R: v.R }
-    })
-    return themeSvg(flowMovementDiagramSvg(data, { size: 340 }), colors)
-  }, [approaches, flow, colors])
+  const align = useMemo(() => buildFlowAlignment(approaches, flow, mode), [approaches, flow, mode])
+  const check = useMemo(() => flowChartsAlignWithTable(approaches, flow, mode), [approaches, flow, mode])
+  const svg = useMemo(
+    () => themeSvg(flowMovementDiagramSvg(align.diagramData, { size: 340 }), colors),
+    [align, colors],
+  )
   return (
     <div className="chart-card">
       <div className="chart-title">
         <span>流量流向箭头图</span>
-        <small>线宽∝流量</small>
+        <small>
+          线宽∝流量 · {align.unit} · {check.ok ? '与表同源✓' : '同源异常'}
+        </small>
       </div>
       <div dangerouslySetInnerHTML={{ __html: svg }} />
+      <div className="table-wrap" style={{ marginTop: 8, maxHeight: 140 }}>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>进口</th>
+              <th>L</th>
+              <th>T</th>
+              <th>R</th>
+              <th>Σ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {align.rows.map((r) => (
+              <tr key={r.approachId}>
+                <td>{r.approachName.replace('进口', '')}</td>
+                <td>{Math.round(r.chartL)}</td>
+                <td>{Math.round(r.chartT)}</td>
+                <td>{Math.round(r.chartR)}</td>
+                <td>{Math.round(r.chartL + r.chartT + r.chartR)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

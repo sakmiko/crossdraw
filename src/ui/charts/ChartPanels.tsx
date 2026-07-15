@@ -32,6 +32,7 @@ import {
   schemeTimingStripSvg,
 } from './schemeCompareDiagrams'
 import { analyzeIntersection } from '@/domain/analysis'
+import { buildFlowAlignment, type FlowDisplayMode } from '@/domain/flow/flowAlign'
 import { professionalCrossSectionSvg, crossSectionShareSvg } from './crossSectionDiagram'
 
 function useChartColors() {
@@ -146,34 +147,26 @@ export function AnalysisCharts({ analysis }: { analysis: AnalysisResult }) {
 export function FlowCharts({
   approaches,
   flow,
+  mode = 'natural',
 }: {
   approaches: Approach[]
   flow: FlowScheme
+  mode?: FlowDisplayMode
 }) {
   const colors = useChartColors()
-  const svg = useMemo(() => {
-    const raw = groupedBarSvg(
-      approaches.map((ap) => {
-        const v = flow.volumes[ap.id] ?? { U: 0, L: 0, T: 0, R: 0 }
-        return {
-          group: ap.name.replace('进口', ''),
-          items: [
-            { key: 'L', value: v.L, color: '#0891b2' },
-            { key: 'T', value: v.T, color: '#2563eb' },
-            { key: 'R', value: v.R, color: '#7c3aed' },
-          ],
-        }
-      }),
-      { height: 160 },
-    )
-    return themeSvg(raw, colors)
-  }, [approaches, flow, colors])
+  const align = useMemo(() => buildFlowAlignment(approaches, flow, mode), [approaches, flow, mode])
+  const svg = useMemo(
+    () => themeSvg(groupedBarSvg(align.barGroups, { height: 160 }), colors),
+    [align, colors],
+  )
 
   return (
     <div className="chart-card">
       <div className="chart-title">
         <span>转向流量</span>
-        <small>L / T / R · 与矩阵同步</small>
+        <small>
+          L / T / R · {align.unit} · Σ={align.mode === 'peak' ? align.totalPeakLTR.toFixed(0) : align.totalLTR.toFixed(0)}
+        </small>
       </div>
       <div dangerouslySetInnerHTML={{ __html: svg }} />
       <div className="legend">
