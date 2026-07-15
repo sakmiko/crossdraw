@@ -27,6 +27,7 @@ export type ExportItemId =
   | 'band-multi-compare'
   | 'pro-pack'
   | 'print-a4'
+  | 'conflict-matrix-svg'
 
 export type ExportItem = {
   id: ExportItemId
@@ -200,6 +201,15 @@ export const EXPORT_CATALOG: ExportItem[] = [
     description: '并排配时 + 延误 + v/c',
     modes: ['compare'],
     requires: ['channel'],
+  },
+  {
+    id: 'conflict-matrix-svg',
+    category: 'signal',
+    title: '冲突矩阵图',
+    format: 'SVG+MD',
+    description: '转向冲突矩阵与全相位审查简报',
+    modes: ['signal'],
+    requires: ['channel', 'signal'],
   },
   {
     id: 'band-pack',

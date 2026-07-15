@@ -20,6 +20,7 @@ export type ChartKindId =
   | 'analysis-board'
   | 'print-a4'
   | 'band-corridor-compare'
+  | 'conflict-matrix'
 
 export type ChartRegistryEntry = {
   id: ChartKindId
@@ -139,6 +140,13 @@ export const CHART_REGISTRY: ChartRegistryEntry[] = [
     dataSource: 'bandCorridorCompare + measureCorridor',
     modes: ['band'],
     exportIds: ['band-multi-compare'],
+  },
+  {
+    id: 'conflict-matrix',
+    title: '转向冲突矩阵',
+    dataSource: 'phaseConflictView + conflictMatrixSvg',
+    modes: ['signal'],
+    exportIds: ['conflict-matrix-svg'],
   },
 ]
 

@@ -21,6 +21,7 @@ import { ExportCenter } from '@/ui/common/ExportCenter'
 import { PrintPreviewModal } from '@/ui/common/PrintPreview'
 import { buildA4PrintSheet, printSheetHtml, type PrintPanel } from '@/io/printSheet'
 import { collectCorridorKpis, corridorKpiCompareSvg, multiBandMarkdown } from '@/ui/charts/bandCorridorCompare'
+import { conflictHitsMarkdown, conflictMatrixExportSvg } from '@/ui/charts/conflictExport'
 import { checkAnalysisIntegrity } from '@/domain/analysis/integrity'
 import { buildFlowAlignment, flowChartsAlignWithTable, type FlowDisplayMode } from '@/domain/flow/flowAlign'
 import { buildSignalTimingAlignment } from '@/domain/signal/timingAlign'
@@ -324,6 +325,15 @@ export default function App() {
           channel.approaches.map((x) => x.id),
         ),
       })
+      panels.push({
+        id: 'conflict',
+        title: '冲突矩阵',
+        svg: conflictMatrixExportSvg(
+          channel.approaches,
+          signal,
+          focusPhaseId ?? signal.phases[0]?.id ?? null,
+        ),
+      })
     }
     if (channel && flow) {
       panels.push({
@@ -337,7 +347,8 @@ export default function App() {
         ),
       })
     }
-    if (analysis && channel && flow && signal) {
+    // fill remaining slots: analysis board or band
+    if (panels.length < 4 && analysis && channel && flow && signal) {
       panels.push({
         id: 'board',
         title: '运行评价拼图',
@@ -352,7 +363,8 @@ export default function App() {
           theme: 'light',
         }),
       })
-    } else if (project.bandCorridor.nodes.length >= 2) {
+    }
+    if (panels.length < 4 && project.bandCorridor.nodes.length >= 2) {
       panels.push({
         id: 'band',
         title: '绿波时距图',
@@ -418,6 +430,17 @@ export default function App() {
         project.bandCorridor.speedKmh,
       ),
     )
+    if (channel) {
+      exportSvgFile(
+        `${project.name}-conflict.svg`,
+        conflictMatrixExportSvg(channel.approaches, signal, focusPhaseId ?? signal.phases[0]?.id),
+      )
+      downloadText(
+        `${project.name}-conflict.md`,
+        conflictHitsMarkdown(project.name, channel.approaches, signal),
+        'text/markdown',
+      )
+    }
     if (analysis) {
       exportJsonFile(`${project.name}-analysis.json`, analysis)
       downloadText(
@@ -1641,6 +1664,30 @@ export default function App() {
                   focusPhaseId={focusPhaseId ?? signal.phases[0]?.id ?? null}
                   onFocusPhase={setFocusPhaseId}
                 />
+              {channel && (
+                <div className="toolbar" style={{ marginTop: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      exportSvgFile(
+                        `${project.name}-conflict.svg`,
+                        conflictMatrixExportSvg(
+                          channel.approaches,
+                          signal,
+                          focusPhaseId ?? signal.phases[0]?.id,
+                        ),
+                      )
+                      downloadText(
+                        `${project.name}-conflict.md`,
+                        conflictHitsMarkdown(project.name, channel.approaches, signal),
+                        'text/markdown',
+                      )
+                    }}
+                  >
+                    导出冲突矩阵
+                  </button>
+                </div>
+              )}
               <SignalTimingPanel signal={signal} />
               {channel && <ControlMatrixPanel signal={signal} approaches={channel.approaches} />}
               {channel && <PhaseFacePanel signal={signal} approaches={channel.approaches} />}
@@ -2316,7 +2363,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.30</span>
+        <span>Crossdraw v0.5.31</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -2376,6 +2423,18 @@ export default function App() {
                 })),
                 signal.cycleSec || 90,
               ),
+            )
+          },
+          'conflict-matrix-svg': () => {
+            if (!channel || !signal) return
+            exportSvgFile(
+              `${project.name}-conflict.svg`,
+              conflictMatrixExportSvg(channel.approaches, signal, focusPhaseId ?? signal.phases[0]?.id),
+            )
+            downloadText(
+              `${project.name}-conflict.md`,
+              conflictHitsMarkdown(project.name, channel.approaches, signal),
+              'text/markdown',
             )
           },
           'control-svg': () => {
