@@ -15,11 +15,12 @@
 
 ```
 docs/
+├── development/      # 开发手册（阶段/验收/测试）★ 实现入口
 ├── product/          # 产品
 ├── research/         # 调研
 ├── architecture/     # 架构
 ├── specs/            # 详细规格
-├── plans/            # 实施计划
+├── plans/            # 早期提纲（细则见 development/phases）
 └── standards/        # 工程规范
 ```
 

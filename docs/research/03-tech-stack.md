@@ -17,7 +17,7 @@
 | 桌面壳 | **阶段 A：纯本地 Web**；**阶段 B：Electron** 打包 | Electron 30+ |
 | 测试 | Vitest + Testing Library + Playwright | — |
 | DXF | `dxf-writer` / `@tarikjabiri/dxf` 类库评估后锁定一种 | MIT |
-| 包管理 | pnpm | — |
+| 包管理 | **npm**（`package-lock.json`） | — |
 | 质量 | ESLint + Prettier + TypeScript strict | — |
 | 许可兼容 | 依赖须 GPLv3 兼容（MIT/BSD/Apache/LGPL；禁 AGPL/SSPL 混用策略见下） | — |
 

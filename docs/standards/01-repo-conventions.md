@@ -8,7 +8,8 @@
 | 对象 | 约定 |
 |------|------|
 | 产品名 | **Crossdraw**（对外唯一） |
-| 包名 / 仓库 | `crossdraw` |
+| 包名 / 仓库 | `crossdraw`（GitHub: sakmiko/crossdraw） |
+| 包管理 | **npm** only |
 | 项目文件扩展名 | `.rtp`（Road Traffic Project） |
 | 品牌旧称 | TrafficCanvas 仅历史文档提及，代码与 UI 禁止出现 |
 
