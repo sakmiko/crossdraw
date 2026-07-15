@@ -192,6 +192,7 @@ export function rebuildChannelMesh(scheme: ChannelizationScheme, flow?: FlowSche
   })
 
   drawAnnotations(mesh, scheme)
+  drawLegend(mesh, scheme)
   return recomputeBBox(mesh)
 }
 
@@ -231,37 +232,86 @@ function buildIntersectionCurb(approaches: Approach[], core: number): Vec[] {
 }
 
 function drawCornerFillets(mesh: Mesh, approaches: Approach[], core: number) {
-  if (approaches.length < 3) return
+  if (approaches.length < 2) return
   const sorted = [...approaches].sort((a, b) => a.bearingDeg - b.bearingDeg)
   for (let i = 0; i < sorted.length; i++) {
     const a = sorted[i]
     const b = sorted[(i + 1) % sorted.length]
+    const ux = dirFromBearing(a.bearingDeg)
+    const px = perpFromBearing(a.bearingDeg)
+    const nux = dirFromBearing(b.bearingDeg)
+    const npx = perpFromBearing(b.bearingDeg)
+    const halfA = totalWidth(a) / 2
+    const halfB = totalWidth(b) / 2
+
+    // corner curb fillet (between a right edge and b left edge)
+    const rCurb = Math.max(4, Math.min(14, (halfA + halfB) * 0.18))
+    const aRight = add(mul(ux, core), mul(px, halfA))
+    const bLeft = add(mul(nux, core), mul(npx, -halfB))
+    const midDir = norm(add(ux, nux))
+    const filletCenter = mul(midDir, Math.max(2, core - rCurb * 0.55))
+    const a0 = Math.atan2(aRight[1] - filletCenter[1], aRight[0] - filletCenter[0])
+    const a1 = Math.atan2(bLeft[1] - filletCenter[1], bLeft[0] - filletCenter[0])
+    let d = a1 - a0
+    while (d <= -Math.PI) d += Math.PI * 2
+    while (d > Math.PI) d -= Math.PI * 2
+    // curb arc line (visual polish)
+    pushLine(mesh, {
+      layer: 'MARKING',
+      points: arcPoints(filletCenter, rCurb, a0, a0 + d, 18),
+      stroke: THEME.curb,
+      strokeWidth: 0.35,
+      alpha: 0.7,
+    })
+
+    // right-turn channelization island for approach a
     if (a.rightTurn.enabled && a.rightTurn.style !== 'none') {
-      const ux = dirFromBearing(a.bearingDeg)
-      const px = perpFromBearing(a.bearingDeg)
-      const half = totalWidth(a) / 2
-      const r = a.rightTurn.radiusM
-      const center = add(mul(ux, core + r * 0.35), mul(px, half + r * 0.25))
-      const island = arcPoints(center, r * 0.55, degToRad(a.bearingDeg), degToRad(a.bearingDeg) + Math.PI * 0.65, 22)
-      island.push(add(center, mul(px, r * 0.2)))
+      const r = Math.max(8, a.rightTurn.radiusM)
+      const w = Math.max(3.5, a.rightTurn.widthM)
+      // island center in the right-turn corner pocket
+      const center = add(add(mul(ux, core + r * 0.42), mul(px, halfA + r * 0.22)), mul(midDir, -r * 0.08))
+      // outer arc (roadside) and inner arc (island body)
+      const ang0 = degToRad(a.bearingDeg) - 0.15
+      const ang1 = degToRad(a.bearingDeg) + Math.PI * 0.72
+      const outer = arcPoints(center, r * 0.92, ang0, ang1, 24)
+      const inner = arcPoints(center, Math.max(2.2, r * 0.92 - w * 0.85), ang1, ang0, 20)
+      const island = [...outer, ...inner]
       pushPoly(mesh, {
         layer: 'ISLAND',
         points: island,
-        fill: a.rightTurn.style === 'solid' ? THEME.island : 'transparent',
+        fill: a.rightTurn.style === 'solid' ? THEME.island : THEME.island,
         stroke: THEME.islandEdge,
-        strokeWidth: 0.35,
-        alpha: a.rightTurn.style === 'painted' ? 0.3 : 0.95,
+        strokeWidth: 0.4,
+        alpha: a.rightTurn.style === 'painted' ? 0.35 : 0.95,
       })
-      // RT lane guide
+      // channel path centerline
       pushLine(mesh, {
         layer: 'MARKING',
-        points: arcPoints(center, r * 0.85, degToRad(a.bearingDeg) - 0.2, degToRad(a.bearingDeg) + 1.1, 12),
+        points: arcPoints(center, r * 0.92 - w * 0.4, ang0 + 0.05, ang1 - 0.05, 20),
         stroke: THEME.marking,
-        strokeWidth: 0.2,
+        strokeWidth: 0.22,
         dashed: true,
       })
+      // yield triangle near merge
+      const tip = add(center, [Math.cos((ang0 + ang1) / 2) * (r * 0.5), Math.sin((ang0 + ang1) / 2) * (r * 0.5)])
+      pushPoly(mesh, {
+        layer: 'MARKING',
+        points: [
+          tip,
+          add(tip, mul(px, 1.2)),
+          add(tip, mul(ux, 1.4)),
+        ],
+        fill: THEME.yellow,
+        alpha: 0.85,
+      })
+      pushLabel(mesh, {
+        text: `R=${r.toFixed(0)}m`,
+        at: add(center, mul(midDir, r * 0.15)),
+        color: THEME.islandEdge,
+        size: 2.1,
+        align: 'center',
+      })
     }
-    void b
   }
 }
 
@@ -388,23 +438,44 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
     })
   }
 
-  // stop line
+  // stop line (double bar — clearer at export scale)
   pushLine(mesh, {
     layer: 'MARKING',
-    points: [add(mul(ux, start), mul(px, -half)), add(mul(ux, start), mul(px, half))],
+    points: [add(mul(ux, start), mul(px, -half + 0.3)), add(mul(ux, start), mul(px, half - 0.3))],
     stroke: THEME.marking,
-    strokeWidth: 0.55,
+    strokeWidth: 0.65,
+  })
+  pushLine(mesh, {
+    layer: 'MARKING',
+    points: [add(mul(ux, start + 0.7), mul(px, -half + 0.3)), add(mul(ux, start + 0.7), mul(px, half - 0.3))],
+    stroke: THEME.marking,
+    strokeWidth: 0.35,
   })
 
-  // crosswalk bars
-  const cw = start - 3.5
-  for (let i = -5; i <= 5; i++) {
-    const o = (i / 5) * (half * 0.92)
+  // crosswalk zebra (denser bars + outline)
+  const cw = start - 3.8
+  const cwHalf = half * 0.95
+  pushLine(mesh, {
+    layer: 'MARKING',
+    points: [add(mul(ux, cw - 1.6), mul(px, -cwHalf)), add(mul(ux, cw - 1.6), mul(px, cwHalf))],
+    stroke: THEME.crosswalk,
+    strokeWidth: 0.2,
+    alpha: 0.7,
+  })
+  pushLine(mesh, {
+    layer: 'MARKING',
+    points: [add(mul(ux, cw + 1.6), mul(px, -cwHalf)), add(mul(ux, cw + 1.6), mul(px, cwHalf))],
+    stroke: THEME.crosswalk,
+    strokeWidth: 0.2,
+    alpha: 0.7,
+  })
+  for (let i = -7; i <= 7; i++) {
+    const o = (i / 7) * cwHalf
     pushLine(mesh, {
       layer: 'MARKING',
-      points: [add(mul(ux, cw - 1.3), mul(px, o)), add(mul(ux, cw + 1.3), mul(px, o))],
+      points: [add(mul(ux, cw - 1.35), mul(px, o)), add(mul(ux, cw + 1.35), mul(px, o))],
       stroke: THEME.crosswalk,
-      strokeWidth: 0.6,
+      strokeWidth: 0.55,
     })
   }
 
@@ -552,13 +623,48 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
     })
   }
 
+  // total width dimension
+  const dimY = half + ap.sidewalkWidthM + 2.5
+  pushLine(mesh, {
+    layer: 'ANNO',
+    points: [add(mul(ux, start + 22), mul(px, -half)), add(mul(ux, start + 22), mul(px, half))],
+    stroke: THEME.accent,
+    strokeWidth: 0.25,
+  })
+  pushLine(mesh, {
+    layer: 'ANNO',
+    points: [add(mul(ux, start + 20.5), mul(px, -half)), add(mul(ux, start + 23.5), mul(px, -half))],
+    stroke: THEME.accent,
+    strokeWidth: 0.25,
+  })
+  pushLine(mesh, {
+    layer: 'ANNO',
+    points: [add(mul(ux, start + 20.5), mul(px, half)), add(mul(ux, start + 23.5), mul(px, half))],
+    stroke: THEME.accent,
+    strokeWidth: 0.25,
+  })
+  pushLabel(mesh, {
+    text: `B=${totalWidth(ap).toFixed(1)}m`,
+    at: add(mul(ux, start + 22), mul(px, 0)),
+    color: THEME.accent,
+    size: 2.2,
+    align: 'center',
+  })
+
   pushLabel(mesh, {
     text: ap.name,
     at: add(mul(ux, end - 6), [0, 0]),
     color: THEME.text,
-    size: 3.8,
+    size: 4.0,
     align: 'center',
     meta: { approachId: ap.id },
+  })
+  pushLabel(mesh, {
+    text: `${ap.bearingDeg.toFixed(0)}° · ${ap.entryLanes.length}进/${ap.exitLanes.length}出`,
+    at: add(mul(ux, end - 2), [0, 0]),
+    color: '#475569',
+    size: 2.2,
+    align: 'center',
   })
 }
 
@@ -641,6 +747,56 @@ function drawFlowArrows(mesh: Mesh, approaches: Approach[], flow: FlowScheme, co
       align: 'center',
     })
   }
+}
+
+
+function drawLegend(mesh: Mesh, scheme: ChannelizationScheme) {
+  const x0 = -155
+  const y0 = 95
+  const rows: { color: string; label: string; stroke?: string }[] = [
+    { color: THEME.laneFill, label: '机动车道', stroke: THEME.asphaltEdge },
+    { color: THEME.island, label: '渠化岛/中分', stroke: THEME.islandEdge },
+    { color: THEME.sidewalk, label: '人行道' },
+    { color: THEME.bike, label: '非机动车道' },
+    { color: THEME.flow, label: '流量箭头' },
+  ]
+  pushPoly(mesh, {
+    layer: 'ANNO',
+    points: [
+      [x0 - 2, y0 - 6],
+      [x0 + 48, y0 - 6],
+      [x0 + 48, y0 + rows.length * 7 + 6],
+      [x0 - 2, y0 + rows.length * 7 + 6],
+    ],
+    fill: '#f8fafc',
+    stroke: '#94a3b8',
+    strokeWidth: 0.3,
+    alpha: 0.92,
+  })
+  pushLabel(mesh, { text: '图例', at: [x0 + 22, y0 - 2], color: THEME.text, size: 2.6, align: 'center' })
+  rows.forEach((r, i) => {
+    const y = y0 + 4 + i * 7
+    pushPoly(mesh, {
+      layer: 'ANNO',
+      points: [
+        [x0 + 2, y - 2],
+        [x0 + 10, y - 2],
+        [x0 + 10, y + 2],
+        [x0 + 2, y + 2],
+      ],
+      fill: r.color,
+      stroke: r.stroke ?? r.color,
+      strokeWidth: 0.2,
+    })
+    pushLabel(mesh, { text: r.label, at: [x0 + 12, y + 0.8], color: '#334155', size: 2.1, align: 'left' })
+  })
+  pushLabel(mesh, {
+    text: `类型 ${scheme.intersectionType} · ${scheme.approaches.length} 进口`,
+    at: [x0 + 22, y0 + rows.length * 7 + 3],
+    color: '#64748b',
+    size: 1.9,
+    align: 'center',
+  })
 }
 
 function drawAnnotations(mesh: Mesh, scheme: ChannelizationScheme) {
