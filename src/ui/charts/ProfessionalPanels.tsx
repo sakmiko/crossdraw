@@ -7,6 +7,7 @@ import {
   timeSpaceDiagramSvg,
 } from './professionalDiagrams'
 import type { Approach, BandCorridor, FlowScheme, SignalScheme } from '@/domain/types'
+import { buildSignalTimingAlignment, signalChartsAlignWithTable } from '@/domain/signal/timingAlign'
 import { useAppStore } from '@/state/store'
 
 function useChartColors() {
@@ -29,30 +30,53 @@ function themeSvg(svg: string, c: { bg: string; grid: string; label: string; tex
 
 export function SignalTimingPanel({ signal }: { signal: SignalScheme }) {
   const colors = useChartColors()
+  const align = useMemo(() => buildSignalTimingAlignment(signal), [signal])
+  const check = useMemo(() => signalChartsAlignWithTable(signal), [signal])
   const svg = useMemo(
     () =>
       themeSvg(
-        signalTimingDiagramSvg(
-          signal.phases.map((p) => ({
-            name: p.name,
-            greenSec: p.greenSec,
-            yellowSec: p.yellowSec,
-            allRedSec: p.allRedSec,
-            isOverlap: p.isOverlap,
-          })),
-          signal.cycleSec || 90,
-        ),
+        signalTimingDiagramSvg(align.chartPhases, align.cycleSec),
         colors,
       ),
-    [signal, colors],
+    [align, colors],
   )
   return (
     <div className="chart-card">
       <div className="chart-title">
         <span>信号配时图</span>
-        <small>矢量 · 绿/黄/红</small>
+        <small>
+          C={align.cycleSec}s · Σ主={align.mainSumSec.toFixed(1)}s ·{' '}
+          {align.closed ? '闭合' : `差${align.balanceSec > 0 ? '+' : ''}${align.balanceSec}`}
+          {check.ok ? ' · 表图对齐✓' : ' · 对齐异常'}
+        </small>
       </div>
       <div dangerouslySetInnerHTML={{ __html: svg }} />
+      <div className="table-wrap" style={{ marginTop: 8, maxHeight: 160 }}>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>相位</th>
+              <th>G</th>
+              <th>Y</th>
+              <th>AR</th>
+              <th>时长</th>
+              <th>类型</th>
+            </tr>
+          </thead>
+          <tbody>
+            {align.rows.map((r) => (
+              <tr key={r.id}>
+                <td>{r.name}</td>
+                <td>{r.greenSec}</td>
+                <td>{r.yellowSec}</td>
+                <td>{r.allRedSec}</td>
+                <td>{r.durationSec}</td>
+                <td>{r.isOverlap ? '搭接' : '主相'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

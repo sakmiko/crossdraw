@@ -207,13 +207,14 @@ export function SignalCharts({
       themeSvg(
         ringBarrierSvg(
           signal.phases.map((p) => ({
-            name: p.isOverlap ? `${p.name}*` : p.name,
+            name: p.name,
             greenSec: p.greenSec,
             yellowSec: p.yellowSec,
             allRedSec: p.allRedSec,
+            isOverlap: p.isOverlap,
           })),
           signal.cycleSec,
-          { height: 78 },
+          { height: 88 },
         ),
         colors,
       ),
@@ -234,8 +235,8 @@ export function SignalCharts({
   return (
     <div className="chart-card">
       <div className="chart-title">
-        <span>相位时间条</span>
-        <small>绿/黄/全红 · *搭接</small>
+        <span>相位环栏条</span>
+        <small>轴=C · 与相位表 G/Y/AR 同源</small>
       </div>
       <div dangerouslySetInnerHTML={{ __html: ring }} />
       {matrix && (

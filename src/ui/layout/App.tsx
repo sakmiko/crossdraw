@@ -18,6 +18,7 @@ import { persistAutosave, redo, undo, useAppStore } from '@/state/store'
 import { CommandPalette } from '@/ui/common/CommandPalette'
 import { ExportCenter } from '@/ui/common/ExportCenter'
 import { checkAnalysisIntegrity } from '@/domain/analysis/integrity'
+import { buildSignalTimingAlignment } from '@/domain/signal/timingAlign'
 import { AnalysisCharts, BandCharts, CompareCharts, CrossSectionCharts, FlowCharts, SchemeCompareBoard, SignalCharts, TimingCompareCharts } from '@/ui/charts/ChartPanels'
 import { ControlMatrixPanel, FlowDirectionPanel, PhaseFacePanel, SignalTimingPanel, TimeSpacePanel } from '@/ui/charts/ProfessionalPanels'
 import { InteractiveTimeSpace, buildTimeSpaceExportSvg } from '@/ui/charts/InteractiveTimeSpace'
@@ -869,7 +870,19 @@ export default function App() {
 
           {mode === 'signal' && signal && (
             <div className="card" style={{ marginTop: 12 }}>
-              <h2>信号 · {signal.name}</h2>
+              <div className="panel-header">
+                <h2 style={{ margin: 0 }}>信号 · {signal.name}</h2>
+                {(() => {
+                  const al = buildSignalTimingAlignment(signal)
+                  return (
+                    <span className={`integrity-badge ${al.closed ? 'ok' : 'bad'}`}>
+                      {al.closed
+                        ? `配时闭合 Σ=${al.mainSumSec.toFixed(1)}=C`
+                        : `未闭合 Σ=${al.mainSumSec.toFixed(1)} C=${al.cycleSec} 差${al.balanceSec > 0 ? '+' : ''}${al.balanceSec}`}
+                    </span>
+                  )
+                })()}
+              </div>
               <label>
                 周期 C (s)
                 <input type="number" value={signal.cycleSec} onChange={(e) => setCycle(Number(e.target.value))} />
@@ -1671,7 +1684,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.15</span>
+        <span>Crossdraw v0.5.16</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

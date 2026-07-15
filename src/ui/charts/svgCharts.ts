@@ -179,33 +179,50 @@ export function stackedBandSvg(
 }
 
 export function ringBarrierSvg(
-  phases: { name: string; greenSec: number; yellowSec: number; allRedSec: number }[],
+  phases: { name: string; greenSec: number; yellowSec: number; allRedSec: number; isOverlap?: boolean }[],
   cycleSec: number,
   opts: { width?: number; height?: number } = {},
 ): string {
-  const width = opts.width ?? 340
-  const height = opts.height ?? 78
-  const total = Math.max(cycleSec, phases.reduce((s, p) => s + p.greenSec + p.yellowSec + p.allRedSec, 0), 1)
-  let x = 0
-  const colors = ['#38bdf8', '#818cf8', '#34d399', '#fbbf24', '#f472b6', '#22d3ee']
+  const width = opts.width ?? 360
+  const height = opts.height ?? 88
+  const C = Math.max(1, cycleSec)
+  const padL = 4
+  const padR = 4
+  const usable = width - padL - padR
+  const scale = usable / C
+  // main phases only on ring (overlap drawn as hatch overlay at end)
+  const main = phases.filter((p) => !p.isOverlap)
+  const overlaps = phases.filter((p) => p.isOverlap)
+  const sumMain = main.reduce((s, p) => s + p.greenSec + p.yellowSec + p.allRedSec, 0)
+  let x = padL
   let body = ''
-  phases.forEach((p, i) => {
-    const wG = (p.greenSec / total) * width
-    const wY = (p.yellowSec / total) * width
-    const wR = (p.allRedSec / total) * width
-    body += `<rect x="${x}" y="22" width="${Math.max(0, wG)}" height="30" fill="${colors[i % colors.length]}"/>`
-    body += `<rect x="${x + wG}" y="22" width="${Math.max(0, wY)}" height="30" fill="#fbbf24"/>`
-    body += `<rect x="${x + wG + wY}" y="22" width="${Math.max(0, wR)}" height="30" fill="#64748b"/>`
-    if (wG > 36) {
-      body += `<text x="${x + wG / 2}" y="41" text-anchor="middle" fill="#0f172a" font-size="9" font-weight="700">${escape(p.name)}</text>`
+  // red remainder background
+  body += `<rect x="${padL}" y="26" width="${usable}" height="28" fill="#7f1d1d" opacity="0.35"/>`
+  main.forEach((p) => {
+    const g = Math.max(0, p.greenSec) * scale
+    const y = Math.max(0, p.yellowSec) * scale
+    const r = Math.max(0, p.allRedSec) * scale
+    body += `<rect x="${x}" y="26" width="${Math.max(0, g)}" height="28" fill="#16a34a"/>`
+    body += `<rect x="${x + g}" y="26" width="${Math.max(0, y)}" height="28" fill="#ca8a04"/>`
+    body += `<rect x="${x + g + y}" y="26" width="${Math.max(0, r)}" height="28" fill="#7f1d1d"/>`
+    if (g > 28) {
+      body += `<text x="${x + g / 2}" y="44" text-anchor="middle" fill="#052e16" font-size="9" font-weight="700">${escape(p.name)}</text>`
     }
-    x += wG + wY + wR
+    // second labels G/Y
+    if (g > 16) body += `<text x="${x + g / 2}" y="58" text-anchor="middle" fill="#94a3b8" font-size="8">${Math.round(p.greenSec)}</text>`
+    x += g + y + r
   })
+  // time ticks 0 and C
+  body += `<text x="${padL}" y="22" fill="#94a3b8" font-size="8">0</text>`
+  body += `<text x="${padL + usable}" y="22" text-anchor="end" fill="#94a3b8" font-size="8">${Math.round(C)}</text>`
+  const bal = Math.round((sumMain - C) * 10) / 10
+  const balTxt = Math.abs(bal) < 0.15 ? 'Σ主相位=C 闭合' : `Σ主相位=${sumMain.toFixed(1)}s 差${bal > 0 ? '+' : ''}${bal}`
+  const ov = overlaps.length ? ` · 搭接${overlaps.length}个不计入环` : ''
   return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" class="chart-svg">
     <rect width="100%" height="100%" fill="#0a1020"/>
+    <text x="4" y="12" fill="#8494ab" font-size="9">Ring-Barrier 环栏条 · 轴=C=${cycleSec}s · 绿/黄/全红</text>
     ${body}
-    <text x="4" y="14" fill="#8494ab" font-size="9">Ring-Barrier · C=${cycleSec}s · 绿/黄/全红</text>
-    <text x="4" y="${height - 6}" fill="#64748b" font-size="8">黄=黄灯 · 灰=全红</text>
+    <text x="4" y="${height - 6}" fill="#64748b" font-size="8">${balTxt}${ov} · 与配时图表字段同源</text>
   </svg>`
 }
 
