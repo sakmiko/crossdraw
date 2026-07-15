@@ -807,3 +807,28 @@ tr.row-recommend td {
   color: var(--muted);
   margin-left: 2px;
 }
+
+.scheme-strip {
+  overflow-x: auto;
+  margin-top: 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  padding: 6px;
+}
+.scheme-strip svg {
+  display: block;
+  max-width: none;
+  height: auto;
+}
+.dual-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+@media (max-width: 900px) {
+  .dual-charts { grid-template-columns: 1fr; }
+}
+.scheme-compare-board {
+  margin-top: 10px;
+}

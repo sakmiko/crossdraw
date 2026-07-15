@@ -15,7 +15,7 @@ import { downloadBlob, downloadText } from '@/io/download'
 import { loadDraft, clearDraft } from '@/io/autosave'
 import { persistAutosave, redo, undo, useAppStore } from '@/state/store'
 import { CommandPalette } from '@/ui/common/CommandPalette'
-import { AnalysisCharts, BandCharts, CompareCharts, CrossSectionCharts, FlowCharts, SignalCharts, TimingCompareCharts } from '@/ui/charts/ChartPanels'
+import { AnalysisCharts, BandCharts, CompareCharts, CrossSectionCharts, FlowCharts, SchemeCompareBoard, SignalCharts, TimingCompareCharts } from '@/ui/charts/ChartPanels'
 import { ControlMatrixPanel, FlowDirectionPanel, PhaseFacePanel, SignalTimingPanel, TimeSpacePanel } from '@/ui/charts/ProfessionalPanels'
 import { InteractiveTimeSpace, buildTimeSpaceExportSvg } from '@/ui/charts/InteractiveTimeSpace'
 import { corridorSegments } from '@/domain/analysis/corridor'
@@ -24,6 +24,7 @@ import { compareTimingMethods, recommendTimingRow, type TimingCompareRow } from 
 import { vcHeatColor } from '@/ui/charts/svgCharts'
 import { analysisMarkdown, bandMarkdown, exportJsonFile, exportSvgFile } from '@/io/exportCharts'
 import { buildAnalysisReportSvg } from '@/io/analysisReportSvg'
+import { collectSchemeSnapshots, schemeTimingStripSvg, schemeMetricsCompareSvg } from '@/ui/charts/schemeCompareDiagrams'
 import {
   controlMatrixSvg,
   flowMovementDiagramSvg,
@@ -1235,6 +1236,7 @@ export default function App() {
                   los: r.los,
                 }))}
               />
+              <SchemeCompareBoard project={project} />
               <div className="table-wrap" style={{ marginTop: 10 }}>
                 <table className="table">
                   <thead>
@@ -1304,6 +1306,27 @@ export default function App() {
                   }}
                 >
                   导出比选 JSON
+                </button>
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={() => {
+                    const snaps = collectSchemeSnapshots(project, analyzeIntersection)
+                    exportSvgFile(
+                      `${project.name}-compare-timing.svg`,
+                      schemeTimingStripSvg(snaps, { max: 4, theme }),
+                    )
+                    exportSvgFile(
+                      `${project.name}-compare-delay.svg`,
+                      schemeMetricsCompareSvg(snaps, { metric: 'delay' }),
+                    )
+                    exportSvgFile(
+                      `${project.name}-compare-vc.svg`,
+                      schemeMetricsCompareSvg(snaps, { metric: 'vc' }),
+                    )
+                  }}
+                >
+                  导出并排配时图
                 </button>
               </div>
               <p className="hint">快捷键 6 · 从分析页迁出的独立比选工作区</p>
@@ -1495,7 +1518,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.9</span>
+        <span>Crossdraw v0.5.10</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

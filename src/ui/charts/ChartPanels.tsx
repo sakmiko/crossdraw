@@ -22,9 +22,16 @@ import type {
   SignalScheme,
   Approach,
   Phase,
+  Project,
 } from '@/domain/types'
 import { buildConflictMatrix } from '@/domain/signal/conflictMatrix'
 import { useAppStore } from '@/state/store'
+import {
+  collectSchemeSnapshots,
+  schemeMetricsCompareSvg,
+  schemeTimingStripSvg,
+} from './schemeCompareDiagrams'
+import { analyzeIntersection } from '@/domain/analysis'
 
 function useChartColors() {
   const theme = useAppStore((s) => s.theme)
@@ -405,3 +412,45 @@ export function TimingCompareCharts({
 }
 
 export type { Phase }
+
+
+export function SchemeCompareBoard({ project }: { project: Project }) {
+  const colors = useChartColors()
+  const snaps = useMemo(() => collectSchemeSnapshots(project, analyzeIntersection), [project])
+  const strip = useMemo(
+    () =>
+      themeSvg(
+        schemeTimingStripSvg(snaps, { max: 4, theme: colors.bg === '#ffffff' ? 'light' : 'dark' }),
+        colors,
+      ),
+    [snaps, colors],
+  )
+  const delaySvg = useMemo(
+    () => themeSvg(schemeMetricsCompareSvg(snaps, { metric: 'delay', width: 360, height: 160 }), colors),
+    [snaps, colors],
+  )
+  const vcSvg = useMemo(
+    () => themeSvg(schemeMetricsCompareSvg(snaps, { metric: 'vc', width: 360, height: 160 }), colors),
+    [snaps, colors],
+  )
+  if (!snaps.length) return <p className="hint">请先在方案树中创建渠化/流量/信号方案</p>
+  return (
+    <div className="chart-card scheme-compare-board">
+      <div className="chart-title">
+        <span>并排配时图</span>
+        <small>
+          {snaps.length} 个组合 · 显示前 4
+        </small>
+      </div>
+      <div className="scheme-strip" dangerouslySetInnerHTML={{ __html: strip }} />
+      <div className="chart-title" style={{ marginTop: 12 }}>
+        <span>指标对比</span>
+        <small>延误 · v/c</small>
+      </div>
+      <div className="dual-charts">
+        <div dangerouslySetInnerHTML={{ __html: delaySvg }} />
+        <div dangerouslySetInnerHTML={{ __html: vcSvg }} />
+      </div>
+    </div>
+  )
+}
