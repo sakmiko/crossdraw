@@ -760,18 +760,6 @@ export default function App() {
               </label>
               <div className="field-row">
                 <label>
-                  展宽段长 (m)
-                  <input
-                    type="number"
-                    value={selected.widen.entryWidenLengthM}
-                    onChange={(e) =>
-                      updateApproach(selected.id, {
-                        widen: { ...selected.widen, entryWidenLengthM: Number(e.target.value) },
-                      })
-                    }
-                  />
-                </label>
-                <label>
                   中分带宽 (m)
                   <input
                     type="number"
@@ -784,6 +772,135 @@ export default function App() {
                   />
                 </label>
               </div>
+              <details className="details-block" open>
+                <summary>进口/出口展宽</summary>
+                <div className="details-body">
+                  <div className="section-title" style={{ marginTop: 0 }}>进口展宽（停车线侧）</div>
+                  <div className="field-row">
+                    <label>
+                      展宽车道数
+                      <input
+                        type="number"
+                        min={0}
+                        max={4}
+                        value={selected.widen.entryWidenCount}
+                        onChange={(e) =>
+                          updateApproach(selected.id, {
+                            widen: { ...selected.widen, entryWidenCount: Number(e.target.value) },
+                          })
+                        }
+                      />
+                    </label>
+                    <label>
+                      单车道宽 (m)
+                      <input
+                        type="number"
+                        min={0}
+                        step={0.1}
+                        value={selected.widen.entryWidenWidthM}
+                        onChange={(e) =>
+                          updateApproach(selected.id, {
+                            widen: { ...selected.widen, entryWidenWidthM: Number(e.target.value) },
+                          })
+                        }
+                      />
+                    </label>
+                  </div>
+                  <div className="field-row">
+                    <label>
+                      展宽段长 (m)
+                      <input
+                        type="number"
+                        min={0}
+                        step={1}
+                        value={selected.widen.entryWidenLengthM}
+                        onChange={(e) =>
+                          updateApproach(selected.id, {
+                            widen: { ...selected.widen, entryWidenLengthM: Number(e.target.value) },
+                          })
+                        }
+                      />
+                    </label>
+                    <label>
+                      渐变段长 (m)
+                      <input
+                        type="number"
+                        min={0}
+                        step={1}
+                        value={selected.widen.entryTaperM}
+                        onChange={(e) =>
+                          updateApproach(selected.id, {
+                            widen: { ...selected.widen, entryTaperM: Number(e.target.value) },
+                          })
+                        }
+                      />
+                    </label>
+                  </div>
+                  <p className="hint">
+                    进口加宽 = 车道数×单宽 ={' '}
+                    {(selected.widen.entryWidenCount * selected.widen.entryWidenWidthM).toFixed(1)} m（几何全量，非系数缩小）
+                  </p>
+                  <div className="section-title">出口展宽</div>
+                  <div className="field-row">
+                    <label>
+                      出口展宽车道数
+                      <input
+                        type="number"
+                        min={0}
+                        max={4}
+                        value={selected.widen.exitWidenCount}
+                        onChange={(e) =>
+                          updateApproach(selected.id, {
+                            widen: { ...selected.widen, exitWidenCount: Number(e.target.value) },
+                          })
+                        }
+                      />
+                    </label>
+                    <label>
+                      出口单宽 (m)
+                      <input
+                        type="number"
+                        min={0}
+                        step={0.1}
+                        value={selected.widen.exitWidenWidthM}
+                        onChange={(e) =>
+                          updateApproach(selected.id, {
+                            widen: { ...selected.widen, exitWidenWidthM: Number(e.target.value) },
+                          })
+                        }
+                      />
+                    </label>
+                  </div>
+                  <div className="field-row">
+                    <label>
+                      出口段长 (m)
+                      <input
+                        type="number"
+                        min={0}
+                        value={selected.widen.exitWidenLengthM}
+                        onChange={(e) =>
+                          updateApproach(selected.id, {
+                            widen: { ...selected.widen, exitWidenLengthM: Number(e.target.value) },
+                          })
+                        }
+                      />
+                    </label>
+                    <label>
+                      出口渐变 (m)
+                      <input
+                        type="number"
+                        min={0}
+                        value={selected.widen.exitTaperM}
+                        onChange={(e) =>
+                          updateApproach(selected.id, {
+                            widen: { ...selected.widen, exitTaperM: Number(e.target.value) },
+                          })
+                        }
+                      />
+                    </label>
+                  </div>
+                </div>
+              </details>
               <div className="field-row">
                 <label>
                   人行道宽
@@ -2064,7 +2181,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.25</span>
+        <span>Crossdraw v0.5.26</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

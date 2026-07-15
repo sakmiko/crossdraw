@@ -2,6 +2,7 @@ import { degToRad, round } from '@/shared/math'
 import type { Approach, ChannelizationScheme, FlowScheme, Mesh, Movement } from '../types'
 import { buildFlowMesh } from '../flow/convert'
 import { emptyMesh, pushLabel, pushLine, pushPoly, recomputeBBox } from './mesh'
+import { buildWidenProfile, entryLateralExtraAt, exitLateralExtraAt, widenAnnotation } from './widen'
 
 export const THEME = {
   asphalt: '#374151',
@@ -415,24 +416,35 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
   const med = ap.median.widthM
   const half = totalWidth(ap) / 2
   const start = core
-  const taper = Math.max(15, ap.widen.entryTaperM)
-  const widenLen = Math.max(20, ap.widen.entryWidenLengthM)
   const end = start + len
-  const widenExtra =
-    ap.widen.entryWidenCount > 0 ? Math.max(0, ap.widen.entryWidenCount * ap.widen.entryWidenWidthM - 0) * 0.35 : 0
+  const profile = buildWidenProfile(ap, len)
+  // entry side is -px (left when looking outbound from center); exit side +px
 
-  // main road body with optional widen near stop line
-  const outerL = (s: number, extra = 0): Vec => add(mul(ux, s), mul(px, -half - extra))
-  const outerR = (s: number, extra = 0): Vec => add(mul(ux, s), mul(px, half + extra))
+  // sample stations along approach for accurate bay + taper polyline
+  const stations: number[] = [0]
+  for (const s of [
+    profile.stations.entryFullEnd,
+    profile.stations.entryTaperEnd,
+    profile.stations.exitFullStart,
+    profile.stations.exitTaperStart,
+    len,
+  ]) {
+    if (s > 0 && s < len) stations.push(s)
+  }
+  stations.push(len)
+  const uniq = Array.from(new Set(stations.map((x) => Math.round(x * 100) / 100))).sort((a, b) => a - b)
 
-  const body: Vec[] = [
-    outerL(start, widenExtra),
-    outerL(start + taper, 0),
-    outerL(end, 0),
-    outerR(end, 0),
-    outerR(start + taper, 0),
-    outerR(start, widenExtra * 0.25),
-  ]
+  const leftPts: Vec[] = []
+  const rightPts: Vec[] = []
+  for (const s of uniq) {
+    const eExtra = entryLateralExtraAt(profile, s)
+    const xExtra = exitLateralExtraAt(profile, s, len)
+    // left = entry curb (more negative with entry widen)
+    leftPts.push(add(mul(ux, start + s), mul(px, -half - eExtra)))
+    // right = exit curb
+    rightPts.push(add(mul(ux, start + s), mul(px, half + xExtra)))
+  }
+  const body: Vec[] = [...leftPts, ...rightPts.slice().reverse()]
   pushPoly(mesh, {
     layer: 'ROAD',
     points: body,
@@ -441,6 +453,23 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
     strokeWidth: 0.3,
     meta: { approachId: ap.id },
   })
+  // edge highlight for widen bay
+  if (profile.entryExtraM > 0) {
+    const bayEdge: Vec[] = []
+    for (const s of uniq) {
+      if (s > profile.stations.entryTaperEnd + 0.5) break
+      bayEdge.push(add(mul(ux, start + s), mul(px, -half - entryLateralExtraAt(profile, s))))
+    }
+    if (bayEdge.length >= 2) {
+      pushLine(mesh, {
+        layer: 'MARKING',
+        points: bayEdge,
+        stroke: THEME.accent,
+        strokeWidth: 0.35,
+        alpha: 0.85,
+      })
+    }
+  }
 
   // per-lane coloring for entry lanes
   let off = -half
@@ -704,15 +733,39 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
     off += ln.widthM
   }
 
-  // widen dimension annotation
-  if (widenExtra > 0) {
+  // widen dimension annotation (同源 WidenParams)
+  const wAnno = widenAnnotation(ap)
+  if (wAnno) {
+    const sLab = Math.min(len * 0.35, Math.max(8, profile.stations.entryFullEnd * 0.5 + 4))
     pushLabel(mesh, {
-      text: `展宽 ${ap.widen.entryWidenLengthM}m / 渐变 ${ap.widen.entryTaperM}m`,
-      at: add(mul(ux, start + widenLen * 0.35), mul(px, -half - 4)),
-      color: '#334155',
-      size: 2.4,
+      text: wAnno,
+      at: add(mul(ux, start + sLab), mul(px, -half - profile.entryExtraM - 3.5)),
+      color: '#0f172a',
+      size: 2.2,
       align: 'center',
     })
+    // station ticks: bay end / taper end
+    for (const [s, lab] of [
+      [profile.stations.entryFullEnd, '段尽'],
+      [profile.stations.entryTaperEnd, '渐尽'],
+    ] as const) {
+      if (s <= 0 || s >= len) continue
+      const p0 = add(mul(ux, start + s), mul(px, -half - profile.entryExtraM - 1))
+      const p1 = add(mul(ux, start + s), mul(px, -half + 1))
+      pushLine(mesh, {
+        layer: 'ANNO',
+        points: [p0, p1],
+        stroke: THEME.accent,
+        strokeWidth: 0.25,
+      })
+      pushLabel(mesh, {
+        text: lab,
+        at: add(p0, mul(px, -2)),
+        color: THEME.accent,
+        size: 1.7,
+        align: 'center',
+      })
+    }
   }
 
   // total width dimension
