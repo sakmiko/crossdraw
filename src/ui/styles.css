@@ -1381,3 +1381,19 @@ html[data-theme='light'] .mode-hierarchy {
 html[data-theme='light'] .print-stage {
   background: #cbd5e1;
 }
+
+
+/* === v0.5.27 multi band corridor === */
+.band-corridor-bar {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.band-corridor-bar label {
+  font-size: 11.5px;
+}

@@ -138,6 +138,18 @@ export function createCrossTemplate(name = '标准十字交叉口'): Project {
     flowSchemes: [defaultFlow(approaches)],
   }
   const now = new Date().toISOString()
+  const band = {
+    id: newId(),
+    name: '主干路绿波走廊',
+    speedKmh: 40,
+    method: 'classic' as const,
+    nodes: [
+      { id: newId(), name: '路口A', distanceM: 0, greenRatio: 0.45, cycleSec: 90, offsetSec: 0 },
+      { id: newId(), name: '路口B', distanceM: 480, greenRatio: 0.5, cycleSec: 90, offsetSec: 0 },
+      { id: newId(), name: '路口C', distanceM: 980, greenRatio: 0.42, cycleSec: 90, offsetSec: 0 },
+      { id: newId(), name: '路口D', distanceM: 1500, greenRatio: 0.48, cycleSec: 90, offsetSec: 0 },
+    ],
+  }
   return {
     id: newId(),
     name,
@@ -163,18 +175,9 @@ export function createCrossTemplate(name = '标准十字交叉口'): Project {
         opacity: 0.55,
       },
     },
-    bandCorridor: {
-      id: newId(),
-      name: '主干路绿波走廊',
-      speedKmh: 40,
-      method: 'classic',
-      nodes: [
-        { id: newId(), name: '路口A', distanceM: 0, greenRatio: 0.45, cycleSec: 90, offsetSec: 0 },
-        { id: newId(), name: '路口B', distanceM: 480, greenRatio: 0.5, cycleSec: 90, offsetSec: 0 },
-        { id: newId(), name: '路口C', distanceM: 980, greenRatio: 0.42, cycleSec: 90, offsetSec: 0 },
-        { id: newId(), name: '路口D', distanceM: 1500, greenRatio: 0.48, cycleSec: 90, offsetSec: 0 },
-      ],
-    },
+    bandCorridors: [band],
+    activeBandId: band.id,
+    bandCorridor: band,
   }
 }
 
@@ -203,6 +206,8 @@ export function createTTemplate(name = 'T型交叉口'): Project {
     }
   }
   p.bandCorridor.nodes = p.bandCorridor.nodes.slice(0, 2)
+  p.bandCorridors = [p.bandCorridor]
+  p.activeBandId = p.bandCorridor.id
   return p
 }
 

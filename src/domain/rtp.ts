@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import type { Project, ProjectFile } from './types'
+import { normalizeBandCorridors } from './band/corridors'
 import { normalizeNewlines } from '@/shared/math'
 
 const turnSchema = z.object({ U: z.number(), L: z.number(), T: z.number(), R: z.number() })
@@ -186,6 +187,28 @@ const projectSchema = z.object({
       ),
     })
     .optional(),
+  bandCorridors: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        speedKmh: z.number(),
+        method: z.enum(['classic', 'optimized-scan', 'one-way', 'two-way-equal', 'graphical']),
+        nodes: z.array(
+          z.object({
+            id: z.string(),
+            name: z.string(),
+            distanceM: z.number(),
+            greenRatio: z.number(),
+            cycleSec: z.number(),
+            lockedOffset: z.boolean().optional(),
+            offsetSec: z.number(),
+          }),
+        ),
+      }),
+    )
+    .optional(),
+  activeBandId: z.string().optional(),
 })
 
 export const projectFileSchema = z.object({
@@ -272,6 +295,7 @@ export function parseRtp(text: string): ProjectFile {
     file.project.bandCorridor = defaultBand()
   }
   normalizeProjectApproaches(file.project)
+  normalizeBandCorridors(file.project as Project)
   return file
 }
 

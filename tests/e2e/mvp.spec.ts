@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
-test.describe('Crossdraw v0.5.26', () => {
-  test('widen panel params', async ({ page }) => {
+test.describe('Crossdraw v0.5.27', () => {
+  test('multi corridor switcher', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto('/')
     await page.getByRole('button', { name: '十字', exact: true }).click()
@@ -9,25 +9,15 @@ test.describe('Crossdraw v0.5.26', () => {
     await page.waitForTimeout(400)
 
     const tablist = page.getByRole('tablist', { name: '编辑模式' })
-    await tablist.getByRole('tab', { name: '渠化' }).click()
-    await page.locator('.tree-approach').first().click()
+    await tablist.getByRole('tab', { name: '绿波' }).click()
+    await expect(page.getByText('当前走廊').first()).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('button', { name: '+ 新建走廊' })).toBeVisible()
+    await page.getByRole('button', { name: '+ 新建走廊' }).click()
     await page.waitForTimeout(200)
-
-    const details = page.locator('details.details-block').filter({ hasText: '进口/出口展宽' }).first()
-    await expect(details).toBeVisible({ timeout: 10000 })
-    await details.evaluate((el: HTMLDetailsElement) => {
-      el.open = true
-    })
-    await details.locator('.details-body').evaluate((el) => el.scrollIntoView({ block: 'center' }))
-
-    await expect(details.getByText('展宽车道数', { exact: true })).toBeVisible({ timeout: 5000 })
-    await expect(details.getByText('渐变段长 (m)', { exact: true })).toBeVisible()
-    await expect(details.getByText(/进口加宽/)).toBeVisible()
-
-    const count = details.locator('label').filter({ hasText: /^展宽车道数$/ }).locator('input')
-    await count.fill('2')
-    await page.waitForTimeout(250)
-    await expect(details.getByText(/7\.0/)).toBeVisible()
-    await page.screenshot({ path: 'docs/screenshots/01-channel.png', fullPage: true })
+    await expect(page.getByText(/条走廊/).first()).toBeVisible()
+    // select should have 2 options
+    const sel = page.locator('.band-corridor-bar select').first()
+    await expect(sel.locator('option')).toHaveCount(2)
+    await page.screenshot({ path: 'docs/screenshots/05-band.png', fullPage: true })
   })
 })

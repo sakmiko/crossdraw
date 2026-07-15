@@ -14,6 +14,7 @@ import type {
 } from '@/domain/types'
 import { createCrossTemplate, createTemplateByType } from '@/domain/templates/cross'
 import { applyOffsetsToCorridor, optimizeCorridor, setSegmentLength } from '@/domain/analysis/corridor'
+import { cloneBandCorridor, defaultBandCorridor, normalizeBandCorridors } from '@/domain/band/corridors'
 import { wrapProject, serializeRtp } from '@/domain/rtp'
 import { saveDraft } from '@/io/autosave'
 
@@ -72,6 +73,11 @@ export type AppState = {
   optimizeBand: () => void
   setBandSegmentLength: (toNodeId: string, lengthM: number) => void
   updateBasemap: (patch: Partial<NonNullable<Project["settings"]["basemap"]>>) => void
+  setActiveBand: (id: string) => void
+  addBandCorridor: () => void
+  duplicateBandCorridor: () => void
+  removeBandCorridor: (id: string) => void
+  renameBandCorridor: (id: string, name: string) => void
 }
 
 function activeChannel(p: Project) {
@@ -386,11 +392,16 @@ export const useAppStore = create<AppState>()(
         }),
       updateBand: (patch) =>
         set((s) => {
+          normalizeBandCorridors(s.project)
           Object.assign(s.project.bandCorridor, patch)
+          // keep list entry same reference as bandCorridor
+          const i = s.project.bandCorridors.findIndex((c) => c.id === s.project.activeBandId)
+          if (i >= 0) s.project.bandCorridors[i] = s.project.bandCorridor
           s.dirty = true
         }),
       updateBandNode: (nodeId, patch) =>
         set((s) => {
+          normalizeBandCorridors(s.project)
           const n = s.project.bandCorridor.nodes.find((x) => x.id === nodeId)
           if (!n) return
           Object.assign(n, patch)
@@ -398,6 +409,7 @@ export const useAppStore = create<AppState>()(
         }),
       addBandNode: () =>
         set((s) => {
+          normalizeBandCorridors(s.project)
           const nodes = s.project.bandCorridor.nodes
           const last = nodes[nodes.length - 1]
           nodes.push({
@@ -412,19 +424,73 @@ export const useAppStore = create<AppState>()(
         }),
       removeBandNode: (nodeId) =>
         set((s) => {
+          normalizeBandCorridors(s.project)
           if (s.project.bandCorridor.nodes.length <= 2) return
           s.project.bandCorridor.nodes = s.project.bandCorridor.nodes.filter((n) => n.id !== nodeId)
           s.dirty = true
         }),
       optimizeBand: () =>
         set((s) => {
+          normalizeBandCorridors(s.project)
           const result = optimizeCorridor(s.project.bandCorridor)
           s.project.bandCorridor = applyOffsetsToCorridor(s.project.bandCorridor, result)
+          const i = s.project.bandCorridors.findIndex((c) => c.id === s.project.activeBandId)
+          if (i >= 0) s.project.bandCorridors[i] = s.project.bandCorridor
           s.dirty = true
         }),
       setBandSegmentLength: (toNodeId, lengthM) =>
         set((s) => {
+          normalizeBandCorridors(s.project)
           s.project.bandCorridor = setSegmentLength(s.project.bandCorridor, toNodeId, lengthM)
+          const i = s.project.bandCorridors.findIndex((c) => c.id === s.project.activeBandId)
+          if (i >= 0) s.project.bandCorridors[i] = s.project.bandCorridor
+          s.dirty = true
+        }),
+      setActiveBand: (id) =>
+        set((s) => {
+          normalizeBandCorridors(s.project)
+          if (!s.project.bandCorridors.some((c) => c.id === id)) return
+          s.project.activeBandId = id
+          s.project.bandCorridor = s.project.bandCorridors.find((c) => c.id === id)!
+          s.dirty = true
+        }),
+      addBandCorridor: () =>
+        set((s) => {
+          normalizeBandCorridors(s.project)
+          const n = s.project.bandCorridors.length + 1
+          const c = defaultBandCorridor(`走廊 ${n}`)
+          s.project.bandCorridors.push(c)
+          s.project.activeBandId = c.id
+          s.project.bandCorridor = c
+          s.dirty = true
+        }),
+      duplicateBandCorridor: () =>
+        set((s) => {
+          normalizeBandCorridors(s.project)
+          const copy = cloneBandCorridor(s.project.bandCorridor)
+          s.project.bandCorridors.push(copy)
+          s.project.activeBandId = copy.id
+          s.project.bandCorridor = copy
+          s.dirty = true
+        }),
+      removeBandCorridor: (id) =>
+        set((s) => {
+          normalizeBandCorridors(s.project)
+          if (s.project.bandCorridors.length <= 1) return
+          s.project.bandCorridors = s.project.bandCorridors.filter((c) => c.id !== id)
+          if (s.project.activeBandId === id) {
+            s.project.activeBandId = s.project.bandCorridors[0].id
+            s.project.bandCorridor = s.project.bandCorridors[0]
+          }
+          s.dirty = true
+        }),
+      renameBandCorridor: (id, name) =>
+        set((s) => {
+          normalizeBandCorridors(s.project)
+          const c = s.project.bandCorridors.find((x) => x.id === id)
+          if (!c) return
+          c.name = name
+          if (s.project.bandCorridor.id === id) s.project.bandCorridor.name = name
           s.dirty = true
         }),
       updateBasemap: (patch) =>

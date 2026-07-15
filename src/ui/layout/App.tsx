@@ -86,6 +86,11 @@ export default function App() {
   const removeBandNode = useAppStore((s) => s.removeBandNode)
   const optimizeBand = useAppStore((s) => s.optimizeBand)
   const setBandSegmentLength = useAppStore((s) => s.setBandSegmentLength)
+  const setActiveBand = useAppStore((s) => s.setActiveBand)
+  const addBandCorridor = useAppStore((s) => s.addBandCorridor)
+  const duplicateBandCorridor = useAppStore((s) => s.duplicateBandCorridor)
+  const removeBandCorridor = useAppStore((s) => s.removeBandCorridor)
+  const renameBandCorridor = useAppStore((s) => s.renameBandCorridor)
   const updateBasemap = useAppStore((s) => s.updateBasemap)
   const setActiveChannel = useAppStore((s) => s.setActiveChannel)
   const setActiveFlow = useAppStore((s) => s.setActiveFlow)
@@ -1960,7 +1965,50 @@ export default function App() {
 
           {mode === 'band' && (
             <div className="card" style={{ marginTop: 12 }}>
-              <h2>干道绿波 · {project.bandCorridor.name}</h2>
+              <div className="panel-header">
+                <h2 style={{ margin: 0 }}>干道绿波 · {project.bandCorridor.name}</h2>
+                <span className="hint">{(project.bandCorridors ?? [project.bandCorridor]).length} 条走廊</span>
+              </div>
+              <div className="band-corridor-bar">
+                <label>
+                  当前走廊
+                  <select
+                    value={project.activeBandId ?? project.bandCorridor.id}
+                    onChange={(e) => setActiveBand(e.target.value)}
+                  >
+                    {(project.bandCorridors ?? [project.bandCorridor]).map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} · {c.nodes.length} 节点 · {c.speedKmh}km/h
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div className="toolbar" style={{ marginTop: 6, flexWrap: 'wrap', gap: 6 }}>
+                  <button type="button" onClick={() => addBandCorridor()}>
+                    + 新建走廊
+                  </button>
+                  <button type="button" onClick={() => duplicateBandCorridor()}>
+                    复制走廊
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost"
+                    disabled={(project.bandCorridors ?? []).length <= 1}
+                    onClick={() => removeBandCorridor(project.activeBandId ?? project.bandCorridor.id)}
+                  >
+                    删除走廊
+                  </button>
+                </div>
+                <label>
+                  走廊名称
+                  <input
+                    value={project.bandCorridor.name}
+                    onChange={(e) =>
+                      renameBandCorridor(project.bandCorridor.id, e.target.value)
+                    }
+                  />
+                </label>
+              </div>
               <div className="field-row">
                 <label>
                   走廊速度 km/h
@@ -2181,7 +2229,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.26</span>
+        <span>Crossdraw v0.5.27</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

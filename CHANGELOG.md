@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 0.5.27 — 2026-07-16
+
+- 绿波多走廊：bandCorridors[] + activeBandId
+- 新建/复制/删除/切换走廊；名称编辑
+- 旧 .rtp 自动归一为单走廊列表
+
+# CHANGELOG
+
 ## 0.5.26 — 2026-07-16
 
 - 展宽几何与 WidenParams 全量对齐（取消 0.35 缩水系数）

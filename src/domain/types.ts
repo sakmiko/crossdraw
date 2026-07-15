@@ -235,6 +235,13 @@ export interface Project {
       opacity?: number
     }
   }
+  /**
+   * Multi-corridor green-band (绿波) support.
+   * `bandCorridor` remains the active corridor (synced with bandCorridors[activeBandId]).
+   */
+  bandCorridors: BandCorridor[]
+  activeBandId: string
+  /** @deprecated use bandCorridors + activeBandId; kept as active mirror for compatibility */
   bandCorridor: BandCorridor
 }
 
