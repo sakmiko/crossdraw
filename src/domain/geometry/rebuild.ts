@@ -4,6 +4,13 @@ import { buildFlowMesh } from '../flow/convert'
 import { emptyMesh, pushLabel, pushLine, pushPoly, recomputeBBox } from './mesh'
 import { buildWidenProfile, entryLateralExtraAt, exitLateralExtraAt, widenAnnotation } from './widen'
 import { laneMovementLabel } from './laneGroups'
+import {
+  approachCode,
+  entryLaneStamp,
+  exitLaneStamp,
+  stopLineStationLabel,
+  stopLineStationShort,
+} from './annotations'
 
 export const THEME = {
   asphalt: '#374151',
@@ -573,6 +580,33 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
     stroke: THEME.marking,
     strokeWidth: 0.35,
   })
+  // stop-line chainage + tick outside entry curb
+  {
+    const tick0 = add(mul(ux, start), mul(px, -half - 0.8))
+    const tick1 = add(mul(ux, start), mul(px, -half - 2.4))
+    pushLine(mesh, {
+      layer: 'ANNO',
+      points: [tick0, tick1],
+      stroke: THEME.accent,
+      strokeWidth: 0.28,
+    })
+    pushLabel(mesh, {
+      text: stopLineStationLabel(start),
+      at: add(mul(ux, start + 0.2), mul(px, -half - 4.2)),
+      color: THEME.accent,
+      size: 2.0,
+      align: 'center',
+      meta: { kind: 'stop-station', approachId: ap.id, stationM: start },
+    })
+    pushLabel(mesh, {
+      text: `${approachCode(ap)} ${stopLineStationShort(start)}`,
+      at: add(mul(ux, start + 0.2), mul(px, half + 3.6)),
+      color: '#0f172a',
+      size: 1.9,
+      align: 'center',
+      meta: { kind: 'stop-code', approachId: ap.id },
+    })
+  }
 
   // crosswalk zebra (denser bars + outline)
   const cw = start - 3.8
@@ -717,22 +751,30 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
     })
   }
 
-  // movement arrows per entry lane (respect actual lane widths + variable)
+  // movement arrows + lane numbers (E1.. from median outward) per entry lane
   off = -half
-  for (const ln of ap.entryLanes) {
+  ap.entryLanes.forEach((ln, li) => {
     const mid = off + ln.widthM / 2
     const base = add(mul(ux, start + 12), mul(px, mid))
     drawMovementArrow(mesh, base, ux, px, ln.movements, !!ln.variable)
-    // width label near stop line
+    // lane number stamp near stop line (median→curb = E1..)
+    pushLabel(mesh, {
+      text: entryLaneStamp(li, ln.movements, !!ln.variable),
+      at: add(mul(ux, start + 4.2), mul(px, mid)),
+      color: ln.variable ? THEME.yellow : '#f8fafc',
+      size: 2.0,
+      align: 'center',
+      meta: { kind: 'lane-no', approachId: ap.id, laneId: ln.id, index: li + 1 },
+    })
+    // width under number
     pushLabel(mesh, {
       text: `${ln.widthM.toFixed(2)}m`,
-      at: add(mul(ux, start + 3.5), mul(px, mid)),
-      color: '#e2e8f0',
-      size: 1.8,
+      at: add(mul(ux, start + 2.2), mul(px, mid)),
+      color: '#cbd5e1',
+      size: 1.55,
       align: 'center',
     })
     if (ln.variable) {
-      // dashed side ticks mark variable lane
       pushLine(mesh, {
         layer: 'MARKING',
         points: [
@@ -743,15 +785,24 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
         strokeWidth: 0.35,
         dashed: true,
       })
-      pushLabel(mesh, {
-        text: '可变',
-        at: add(mul(ux, start + 7), mul(px, mid)),
-        color: THEME.yellow,
-        size: 1.8,
-        align: 'center',
-      })
     }
     off += ln.widthM
+  })
+  // exit lane numbers X1.. from median
+  {
+    let xoff = medR
+    ap.exitLanes.forEach((ln, xi) => {
+      const mid = xoff + ln.widthM / 2
+      pushLabel(mesh, {
+        text: exitLaneStamp(xi),
+        at: add(mul(ux, start + 5.5), mul(px, mid)),
+        color: '#94a3b8',
+        size: 1.75,
+        align: 'center',
+        meta: { kind: 'exit-lane-no', approachId: ap.id, index: xi + 1 },
+      })
+      xoff += ln.widthM
+    })
   }
 
   // widen dimension annotation (同源 WidenParams)
@@ -818,15 +869,15 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
   })
 
   pushLabel(mesh, {
-    text: ap.name,
+    text: `${approachCode(ap)} ${ap.name}`,
     at: add(mul(ux, end - 6), [0, 0]),
     color: THEME.text,
     size: 4.0,
     align: 'center',
-    meta: { approachId: ap.id },
+    meta: { approachId: ap.id, code: approachCode(ap) },
   })
   pushLabel(mesh, {
-    text: `${ap.bearingDeg.toFixed(0)}° · ${ap.entryLanes.length}进/${ap.exitLanes.length}出`,
+    text: `${ap.bearingDeg.toFixed(0)}° · ${ap.entryLanes.length}进/${ap.exitLanes.length}出 · ${stopLineStationShort(start)}`,
     at: add(mul(ux, end - 2), [0, 0]),
     color: '#475569',
     size: 2.2,
@@ -929,6 +980,8 @@ function drawLegend(mesh: Mesh, scheme: ChannelizationScheme) {
   const y0 = 78
   const rows: { color: string; label: string; stroke?: string; line?: boolean }[] = [
     { color: THEME.laneFill, label: '机动车道', stroke: THEME.asphaltEdge },
+    { color: THEME.accent, label: '停车线桩号', stroke: THEME.accent },
+    { color: '#f8fafc', label: '车道编号 E1…', stroke: THEME.marking },
     { color: THEME.island, label: '导流岛/中分带', stroke: THEME.islandEdge },
     { color: THEME.sidewalk, label: '人行道', stroke: '#94a3b8' },
     { color: THEME.bike, label: '非机动车道', stroke: '#64748b' },
