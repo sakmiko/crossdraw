@@ -313,7 +313,7 @@ export function phaseFaceDiagramSvg(
     const x = cx + Math.cos(rad) * R * 0.7
     const y = cy + Math.sin(rad) * R * 0.7
     body += `<circle cx="${x}" cy="${y}" r="12" fill="${on ? '#14532d' : '#1e293b'}" stroke="${on ? '#22c55e' : '#334155'}"/>`
-    body += `<text x="${x}" y="${y + 3}" text-anchor="middle" fill="${on ? '#86efac' : '#64748b'}" font-size="8" font-weight="700">${movs.join('') || '·'}</text>`
+    body += `<text x="${x}" y="${y + 3}" text-anchor="middle" fill="${on ? '#86efac' : '#64748b'}" font-size="8" font-weight="700">${movs.join('·') || '·'}</text>`
     body += `<text x="${cx + Math.cos(rad) * R * 1.35}" y="${cy + Math.sin(rad) * R * 1.35}" text-anchor="middle" fill="${CHART_COLORS.muted}" font-size="8">${escapeXml(ap.name.replace('进口', ''))}</text>`
   }
   return svgShell(size, size, body)

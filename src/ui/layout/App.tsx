@@ -19,6 +19,7 @@ import { CommandPalette } from '@/ui/common/CommandPalette'
 import { ExportCenter } from '@/ui/common/ExportCenter'
 import { checkAnalysisIntegrity } from '@/domain/analysis/integrity'
 import { buildSignalTimingAlignment } from '@/domain/signal/timingAlign'
+import { releaseMatrixAlignsWithPhases } from '@/domain/signal/releaseAlign'
 import { AnalysisCharts, BandCharts, CompareCharts, CrossSectionCharts, FlowCharts, SchemeCompareBoard, SignalCharts, TimingCompareCharts } from '@/ui/charts/ChartPanels'
 import { ControlMatrixPanel, FlowDirectionPanel, PhaseFacePanel, SignalTimingPanel, TimeSpacePanel } from '@/ui/charts/ProfessionalPanels'
 import { InteractiveTimeSpace, buildTimeSpaceExportSvg } from '@/ui/charts/InteractiveTimeSpace'
@@ -957,6 +958,16 @@ export default function App() {
                   </div>
                 ))}
               </div>
+              {channel && (
+                <p className="hint" style={{ marginTop: 8 }}>
+                  {(() => {
+                    const r = releaseMatrixAlignsWithPhases(signal, channel.approaches)
+                    return r.ok
+                      ? '放行矩阵与各相位 L/T/R 按钮已逐格对齐'
+                      : `放行对齐异常：${r.mismatches.slice(0, 2).join('；')}`
+                  })()}
+                </p>
+              )}
               <div className="toolbar" style={{ marginTop: 8 }}>
                 <button type="button" onClick={() => addPhase()}>添加相位</button>
                 <button type="button" onClick={() => addOverlapPhase()}>
@@ -1684,7 +1695,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.16</span>
+        <span>Crossdraw v0.5.17</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

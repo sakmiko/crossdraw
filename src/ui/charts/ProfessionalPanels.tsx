@@ -8,6 +8,11 @@ import {
 } from './professionalDiagrams'
 import type { Approach, BandCorridor, FlowScheme, SignalScheme } from '@/domain/types'
 import { buildSignalTimingAlignment, signalChartsAlignWithTable } from '@/domain/signal/timingAlign'
+import {
+  buildReleaseMatrix,
+  controlMatrixChartInput,
+  releaseMatrixAlignsWithPhases,
+} from '@/domain/signal/releaseAlign'
 import { useAppStore } from '@/state/store'
 
 function useChartColors() {
@@ -89,25 +94,49 @@ export function ControlMatrixPanel({
   approaches: Approach[]
 }) {
   const colors = useChartColors()
-  const svg = useMemo(
-    () =>
-      themeSvg(
-        controlMatrixSvg(
-          approaches.map((a) => a.name.replace('进口', '')),
-          signal.phases.map((p) => ({ name: p.name, releases: p.releases })),
-          approaches.map((a) => a.id),
-        ),
-        colors,
-      ),
-    [signal, approaches, colors],
-  )
+  const matrix = useMemo(() => buildReleaseMatrix(signal, approaches), [signal, approaches])
+  const check = useMemo(() => releaseMatrixAlignsWithPhases(signal, approaches), [signal, approaches])
+  const svg = useMemo(() => {
+    const input = controlMatrixChartInput(signal, approaches)
+    return themeSvg(
+      controlMatrixSvg(input.approaches, input.phases, input.approachIds),
+      colors,
+    )
+  }, [signal, approaches, colors])
   return (
     <div className="chart-card">
       <div className="chart-title">
         <span>管控 / 放行图</span>
-        <small>相位×进口</small>
+        <small>
+          {matrix.activeCount}/{matrix.totalCells} 放行格 ·{' '}
+          {check.ok ? '与 L/T/R 按钮对齐✓' : `错位 ${check.mismatches.length}`}
+        </small>
       </div>
       <div dangerouslySetInnerHTML={{ __html: svg }} />
+      <div className="table-wrap" style={{ marginTop: 8, maxHeight: 180 }}>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>进口\相位</th>
+              {matrix.phaseNames.map((n) => (
+                <th key={n}>{n}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {matrix.cells.map((row, i) => (
+              <tr key={matrix.approachIds[i]}>
+                <td>{matrix.approachNames[i]}</td>
+                {row.map((cell) => (
+                  <td key={cell.phaseId} style={{ fontWeight: cell.active ? 700 : 400 }}>
+                    {cell.label}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
