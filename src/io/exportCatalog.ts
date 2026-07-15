@@ -1,0 +1,233 @@
+/**
+ * Unified export center catalog — hierarchical checklist of deliverables.
+ * Each item knows when it is available and how to run.
+ */
+export type ExportCategory = 'drawing' | 'signal' | 'analysis' | 'band' | 'data' | 'package'
+
+export type ExportItemId =
+  | 'mesh-png'
+  | 'mesh-svg'
+  | 'mesh-dxf'
+  | 'project-rtp'
+  | 'timing-svg'
+  | 'control-svg'
+  | 'flow-dir-svg'
+  | 'timespace-simple-svg'
+  | 'analysis-board'
+  | 'analysis-csv'
+  | 'analysis-xls'
+  | 'analysis-json'
+  | 'analysis-md'
+  | 'vissim-csv'
+  | 'compare-csv'
+  | 'compare-json'
+  | 'compare-timing-svg'
+  | 'xsection-svg'
+  | 'band-pack'
+  | 'pro-pack'
+
+export type ExportItem = {
+  id: ExportItemId
+  category: ExportCategory
+  title: string
+  format: string
+  description: string
+  /** modes where this export is most relevant */
+  modes?: string[]
+  requires: Array<'channel' | 'flow' | 'signal' | 'analysis' | 'selected' | 'band'>
+}
+
+export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'project-rtp',
+    category: 'data',
+    title: '工程文件',
+    format: '.rtp',
+    description: '完整项目 JSON，可再打开编辑',
+    requires: [],
+  },
+  {
+    id: 'mesh-png',
+    category: 'drawing',
+    title: '渠化平面图 PNG',
+    format: 'PNG',
+    description: '画布栅格导出，适合汇报插图',
+    modes: ['channel', 'flow'],
+    requires: ['channel'],
+  },
+  {
+    id: 'mesh-svg',
+    category: 'drawing',
+    title: '渠化平面图 SVG',
+    format: 'SVG',
+    description: '矢量平面图，可二次编辑',
+    modes: ['channel'],
+    requires: ['channel'],
+  },
+  {
+    id: 'mesh-dxf',
+    category: 'drawing',
+    title: '渠化平面图 DXF',
+    format: 'DXF',
+    description: 'CAD 中间交换',
+    modes: ['channel'],
+    requires: ['channel'],
+  },
+  {
+    id: 'xsection-svg',
+    category: 'drawing',
+    title: '标准横断面图',
+    format: 'SVG',
+    description: '当前进口标准断面 + 尺寸链',
+    modes: ['xsection'],
+    requires: ['channel', 'selected'],
+  },
+  {
+    id: 'timing-svg',
+    category: 'signal',
+    title: '信号配时图',
+    format: 'SVG',
+    description: '绿/黄/红相位条',
+    modes: ['signal'],
+    requires: ['signal'],
+  },
+  {
+    id: 'control-svg',
+    category: 'signal',
+    title: '放行管控图',
+    format: 'SVG',
+    description: '相位 × 进口放行矩阵',
+    modes: ['signal'],
+    requires: ['channel', 'signal'],
+  },
+  {
+    id: 'flow-dir-svg',
+    category: 'signal',
+    title: '流量流向图',
+    format: 'SVG',
+    description: '线宽∝流量的 L/T/R 箭头图',
+    modes: ['flow', 'analysis'],
+    requires: ['channel', 'flow'],
+  },
+  {
+    id: 'pro-pack',
+    category: 'package',
+    title: '专业图件包',
+    format: '多 SVG',
+    description: '配时 + 管控 + 流向 + 时距（若有走廊）',
+    modes: ['analysis', 'signal'],
+    requires: ['channel', 'flow', 'signal'],
+  },
+  {
+    id: 'analysis-board',
+    category: 'analysis',
+    title: '分析报告拼图',
+    format: 'SVG+MD',
+    description: 'KPI / 流向 / 雷达 / 延误 / 相位灯态 / 表',
+    modes: ['analysis'],
+    requires: ['channel', 'flow', 'signal', 'analysis'],
+  },
+  {
+    id: 'analysis-csv',
+    category: 'analysis',
+    title: '评价明细 CSV',
+    format: 'CSV',
+    description: '车道组 v/c 延误排队',
+    modes: ['analysis'],
+    requires: ['analysis'],
+  },
+  {
+    id: 'analysis-xls',
+    category: 'analysis',
+    title: '评价表 Excel(HTML)',
+    format: 'XLS',
+    description: '可用 Excel 打开的 HTML 表',
+    modes: ['analysis'],
+    requires: ['analysis'],
+  },
+  {
+    id: 'analysis-json',
+    category: 'data',
+    title: '分析结果 JSON',
+    format: 'JSON',
+    description: '结构化评价结果',
+    modes: ['analysis'],
+    requires: ['analysis'],
+  },
+  {
+    id: 'vissim-csv',
+    category: 'data',
+    title: 'Vissim 中间表',
+    format: 'CSV×4',
+    description: 'links / routes / volumes / signal',
+    modes: ['analysis'],
+    requires: ['channel', 'flow', 'signal'],
+  },
+  {
+    id: 'compare-csv',
+    category: 'analysis',
+    title: '方案比选 CSV',
+    format: 'CSV',
+    description: '渠化×流量×信号组合指标',
+    modes: ['compare', 'analysis'],
+    requires: ['channel'],
+  },
+  {
+    id: 'compare-json',
+    category: 'analysis',
+    title: '方案比选 JSON',
+    format: 'JSON',
+    description: '比选行数据',
+    modes: ['compare'],
+    requires: ['channel'],
+  },
+  {
+    id: 'compare-timing-svg',
+    category: 'package',
+    title: '并排配时图包',
+    format: 'SVG×3',
+    description: '并排配时 + 延误 + v/c',
+    modes: ['compare'],
+    requires: ['channel'],
+  },
+  {
+    id: 'band-pack',
+    category: 'band',
+    title: '绿波时距/简报',
+    format: 'SVG+JSON+MD',
+    description: '时距图、走廊数据、Markdown 简报',
+    modes: ['band'],
+    requires: ['band'],
+  },
+]
+
+export const CATEGORY_LABEL: Record<ExportCategory, string> = {
+  drawing: '图面出图',
+  signal: '信号与流量图',
+  analysis: '评价与比选',
+  band: '绿波走廊',
+  data: '数据交换',
+  package: '打包导出',
+}
+
+export function isExportAvailable(
+  item: ExportItem,
+  ctx: {
+    hasChannel: boolean
+    hasFlow: boolean
+    hasSignal: boolean
+    hasAnalysis: boolean
+    hasSelected: boolean
+    hasBand: boolean
+  },
+): boolean {
+  return item.requires.every((r) => {
+    if (r === 'channel') return ctx.hasChannel
+    if (r === 'flow') return ctx.hasFlow
+    if (r === 'signal') return ctx.hasSignal
+    if (r === 'analysis') return ctx.hasAnalysis
+    if (r === 'selected') return ctx.hasSelected
+    if (r === 'band') return ctx.hasBand
+    return true
+  })
+}

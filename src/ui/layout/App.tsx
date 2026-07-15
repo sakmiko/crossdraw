@@ -15,6 +15,7 @@ import { downloadBlob, downloadText } from '@/io/download'
 import { loadDraft, clearDraft } from '@/io/autosave'
 import { persistAutosave, redo, undo, useAppStore } from '@/state/store'
 import { CommandPalette } from '@/ui/common/CommandPalette'
+import { ExportCenter } from '@/ui/common/ExportCenter'
 import { AnalysisCharts, BandCharts, CompareCharts, CrossSectionCharts, FlowCharts, SchemeCompareBoard, SignalCharts, TimingCompareCharts } from '@/ui/charts/ChartPanels'
 import { ControlMatrixPanel, FlowDirectionPanel, PhaseFacePanel, SignalTimingPanel, TimeSpacePanel } from '@/ui/charts/ProfessionalPanels'
 import { InteractiveTimeSpace, buildTimeSpaceExportSvg } from '@/ui/charts/InteractiveTimeSpace'
@@ -102,6 +103,7 @@ export default function App() {
   const [fixedCycleSec, setFixedCycleSec] = useState(90)
   const [timingNotes, setTimingNotes] = useState<string[]>([])
   const [timingCompare, setTimingCompare] = useState<TimingCompareRow[]>([])
+  const [exportOpen, setExportOpen] = useState(false)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -378,6 +380,9 @@ export default function App() {
           <button type="button" onClick={() => undo()}>撤销</button>
           <button type="button" onClick={() => redo()}>重做</button>
           <div className="toolbar-secondary">
+            <button type="button" className="primary" onClick={() => setExportOpen(true)}>
+              导出中心
+            </button>
             <button type="button" onClick={exportPng}>PNG</button>
             <button type="button" onClick={exportSvg}>SVG</button>
             <button type="button" onClick={exportDxf}>DXF</button>
@@ -1554,7 +1559,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.11</span>
+        <span>Crossdraw v0.5.12</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1562,6 +1567,159 @@ export default function App() {
         <span style={{ marginLeft: 'auto' }}>sakmiko/crossdraw · GPLv3</span>
       </footer>
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+      <ExportCenter
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        currentMode={mode}
+        ctx={{
+          hasChannel: !!channel,
+          hasFlow: !!flow,
+          hasSignal: !!signal,
+          hasAnalysis: !!analysis,
+          hasSelected: !!selected,
+          hasBand: project.bandCorridor.nodes.length >= 2,
+        }}
+        handlers={{
+          'project-rtp': () => saveRtp(),
+          'mesh-png': () => exportPng(),
+          'mesh-svg': () => exportSvg(),
+          'mesh-dxf': () => exportDxf(),
+          'xsection-svg': () => {
+            if (!xsection || !selected) return
+            exportSvgFile(
+              `${project.name}-${selected.name}-xsection.svg`,
+              professionalCrossSectionSvg(xsection, selected, { theme }),
+            )
+          },
+          'timing-svg': () => {
+            if (!signal) return
+            exportSvgFile(
+              `${project.name}-timing.svg`,
+              signalTimingDiagramSvg(
+                signal.phases.map((p) => ({
+                  name: p.name,
+                  greenSec: p.greenSec,
+                  yellowSec: p.yellowSec,
+                  allRedSec: p.allRedSec,
+                  isOverlap: p.isOverlap,
+                })),
+                signal.cycleSec || 90,
+              ),
+            )
+          },
+          'control-svg': () => {
+            if (!channel || !signal) return
+            exportSvgFile(
+              `${project.name}-control.svg`,
+              controlMatrixSvg(
+                channel.approaches.map((x) => x.name),
+                signal.phases.map((p) => ({ name: p.name, releases: p.releases })),
+                channel.approaches.map((x) => x.id),
+              ),
+            )
+          },
+          'flow-dir-svg': () => {
+            if (!channel || !flow) return
+            exportSvgFile(
+              `${project.name}-flow-arrows.svg`,
+              flowMovementDiagramSvg(
+                channel.approaches.map((ap) => {
+                  const v = flow.volumes[ap.id] ?? { L: 0, T: 0, R: 0, U: 0 }
+                  return { name: ap.name, bearingDeg: ap.bearingDeg, L: v.L, T: v.T, R: v.R }
+                }),
+              ),
+            )
+          },
+          'pro-pack': () => exportProfessionalDiagrams(),
+          'analysis-board': () => {
+            if (!channel || !flow || !signal || !analysis) return
+            exportSvgFile(
+              `${project.name}-analysis-board.svg`,
+              buildAnalysisReportSvg({
+                projectName: project.name,
+                channelName: channel.name,
+                signalName: signal.name,
+                approaches: channel.approaches,
+                flow,
+                signal,
+                analysis,
+                theme,
+              }),
+            )
+            downloadText(
+              `${project.name}-report.md`,
+              analysisMarkdown(project.name, {
+                avgVc: analysis.avgVc,
+                avgDelay: analysis.avgDelay,
+                avgQueueM: analysis.avgQueueM,
+                losFinal: analysis.losFinal,
+                cycleSec: signal.cycleSec,
+                notes: ['导出中心 · 分析拼图'],
+              }),
+              'text/markdown',
+            )
+          },
+          'analysis-csv': () => {
+            if (!analysis) return
+            downloadText(`${project.name}-analysis.csv`, analysisToCsv(analysis), 'text/csv')
+          },
+          'analysis-xls': () => {
+            if (!analysis) return
+            downloadText(
+              `${project.name}-analysis.xls`,
+              analysisToExcelHtml(project.name, analysis),
+              'application/vnd.ms-excel',
+            )
+          },
+          'analysis-json': () => {
+            if (!analysis) return
+            exportJsonFile(`${project.name}-analysis.json`, analysis)
+          },
+          'vissim-csv': () => {
+            if (!channel || !flow || !signal) return
+            const b = exportVissimCsvBundle(channel.approaches, flow, signal)
+            downloadText(`${project.name}-vissim-links.csv`, b.links, 'text/csv')
+            downloadText(`${project.name}-vissim-routes.csv`, b.routes, 'text/csv')
+            downloadText(`${project.name}-vissim-volumes.csv`, b.volumes, 'text/csv')
+            downloadText(`${project.name}-vissim-signal.csv`, b.signal, 'text/csv')
+          },
+          'compare-csv': () => {
+            const rows = collectCompareRows(project, analyzeIntersection)
+            downloadText(`${project.name}-compare.csv`, compareSchemesCsv(rows), 'text/csv')
+          },
+          'compare-json': () => {
+            exportJsonFile(`${project.name}-compare.json`, collectCompareRows(project, analyzeIntersection))
+          },
+          'compare-timing-svg': () => {
+            const snaps = collectSchemeSnapshots(project, analyzeIntersection)
+            exportSvgFile(`${project.name}-compare-timing.svg`, schemeTimingStripSvg(snaps, { max: 4, theme }))
+            exportSvgFile(`${project.name}-compare-delay.svg`, schemeMetricsCompareSvg(snaps, { metric: 'delay' }))
+            exportSvgFile(`${project.name}-compare-vc.svg`, schemeMetricsCompareSvg(snaps, { metric: 'vc' }))
+          },
+          'band-pack': () => {
+            exportSvgFile(
+              `${project.name}-timespace.svg`,
+              buildTimeSpaceExportSvg(project.bandCorridor, band, theme),
+            )
+            exportJsonFile(`${project.name}-band.json`, { corridor: project.bandCorridor, result: band })
+            downloadText(
+              `${project.name}-band.md`,
+              bandMarkdown(project.name, project.bandCorridor.name, {
+                method: String(band.method),
+                speedKmh: project.bandCorridor.speedKmh,
+                halfCycleDistanceM: band.halfCycleDistanceM,
+                bandwidthRatio: band.bandwidthRatio,
+                bandwidthSec: band.bandwidthSec,
+                forwardSec: band.forwardBandwidthSec ?? band.bandwidthSec,
+                backwardSec: band.backwardBandwidthSec ?? 0,
+                standardSpeedKmh: band.standardSpeedKmh,
+                nodes: project.bandCorridor.nodes,
+              }),
+              'text/markdown',
+            )
+          },
+        }}
+      />
     </div>
   )
 }
