@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 0.5.42 — 2026-07-16
+
+- AnalysisWorkspace：评价分析面板从 App 拆出
+- App.tsx 再减约 130 行（~1210）
+
+# CHANGELOG
+
 ## 0.5.41 — 2026-07-16
 
 - BandWorkspace：绿波侧栏/节点表/时距图从 App 拆出
