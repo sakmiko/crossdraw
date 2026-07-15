@@ -3,11 +3,11 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 describe('maintainability v0.5.32', () => {
-  it('App.tsx is under 2400 lines after signal extract', () => {
+  it('App.tsx stays lean after workspace extracts', () => {
     const p = resolve(__dirname, '../../src/ui/layout/App.tsx')
     const lines = readFileSync(p, 'utf8').split('\n').length
     expect(lines).toBeLessThan(2400)
-    expect(lines).toBeGreaterThan(1500)
+    expect(lines).toBeGreaterThan(800)
   })
 
   it('SignalWorkspace module exists and exports component', () => {
