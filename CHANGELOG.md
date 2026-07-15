@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 0.5.43 — 2026-07-16
+
+- E2E 多页冒烟：壳层/渠化/流量/信号/分析/绿波/比选
+- 截图回归 docs/screenshots/00–06
+
+# CHANGELOG
+
 ## 0.5.42 — 2026-07-16
 
 - AnalysisWorkspace：评价分析面板从 App 拆出
