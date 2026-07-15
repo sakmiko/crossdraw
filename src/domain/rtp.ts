@@ -44,6 +44,18 @@ const approachSchema = z.object({
     separateExit: z.boolean(),
     widthM: z.number(),
     radiusM: z.number(),
+    channelWidthM: z.number().optional().default(4.5),
+    islandOffsetM: z.number().optional().default(0),
+    safetyIsland: z
+      .object({
+        enabled: z.boolean(),
+        surface: z.enum(['raised', 'painted', 'landscaped']),
+        radiusM: z.number(),
+        setbackM: z.number(),
+        showYield: z.boolean(),
+        label: z.string(),
+      })
+      .optional(),
   }),
   median: z.object({
     style: z.enum(['doubleYellow', 'singleYellow', 'barrier', 'fishBelly', 'yellowHatch', 'greenBelt']),
@@ -183,6 +195,54 @@ export const projectFileSchema = z.object({
   project: projectSchema,
 })
 
+
+function defaultSafetyIsland() {
+  return {
+    enabled: true,
+    surface: 'raised' as const,
+    radiusM: 3.5,
+    setbackM: 1.5,
+    showYield: true,
+    label: '安全岛',
+  }
+}
+
+function normalizeRightTurn(rt: {
+  enabled: boolean
+  style: 'solid' | 'painted' | 'none'
+  separateEntry: boolean
+  separateExit: boolean
+  widthM: number
+  radiusM: number
+  channelWidthM?: number
+  islandOffsetM?: number
+  safetyIsland?: {
+    enabled: boolean
+    surface: 'raised' | 'painted' | 'landscaped'
+    radiusM: number
+    setbackM: number
+    showYield: boolean
+    label: string
+  }
+}) {
+  return {
+    ...rt,
+    channelWidthM: rt.channelWidthM ?? rt.widthM ?? 4.5,
+    islandOffsetM: rt.islandOffsetM ?? 0,
+    safetyIsland: rt.safetyIsland
+      ? { ...defaultSafetyIsland(), ...rt.safetyIsland }
+      : defaultSafetyIsland(),
+  }
+}
+
+function normalizeProjectApproaches(project: ProjectFile['project']) {
+  for (const ch of project.channelizationSchemes) {
+    for (const ap of ch.approaches) {
+      ap.rightTurn = normalizeRightTurn(ap.rightTurn as never) as typeof ap.rightTurn
+    }
+  }
+}
+
 function defaultBand() {
   return {
     id: 'band-default',
@@ -211,6 +271,7 @@ export function parseRtp(text: string): ProjectFile {
   if (!file.project.bandCorridor) {
     file.project.bandCorridor = defaultBand()
   }
+  normalizeProjectApproaches(file.project)
   return file
 }
 

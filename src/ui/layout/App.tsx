@@ -797,6 +797,8 @@ export default function App() {
                   右转半径
                   <input
                     type="number"
+                    min={6}
+                    step={0.5}
                     value={selected.rightTurn.radiusM}
                     onChange={(e) =>
                       updateApproach(selected.id, {
@@ -806,6 +808,218 @@ export default function App() {
                   />
                 </label>
               </div>
+              <details className="details-block" open>
+                <summary>右转渠化 / 安全岛</summary>
+                <div className="details-body">
+                  <div className="field-row">
+                    <label>
+                      渠化岛宽
+                      <input
+                        type="number"
+                        min={1}
+                        step={0.1}
+                        value={selected.rightTurn.widthM}
+                        onChange={(e) =>
+                          updateApproach(selected.id, {
+                            rightTurn: { ...selected.rightTurn, widthM: Number(e.target.value) },
+                          })
+                        }
+                      />
+                    </label>
+                    <label>
+                      右转道宽
+                      <input
+                        type="number"
+                        min={3}
+                        step={0.1}
+                        value={selected.rightTurn.channelWidthM ?? selected.rightTurn.widthM}
+                        onChange={(e) =>
+                          updateApproach(selected.id, {
+                            rightTurn: {
+                              ...selected.rightTurn,
+                              channelWidthM: Number(e.target.value),
+                            },
+                          })
+                        }
+                      />
+                    </label>
+                  </div>
+                  <div className="field-row">
+                    <label>
+                      岛偏移
+                      <input
+                        type="number"
+                        step={0.2}
+                        value={selected.rightTurn.islandOffsetM ?? 0}
+                        onChange={(e) =>
+                          updateApproach(selected.id, {
+                            rightTurn: {
+                              ...selected.rightTurn,
+                              islandOffsetM: Number(e.target.value),
+                            },
+                          })
+                        }
+                      />
+                    </label>
+                    <label>
+                      渠化样式
+                      <select
+                        value={selected.rightTurn.style}
+                        onChange={(e) =>
+                          updateApproach(selected.id, {
+                            rightTurn: {
+                              ...selected.rightTurn,
+                              style: e.target.value as typeof selected.rightTurn.style,
+                            },
+                          })
+                        }
+                      >
+                        <option value="solid">实体导流岛</option>
+                        <option value="painted">标线岛</option>
+                        <option value="none">无</option>
+                      </select>
+                    </label>
+                  </div>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={selected.rightTurn.safetyIsland?.enabled ?? false}
+                      onChange={(e) =>
+                        updateApproach(selected.id, {
+                          rightTurn: {
+                            ...selected.rightTurn,
+                            safetyIsland: {
+                              enabled: e.target.checked,
+                              surface: selected.rightTurn.safetyIsland?.surface ?? 'raised',
+                              radiusM: selected.rightTurn.safetyIsland?.radiusM ?? 3.5,
+                              setbackM: selected.rightTurn.safetyIsland?.setbackM ?? 1.5,
+                              showYield: selected.rightTurn.safetyIsland?.showYield ?? true,
+                              label: selected.rightTurn.safetyIsland?.label ?? '安全岛',
+                            },
+                          },
+                        })
+                      }
+                    />{' '}
+                    行人安全岛
+                  </label>
+                  {(selected.rightTurn.safetyIsland?.enabled ?? false) && (
+                    <>
+                      <div className="field-row">
+                        <label>
+                          安全岛半径
+                          <input
+                            type="number"
+                            min={1}
+                            step={0.1}
+                            value={selected.rightTurn.safetyIsland?.radiusM ?? 3.5}
+                            onChange={(e) =>
+                              updateApproach(selected.id, {
+                                rightTurn: {
+                                  ...selected.rightTurn,
+                                  safetyIsland: {
+                                    ...(selected.rightTurn.safetyIsland ?? {
+                                      enabled: true,
+                                      surface: 'raised',
+                                      radiusM: 3.5,
+                                      setbackM: 1.5,
+                                      showYield: true,
+                                      label: '安全岛',
+                                    }),
+                                    radiusM: Number(e.target.value),
+                                  },
+                                },
+                              })
+                            }
+                          />
+                        </label>
+                        <label>
+                          退距
+                          <input
+                            type="number"
+                            min={0}
+                            step={0.1}
+                            value={selected.rightTurn.safetyIsland?.setbackM ?? 1.5}
+                            onChange={(e) =>
+                              updateApproach(selected.id, {
+                                rightTurn: {
+                                  ...selected.rightTurn,
+                                  safetyIsland: {
+                                    ...(selected.rightTurn.safetyIsland ?? {
+                                      enabled: true,
+                                      surface: 'raised',
+                                      radiusM: 3.5,
+                                      setbackM: 1.5,
+                                      showYield: true,
+                                      label: '安全岛',
+                                    }),
+                                    setbackM: Number(e.target.value),
+                                  },
+                                },
+                              })
+                            }
+                          />
+                        </label>
+                      </div>
+                      <div className="field-row">
+                        <label>
+                          岛面
+                          <select
+                            value={selected.rightTurn.safetyIsland?.surface ?? 'raised'}
+                            onChange={(e) =>
+                              updateApproach(selected.id, {
+                                rightTurn: {
+                                  ...selected.rightTurn,
+                                  safetyIsland: {
+                                    ...(selected.rightTurn.safetyIsland ?? {
+                                      enabled: true,
+                                      surface: 'raised',
+                                      radiusM: 3.5,
+                                      setbackM: 1.5,
+                                      showYield: true,
+                                      label: '安全岛',
+                                    }),
+                                    surface: e.target.value as 'raised' | 'painted' | 'landscaped',
+                                  },
+                                },
+                              })
+                            }
+                          >
+                            <option value="raised">抬升实体</option>
+                            <option value="landscaped">绿化</option>
+                            <option value="painted">标线</option>
+                          </select>
+                        </label>
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={selected.rightTurn.safetyIsland?.showYield ?? true}
+                            onChange={(e) =>
+                              updateApproach(selected.id, {
+                                rightTurn: {
+                                  ...selected.rightTurn,
+                                  safetyIsland: {
+                                    ...(selected.rightTurn.safetyIsland ?? {
+                                      enabled: true,
+                                      surface: 'raised',
+                                      radiusM: 3.5,
+                                      setbackM: 1.5,
+                                      showYield: true,
+                                      label: '安全岛',
+                                    }),
+                                    showYield: e.target.checked,
+                                  },
+                                },
+                              })
+                            }
+                          />{' '}
+                          让行三角
+                        </label>
+                      </div>
+                    </>
+                  )}
+                  <p className="hint">改半径/道宽/安全岛后画布即时重绘；图例含导流岛与安全岛。</p>
+                </div>
+              </details>
               <label>
                 中分样式
                 <select
@@ -1850,7 +2064,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.24</span>
+        <span>Crossdraw v0.5.25</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

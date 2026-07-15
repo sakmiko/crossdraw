@@ -35,6 +35,21 @@ export interface LaneGroup {
   movements: Movement[]
 }
 
+export type IslandSurface = 'raised' | 'painted' | 'landscaped'
+
+export interface SafetyIsland {
+  /** pedestrian refuge / channel island at corner */
+  enabled: boolean
+  surface: IslandSurface
+  /** inscribed radius of island body (m) */
+  radiusM: number
+  /** setback from stop-line / curb fillet (m) */
+  setbackM: number
+  showYield: boolean
+  /** label on drawing */
+  label: string
+}
+
 export interface RightTurnChannel {
   enabled: boolean
   style: ChannelizeStyle
@@ -42,6 +57,11 @@ export interface RightTurnChannel {
   separateExit: boolean
   widthM: number
   radiusM: number
+  /** channel lane width for free-right (m) */
+  channelWidthM: number
+  /** island offset from curb toward corner pocket (m) */
+  islandOffsetM: number
+  safetyIsland: SafetyIsland
 }
 
 export interface Median {

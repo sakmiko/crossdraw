@@ -265,51 +265,142 @@ function drawCornerFillets(mesh: Mesh, approaches: Approach[], core: number) {
       alpha: 0.7,
     })
 
-    // right-turn channelization island for approach a
+    // right-turn channelization + optional safety island (parameter-driven)
     if (a.rightTurn.enabled && a.rightTurn.style !== 'none') {
-      const r = Math.max(8, a.rightTurn.radiusM)
-      const w = Math.max(3.5, a.rightTurn.widthM)
-      // island center in the right-turn corner pocket
-      const center = add(add(mul(ux, core + r * 0.42), mul(px, halfA + r * 0.22)), mul(midDir, -r * 0.08))
-      // outer arc (roadside) and inner arc (island body)
-      const ang0 = degToRad(a.bearingDeg) - 0.15
-      const ang1 = degToRad(a.bearingDeg) + Math.PI * 0.72
-      const outer = arcPoints(center, r * 0.92, ang0, ang1, 24)
-      const inner = arcPoints(center, Math.max(2.2, r * 0.92 - w * 0.85), ang1, ang0, 20)
-      const island = [...outer, ...inner]
+      const r = Math.max(6, a.rightTurn.radiusM)
+      const chW = Math.max(3.0, a.rightTurn.channelWidthM ?? a.rightTurn.widthM)
+      const islandW = Math.max(2.0, a.rightTurn.widthM)
+      const off = a.rightTurn.islandOffsetM ?? 0
+      // island / channel center in the right-turn corner pocket
+      const center = add(
+        add(mul(ux, core + r * 0.42 + off * 0.15), mul(px, halfA + r * 0.22 + off)),
+        mul(midDir, -r * 0.08),
+      )
+      const ang0 = degToRad(a.bearingDeg) - 0.12
+      const ang1 = degToRad(a.bearingDeg) + Math.PI * 0.7
+      const outerR = r * 0.95
+      const midR = Math.max(outerR - chW * 0.55, 2.5)
+      const innerR = Math.max(midR - islandW * 0.55, 1.8)
+
+      // free-right channel ribbon (between outer curb arc and island outer)
+      const chOuter = arcPoints(center, outerR, ang0, ang1, 26)
+      const chInner = arcPoints(center, midR, ang1, ang0, 22)
       pushPoly(mesh, {
-        layer: 'ISLAND',
-        points: island,
-        fill: a.rightTurn.style === 'solid' ? THEME.island : THEME.island,
-        stroke: THEME.islandEdge,
-        strokeWidth: 0.4,
-        alpha: a.rightTurn.style === 'painted' ? 0.35 : 0.95,
+        layer: 'ROAD',
+        points: [...chOuter, ...chInner],
+        fill: THEME.laneFill,
+        stroke: THEME.asphaltEdge,
+        strokeWidth: 0.25,
+        alpha: 0.92,
       })
-      // channel path centerline
+      // channel edge lines
       pushLine(mesh, {
         layer: 'MARKING',
-        points: arcPoints(center, r * 0.92 - w * 0.4, ang0 + 0.05, ang1 - 0.05, 20),
+        points: arcPoints(center, outerR, ang0, ang1, 22),
         stroke: THEME.marking,
-        strokeWidth: 0.22,
+        strokeWidth: 0.2,
+      })
+      pushLine(mesh, {
+        layer: 'MARKING',
+        points: arcPoints(center, midR, ang0 + 0.02, ang1 - 0.02, 20),
+        stroke: THEME.marking,
+        strokeWidth: 0.18,
         dashed: true,
       })
-      // yield triangle near merge
-      const tip = add(center, [Math.cos((ang0 + ang1) / 2) * (r * 0.5), Math.sin((ang0 + ang1) / 2) * (r * 0.5)])
+
+      // main channelization island body (between midR and innerR)
+      const outer = arcPoints(center, midR, ang0, ang1, 24)
+      const inner = arcPoints(center, innerR, ang1, ang0, 20)
+      const painted = a.rightTurn.style === 'painted'
       pushPoly(mesh, {
-        layer: 'MARKING',
-        points: [
-          tip,
-          add(tip, mul(px, 1.2)),
-          add(tip, mul(ux, 1.4)),
-        ],
-        fill: THEME.yellow,
-        alpha: 0.85,
+        layer: 'ISLAND',
+        points: [...outer, ...inner],
+        fill: painted ? THEME.yellow : THEME.island,
+        stroke: THEME.islandEdge,
+        strokeWidth: 0.4,
+        alpha: painted ? 0.4 : 0.95,
       })
+      if (painted) {
+        // hatch suggestion via parallel arcs
+        for (const frac of [0.35, 0.55, 0.75]) {
+          const rr = innerR + (midR - innerR) * frac
+          pushLine(mesh, {
+            layer: 'MARKING',
+            points: arcPoints(center, rr, ang0 + 0.08, ang1 - 0.08, 12),
+            stroke: THEME.doubleYellow,
+            strokeWidth: 0.15,
+            alpha: 0.7,
+          })
+        }
+      }
+
+      // safety island (refuge) — smaller disc near pedestrian path
+      const si = a.rightTurn.safetyIsland
+      if (si?.enabled) {
+        const siR = Math.max(1.2, si.radiusM)
+        const setback = si.setbackM ?? 1.5
+        const siCenter = add(
+          center,
+          add(mul(midDir, -siR * 0.2 - setback * 0.3), mul(px, -siR * 0.15)),
+        )
+        const surfaceFill =
+          si.surface === 'landscaped' ? THEME.island : si.surface === 'painted' ? THEME.yellow : '#d6d3d1'
+        const segs = 20
+        const disc: Vec[] = []
+        for (let i = 0; i < segs; i++) {
+          const th = (i / segs) * Math.PI * 2
+          disc.push([siCenter[0] + Math.cos(th) * siR, siCenter[1] + Math.sin(th) * siR])
+        }
+        pushPoly(mesh, {
+          layer: 'ISLAND',
+          points: disc,
+          fill: surfaceFill,
+          stroke: THEME.islandEdge,
+          strokeWidth: 0.35,
+          alpha: si.surface === 'painted' ? 0.45 : 0.98,
+        })
+        // curb ring
+        const ring: Vec[] = []
+        for (let i = 0; i <= segs; i++) {
+          const th = (i / segs) * Math.PI * 2
+          ring.push([siCenter[0] + Math.cos(th) * siR, siCenter[1] + Math.sin(th) * siR])
+        }
+        pushLine(mesh, {
+          layer: 'ANNO',
+          points: ring,
+          stroke: THEME.curb,
+          strokeWidth: 0.3,
+        })
+        if (si.showYield) {
+          const tip = add(siCenter, mul(ux, siR * 0.15))
+          pushPoly(mesh, {
+            layer: 'MARKING',
+            points: [tip, add(tip, mul(px, 1.0)), add(tip, mul(ux, 1.2))],
+            fill: THEME.yellow,
+            alpha: 0.9,
+          })
+        }
+        pushLabel(mesh, {
+          text: si.label || '安全岛',
+          at: add(siCenter, [0, siR + 1.8]),
+          color: THEME.islandEdge,
+          size: 1.9,
+          align: 'center',
+        })
+        pushLabel(mesh, {
+          text: `r=${siR.toFixed(1)}m`,
+          at: add(siCenter, [0, -siR - 1.2]),
+          color: '#475569',
+          size: 1.7,
+          align: 'center',
+        })
+      }
+
       pushLabel(mesh, {
-        text: `R=${r.toFixed(0)}m`,
-        at: add(center, mul(midDir, r * 0.15)),
+        text: `R=${r.toFixed(0)}m · 道宽${chW.toFixed(1)}`,
+        at: add(center, mul(midDir, r * 0.12)),
         color: THEME.islandEdge,
-        size: 2.1,
+        size: 2.0,
         align: 'center',
       })
     }
