@@ -8,16 +8,18 @@ test.describe('Crossdraw v0.5.25', () => {
     await expect(page.locator('#canvas-root')).toBeVisible({ timeout: 20000 })
     await page.waitForTimeout(400)
 
-    // select first approach in tree if needed
-    await page.locator('.tree-approach').first().click().catch(() => {})
+    // ensure channel mode and approach selected
+    const tablist = page.getByRole('tablist', { name: '编辑模式' })
+    await tablist.getByRole('tab', { name: '渠化' }).click()
+    await page.locator('.tree-approach').first().click()
     await page.waitForTimeout(200)
 
-    await expect(page.getByText('右转渠化 / 安全岛').first()).toBeVisible({ timeout: 10000 })
-    await page.getByText('右转渠化 / 安全岛').first().click()
-    await expect(page.getByText('行人安全岛').first()).toBeVisible()
-    await expect(page.getByText('安全岛半径').or(page.getByText('渠化岛宽')).first()).toBeVisible()
+    const summary = page.locator('summary').filter({ hasText: '右转渠化 / 安全岛' }).first()
+    await expect(summary).toBeVisible({ timeout: 10000 })
+    await summary.click()
+    await expect(page.getByText('行人安全岛').first()).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText('渠化岛宽').first()).toBeVisible()
 
-    // tweak radius
     const radius = page.locator('label').filter({ hasText: '右转半径' }).locator('input')
     await radius.fill('18')
     await page.waitForTimeout(300)
