@@ -5,6 +5,7 @@ import {
   optimizeBandMaxScan,
   optimizeBandOneWay,
   optimizeBandTwoWayEqual,
+  scoreOffsets,
 } from './band'
 
 export function corridorToIntersections(c: BandCorridor): BandIntersection[] {
@@ -35,6 +36,10 @@ export function optimizeCorridor(c: BandCorridor): BandResult {
   }
 }
 
+/**
+ * Apply optimizer offsets but keep locked nodes.
+ * Then re-measure bandwidth on the *actual* applied offsets (including locks).
+ */
 export function applyOffsetsToCorridor(c: BandCorridor, result: BandResult): BandCorridor {
   const map = new Map(result.offsets.map((o) => [o.id, o.offsetSec]))
   return {
@@ -46,7 +51,27 @@ export function applyOffsetsToCorridor(c: BandCorridor, result: BandResult): Ban
   }
 }
 
-/** Segment lengths between successive nodes (for UI: 路段距离). */
+/** Re-measure band KPIs for current corridor offsets (respects manual/locked values). */
+export function measureCorridor(c: BandCorridor): BandResult {
+  const nodes = corridorToIntersections(c)
+  const C = c.nodes[0]?.cycleSec ?? 90
+  const v = (c.speedKmh * 1000) / 3600
+  const offsets = nodes.map((n) => n.offsetSec)
+  const scored = scoreOffsets(nodes, C, offsets, v)
+  const mean = (scored.forwardSec + scored.backwardSec) / 2
+  const oneWay = c.method === 'one-way'
+  return {
+    method: c.method,
+    halfCycleDistanceM: (v * C) / 2,
+    bandwidthRatio: oneWay ? scored.forwardSec / C : mean / C,
+    bandwidthSec: oneWay ? scored.forwardSec : mean,
+    offsets: nodes.map((n) => ({ id: n.id, offsetSec: n.offsetSec })),
+    standardSpeedKmh: c.speedKmh,
+    forwardBandwidthSec: scored.forwardSec,
+    backwardBandwidthSec: oneWay ? 0 : scored.backwardSec,
+  }
+}
+
 export function corridorSegments(c: BandCorridor): {
   fromId: string
   toId: string
@@ -68,7 +93,6 @@ export function corridorSegments(c: BandCorridor): {
   return out
 }
 
-/** Set segment length by moving downstream node pile (keeps upstream fixed). */
 export function setSegmentLength(
   c: BandCorridor,
   toNodeId: string,
@@ -82,7 +106,6 @@ export function setSegmentLength(
   const newPos = prev.distanceM + Math.max(50, lengthM)
   const delta = newPos - next.distanceM
   const map = new Map(c.nodes.map((n) => [n.id, { ...n }]))
-  // shift this and all downstream
   for (let i = idx; i < nodes.length; i++) {
     const n = map.get(nodes[i].id)!
     n.distanceM = Math.max(0, n.distanceM + delta)

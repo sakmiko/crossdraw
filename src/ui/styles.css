@@ -986,3 +986,36 @@ tr.row-recommend td {
   font-size: 12px;
   color: var(--muted);
 }
+
+tr.row-locked td {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.lock-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+}
+.lock-check input {
+  width: auto;
+  margin: 0;
+}
+
+.integrity-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+.integrity-badge.ok {
+  color: #16a34a;
+  background: color-mix(in srgb, #16a34a 12%, transparent);
+}
+.integrity-badge.bad {
+  color: #dc2626;
+  background: color-mix(in srgb, #dc2626 12%, transparent);
+}

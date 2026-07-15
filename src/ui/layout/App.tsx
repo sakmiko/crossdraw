@@ -11,16 +11,16 @@ import { meshToSvg } from '@/io/exportSvg'
 import { meshToDxf } from '@/io/exportDxf'
 import { analysisToCsv, analysisToExcelHtml, collectCompareRows, compareSchemesCsv } from '@/io/report'
 import { exportVissimCsvBundle } from '@/io/vissimCsv'
-import { optimizeCorridor } from '@/domain/analysis/corridor'
+import { optimizeCorridor, measureCorridor, corridorSegments } from '@/domain/analysis/corridor'
 import { downloadBlob, downloadText } from '@/io/download'
 import { loadDraft, clearDraft } from '@/io/autosave'
 import { persistAutosave, redo, undo, useAppStore } from '@/state/store'
 import { CommandPalette } from '@/ui/common/CommandPalette'
 import { ExportCenter } from '@/ui/common/ExportCenter'
+import { checkAnalysisIntegrity } from '@/domain/analysis/integrity'
 import { AnalysisCharts, BandCharts, CompareCharts, CrossSectionCharts, FlowCharts, SchemeCompareBoard, SignalCharts, TimingCompareCharts } from '@/ui/charts/ChartPanels'
 import { ControlMatrixPanel, FlowDirectionPanel, PhaseFacePanel, SignalTimingPanel, TimeSpacePanel } from '@/ui/charts/ProfessionalPanels'
 import { InteractiveTimeSpace, buildTimeSpaceExportSvg } from '@/ui/charts/InteractiveTimeSpace'
-import { corridorSegments } from '@/domain/analysis/corridor'
 import { optimizeSignalTiming, criticalFlowRatios, TIMING_METHOD_LABELS, type TimingMethod } from '@/domain/analysis/timing'
 import { compareTimingMethods, recommendTimingRow, type TimingCompareRow } from '@/domain/analysis/timingCompare'
 import { vcHeatColor } from '@/ui/charts/svgCharts'
@@ -175,6 +175,10 @@ export default function App() {
     return analyzeIntersection(channel.approaches, flow, signal)
   }, [channel, flow, signal])
 
+  const analysisIntegrity = useMemo(
+    () => (analysis ? checkAnalysisIntegrity(analysis) : null),
+    [analysis],
+  )
   const selected = channel?.approaches.find((a) => a.id === selectedApproachId) ?? channel?.approaches[0]
 
   function saveRtp() {
@@ -332,7 +336,7 @@ export default function App() {
     }
   }
 
-  const band = useMemo(() => optimizeCorridor(project.bandCorridor), [project.bandCorridor])
+  const band = useMemo(() => measureCorridor(project.bandCorridor), [project.bandCorridor])
 
   const xsection = selected ? buildCrossSection(selected) : null
 
@@ -1142,11 +1146,20 @@ export default function App() {
             </div>
           )}
 
-          {mode === 'analysis' && analysis && (
+          {mode === 'analysis' && analysis && analysisIntegrity && (
             <div className="card" style={{ marginTop: 12 }}>
               <div className="panel-header">
-                <h2>评价分析</h2>
+                <h2 style={{ margin: 0 }}>评价分析</h2>
+                <span className={`integrity-badge ${analysisIntegrity.ok ? 'ok' : 'bad'}`}>
+                  {analysisIntegrity.ok ? '图/表同源 ✓' : '同源校验失败'}
+                </span>
               </div>
+              {!analysisIntegrity.ok && (
+                <p className="hint" style={{ color: '#dc2626' }}>
+                  汇总与车道表重算不一致：Δv/c={analysisIntegrity.deltaVc.toExponential(2)} · Δ延误=
+                  {analysisIntegrity.deltaDelay.toExponential(2)}
+                </p>
+              )}
               <div className="metric-grid">
                 <div className="metric">
                   <div className="label">平均 v/c</div>
@@ -1493,13 +1506,14 @@ export default function App() {
                     <th>桩号m</th>
                     <th>λ</th>
                     <th>C</th>
-                    <th>相位差</th>
+                    <th>相位差 o(s)</th>
+                    <th>锁定</th>
                     <th></th>
                   </tr>
                 </thead>
                 <tbody>
                   {project.bandCorridor.nodes.map((n) => (
-                    <tr key={n.id}>
+                    <tr key={n.id} className={n.lockedOffset ? 'row-locked' : undefined}>
                       <td>
                         <input
                           value={n.name}
@@ -1517,6 +1531,8 @@ export default function App() {
                         <input
                           type="number"
                           step={0.01}
+                          min={0.05}
+                          max={0.95}
                           value={n.greenRatio}
                           onChange={(e) => updateBandNode(n.id, { greenRatio: Number(e.target.value) })}
                         />
@@ -1528,7 +1544,28 @@ export default function App() {
                           onChange={(e) => updateBandNode(n.id, { cycleSec: Number(e.target.value) })}
                         />
                       </td>
-                      <td>{n.offsetSec.toFixed(1)}</td>
+                      <td>
+                        <input
+                          type="number"
+                          step={0.1}
+                          value={Number(n.offsetSec.toFixed(1))}
+                          disabled={false}
+                          title={n.lockedOffset ? '已锁定：优化时保留' : '可手动改；勾选锁定后优化不覆盖'}
+                          onChange={(e) =>
+                            updateBandNode(n.id, { offsetSec: Number(e.target.value) })
+                          }
+                        />
+                      </td>
+                      <td>
+                        <label className="lock-check" title="锁定后「优化相位差」不覆盖该路口">
+                          <input
+                            type="checkbox"
+                            checked={!!n.lockedOffset}
+                            onChange={(e) => updateBandNode(n.id, { lockedOffset: e.target.checked })}
+                          />
+                          <span>{n.lockedOffset ? '锁' : '—'}</span>
+                        </label>
+                      </td>
                       <td>
                         <button type="button" className="ghost" onClick={() => removeBandNode(n.id)}>
                           删
@@ -1538,6 +1575,10 @@ export default function App() {
                   ))}
                 </tbody>
               </table>
+              <p className="hint">
+                锁定的相位差在优化时保留；KPI/时距图始终按<strong>当前表内相位差</strong>用圆环弧度量重算（与图同源）。
+                已锁 {project.bandCorridor.nodes.filter((n) => n.lockedOffset).length} 个路口。
+              </p>
               <div className="section-title" style={{ marginTop: 10 }}>路段距离（m）</div>
               <table className="table">
                 <thead>
@@ -1570,7 +1611,17 @@ export default function App() {
                   添加路口
                 </button>
                 <button type="button" className="primary" onClick={() => optimizeBand()}>
-                  优化相位差
+                  优化相位差（保留锁定）
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    for (const n of project.bandCorridor.nodes) {
+                      if (n.lockedOffset) updateBandNode(n.id, { lockedOffset: false })
+                    }
+                  }}
+                >
+                  解除全部锁定
                 </button>
                 <button
                   type="button"
@@ -1620,7 +1671,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.14</span>
+        <span>Crossdraw v0.5.15</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
