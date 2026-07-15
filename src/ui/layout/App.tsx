@@ -18,6 +18,7 @@ import { loadDraft, clearDraft } from '@/io/autosave'
 import { persistAutosave, redo, undo, useAppStore } from '@/state/store'
 import { CommandPalette } from '@/ui/common/CommandPalette'
 import { ExportCenter } from '@/ui/common/ExportCenter'
+import { SignalWorkspace } from '@/ui/layout/SignalWorkspace'
 import { PrintPreviewModal } from '@/ui/common/PrintPreview'
 import { buildA4PrintSheet, printSheetHtml, type PrintPanel } from '@/io/printSheet'
 import { collectCorridorKpis, corridorKpiCompareSvg, multiBandMarkdown } from '@/ui/charts/bandCorridorCompare'
@@ -1445,287 +1446,30 @@ export default function App() {
           )}
 
           {mode === 'signal' && signal && (
-            <div className="card" style={{ marginTop: 12 }}>
-              <div className="panel-header">
-                <h2 style={{ margin: 0 }}>信号 · {signal.name}</h2>
-                {(() => {
-                  const al = buildSignalTimingAlignment(signal)
-                  const hits = channel ? allPhasesConflictHits(channel.approaches, signal) : []
-                  const blocks = hits.filter((h) => h.level === 'block').length
-                  return (
-                    <>
-                      <span className={`integrity-badge ${al.closed ? 'ok' : 'bad'}`}>
-                        {al.closed
-                          ? `配时闭合 Σ=${al.mainSumSec.toFixed(1)}=C`
-                          : `未闭合 Σ=${al.mainSumSec.toFixed(1)} C=${al.cycleSec} 差${al.balanceSec > 0 ? '+' : ''}${al.balanceSec}`}
-                      </span>
-                      <span className={`integrity-badge ${blocks ? 'bad' : hits.length ? 'warn' : 'ok'}`}>
-                        {blocks ? `相位相悖 ${blocks}` : hits.length ? `冲突警告 ${hits.length}` : '无相悖 ✓'}
-                      </span>
-                    </>
-                  )
-                })()}
-              </div>
-              <label>
-                周期 C (s)
-                <input type="number" value={signal.cycleSec} onChange={(e) => setCycle(Number(e.target.value))} />
-              </label>
-              <div className="ring">
-                {signal.phases.map((ph) => (
-                  <div key={ph.id} className="phase" style={{ minWidth: 168 }}>
-                    <input
-                      value={ph.name}
-                      onChange={(e) => updatePhaseTiming(ph.id, { name: e.target.value })}
-                      aria-label="相位名称"
-                      style={{ marginBottom: 6, fontWeight: 650 }}
-                    />
-                    <div className="field-row-3">
-                      <label>
-                        G
-                        <input
-                          type="number"
-                          value={ph.greenSec}
-                          onChange={(e) => updatePhaseTiming(ph.id, { greenSec: Number(e.target.value) })}
-                        />
-                      </label>
-                      <label>
-                        Y
-                        <input
-                          type="number"
-                          value={ph.yellowSec}
-                          onChange={(e) => updatePhaseTiming(ph.id, { yellowSec: Number(e.target.value) })}
-                        />
-                      </label>
-                      <label>
-                        AR
-                        <input
-                          type="number"
-                          value={ph.allRedSec}
-                          onChange={(e) => updatePhaseTiming(ph.id, { allRedSec: Number(e.target.value) })}
-                        />
-                      </label>
-                    </div>
-                    <label style={{ marginTop: 4 }}>
-                      <input
-                        type="checkbox"
-                        checked={!!ph.isOverlap}
-                        onChange={(e) => updatePhaseTiming(ph.id, { isOverlap: e.target.checked })}
-                      />{' '}
-                      搭接相位 Overlap
-                    </label>
-                    <div className="hint" style={{ marginTop: 6 }}>
-                      放行矩阵
-                    </div>
-                    {channel?.approaches.map((ap) => (
-                      <div key={ap.id} style={{ marginTop: 4 }}>
-                        <span className="hint">{ap.name}</span>
-                        <div className="toolbar" style={{ gap: 4, marginTop: 2 }}>
-                          {(['L', 'T', 'R'] as Movement[]).map((m) => {
-                            const on = (ph.releases[ap.id] ?? []).includes(m)
-                            return (
-                              <button
-                                key={m}
-                                type="button"
-                                className={on ? 'primary' : 'ghost'}
-                                style={{ padding: '2px 6px', fontSize: 11 }}
-                                onClick={() => togglePhaseRelease(ph.id, ap.id, m)}
-                              >
-                                {m}
-                              </button>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-              {channel && (
-                <p className="hint" style={{ marginTop: 8 }}>
-                  {(() => {
-                    const r = releaseMatrixAlignsWithPhases(signal, channel.approaches)
-                    return r.ok
-                      ? '放行矩阵与各相位 L/T/R 按钮已逐格对齐'
-                      : `放行对齐异常：${r.mismatches.slice(0, 2).join('；')}`
-                  })()}
-                </p>
-              )}
-              <div className="toolbar" style={{ marginTop: 8 }}>
-                <button type="button" onClick={() => addPhase()}>添加相位</button>
-                <button type="button" onClick={() => addOverlapPhase()}>
-                  添加搭接
-                </button>
-                <label className="timing-method">
-                  配时方法
-                  <select value={timingMethod} onChange={(e) => setTimingMethod(e.target.value as TimingMethod)}>
-                    <option value="webster">Webster 最优周期</option>
-                    <option value="hcm-delay">延误最小 (HCM)</option>
-                    <option value="equal">等绿灯</option>
-                    <option value="fixed-cycle">固定周期分绿</option>
-                  </select>
-                </label>
-                <label className="timing-fixed">
-                  <input
-                    type="checkbox"
-                    checked={fixedCycleOn || timingMethod === 'fixed-cycle'}
-                    onChange={(e) => {
-                      setFixedCycleOn(e.target.checked)
-                      if (e.target.checked && signal) setFixedCycleSec(signal.cycleSec)
-                    }}
-                  />{' '}
-                  固定周期
-                </label>
-                {(fixedCycleOn || timingMethod === 'fixed-cycle') && (
-                  <label>
-                    C(s)
-                    <input
-                      type="number"
-                      min={40}
-                      max={180}
-                      value={fixedCycleSec}
-                      onChange={(e) => setFixedCycleSec(Number(e.target.value))}
-                      style={{ width: 72 }}
-                    />
-                  </label>
-                )}
-                <button type="button" className="primary" onClick={runWebster}>
-                  一键优化配时
-                </button>
-                <button type="button" onClick={runTimingCompare}>
-                  多方法比选
-                </button>
-              </div>
-              {timingCompare.length > 0 && (
-                <div className="card panel-stack" style={{ marginTop: 10 }}>
-                  <div className="panel-header">
-                    <h2 style={{ margin: 0, fontSize: 15 }}>配时方法比选</h2>
-                    <span className="hint">同渠化·同流量 · 点击应用</span>
-                  </div>
-                  <div className="table-wrap">
-                    <table className="table">
-                      <thead>
-                        <tr>
-                          <th>方法</th>
-                          <th>C(s)</th>
-                          <th>Y</th>
-                          <th>v/c</th>
-                          <th>延误s</th>
-                          <th>LOS</th>
-                          <th></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {timingCompare.map((r) => {
-                          const rec = recommendTimingRow(timingCompare)
-                          const isRec = rec?.method === r.method
-                          return (
-                            <tr key={r.method} className={isRec ? 'row-recommend' : ''}>
-                              <td>
-                                {r.label}
-                                {isRec ? ' ★' : ''}
-                              </td>
-                              <td>{r.cycleSec}</td>
-                              <td>{r.Y.toFixed(3)}</td>
-                              <td>
-                                <span className="vc-chip" style={{ background: vcHeatColor(r.avgVc) }}>
-                                  {r.avgVc.toFixed(3)}
-                                </span>
-                              </td>
-                              <td>{r.avgDelay.toFixed(1)}</td>
-                              <td>
-                                <span className={`los-badge los-${r.los}`}>{r.los}</span>
-                              </td>
-                              <td>
-                                <button type="button" className="ghost" onClick={() => applyTimingCompareRow(r)}>
-                                  应用
-                                </button>
-                              </td>
-                            </tr>
-                          )
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                  <TimingCompareCharts
-                    rows={timingCompare.map((r) => ({
-                      label: r.label,
-                      avgDelay: r.avgDelay,
-                      avgVc: r.avgVc,
-                      los: r.los,
-                      cycleSec: r.cycleSec,
-                      method: r.method,
-                    }))}
-                  />
-                </div>
-              )}
-              <SignalCharts
-                  signal={signal}
-                  approaches={channel?.approaches}
-                  focusPhaseId={focusPhaseId ?? signal.phases[0]?.id ?? null}
-                  onFocusPhase={setFocusPhaseId}
-                />
-              {channel && (
-                <div className="toolbar" style={{ marginTop: 8 }}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      exportSvgFile(
-                        `${project.name}-conflict.svg`,
-                        conflictMatrixExportSvg(
-                          channel.approaches,
-                          signal,
-                          focusPhaseId ?? signal.phases[0]?.id,
-                        ),
-                      )
-                      downloadText(
-                        `${project.name}-conflict.md`,
-                        conflictHitsMarkdown(project.name, channel.approaches, signal),
-                        'text/markdown',
-                      )
-                    }}
-                  >
-                    导出冲突矩阵
-                  </button>
-                </div>
-              )}
-              <SignalTimingPanel signal={signal} />
-              {channel && <ControlMatrixPanel signal={signal} approaches={channel.approaches} />}
-              {channel && <PhaseFacePanel signal={signal} approaches={channel.approaches} />}
-              {timingNotes.length > 0 && (
-                <div className="card" style={{ marginTop: 8 }}>
-                  <div className="section-title">配时优化说明 · {TIMING_METHOD_LABELS[timingMethod]}</div>
-                  <ul className="hint" style={{ margin: '6px 0 0', paddingLeft: 18 }}>
-                    {timingNotes.map((n) => (
-                      <li key={n}>{n}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {channel && flow && (
-                <div className="card" style={{ marginTop: 8 }}>
-                  <div className="section-title">关键流量比 y（Webster）</div>
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>相位</th>
-                        <th>y</th>
-                        <th>关键量</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {criticalFlowRatios(channel.approaches, flow, signal).map((r) => (
-                        <tr key={r.phase}>
-                          <td>{r.phase}</td>
-                          <td>{r.y.toFixed(3)}</td>
-                          <td>{r.volume.toFixed(0)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  <p className="hint">C₀=(1.5L+5)/(1−Y) · Webster 1958 · 见专业依据文档</p>
-                </div>
-              )}
-            </div>
+            <SignalWorkspace
+              projectName={project.name}
+              signal={signal}
+              channel={channel}
+              flow={flow}
+              focusPhaseId={focusPhaseId}
+              onFocusPhase={setFocusPhaseId}
+              timingMethod={timingMethod}
+              onTimingMethod={setTimingMethod}
+              fixedCycleOn={fixedCycleOn}
+              onFixedCycleOn={setFixedCycleOn}
+              fixedCycleSec={fixedCycleSec}
+              onFixedCycleSec={setFixedCycleSec}
+              timingCompare={timingCompare}
+              timingNotes={timingNotes}
+              onCycle={setCycle}
+              onUpdatePhaseTiming={updatePhaseTiming}
+              onToggleRelease={togglePhaseRelease}
+              onAddPhase={addPhase}
+              onAddOverlap={addOverlapPhase}
+              onRunOptimize={runWebster}
+              onRunCompare={runTimingCompare}
+              onApplyCompareRow={applyTimingCompareRow}
+            />
           )}
 
           {mode === 'xsection' && xsection && selected && (
@@ -2363,7 +2107,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.31</span>
+        <span>Crossdraw v0.5.32</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

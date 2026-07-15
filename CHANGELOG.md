@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 0.5.32 — 2026-07-16
+
+- 信号工作区拆至 SignalWorkspace.tsx（App 减负）
+- 信号编辑/比选/冲突图/关键 y 面板 props 接线
+
+# CHANGELOG
+
 ## 0.5.31 — 2026-07-16
 
 - 冲突矩阵 SVG + 全相位审查 Markdown 导出
