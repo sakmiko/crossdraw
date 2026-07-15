@@ -3,30 +3,30 @@
   "schemaVersion": 1,
   "appVersion": "0.1.0",
   "project": {
-    "id": "01KXK3H6FZBBPP47BMM30W46XG",
+    "id": "01KXK4BHGPHDPW89G2QMTQMGAM",
     "name": "紧凑十字",
     "units": "metric",
     "channelizationSchemes": [
       {
-        "id": "01KXK3H6FYANM1JN1AE9KZ334T",
+        "id": "01KXK4BHGM4QK0DS33F5C18QQV",
         "name": "渠化方案 A",
         "intersectionType": "cross",
         "approaches": [
           {
-            "id": "01KXK3H6FS8QA2CSP4BEN3BS8X",
+            "id": "01KXK4BHGEB1GWSHTW6126S725",
             "name": "北进口",
             "bearingDeg": 0,
             "designSpeedKmh": 50,
             "entryLanes": [
               {
-                "id": "01KXK3H6FSZ8T1H3AQKS382H3W",
+                "id": "01KXK4BHGEC0P2P1YEME2V9H6C",
                 "widthM": 3.5,
                 "movements": [
                   "L"
                 ]
               },
               {
-                "id": "01KXK3H6FS8M16YK06Y29SKP0Z",
+                "id": "01KXK4BHGEDDP0CS2D2G9ZS6SC",
                 "widthM": 3.5,
                 "movements": [
                   "T"
@@ -35,14 +35,14 @@
             ],
             "exitLanes": [
               {
-                "id": "01KXK3H6FTFXAP5V93QQKGTP96",
+                "id": "01KXK4BHGF201PBRT467RC0Z3M",
                 "widthM": 3.5,
                 "movements": [
                   "T"
                 ]
               },
               {
-                "id": "01KXK3H6FTCG1V6HEFYHEB51YY",
+                "id": "01KXK4BHGF5CZYBP7TYFV4YHHH",
                 "widthM": 3.5,
                 "movements": [
                   "T"
@@ -85,20 +85,20 @@
             "tiltExitDeg": 0
           },
           {
-            "id": "01KXK3H6FTF65P44WAR30MVAJN",
+            "id": "01KXK4BHGGFQCWAKHH27WPTBPX",
             "name": "东进口",
             "bearingDeg": 90,
             "designSpeedKmh": 50,
             "entryLanes": [
               {
-                "id": "01KXK3H6FT3C3DGQXFADBZRA3S",
+                "id": "01KXK4BHGGASTCBCQNBVJ4TAXG",
                 "widthM": 3.5,
                 "movements": [
                   "L"
                 ]
               },
               {
-                "id": "01KXK3H6FTJ2A6FE2HWC324E7Q",
+                "id": "01KXK4BHGGD58YR2N6G4683AV0",
                 "widthM": 3.5,
                 "movements": [
                   "T"
@@ -107,14 +107,14 @@
             ],
             "exitLanes": [
               {
-                "id": "01KXK3H6FVG22CZY05HP6E10DM",
+                "id": "01KXK4BHGGR82WC00Y3H13D5PR",
                 "widthM": 3.5,
                 "movements": [
                   "T"
                 ]
               },
               {
-                "id": "01KXK3H6FVTQPVT2MXD8H8173H",
+                "id": "01KXK4BHGHVDEXA4CVBBCXHHSY",
                 "widthM": 3.5,
                 "movements": [
                   "T"
@@ -157,20 +157,20 @@
             "tiltExitDeg": 0
           },
           {
-            "id": "01KXK3H6FVRK2JPXQGP31N398K",
+            "id": "01KXK4BHGH99B4YE513VHGJ4D4",
             "name": "南进口",
             "bearingDeg": 180,
             "designSpeedKmh": 50,
             "entryLanes": [
               {
-                "id": "01KXK3H6FWH6GA8Y29D9RXG37T",
+                "id": "01KXK4BHGHC4RFTXZ2A8H63SAH",
                 "widthM": 3.5,
                 "movements": [
                   "L"
                 ]
               },
               {
-                "id": "01KXK3H6FW1XGCDKR3K84341NM",
+                "id": "01KXK4BHGHJER9P5Y9003DWYNR",
                 "widthM": 3.5,
                 "movements": [
                   "T"
@@ -179,14 +179,14 @@
             ],
             "exitLanes": [
               {
-                "id": "01KXK3H6FWJZZQ03QFQ7QR4ZMT",
+                "id": "01KXK4BHGJDX95D743WQMC70VV",
                 "widthM": 3.5,
                 "movements": [
                   "T"
                 ]
               },
               {
-                "id": "01KXK3H6FW1TNHGJ5D62A8R890",
+                "id": "01KXK4BHGJXHJQH13XWEH5TWSA",
                 "widthM": 3.5,
                 "movements": [
                   "T"
@@ -229,20 +229,20 @@
             "tiltExitDeg": 0
           },
           {
-            "id": "01KXK3H6FXJZSKPK7WN6H424C5",
+            "id": "01KXK4BHGJZTTXAAGA2B2HB3NC",
             "name": "西进口",
             "bearingDeg": 270,
             "designSpeedKmh": 50,
             "entryLanes": [
               {
-                "id": "01KXK3H6FX0QY45N2A4H8H0ZZC",
+                "id": "01KXK4BHGJ2XCNV45XNM7EPEGF",
                 "widthM": 3.5,
                 "movements": [
                   "L"
                 ]
               },
               {
-                "id": "01KXK3H6FX69J6RXQ8XNWMFREN",
+                "id": "01KXK4BHGK5RR6PS9MDX54ASJX",
                 "widthM": 3.5,
                 "movements": [
                   "T"
@@ -251,14 +251,14 @@
             ],
             "exitLanes": [
               {
-                "id": "01KXK3H6FXZRS9XF33BR6J2ERD",
+                "id": "01KXK4BHGKVTQDCA7BNYTKVJZQ",
                 "widthM": 3.5,
                 "movements": [
                   "T"
                 ]
               },
               {
-                "id": "01KXK3H6FYSQ28YD12D1V8SKFH",
+                "id": "01KXK4BHGKSNJNGNFWH6H6AZ7S",
                 "widthM": 3.5,
                 "movements": [
                   "T"
@@ -308,28 +308,28 @@
         },
         "flowSchemes": [
           {
-            "id": "01KXK3H6FYFDCWFRN9KNT3Z1S0",
+            "id": "01KXK4BHGM2F5R6TXTADR4DYRX",
             "name": "高峰小时",
             "volumes": {
-              "01KXK3H6FS8QA2CSP4BEN3BS8X": {
+              "01KXK4BHGEB1GWSHTW6126S725": {
                 "U": 20,
                 "L": 180,
                 "T": 620,
                 "R": 150
               },
-              "01KXK3H6FTF65P44WAR30MVAJN": {
+              "01KXK4BHGGFQCWAKHH27WPTBPX": {
                 "U": 20,
                 "L": 180,
                 "T": 620,
                 "R": 150
               },
-              "01KXK3H6FVRK2JPXQGP31N398K": {
+              "01KXK4BHGH99B4YE513VHGJ4D4": {
                 "U": 20,
                 "L": 180,
                 "T": 620,
                 "R": 150
               },
-              "01KXK3H6FXJZSKPK7WN6H424C5": {
+              "01KXK4BHGJZTTXAAGA2B2HB3NC": {
                 "U": 20,
                 "L": 180,
                 "T": 620,
@@ -347,70 +347,70 @@
             },
             "signalSchemes": [
               {
-                "id": "01KXK3H6FYF28P3XWX1F2MHGVP",
+                "id": "01KXK4BHGMNT9V9073KRYCE168",
                 "name": "两相位",
                 "cycleSec": 90,
                 "phases": [
                   {
-                    "id": "01KXK3H6FZQ949JANF6KTB3C7Q",
+                    "id": "01KXK4BHGNR7KQRJ2FCGHMCJKM",
                     "name": "南北直行+右转",
                     "greenSec": 28,
                     "yellowSec": 3,
                     "allRedSec": 2,
                     "releases": {
-                      "01KXK3H6FS8QA2CSP4BEN3BS8X": [
+                      "01KXK4BHGEB1GWSHTW6126S725": [
                         "T",
                         "R"
                       ],
-                      "01KXK3H6FVRK2JPXQGP31N398K": [
+                      "01KXK4BHGH99B4YE513VHGJ4D4": [
                         "T",
                         "R"
                       ]
                     }
                   },
                   {
-                    "id": "01KXK3H6FZRRRKP4SXT6W34FEM",
+                    "id": "01KXK4BHGNF25N0B7N14F4CYSY",
                     "name": "南北左转",
                     "greenSec": 28,
                     "yellowSec": 3,
                     "allRedSec": 2,
                     "releases": {
-                      "01KXK3H6FS8QA2CSP4BEN3BS8X": [
+                      "01KXK4BHGEB1GWSHTW6126S725": [
                         "L"
                       ],
-                      "01KXK3H6FVRK2JPXQGP31N398K": [
+                      "01KXK4BHGH99B4YE513VHGJ4D4": [
                         "L"
                       ]
                     }
                   },
                   {
-                    "id": "01KXK3H6FZEZMKYWPP97Y32V6T",
+                    "id": "01KXK4BHGNKK8E3XKMEJY1HR09",
                     "name": "东西直行+右转",
                     "greenSec": 28,
                     "yellowSec": 3,
                     "allRedSec": 2,
                     "releases": {
-                      "01KXK3H6FTF65P44WAR30MVAJN": [
+                      "01KXK4BHGGFQCWAKHH27WPTBPX": [
                         "T",
                         "R"
                       ],
-                      "01KXK3H6FXJZSKPK7WN6H424C5": [
+                      "01KXK4BHGJZTTXAAGA2B2HB3NC": [
                         "T",
                         "R"
                       ]
                     }
                   },
                   {
-                    "id": "01KXK3H6FZ8JH5NVNFQ471H0VB",
+                    "id": "01KXK4BHGPEV7KT5E1SKTPXCWC",
                     "name": "东西左转",
                     "greenSec": 28,
                     "yellowSec": 3,
                     "allRedSec": 2,
                     "releases": {
-                      "01KXK3H6FTF65P44WAR30MVAJN": [
+                      "01KXK4BHGGFQCWAKHH27WPTBPX": [
                         "L"
                       ],
-                      "01KXK3H6FXJZSKPK7WN6H424C5": [
+                      "01KXK4BHGJZTTXAAGA2B2HB3NC": [
                         "L"
                       ]
                     }
@@ -428,13 +428,13 @@
     ],
     "crossSections": [],
     "active": {
-      "channelId": "01KXK3H6FYANM1JN1AE9KZ334T",
-      "flowId": "01KXK3H6FYFDCWFRN9KNT3Z1S0",
-      "signalId": "01KXK3H6FYF28P3XWX1F2MHGVP"
+      "channelId": "01KXK4BHGM4QK0DS33F5C18QQV",
+      "flowId": "01KXK4BHGM2F5R6TXTADR4DYRX",
+      "signalId": "01KXK4BHGMNT9V9073KRYCE168"
     },
     "meta": {
-      "createdAt": "2026-07-15T14:40:13.311Z",
-      "updatedAt": "2026-07-15T14:40:13.311Z"
+      "createdAt": "2026-07-15T14:54:36.566Z",
+      "updatedAt": "2026-07-15T14:54:36.566Z"
     },
     "settings": {
       "maxSchemes": 10,

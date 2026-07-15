@@ -209,6 +209,7 @@ export interface MeshLine {
   stroke?: string
   strokeWidth?: number
   dashed?: boolean
+  alpha?: number
   meta?: Record<string, unknown>
 }
 

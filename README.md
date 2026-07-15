@@ -1,13 +1,12 @@
 # Crossdraw
 
-**本地优先、免费开源的交叉口设计图纸生成器（GPLv3）。**
+**本地优先、免费开源的交叉口设计出图工具（GPLv3）· v0.2.0**
 
-参数一次输入 → 渠化 / 流量 / 信号 / 横断面 / 分析 / 绿波 联动出图。  
-项目即 `.rtp` 文件，可离线、可归档、可 Git。
+面向生产工作流的参数化交叉口方案表达：渠化 / 流量 / 信号 / 断面 / 分析 / 绿波联动，本地 `.rtp` 归档，导出 PNG / SVG / DXF / CSV / Excel。
 
 - 仓库：https://github.com/sakmiko/crossdraw  
 - 协议：[GNU GPLv3](LICENSE)  
-- 包管理：**npm**（跨平台 Windows / macOS / Linux）
+- 包管理：**npm**（Windows / macOS / Linux）
 
 ---
 
@@ -18,65 +17,50 @@ npm install
 npm run dev
 ```
 
-浏览器打开终端提示的本地地址（默认 `http://localhost:5173`）。
-
 ```bash
-npm run build      # 生产构建
-npm run preview    # 预览构建产物
-npm test           # 单元测试
-npm run test:e2e   # 端到端（需 Chromium）
+npm run build && npm run preview
+npm test
+npm run test:e2e
 ```
 
 ---
 
-## 功能一览
+## 生产能力（0.2）
 
-| 模块 | 能力 |
+| 模块 | 内容 |
 |------|------|
-| 渠化 | 十字模板、车道/展宽/中分/右转渠化/人行非机，参数改即重绘 |
-| 流量 | 转向矩阵、大车比、PHF、饱和流率 |
-| 信号 | 相位编辑、周期、Webster 自动配时 |
-| 断面 | 从进口参数生成简绘横断面 |
-| 分析 | 饱和度 / 延误 / 排队 / LOS，CSV 导出 |
-| 绿波 | 经典数解带宽与相位差示意 |
-| 文件 | `.rtp` 打开保存、自动草稿恢复 |
-| 导出 | PNG / SVG / DXF |
-| 体验 | 撤销重做、快捷键、暗色专业 UI、Pixi 画布 |
+| 几何 2.0 | 圆角路口核心、分车道宽、展宽渐变、渠化岛、斑马线、图框图签、比例尺、指北针 |
+| 流量 | 转向矩阵 + 画布流量箭头层 |
+| 信号 | 相位编辑、Webster、冲突检测、周期校核 |
+| 断面 | 简绘横断面联动 |
+| 分析 | v/c·延误·排队·LOS；CSV / Excel；多方案对比 |
+| 绿波 | 经典数解带宽与相位差 |
+| 方案树 | 渠化/流量/信号增删复制激活；十字 / T 型模板 |
+| 导出 | PNG / SVG / DXF（图层+线型） |
+| 体验 | 撤销重做、Ctrl+K 命令面板、自动草稿、暗色专业 UI |
 
 ---
 
-## 示例工程
+## 示例
 
-`examples/`：
-
-- `standard-cross.rtp`
-- `wide-entry.rtp`
-- `compact.rtp`
-
-在应用中「打开 .rtp」加载。
+`examples/standard-cross.rtp` · `wide-entry.rtp` · `compact.rtp`
 
 ---
 
 ## 技术栈
 
-TypeScript · React · Vite · Zustand · PixiJS · Zod · Vitest · Playwright
-
-架构原则：**domain 纯函数引擎 + 薄 UI + 可替换渲染**。详见 `docs/`。
+TypeScript · React · Vite · Zustand · PixiJS · Zod · Vitest · Playwright · GitHub Actions CI
 
 ---
 
 ## 文档
 
-| 路径 | 说明 |
-|------|------|
-| [docs/development/](docs/development/) | 开发阶段与验收 |
-| [docs/product/](docs/product/) | PRD / 路线图 |
-| [docs/research/](docs/research/) | RoadGee 与市场调研 |
-| [docs/architecture/](docs/architecture/) | 架构与数据模型 |
-| [docs/specs/](docs/specs/) | UI / 算法 / 文件格式 |
+见 `docs/`（产品 / 调研 / 架构 / 开发阶段手册）。
 
----
+## 边界说明
 
-## 贡献与许可
+几何为**工程示意级参数化生成**（可出方案图/报告附图），不是测绘级施工图 CAD；绿波多节点默认示意坐标，可扩展为真实项目坐标。仿真深度对接（完整 Vissim inpx）仍可继续增强。
 
-见 [CONTRIBUTING.md](CONTRIBUTING.md)。代码与文档以 **GPLv3** 发布。
+## 贡献
+
+见 [CONTRIBUTING.md](CONTRIBUTING.md)。

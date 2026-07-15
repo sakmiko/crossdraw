@@ -34,6 +34,14 @@ export type AppState = {
     | null
   duplicateChannel: () => void
   applyWebster: (greens: { phaseId: string; greenSec: number }[], cycle: number) => void
+  setActiveChannel: (id: string) => void
+  setActiveFlow: (id: string) => void
+  setActiveSignal: (id: string) => void
+  addFlowScheme: () => void
+  addSignalScheme: () => void
+  deleteChannel: (id: string) => void
+  renameChannel: (id: string, name: string) => void
+  loadTemplate: (kind: 'cross' | 't') => void
 }
 
 function activeChannel(p: Project) {
@@ -191,6 +199,85 @@ export const useAppStore = create<AppState>()(
             if (ph) ph.greenSec = g.greenSec
           }
           s.dirty = true
+        }),
+      setActiveChannel: (id) =>
+        set((s) => {
+          s.project.active.channelId = id
+          const ch = s.project.channelizationSchemes.find((c) => c.id === id)
+          if (ch) {
+            s.project.active.flowId = ch.flowSchemes[0]?.id ?? null
+            s.project.active.signalId = ch.flowSchemes[0]?.signalSchemes[0]?.id ?? null
+            s.selectedApproachId = ch.approaches[0]?.id ?? null
+          }
+        }),
+      setActiveFlow: (id) =>
+        set((s) => {
+          s.project.active.flowId = id
+          const fl = activeFlow({ ...s.project, active: { ...s.project.active, flowId: id } })
+          s.project.active.signalId = fl?.signalSchemes[0]?.id ?? null
+        }),
+      setActiveSignal: (id) => set((s) => { s.project.active.signalId = id }),
+      addFlowScheme: () =>
+        set((s) => {
+          const ch = activeChannel(s.project)
+          if (!ch) return
+          if (ch.flowSchemes.length >= s.project.settings.maxSchemes) return
+          const base = ch.flowSchemes[0]
+          const copy = structuredClone(base)
+          copy.id = newId()
+          copy.name = `流量方案 ${ch.flowSchemes.length + 1}`
+          copy.signalSchemes.forEach((sg) => {
+            sg.id = newId()
+            sg.phases.forEach((ph) => { ph.id = newId() })
+          })
+          ch.flowSchemes.push(copy)
+          s.project.active.flowId = copy.id
+          s.project.active.signalId = copy.signalSchemes[0]?.id ?? null
+          s.dirty = true
+        }),
+      addSignalScheme: () =>
+        set((s) => {
+          const fl = activeFlow(s.project)
+          if (!fl) return
+          if (fl.signalSchemes.length >= s.project.settings.maxSchemes) return
+          const base = fl.signalSchemes[0]
+          const copy = structuredClone(base)
+          copy.id = newId()
+          copy.name = `信号方案 ${fl.signalSchemes.length + 1}`
+          copy.phases.forEach((ph) => { ph.id = newId() })
+          fl.signalSchemes.push(copy)
+          s.project.active.signalId = copy.id
+          s.dirty = true
+        }),
+      deleteChannel: (id) =>
+        set((s) => {
+          if (s.project.channelizationSchemes.length <= 1) return
+          s.project.channelizationSchemes = s.project.channelizationSchemes.filter((c) => c.id !== id)
+          if (s.project.active.channelId === id) {
+            const ch = s.project.channelizationSchemes[0]
+            s.project.active.channelId = ch.id
+            s.project.active.flowId = ch.flowSchemes[0]?.id ?? null
+            s.project.active.signalId = ch.flowSchemes[0]?.signalSchemes[0]?.id ?? null
+          }
+          s.dirty = true
+        }),
+      renameChannel: (id, name) =>
+        set((s) => {
+          const ch = s.project.channelizationSchemes.find((c) => c.id === id)
+          if (ch) ch.name = name
+          s.dirty = true
+        }),
+      loadTemplate: (kind) =>
+        set((s) => {
+          const p = createCrossTemplate(kind === 't' ? '标准T型交叉口' : '标准十字交叉口')
+          if (kind === 't') {
+            p.channelizationSchemes[0].intersectionType = 't'
+            p.channelizationSchemes[0].approaches = p.channelizationSchemes[0].approaches.filter((a) => a.bearingDeg !== 180)
+            p.channelizationSchemes[0].name = 'T型渠化 A'
+          }
+          s.project = p
+          s.dirty = true
+          s.selectedApproachId = p.channelizationSchemes[0]?.approaches[0]?.id ?? null
         }),
     })),
     {

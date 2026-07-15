@@ -5,12 +5,15 @@ import { analyzeIntersection, websterTiming } from '@/domain/analysis'
 import { optimizeBandClassic } from '@/domain/analysis/band'
 import { buildCrossSection, markStaleIfNeeded } from '@/domain/xsection/build'
 import { validateProject, summarizeIssues } from '@/domain/validate'
+import { detectProjectSignalIssues } from '@/domain/signal/conflicts'
 import { wrapProject, serializeRtp, parseRtp } from '@/domain/rtp'
 import { meshToSvg } from '@/io/exportSvg'
 import { meshToDxf } from '@/io/exportDxf'
+import { analysisToCsv, analysisToExcelHtml, collectCompareRows, compareSchemesCsv } from '@/io/report'
 import { downloadBlob, downloadText } from '@/io/download'
 import { loadDraft, clearDraft } from '@/io/autosave'
 import { persistAutosave, redo, undo, useAppStore } from '@/state/store'
+import { CommandPalette } from '@/ui/common/CommandPalette'
 import type { EditorMode, TurnVolumes } from '@/domain/types'
 import '@/ui/styles.css'
 
@@ -43,12 +46,20 @@ export default function App() {
   const setProjectName = useAppStore((s) => s.setProjectName)
   const duplicateChannel = useAppStore((s) => s.duplicateChannel)
   const applyWebster = useAppStore((s) => s.applyWebster)
+  const setActiveChannel = useAppStore((s) => s.setActiveChannel)
+  const setActiveFlow = useAppStore((s) => s.setActiveFlow)
+  const setActiveSignal = useAppStore((s) => s.setActiveSignal)
+  const addFlowScheme = useAppStore((s) => s.addFlowScheme)
+  const addSignalScheme = useAppStore((s) => s.addSignalScheme)
+  const deleteChannel = useAppStore((s) => s.deleteChannel)
+  const loadTemplate = useAppStore((s) => s.loadTemplate)
 
   const channel = useAppStore((s) => s.getActiveChannel())
   const flow = useAppStore((s) => s.getActiveFlow())
   const signal = useAppStore((s) => s.getActiveSignal())
 
   const [restoreMsg, setRestoreMsg] = useState<string | null>(null)
+  const [paletteOpen, setPaletteOpen] = useState(false)
 
   useEffect(() => {
     const d = loadDraft()
@@ -66,6 +77,10 @@ export default function App() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setPaletteOpen(true)
+      }
       if (e.ctrlKey && e.key.toLowerCase() === 's') {
         e.preventDefault()
         saveRtp()
@@ -88,13 +103,21 @@ export default function App() {
   }, [setMode])
 
   const mesh = useMemo(() => {
-    if (!channel) return rebuildChannelMesh({
-      id: 'x', name: '', intersectionType: 'cross', approaches: [], display: { background: THEME.paper, northArrow: true, paperSize: 'A3' }, flowSchemes: [],
-    })
-    return rebuildChannelMesh(channel)
-  }, [channel])
+    if (!channel)
+      return rebuildChannelMesh({
+        id: 'x',
+        name: '',
+        intersectionType: 'cross',
+        approaches: [],
+        display: { background: THEME.paper, northArrow: true, paperSize: 'A3' },
+        flowSchemes: [],
+      })
+    return rebuildChannelMesh(channel, mode === 'flow' || mode === 'analysis' ? flow : null)
+  }, [channel, flow, mode])
 
-  const issues = useMemo(() => validateProject(project), [project])
+  const issues = useMemo(() => {
+    return [...validateProject(project), ...detectProjectSignalIssues(project)]
+  }, [project])
   const summary = summarizeIssues(issues)
 
   const analysis = useMemo(() => {
@@ -185,7 +208,8 @@ export default function App() {
           aria-label="项目名称"
         />
         <div className="toolbar">
-          <button type="button" onClick={() => resetTemplate()}>新建十字</button>
+          <button type="button" onClick={() => loadTemplate('cross')}>新建十字</button>
+          <button type="button" onClick={() => loadTemplate('t')}>新建T型</button>
           <label style={{ margin: 0 }}>
             <span className="hint">打开</span>
             <input
@@ -205,6 +229,7 @@ export default function App() {
           <button type="button" onClick={exportSvg}>SVG</button>
           <button type="button" onClick={exportDxf}>DXF</button>
           <button type="button" onClick={() => duplicateChannel()}>复制渠化</button>
+          <button type="button" onClick={() => setPaletteOpen(true)}>命令 Ctrl+K</button>
         </div>
         <div style={{ marginLeft: 'auto' }} className="hint">
           {dirty ? '未保存' : '已保存'} · 本地免费 · GPLv3
@@ -214,15 +239,57 @@ export default function App() {
       <div className="main">
         <aside className="side">
           <div className="section-title">方案树</div>
+          <div className="toolbar" style={{ marginBottom: 8 }}>
+            <button type="button" onClick={() => duplicateChannel()}>+渠化</button>
+            <button type="button" onClick={() => addFlowScheme()}>+流量</button>
+            <button type="button" onClick={() => addSignalScheme()}>+信号</button>
+          </div>
           {project.channelizationSchemes.map((ch) => (
-            <div key={ch.id} className={`tree-item ${ch.id === channel?.id ? 'active' : ''}`}>
+            <div
+              key={ch.id}
+              className={`tree-item ${ch.id === channel?.id ? 'active' : ''}`}
+              onClick={() => setActiveChannel(ch.id)}
+            >
               <strong>{ch.name}</strong>
-              <div className="hint">{ch.approaches.length} 进口 · {ch.flowSchemes.length} 流量方案</div>
+              <div className="hint">{ch.approaches.length} 进口 · {ch.intersectionType}</div>
+              {ch.id === channel?.id && project.channelizationSchemes.length > 1 && (
+                <button
+                  type="button"
+                  className="ghost"
+                  style={{ marginTop: 4 }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    deleteChannel(ch.id)
+                  }}
+                >
+                  删除
+                </button>
+              )}
               {ch.flowSchemes.map((fl) => (
-                <div key={fl.id} style={{ marginLeft: 8, marginTop: 6 }}>
-                  <div className="hint">流量：{fl.name}</div>
+                <div
+                  key={fl.id}
+                  style={{ marginLeft: 8, marginTop: 6 }}
+                  className={fl.id === flow?.id ? 'hint' : 'hint'}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setActiveChannel(ch.id)
+                    setActiveFlow(fl.id)
+                  }}
+                >
+                  流量：{fl.name}{fl.id === flow?.id ? ' · 当前' : ''}
                   {fl.signalSchemes.map((sg) => (
-                    <div key={sg.id} className="hint" style={{ marginLeft: 8 }}>信号：{sg.name} · C={sg.cycleSec}s</div>
+                    <div
+                      key={sg.id}
+                      style={{ marginLeft: 8 }}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setActiveChannel(ch.id)
+                        setActiveFlow(fl.id)
+                        setActiveSignal(sg.id)
+                      }}
+                    >
+                      信号：{sg.name} · C={sg.cycleSec}s{sg.id === signal?.id ? ' · 当前' : ''}
+                    </div>
                   ))}
                 </div>
               ))}
@@ -248,8 +315,8 @@ export default function App() {
             </div>
           )}
           <div className="card">
-            <h3>差异化</h3>
-            <p className="hint">无限本地保存 · 方案上限 {project.settings.maxSchemes} · 国标默认提示 · 开源可审计引擎</p>
+            <h3>生产说明</h3>
+            <p className="hint">本地无限保存 · 方案上限 {project.settings.maxSchemes} · DXF 图层 ROAD/MARKING/ISLAND/ANNO/FLOW · Ctrl+K 命令面板</p>
           </div>
         </aside>
 
@@ -507,21 +574,60 @@ export default function App() {
                   ))}
                 </tbody>
               </table>
-              <button
-                type="button"
-                onClick={() => {
-                  const rows = [
-                    'approach,movement,vc,delay,queue_m',
-                    ...analysis.lanes.map(
-                      (l) =>
-                        `${l.approachName},${l.movement},${l.vc.toFixed(3)},${l.delaySec.toFixed(2)},${l.queueM.toFixed(2)}`,
-                    ),
-                  ]
-                  downloadText(`${project.name}-analysis.csv`, rows.join('\n'), 'text/csv')
-                }}
-              >
-                导出 CSV
-              </button>
+              <div className="toolbar" style={{ marginTop: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => downloadText(`${project.name}-analysis.csv`, analysisToCsv(analysis), 'text/csv')}
+                >
+                  导出 CSV
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    downloadText(
+                      `${project.name}-analysis.xls`,
+                      analysisToExcelHtml(project.name, analysis),
+                      'application/vnd.ms-excel',
+                    )
+                  }
+                >
+                  导出 Excel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const rows = collectCompareRows(project, analyzeIntersection)
+                    downloadText(`${project.name}-compare.csv`, compareSchemesCsv(rows), 'text/csv')
+                  }}
+                >
+                  多方案对比 CSV
+                </button>
+              </div>
+              <div className="section-title">方案对比摘要</div>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>渠化</th>
+                    <th>流量</th>
+                    <th>信号</th>
+                    <th>v/c</th>
+                    <th>延误</th>
+                    <th>LOS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {collectCompareRows(project, analyzeIntersection).map((r, i) => (
+                    <tr key={i}>
+                      <td>{r.channel}</td>
+                      <td>{r.flow}</td>
+                      <td>{r.signal}</td>
+                      <td>{r.avgVc.toFixed(2)}</td>
+                      <td>{r.avgDelay.toFixed(1)}</td>
+                      <td>{r.los}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
 
@@ -548,14 +654,14 @@ export default function App() {
                   ))}
                 </tbody>
               </table>
-              <p className="hint">示意模块：可在 V2 接入真实多路口项目坐标。</p>
+              <p className="hint">干道协调模块：默认 4 节点示意；可按实际间距扩展为项目坐标驱动。</p>
             </div>
           )}
 
           <div className="card">
             <h3>校验</h3>
             {issues.length === 0 && <p className="hint">无问题</p>}
-            {issues.slice(0, 8).map((i) => (
+            {issues.slice(0, 10).map((i) => (
               <div key={i.id} className={`pill ${i.level}`} style={{ display: 'flex', marginBottom: 6 }}>
                 {i.level.toUpperCase()} · {i.message}
               </div>
@@ -565,11 +671,14 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.1.0</span>
+        <span>Crossdraw v0.2.0</span>
         <span>Mesh polys {mesh.polygons.length}</span>
-        <span>bbox {mesh.bbox.maxX - mesh.bbox.minX | 0}×{mesh.bbox.maxY - mesh.bbox.minY | 0} m</span>
+        <span>
+          bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
+        </span>
         <span style={{ marginLeft: 'auto' }}>sakmiko/crossdraw · GPLv3</span>
       </footer>
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   )
 }
