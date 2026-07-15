@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Application, Container, Graphics, Text, TextStyle } from 'pixi.js'
 import type { Mesh } from '@/domain/types'
+import { useAppStore } from '@/state/store'
 
 type Props = {
   mesh: Mesh
@@ -12,6 +13,7 @@ export function CanvasView({ mesh, selectedApproachId, height = 640 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null)
   const appRef = useRef<Application | null>(null)
   const worldRef = useRef<Container | null>(null)
+  const theme = useAppStore((s) => s.theme)
 
   useEffect(() => {
     let destroyed = false
@@ -21,7 +23,7 @@ export function CanvasView({ mesh, selectedApproachId, height = 640 }: Props) {
     const app = new Application()
     ;(async () => {
       await app.init({
-        background: '#0b1220',
+        background: theme === 'light' ? '#d7dee8' : '#0a0e14',
         antialias: true,
         resizeTo: host,
         resolution: Math.min(window.devicePixelRatio || 1, 2),
@@ -70,12 +72,18 @@ export function CanvasView({ mesh, selectedApproachId, height = 640 }: Props) {
       window.addEventListener('pointermove', onMove)
       window.addEventListener('pointerup', onUp)
 
-      // initial center
-      world.x = host.clientWidth / 2
-      world.y = host.clientHeight / 2
-      world.scale.set(2.2)
-
       drawMesh(world, mesh, selectedApproachId)
+      // fit mesh into host (better mobile + desktop)
+      const b = mesh.bbox
+      const mw = Math.max(1, b.maxX - b.minX)
+      const mh = Math.max(1, b.maxY - b.minY)
+      const pad = 0.86
+      const sx = (host.clientWidth * pad) / mw
+      const sy = (host.clientHeight * pad) / mh
+      const next = Math.min(4, Math.max(0.2, Math.min(sx, sy)))
+      world.scale.set(next)
+      world.x = host.clientWidth / 2 - ((b.minX + b.maxX) / 2) * next
+      world.y = host.clientHeight / 2 - ((b.minY + b.maxY) / 2) * next
 
       return () => {
         app.canvas.removeEventListener('wheel', onWheel)
@@ -105,7 +113,8 @@ export function CanvasView({ mesh, selectedApproachId, height = 640 }: Props) {
     <div
       ref={hostRef}
       id="canvas-root"
-      style={{ width: '100%', height, borderRadius: 12, overflow: 'hidden', boxShadow: 'inset 0 0 0 1px #1e293b' }}
+      className="canvas-host"
+      style={{ width: '100%', height }}
     />
   )
 }

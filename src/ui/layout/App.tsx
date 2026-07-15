@@ -15,6 +15,7 @@ import { downloadBlob, downloadText } from '@/io/download'
 import { loadDraft, clearDraft } from '@/io/autosave'
 import { persistAutosave, redo, undo, useAppStore } from '@/state/store'
 import { CommandPalette } from '@/ui/common/CommandPalette'
+import { AnalysisCharts, BandCharts, FlowCharts, SignalCharts } from '@/ui/charts/ChartPanels'
 import type { EditorMode, Movement, TurnVolumes } from '@/domain/types'
 import '@/ui/styles.css'
 
@@ -33,6 +34,8 @@ export default function App() {
   const dirty = useAppStore((s) => s.dirty)
   const selectedApproachId = useAppStore((s) => s.selectedApproachId)
   const setMode = useAppStore((s) => s.setMode)
+  const theme = useAppStore((s) => s.theme)
+  const setTheme = useAppStore((s) => s.setTheme)
   const selectApproach = useAppStore((s) => s.selectApproach)
   const updateApproach = useAppStore((s) => s.updateApproach)
   const setLaneCount = useAppStore((s) => s.setLaneCount)
@@ -69,6 +72,11 @@ export default function App() {
 
   const [restoreMsg, setRestoreMsg] = useState<string | null>(null)
   const [paletteOpen, setPaletteOpen] = useState(false)
+  const [mobilePane, setMobilePane] = useState<'tree' | 'canvas' | 'inspector'>('canvas')
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+  }, [theme])
 
   useEffect(() => {
     const d = loadDraft()
@@ -196,14 +204,23 @@ export default function App() {
   const xsection = selected ? buildCrossSection(selected) : null
 
   return (
-    <div className="app">
+    <div className="app" data-pane={mobilePane}>
+      <nav className="mobile-nav" aria-label="移动端面板">
+        <button type="button" className={mobilePane === 'tree' ? 'active' : ''} onClick={() => setMobilePane('tree')}>方案</button>
+        <button type="button" className={mobilePane === 'canvas' ? 'active' : ''} onClick={() => setMobilePane('canvas')}>画布</button>
+        <button type="button" className={mobilePane === 'inspector' ? 'active' : ''} onClick={() => setMobilePane('inspector')}>参数</button>
+      </nav>
       <header className="topbar">
         <div className="brand">
           <div className="brand-badge" />
-          <span>Crossdraw</span>
+          <div>
+            Crossdraw
+            <small>LOCAL INTERSECTION DESIGN</small>
+          </div>
         </div>
+        <div className="topbar-divider" />
         <input
-          style={{ maxWidth: 220 }}
+          className="project-name"
           value={project.name}
           onChange={(e) => setProjectName(e.target.value)}
           aria-label="项目名称"
@@ -226,14 +243,23 @@ export default function App() {
           <button type="button" className="primary" onClick={saveRtp}>保存</button>
           <button type="button" onClick={() => undo()}>撤销</button>
           <button type="button" onClick={() => redo()}>重做</button>
-          <button type="button" onClick={exportPng}>PNG</button>
-          <button type="button" onClick={exportSvg}>SVG</button>
-          <button type="button" onClick={exportDxf}>DXF</button>
-          <button type="button" onClick={() => duplicateChannel()}>复制渠化</button>
-          <button type="button" onClick={() => setPaletteOpen(true)}>命令 Ctrl+K</button>
+          <div className="toolbar-secondary">
+            <button type="button" onClick={exportPng}>PNG</button>
+            <button type="button" onClick={exportSvg}>SVG</button>
+            <button type="button" onClick={exportDxf}>DXF</button>
+          </div>
+          <button type="button" onClick={() => duplicateChannel()}>复制</button>
+          <button type="button" onClick={() => setPaletteOpen(true)}>命令 ⌘K</button>
         </div>
-        <div style={{ marginLeft: 'auto' }} className="hint">
-          {dirty ? '未保存' : '已保存'} · 本地免费 · GPLv3
+        <div className="topbar-end">
+          <button type="button" className="primary" onClick={saveRtp}>保存</button>
+          <div className="theme-toggle" role="group" aria-label="主题">
+            <button type="button" className={theme === 'dark' ? 'active' : ''} onClick={() => setTheme('dark')}>深色</button>
+            <button type="button" className={theme === 'light' ? 'active' : ''} onClick={() => setTheme('light')}>浅色</button>
+          </div>
+          <div className="hint">
+            {dirty ? '未保存' : '已保存'}
+          </div>
         </div>
       </header>
 
@@ -316,14 +342,20 @@ export default function App() {
             </div>
           )}
           <div className="card">
-            <h3>生产说明</h3>
-            <p className="hint">本地无限保存 · 方案上限 {project.settings.maxSchemes} · DXF 图层 ROAD/MARKING/ISLAND/ANNO/FLOW · Ctrl+K 命令面板</p>
+            <h3>提示</h3>
+            <p className="hint">本地无限保存 · 方案上限 {project.settings.maxSchemes} · Ctrl+K 命令 · 1–6 切换模式</p>
           </div>
         </aside>
 
         <main className="center">
-          <div className="toolbar">
-            <span className="hint">拖动画布平移 · 滚轮缩放 · 1-6 切换模式</span>
+          <div className="breadcrumb">
+            <b>项目</b><span className="sep">/</span>
+            <span>{project.name}</span><span className="sep">/</span>
+            <span>{channel?.name ?? '—'}</span><span className="sep">/</span>
+            <span>{MODES.find((m) => m.id === mode)?.label}</span>
+          </div>
+          <div className="stage-bar">
+            <span className="hint">平移 · 缩放 · 1–6 模式 · Ctrl+K</span>
             <span className={`pill ${summary.block ? 'block' : summary.warn ? 'warn' : 'ok'}`}>
               {summary.block ? `BLOCK ${summary.block}` : summary.warn ? `WARN ${summary.warn}` : 'OK'}
             </span>
@@ -331,13 +363,22 @@ export default function App() {
               <span className="pill ok">LOS {analysis.losFinal} · v/c {analysis.avgVc.toFixed(2)} · 延误 {analysis.avgDelay.toFixed(1)}s</span>
             )}
           </div>
-          <CanvasView mesh={mesh} selectedApproachId={selected?.id} height={window.innerHeight - 140} />
+          <div className="canvas-shell">
+            <CanvasView mesh={mesh} selectedApproachId={selected?.id} height={typeof window !== 'undefined' && window.innerWidth < 720 ? Math.max(320, window.innerHeight - 160) : window.innerHeight - 180} />
+          </div>
         </main>
 
         <aside className="right">
-          <div className="mode-tabs">
+          <div className="mode-rail" role="tablist" aria-label="编辑模式">
             {MODES.map((m) => (
-              <button key={m.id} type="button" className={mode === m.id ? 'active' : ''} onClick={() => setMode(m.id)}>
+              <button
+                key={m.id}
+                type="button"
+                role="tab"
+                aria-selected={mode === m.id}
+                className={mode === m.id ? 'active' : ''}
+                onClick={() => setMode(m.id)}
+              >
                 {m.label}
               </button>
             ))}
@@ -442,6 +483,9 @@ export default function App() {
                 />{' '}
                 非机动车道
               </label>
+              <details className="details-block" open>
+                <summary>渠化选项 / 待转借道</summary>
+                <div className="details-body">
               <div className="field-row">
                 <label>
                   <input
@@ -491,7 +535,12 @@ export default function App() {
                   />
                 </label>
               )}
-              <div className="section-title">分车道宽 / 转向</div>
+                </div>
+              </details>
+              <details className="details-block" open>
+                <summary>分车道宽 / 转向</summary>
+                <div className="details-body">
+              <div className="section-title" style={{ marginTop: 0 }}>车道配置</div>
               {selected.entryLanes.map((ln, i) => (
                 <div key={ln.id} className="field-row" style={{ alignItems: 'end' }}>
                   <label>
@@ -517,6 +566,8 @@ export default function App() {
                 </div>
               ))}
               <p className="hint">改参后画布即时联动。待转/借道/红灯右转参与几何与分析。</p>
+                </div>
+              </details>
             </div>
           )}
 
@@ -543,36 +594,43 @@ export default function App() {
                   />
                 </label>
               </div>
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>进口</th>
-                    <th>L</th>
-                    <th>T</th>
-                    <th>R</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {channel.approaches.map((ap) => {
-                    const v = flow.volumes[ap.id] ?? { U: 0, L: 0, T: 0, R: 0 }
-                    const cell = (k: keyof TurnVolumes) => (
-                      <input
-                        type="number"
-                        value={v[k]}
-                        onChange={(e) => setVolume(ap.id, { [k]: Number(e.target.value) })}
-                      />
-                    )
-                    return (
-                      <tr key={ap.id}>
-                        <td>{ap.name}</td>
-                        <td>{cell('L')}</td>
-                        <td>{cell('T')}</td>
-                        <td>{cell('R')}</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+              <div className="table-wrap" style={{ maxHeight: 200 }}>
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>进口</th>
+                      <th>L</th>
+                      <th>T</th>
+                      <th>R</th>
+                      <th>合计</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {channel.approaches.map((ap) => {
+                      const v = flow.volumes[ap.id] ?? { U: 0, L: 0, T: 0, R: 0 }
+                      const cell = (k: keyof TurnVolumes) => (
+                        <input
+                          type="number"
+                          value={v[k]}
+                          onChange={(e) => setVolume(ap.id, { [k]: Number(e.target.value) })}
+                        />
+                      )
+                      const sum = (v.L || 0) + (v.T || 0) + (v.R || 0)
+                      return (
+                        <tr key={ap.id}>
+                          <td>{ap.name}</td>
+                          <td>{cell('L')}</td>
+                          <td>{cell('T')}</td>
+                          <td>{cell('R')}</td>
+                          <td className="hint">{sum}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <p className="hint">单位 veh/h · 图表与矩阵同步</p>
+              <FlowCharts approaches={channel.approaches} flow={flow} />
             </div>
           )}
 
@@ -624,6 +682,7 @@ export default function App() {
                 <button type="button" onClick={() => addPhase()}>添加相位</button>
                 <button type="button" className="primary" onClick={runWebster}>Webster 自动配时</button>
               </div>
+              <SignalCharts signal={signal} />
             </div>
           )}
 
@@ -646,33 +705,63 @@ export default function App() {
 
           {mode === 'analysis' && analysis && (
             <div className="card" style={{ marginTop: 12 }}>
-              <h2>评价分析</h2>
-              <p className="hint">
+              <div className="panel-header">
+                <h2>评价分析</h2>
+              </div>
+              <div className="metric-grid">
+                <div className="metric">
+                  <div className="label">平均 v/c</div>
+                  <div className="value">{analysis.avgVc.toFixed(3)}</div>
+                </div>
+                <div className="metric">
+                  <div className="label">车均延误</div>
+                  <div className="value">
+                    {analysis.avgDelay.toFixed(1)}
+                    <small style={{ fontSize: 12 }}> s</small>
+                  </div>
+                </div>
+                <div className="metric">
+                  <div className="label">平均排队</div>
+                  <div className="value">
+                    {analysis.avgQueueM.toFixed(1)}
+                    <small style={{ fontSize: 12 }}> m</small>
+                  </div>
+                </div>
+                <div className={`metric los-${analysis.losFinal}${analysis.losFinal === 'F' || analysis.losFinal === 'E' ? ' danger' : ''}`}>
+                  <div className="label">服务水平</div>
+                  <div className="value">{analysis.losFinal}</div>
+                  <div className="sub">与图表/表格同源</div>
+                </div>
+              </div>
+              <AnalysisCharts analysis={analysis} />
+              <p className="hint" style={{ marginTop: 8 }}>
                 平均饱和度 {analysis.avgVc.toFixed(3)} · 车均延误 {analysis.avgDelay.toFixed(1)} s · 排队{' '}
                 {analysis.avgQueueM.toFixed(1)} m · LOS {analysis.losFinal}
               </p>
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>进口</th>
-                    <th>转向</th>
-                    <th>v/c</th>
-                    <th>延误</th>
-                    <th>排队m</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {analysis.lanes.map((l, i) => (
-                    <tr key={i}>
-                      <td>{l.approachName}</td>
-                      <td>{l.movement}</td>
-                      <td>{l.vc.toFixed(2)}</td>
-                      <td>{l.delaySec.toFixed(1)}</td>
-                      <td>{l.queueM.toFixed(1)}</td>
+              <div className="table-wrap">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>进口</th>
+                      <th>转向</th>
+                      <th>v/c</th>
+                      <th>延误</th>
+                      <th>排队m</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {analysis.lanes.map((l, i) => (
+                      <tr key={i}>
+                        <td>{l.approachName}</td>
+                        <td>{l.movement}</td>
+                        <td className={l.vc >= 1 ? 'cell-hot' : l.vc >= 0.85 ? 'cell-warm' : ''}>{l.vc.toFixed(2)}</td>
+                        <td className={l.delaySec >= 80 ? 'cell-hot' : l.delaySec >= 55 ? 'cell-warm' : ''}>{l.delaySec.toFixed(1)}</td>
+                        <td>{l.queueM.toFixed(1)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
               <div className="toolbar" style={{ marginTop: 8 }}>
                 <button
                   type="button"
@@ -833,7 +922,8 @@ export default function App() {
                   优化相位差
                 </button>
               </div>
-              <p className="hint">节点坐标可编辑并写入 .rtp；优化结果写回相位差，锁定点保留原值（lockedOffset）。</p>
+              <BandCharts corridor={project.bandCorridor} />
+              <p className="hint">节点写入 .rtp；时空图与相位差曲线随数据联动。</p>
             </div>
           )}
 
@@ -850,7 +940,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.3.0</span>
+        <span>Crossdraw v0.4.2</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

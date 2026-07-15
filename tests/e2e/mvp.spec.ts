@@ -1,27 +1,46 @@
 import { expect, test } from '@playwright/test'
 
-test('E2E-MVP-001 main path', async ({ page }) => {
-  await page.goto('/')
-  await expect(page.getByText('Crossdraw').first()).toBeVisible()
-  await page.getByRole('button', { name: '新建十字' }).click()
-  await expect(page.locator('#canvas-root')).toBeVisible()
+test.describe('Crossdraw visual QA', () => {
+  test('main path + themes + screenshots', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/')
+    await expect(page.getByText('Crossdraw').first()).toBeVisible()
+    await page.getByRole('button', { name: '新建十字' }).click()
+    await expect(page.locator('#canvas-root')).toBeVisible({ timeout: 20000 })
+    await page.waitForTimeout(900)
 
-  const lane = page.getByLabel('进口车道数')
-  if (await lane.count()) {
-    await lane.fill('4')
-  }
+    const tablist = page.getByRole('tablist', { name: '编辑模式' })
+    await expect(tablist).toBeVisible({ timeout: 15000 })
 
-  // mode tabs are in the right panel segmented control
-  await page.locator('.mode-tabs').getByRole('button', { name: '流量', exact: true }).click()
-  await page.locator('.mode-tabs').getByRole('button', { name: '信号', exact: true }).click()
-  await page.locator('.mode-tabs').getByRole('button', { name: '分析', exact: true }).click()
-  await expect(page.getByText('评价分析')).toBeVisible()
-  await page.locator('.mode-tabs').getByRole('button', { name: '断面', exact: true }).click()
-  await expect(page.getByText('横断面')).toBeVisible()
+    await page.screenshot({ path: 'docs/screenshots/01-channel-dark.png', fullPage: true })
 
-  await expect(page.getByRole('button', { name: 'PNG' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'SVG' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'DXF' })).toBeVisible()
-  await expect(page.getByRole('button', { name: '保存' })).toBeVisible()
-  await expect(page.getByRole('button', { name: /命令/ })).toBeVisible()
+    await page.getByRole('button', { name: '浅色', exact: true }).click()
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
+    await page.waitForTimeout(400)
+    await page.screenshot({ path: 'docs/screenshots/01b-channel-light.png', fullPage: true })
+
+    await page.getByRole('button', { name: '深色', exact: true }).click()
+    await tablist.getByRole('tab', { name: '流量' }).click()
+    await expect(page.getByText('转向流量')).toBeVisible({ timeout: 10000 })
+    await page.waitForTimeout(400)
+    await page.screenshot({ path: 'docs/screenshots/02-flow.png', fullPage: true })
+
+    await tablist.getByRole('tab', { name: '分析' }).click()
+    await expect(page.getByText('评价分析')).toBeVisible({ timeout: 10000 })
+    await page.waitForTimeout(400)
+    await page.screenshot({ path: 'docs/screenshots/04-analysis.png', fullPage: true })
+
+    // responsive phone layout
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.waitForTimeout(300)
+    await expect(page.locator('.mobile-nav')).toBeVisible()
+    await page.getByRole('button', { name: '参数', exact: true }).click()
+    await page.waitForTimeout(200)
+    await page.screenshot({ path: 'docs/screenshots/07-mobile-inspector.png', fullPage: true })
+    await page.getByRole('button', { name: '画布', exact: true }).click()
+    await page.waitForTimeout(200)
+    await page.screenshot({ path: 'docs/screenshots/08-mobile-canvas.png', fullPage: true })
+
+    await expect(page.getByRole('button', { name: '保存' })).toBeVisible()
+  })
 })

@@ -3,6 +3,8 @@ import { immer } from 'zustand/middleware/immer'
 import { temporal } from 'zundo'
 import { newId } from '@/shared/id'
 import type { Approach, BandCorridor, EditorMode, Movement, Project, TurnVolumes } from '@/domain/types'
+
+export type UiTheme = 'dark' | 'light'
 import { createCrossTemplate } from '@/domain/templates/cross'
 import { wrapProject, serializeRtp } from '@/domain/rtp'
 import { saveDraft } from '@/io/autosave'
@@ -14,6 +16,8 @@ export type AppState = {
   selectedApproachId: string | null
   dirty: boolean
   lastMeshKey: string
+  theme: UiTheme
+  setTheme: (t: UiTheme) => void
   setMode: (m: EditorMode) => void
   selectApproach: (id: string | null) => void
   loadProject: (p: Project) => void
@@ -77,6 +81,15 @@ export const useAppStore = create<AppState>()(
       selectedApproachId: null,
       dirty: false,
       lastMeshKey: '',
+      theme: (typeof localStorage !== 'undefined' && localStorage.getItem('crossdraw-theme') === 'light' ? 'light' : 'dark') as UiTheme,
+      setTheme: (th) =>
+        set((s) => {
+          s.theme = th
+          try {
+            localStorage.setItem('crossdraw-theme', th)
+            document.documentElement.setAttribute('data-theme', th)
+          } catch {}
+        }),
       setMode: (m) => set((s) => { s.mode = m }),
       selectApproach: (id) => set((s) => { s.selectedApproachId = id }),
       loadProject: (p) =>

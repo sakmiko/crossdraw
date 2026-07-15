@@ -71,7 +71,7 @@ function defaultSignal(approaches: Approach[]): SignalScheme {
   const phase = (name: string, list: Approach[], mov: Array<'L' | 'T' | 'R'>): SignalScheme['phases'][0] => ({
     id: newId(),
     name,
-    greenSec: 28,
+    greenSec: 18,
     yellowSec: 3,
     allRedSec: 2,
     releases: Object.fromEntries(list.map((a) => [a.id, mov])),
@@ -96,7 +96,8 @@ function defaultSignal(approaches: Approach[]): SignalScheme {
 function defaultFlow(approaches: Approach[]): FlowScheme {
   const volumes: Record<string, TurnVolumes> = {}
   for (const a of approaches) {
-    volumes[a.id] = { U: 20, L: 180, T: 620, R: 150 }
+    // balanced demo volumes (not overloaded)
+    volumes[a.id] = { U: 10, L: 120, T: 380, R: 100 }
   }
   return {
     id: newId(),
@@ -123,7 +124,7 @@ export function createCrossTemplate(name = '标准十字交叉口'): Project {
     name: '渠化方案 A',
     intersectionType: 'cross',
     approaches,
-    display: { background: '#e8eef5', northArrow: true, paperSize: 'A3' },
+    display: { background: '#e2e8f0', northArrow: true, paperSize: 'A3' },
     flowSchemes: [defaultFlow(approaches)],
   }
   const now = new Date().toISOString()

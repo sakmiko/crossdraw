@@ -101,40 +101,55 @@ export function rebuildChannelMesh(scheme: ChannelizationScheme, flow?: FlowSche
   const core = stopLineDistance(approaches)
   const approachLen = 95
 
-  // paper background
-  const ground: Vec[] = []
-  for (let i = 0; i < 64; i++) {
-    const a = (i / 64) * Math.PI * 2
-    ground.push([Math.cos(a) * 175, Math.sin(a) * 175])
-  }
+  // modern rectangular paper (not circular vignette)
+  const halfPaper = 170
   pushPoly(mesh, {
     layer: 'FRAME',
-    points: ground,
+    points: [
+      [-halfPaper, -halfPaper],
+      [halfPaper, -halfPaper],
+      [halfPaper, halfPaper],
+      [-halfPaper, halfPaper],
+    ],
     fill: scheme.display.background || THEME.paper,
     alpha: 1,
   })
+  // outer soft margin
+  pushPoly(mesh, {
+    layer: 'FRAME',
+    points: [
+      [-halfPaper - 8, -halfPaper - 8],
+      [halfPaper + 8, -halfPaper - 8],
+      [halfPaper + 8, halfPaper + 8],
+      [-halfPaper - 8, halfPaper + 8],
+    ],
+    fill: '#0a1020',
+    alpha: 0.35,
+    stroke: '#1e293b',
+    strokeWidth: 0.4,
+  })
 
   // subtle grid
-  for (let g = -140; g <= 140; g += 10) {
+  for (let g = -150; g <= 150; g += 10) {
     pushLine(mesh, {
       layer: 'FRAME',
       points: [
-        [g, -140],
-        [g, 140],
+        [g, -150],
+        [g, 150],
       ],
       stroke: THEME.grid,
       strokeWidth: 0.08,
-      alpha: 0.25,
+      alpha: 0.22,
     })
     pushLine(mesh, {
       layer: 'FRAME',
       points: [
-        [-140, g],
-        [140, g],
+        [-150, g],
+        [150, g],
       ],
       stroke: THEME.grid,
       strokeWidth: 0.08,
-      alpha: 0.25,
+      alpha: 0.22,
     })
   }
 
