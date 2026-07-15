@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 0.5.28 — 2026-07-16
+
+- 多走廊带宽对比图/表（measureCorridor 同源）
+- 导出多走廊对比包 SVG+JSON+MD
+- 导出中心 band-multi-compare
+
+# CHANGELOG
+
 ## 0.5.27 — 2026-07-16
 
 - 绿波多走廊：bandCorridors[] + activeBandId

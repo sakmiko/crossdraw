@@ -34,6 +34,7 @@ import {
 import { analyzeIntersection } from '@/domain/analysis'
 import { buildFlowAlignment, type FlowDisplayMode } from '@/domain/flow/flowAlign'
 import { professionalCrossSectionSvg, crossSectionShareSvg } from './crossSectionDiagram'
+import { collectCorridorKpis, corridorKpiCompareSvg } from './bandCorridorCompare'
 import { chartColorsForTheme, themeSvg } from './chartTheme'
 
 function useChartColors() {
@@ -453,6 +454,47 @@ export function SchemeCompareBoard({ project }: { project: Project }) {
       <div className="dual-charts">
         <div dangerouslySetInnerHTML={{ __html: delaySvg }} />
         <div dangerouslySetInnerHTML={{ __html: vcSvg }} />
+      </div>
+    </div>
+  )
+}
+
+
+export function CorridorCompareCharts({ corridors }: { corridors: BandCorridor[] }) {
+  const colors = useChartColors()
+  const rows = useMemo(() => collectCorridorKpis(corridors), [corridors])
+  const svg = useMemo(
+    () => themeSvg(corridorKpiCompareSvg(rows, { width: 360, height: 200 }), colors),
+    [rows, colors],
+  )
+  return (
+    <div className="chart-card">
+      <div className="chart-title">
+        <span>多走廊带宽对比</span>
+        <small>{rows.length} 条 · measureCorridor 同源</small>
+      </div>
+      <div dangerouslySetInnerHTML={{ __html: svg }} />
+      <div className="table-wrap" style={{ marginTop: 8, maxHeight: 160 }}>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>走廊</th>
+              <th>上行b</th>
+              <th>下行b</th>
+              <th>比</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.id}>
+                <td>{r.name}</td>
+                <td>{r.forwardSec.toFixed(1)}</td>
+                <td>{r.backwardSec.toFixed(1)}</td>
+                <td>{(r.bandwidthRatio * 100).toFixed(0)}%</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   )

@@ -19,6 +19,7 @@ export type ChartKindId =
   | 'scheme-compare-timing'
   | 'analysis-board'
   | 'print-a4'
+  | 'band-corridor-compare'
 
 export type ChartRegistryEntry = {
   id: ChartKindId
@@ -131,6 +132,13 @@ export const CHART_REGISTRY: ChartRegistryEntry[] = [
     modes: ['analysis', 'signal', 'flow'],
     exportIds: ['print-a4'],
     notes: '2×2 面板拼入 A4',
+  },
+  {
+    id: 'band-corridor-compare',
+    title: '多走廊带宽对比',
+    dataSource: 'bandCorridorCompare + measureCorridor',
+    modes: ['band'],
+    exportIds: ['band-multi-compare'],
   },
 ]
 

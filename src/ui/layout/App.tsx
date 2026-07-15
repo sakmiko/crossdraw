@@ -19,11 +19,12 @@ import { CommandPalette } from '@/ui/common/CommandPalette'
 import { ExportCenter } from '@/ui/common/ExportCenter'
 import { PrintPreviewModal } from '@/ui/common/PrintPreview'
 import { buildA4PrintSheet, printSheetHtml, type PrintPanel } from '@/io/printSheet'
+import { collectCorridorKpis, corridorKpiCompareSvg, multiBandMarkdown } from '@/ui/charts/bandCorridorCompare'
 import { checkAnalysisIntegrity } from '@/domain/analysis/integrity'
 import { buildFlowAlignment, flowChartsAlignWithTable, type FlowDisplayMode } from '@/domain/flow/flowAlign'
 import { buildSignalTimingAlignment } from '@/domain/signal/timingAlign'
 import { releaseMatrixAlignsWithPhases } from '@/domain/signal/releaseAlign'
-import { AnalysisCharts, BandCharts, CompareCharts, CrossSectionCharts, FlowCharts, SchemeCompareBoard, SignalCharts, TimingCompareCharts } from '@/ui/charts/ChartPanels'
+import { AnalysisCharts, BandCharts, CompareCharts, CorridorCompareCharts, CrossSectionCharts, FlowCharts, SchemeCompareBoard, SignalCharts, TimingCompareCharts } from '@/ui/charts/ChartPanels'
 import { ControlMatrixPanel, FlowDirectionPanel, PhaseFacePanel, SignalTimingPanel, TimeSpacePanel } from '@/ui/charts/ProfessionalPanels'
 import { InteractiveTimeSpace, buildTimeSpaceExportSvg } from '@/ui/charts/InteractiveTimeSpace'
 import { optimizeSignalTiming, criticalFlowRatios, TIMING_METHOD_LABELS, type TimingMethod } from '@/domain/analysis/timing'
@@ -2212,6 +2213,20 @@ export default function App() {
               <InteractiveTimeSpace corridor={project.bandCorridor} result={band} />
               <BandCharts corridor={project.bandCorridor} />
               <TimeSpacePanel corridor={project.bandCorridor} />
+              <CorridorCompareCharts corridors={project.bandCorridors ?? [project.bandCorridor]} />
+              <div className="toolbar" style={{ marginTop: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const rows = collectCorridorKpis(project.bandCorridors ?? [project.bandCorridor])
+                    exportSvgFile(`${project.name}-band-multi.svg`, corridorKpiCompareSvg(rows))
+                    exportJsonFile(`${project.name}-band-multi.json`, { corridors: project.bandCorridors, kpis: rows })
+                    downloadText(`${project.name}-band-multi.md`, multiBandMarkdown(project.name, rows), 'text/markdown')
+                  }}
+                >
+                  导出多走廊对比
+                </button>
+              </div>
               <p className="hint">时距图悬停显示 λ、相位差、路段长度、行程时间；数据写入 .rtp。</p>
             </div>
           )}
@@ -2229,7 +2244,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.27</span>
+        <span>Crossdraw v0.5.28</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -2380,6 +2395,15 @@ export default function App() {
             exportSvgFile(`${project.name}-compare-timing.svg`, schemeTimingStripSvg(snaps, { max: 4, theme }))
             exportSvgFile(`${project.name}-compare-delay.svg`, schemeMetricsCompareSvg(snaps, { metric: 'delay' }))
             exportSvgFile(`${project.name}-compare-vc.svg`, schemeMetricsCompareSvg(snaps, { metric: 'vc' }))
+          },
+          'band-multi-compare': () => {
+            const rows = collectCorridorKpis(project.bandCorridors ?? [project.bandCorridor])
+            exportSvgFile(`${project.name}-band-multi.svg`, corridorKpiCompareSvg(rows))
+            exportJsonFile(`${project.name}-band-multi.json`, {
+              corridors: project.bandCorridors ?? [project.bandCorridor],
+              kpis: rows.map(({ result, ...rest }) => rest),
+            })
+            downloadText(`${project.name}-band-multi.md`, multiBandMarkdown(project.name, rows), 'text/markdown')
           },
           'band-pack': () => {
             exportSvgFile(

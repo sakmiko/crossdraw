@@ -24,6 +24,7 @@ export type ExportItemId =
   | 'compare-timing-svg'
   | 'xsection-svg'
   | 'band-pack'
+  | 'band-multi-compare'
   | 'pro-pack'
   | 'print-a4'
 
@@ -205,7 +206,16 @@ export const EXPORT_CATALOG: ExportItem[] = [
     category: 'band',
     title: '绿波时距/简报',
     format: 'SVG+JSON+MD',
-    description: '时距图、走廊数据、Markdown 简报',
+    description: '当前走廊时距图、数据、Markdown 简报',
+    modes: ['band'],
+    requires: ['band'],
+  },
+  {
+    id: 'band-multi-compare',
+    category: 'band',
+    title: '多走廊对比包',
+    format: 'SVG+JSON+MD',
+    description: '全部走廊 KPI 柱图 + 对比表 + 各走廊摘要',
     modes: ['band'],
     requires: ['band'],
   },
