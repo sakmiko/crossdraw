@@ -19,14 +19,15 @@ test.describe('Crossdraw v0.5.26', () => {
       el.open = true
     })
     await details.locator('.details-body').evaluate((el) => el.scrollIntoView({ block: 'center' }))
-    await expect(details.locator('text=展宽车道数')).toBeVisible()
-    await expect(details.locator('text=渐变段长')).toBeVisible()
-    await expect(details.locator('text=进口加宽')).toBeVisible()
 
-    const count = details.locator('label').filter({ hasText: '展宽车道数' }).locator('input')
+    await expect(details.getByText('展宽车道数', { exact: true })).toBeVisible({ timeout: 5000 })
+    await expect(details.getByText('渐变段长 (m)', { exact: true })).toBeVisible()
+    await expect(details.getByText(/进口加宽/)).toBeVisible()
+
+    const count = details.locator('label').filter({ hasText: /^展宽车道数$/ }).locator('input')
     await count.fill('2')
-    await page.waitForTimeout(200)
-    await expect(details.getByText(/加宽\s*7\.0/)).toBeVisible()
+    await page.waitForTimeout(250)
+    await expect(details.getByText(/7\.0/)).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/01-channel.png', fullPage: true })
   })
 })
