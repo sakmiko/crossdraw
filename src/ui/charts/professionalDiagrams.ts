@@ -1,0 +1,184 @@
+/** Professional traffic diagrams — vector SVG, textbook-style */
+
+export function signalTimingDiagramSvg(
+  phases: { name: string; greenSec: number; yellowSec: number; allRedSec: number; isOverlap?: boolean }[],
+  cycleSec: number,
+  opts: { width?: number; height?: number } = {},
+): string {
+  const width = opts.width ?? 520
+  const rowH = 28
+  const head = 36
+  const left = 88
+  const height = opts.height ?? head + phases.length * rowH + 28
+  const total = Math.max(cycleSec, phases.reduce((s, p) => s + (p.isOverlap ? 0 : p.greenSec + p.yellowSec + p.allRedSec), 1), 1)
+  const scale = (width - left - 16) / total
+  let body = ''
+  // time axis
+  body += `<line x1="${left}" y1="${head - 8}" x2="${width - 12}" y2="${head - 8}" stroke="#64748b" stroke-width="1"/>`
+  for (let t = 0; t <= total; t += Math.max(5, Math.round(total / 8))) {
+    const x = left + t * scale
+    body += `<line x1="${x}" y1="${head - 12}" x2="${x}" y2="${head - 6}" stroke="#64748b"/>`
+    body += `<text x="${x}" y="${head - 14}" text-anchor="middle" fill="#94a3b8" font-size="9">${t}</text>`
+  }
+  let cursor = 0
+  phases.forEach((p, i) => {
+    const y = head + i * rowH
+    body += `<text x="8" y="${y + 16}" fill="#e2e8f0" font-size="11">${escape(p.name)}${p.isOverlap ? '*' : ''}</text>`
+    const g = p.greenSec * scale
+    const yEl = p.yellowSec * scale
+    const r = p.allRedSec * scale
+    const x0 = p.isOverlap ? left : left + cursor * scale
+    body += `<rect x="${x0}" y="${y + 4}" width="${Math.max(0, g)}" height="16" fill="#22c55e"/>`
+    body += `<rect x="${x0 + g}" y="${y + 4}" width="${Math.max(0, yEl)}" height="16" fill="#eab308"/>`
+    body += `<rect x="${x0 + g + yEl}" y="${y + 4}" width="${Math.max(0, r)}" height="16" fill="#ef4444"/>`
+    if (!p.isOverlap) cursor += p.greenSec + p.yellowSec + p.allRedSec
+  })
+  body += `<text x="${left}" y="${height - 8}" fill="#94a3b8" font-size="9">配时图 · C=${cycleSec}s · 绿/黄/红 · *搭接（Webster 1958 / 教材制图）</text>`
+  return svgShell(width, height, body)
+}
+
+export function controlMatrixSvg(
+  approaches: string[],
+  phases: { name: string; releases: Record<string, string[]> }[],
+  approachIds: string[],
+  opts: { width?: number; cell?: number } = {},
+): string {
+  const cellW = opts.cell ?? 36
+  const cellH = 22
+  const left = 72
+  const top = 32
+  const width = opts.width ?? left + phases.length * cellW + 16
+  const height = top + approaches.length * cellH + 24
+  let body = `<text x="8" y="16" fill="#94a3b8" font-size="9">相位放行管控图 · 进口×相位</text>`
+  phases.forEach((ph, j) => {
+    body += `<text x="${left + j * cellW + cellW / 2}" y="${top - 8}" text-anchor="middle" fill="#94a3b8" font-size="9">${escape(ph.name)}</text>`
+  })
+  approaches.forEach((name, i) => {
+    const y = top + i * cellH
+    body += `<text x="8" y="${y + 15}" fill="#e2e8f0" font-size="10">${escape(name)}</text>`
+    phases.forEach((ph, j) => {
+      const id = approachIds[i]
+      const movs = ph.releases[id] ?? []
+      const x = left + j * cellW
+      const label = movs.join('') || '—'
+      const on = movs.length > 0
+      body += `<rect x="${x + 1}" y="${y + 2}" width="${cellW - 2}" height="${cellH - 4}" rx="3" fill="${on ? '#14532d' : '#1e293b'}" stroke="#334155"/>`
+      body += `<text x="${x + cellW / 2}" y="${y + 15}" text-anchor="middle" fill="${on ? '#86efac' : '#64748b'}" font-size="10" font-weight="600">${escape(label)}</text>`
+    })
+  })
+  return svgShell(width, height, body)
+}
+
+export function flowMovementDiagramSvg(
+  approaches: { name: string; bearingDeg: number; L: number; T: number; R: number }[],
+  opts: { size?: number } = {},
+): string {
+  const size = opts.size ?? 360
+  const cx = size / 2
+  const cy = size / 2
+  const R = size * 0.32
+  const maxV = Math.max(1, ...approaches.flatMap((a) => [a.L, a.T, a.R]))
+  let body = `<circle cx="${cx}" cy="${cy}" r="${R * 0.55}" fill="none" stroke="#334155" stroke-width="2"/>`
+  body += `<text x="8" y="16" fill="#94a3b8" font-size="9">流量流向图 · 线宽∝流量（方案附图常用）</text>`
+  for (const ap of approaches) {
+    const rad = ((ap.bearingDeg - 90) * Math.PI) / 180
+    // approach from outside toward center
+    const x1 = cx + Math.cos(rad) * R * 1.35
+    const y1 = cy + Math.sin(rad) * R * 1.35
+    const x0 = cx + Math.cos(rad) * R * 0.7
+    const y0 = cy + Math.sin(rad) * R * 0.7
+    // through
+    const tw = 1 + (ap.T / maxV) * 10
+    body += arrow(x1, y1, x0, y0, '#3b82f6', tw, `${Math.round(ap.T)}`)
+    // left (perp)
+    const lx = Math.cos(rad + Math.PI / 2)
+    const ly = Math.sin(rad + Math.PI / 2)
+    const lw = 1 + (ap.L / maxV) * 8
+    body += arrow(x1 + lx * 14, y1 + ly * 14, x0 + lx * 28, y0 + ly * 28, '#06b6d4', lw, `${Math.round(ap.L)}`)
+    // right
+    const rx = Math.cos(rad - Math.PI / 2)
+    const ry = Math.sin(rad - Math.PI / 2)
+    const rw = 1 + (ap.R / maxV) * 8
+    body += arrow(x1 + rx * 14, y1 + ry * 14, x0 + rx * 28, y0 + ry * 28, '#a855f7', rw, `${Math.round(ap.R)}`)
+    body += `<text x="${cx + Math.cos(rad) * R * 1.55}" y="${cy + Math.sin(rad) * R * 1.55}" text-anchor="middle" fill="#e2e8f0" font-size="11">${escape(ap.name)}</text>`
+  }
+  body += `<text x="8" y="${size - 10}" fill="#64748b" font-size="9">蓝=直行 青=左转 紫=右转</text>`
+  return svgShell(size, size, body)
+}
+
+export function timeSpaceDiagramSvg(
+  nodes: { name: string; distanceM: number; greenRatio: number; offsetSec: number; cycleSec: number }[],
+  speedKmh: number,
+  opts: { width?: number; height?: number } = {},
+): string {
+  const width = opts.width ?? 520
+  const height = opts.height ?? 280
+  const pad = { t: 28, r: 16, b: 36, l: 48 }
+  if (nodes.length < 2) {
+    return svgShell(width, height, `<text x="50%" y="50%" text-anchor="middle" fill="#8494ab">至少 2 个路口</text>`)
+  }
+  const maxD = Math.max(...nodes.map((n) => n.distanceM), 1)
+  const C = nodes[0].cycleSec || 90
+  const innerW = width - pad.l - pad.r
+  const innerH = height - pad.t - pad.b
+  let body = `<text x="8" y="16" fill="#94a3b8" font-size="9">干道协调时距图 · v=${speedKmh}km/h · C=${C}s（教材图解风格）</text>`
+  // grid time
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + (innerH * i) / 4
+    body += `<line x1="${pad.l}" y1="${y}" x2="${width - pad.r}" y2="${y}" stroke="#1e293b"/>`
+    body += `<text x="${pad.l - 6}" y="${y + 3}" text-anchor="end" fill="#64748b" font-size="9">${Math.round(C * (1 - i / 4))}s</text>`
+  }
+  const v = (speedKmh * 1000) / 3600
+  nodes.forEach((n) => {
+    const x = pad.l + (n.distanceM / maxD) * innerW
+    body += `<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${pad.t + innerH}" stroke="#334155"/>`
+    const g0 = ((n.offsetSec % C) + C) % C
+    const g1 = g0 + n.greenRatio * C
+    const y0 = pad.t + (1 - g0 / C) * innerH
+    const y1 = pad.t + (1 - Math.min(C, g1) / C) * innerH
+    body += `<rect x="${x - 8}" y="${Math.min(y0, y1)}" width="16" height="${Math.max(3, Math.abs(y0 - y1))}" fill="#22c55e" opacity="0.85"/>`
+    body += `<text x="${x}" y="${height - 12}" text-anchor="middle" fill="#94a3b8" font-size="9">${escape(n.name)}</text>`
+  })
+  // trajectory band along speed
+  if (nodes.length >= 2) {
+    const a = nodes[0]
+    const b = nodes[nodes.length - 1]
+    const x0 = pad.l + (a.distanceM / maxD) * innerW
+    const x1 = pad.l + (b.distanceM / maxD) * innerW
+    const travel = (b.distanceM - a.distanceM) / Math.max(0.1, v)
+    const t0 = ((a.offsetSec % C) + C) % C
+    const t1 = (t0 + travel) % C
+    const yA = pad.t + (1 - t0 / C) * innerH
+    const yB = pad.t + (1 - t1 / C) * innerH
+    body += `<path d="M${x0},${yA} L${x1},${yB}" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="6 3" fill="none"/>`
+  }
+  body += `<text x="${pad.l}" y="${height - 4}" fill="#64748b" font-size="8">横轴距离 · 纵轴周期内时间 · 绿条=有效绿窗</text>`
+  return svgShell(width, height, body)
+}
+
+function arrow(x1: number, y1: number, x2: number, y2: number, color: string, w: number, label: string): string {
+  const dx = x2 - x1
+  const dy = y2 - y1
+  const len = Math.hypot(dx, dy) || 1
+  const ux = dx / len
+  const uy = dy / len
+  const px = -uy
+  const py = ux
+  const ah = 6
+  const tipx = x2
+  const tipy = y2
+  const bx = tipx - ux * ah
+  const by = tipy - uy * ah
+  return `<line x1="${x1}" y1="${y1}" x2="${bx}" y2="${by}" stroke="${color}" stroke-width="${w}" stroke-linecap="round"/>
+  <polygon points="${tipx},${tipy} ${bx + px * 3},${by + py * 3} ${bx - px * 3},${by - py * 3}" fill="${color}"/>
+  <text x="${(x1 + x2) / 2}" y="${(y1 + y2) / 2 - 4}" text-anchor="middle" fill="${color}" font-size="9" font-weight="600">${escape(label)}</text>`
+}
+
+function svgShell(width: number, height: number, body: string): string {
+  return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" class="chart-svg">
+  <rect width="100%" height="100%" fill="#0a1020"/>${body}</svg>`
+}
+
+function escape(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}

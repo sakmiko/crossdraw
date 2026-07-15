@@ -684,3 +684,38 @@ label {
   background: color-mix(in srgb, var(--muted) 35%, transparent);
   border-radius: 8px;
 }
+
+.layer-toggles { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.layer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--muted);
+}
+.layer-chip.on {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  background: var(--accent-soft);
+}
+.layer-chip.off { opacity: 0.55; text-decoration: line-through; }
+.layer-chip .legend-swatch { width: 8px; height: 8px; border-radius: 2px; }
+
+.template-menu {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+}
+.template-menu button {
+  font-size: 11px;
+  padding: 4px 8px;
+}
+.chart-card { margin-top: 10px; }

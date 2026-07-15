@@ -101,7 +101,7 @@ const flowSchema = z.object({
 const channelSchema = z.object({
   id: z.string(),
   name: z.string(),
-  intersectionType: z.enum(['cross', 't', 'custom']),
+  intersectionType: z.enum(['cross', 't', 'y', 'skewed', 'roundabout', 'custom']),
   approaches: z.array(approachSchema),
   display: z.object({
     background: z.string(),

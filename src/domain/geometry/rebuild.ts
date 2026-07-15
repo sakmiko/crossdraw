@@ -153,24 +153,26 @@ export function rebuildChannelMesh(scheme: ChannelizationScheme, flow?: FlowSche
     })
   }
 
-  // intersection core as rounded asphalt using outer curb path
-  const curb = buildIntersectionCurb(approaches, core)
-  if (curb.length >= 3) {
-    pushPoly(mesh, {
-      layer: 'ROAD',
-      points: curb,
-      fill: THEME.asphalt,
-      stroke: THEME.curb,
-      strokeWidth: 0.45,
-    })
+  if (scheme.intersectionType === 'roundabout') {
+    drawRoundabout(mesh, approaches, core)
+  } else {
+    // intersection core as rounded asphalt using outer curb path
+    const curb = buildIntersectionCurb(approaches, core)
+    if (curb.length >= 3) {
+      pushPoly(mesh, {
+        layer: 'ROAD',
+        points: curb,
+        fill: THEME.asphalt,
+        stroke: THEME.curb,
+        strokeWidth: 0.45,
+      })
+    }
+    for (const ap of approaches) {
+      drawApproach(mesh, ap, core, approachLen)
+    }
+    // corner islands between adjacent approaches
+    drawCornerFillets(mesh, approaches, core)
   }
-
-  for (const ap of approaches) {
-    drawApproach(mesh, ap, core, approachLen)
-  }
-
-  // corner islands between adjacent approaches (for cross)
-  drawCornerFillets(mesh, approaches, core)
 
   if (flow) {
     drawFlowArrows(mesh, approaches, flow, core)
@@ -734,6 +736,47 @@ function shoelace(pts: [number, number][]): number {
     s += x1 * y2 - x2 * y1
   }
   return s / 2
+}
+
+
+function drawRoundabout(mesh: Mesh, approaches: Approach[], core: number) {
+  const outerR = core + 8
+  const innerR = Math.max(6, core * 0.45)
+  const ring = arcPoints([0, 0], outerR, 0, Math.PI * 2, 48)
+  pushPoly(mesh, {
+    layer: 'ROAD',
+    points: ring,
+    fill: THEME.asphalt,
+    stroke: THEME.curb,
+    strokeWidth: 0.5,
+  })
+  // central island
+  pushPoly(mesh, {
+    layer: 'ISLAND',
+    points: arcPoints([0, 0], innerR, 0, Math.PI * 2, 36),
+    fill: THEME.island,
+    stroke: THEME.islandEdge,
+    strokeWidth: 0.4,
+  })
+  // circulatory lane marking
+  pushLine(mesh, {
+    layer: 'MARKING',
+    points: arcPoints([0, 0], (outerR + innerR) / 2, 0, Math.PI * 2, 48),
+    stroke: THEME.marking,
+    strokeWidth: 0.25,
+    dashed: true,
+    alpha: 0.85,
+  })
+  for (const ap of approaches) {
+    drawApproach(mesh, ap, outerR - 2, 90)
+  }
+  pushLabel(mesh, {
+    text: '环形交叉口（示意）',
+    at: [0, -outerR - 8],
+    color: THEME.text,
+    size: 3,
+    align: 'center',
+  })
 }
 
 /** T-junction template helper: drop one approach */

@@ -1,6 +1,6 @@
 export type Units = 'metric'
 
-export type IntersectionType = 'cross' | 't' | 'custom'
+export type IntersectionType = 'cross' | 't' | 'y' | 'skewed' | 'roundabout' | 'custom'
 
 export type Movement = 'U' | 'L' | 'T' | 'R'
 
@@ -143,6 +143,8 @@ export interface SignalScheme {
   yellowDefault: number
   allRedDefault: number
   startLossSec: number
+  /** total lost time L used by Webster (s); if omitted derived from phases */
+  lostTimeSec?: number
   unsignalized: boolean
 }
 

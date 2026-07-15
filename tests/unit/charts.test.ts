@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { barChartSvg, lineChartSvg, ringBarrierSvg, stackedBandSvg } from '@/ui/charts/svgCharts'
+import { barChartSvg, crossSectionBarSvg, lineChartSvg, ringBarrierSvg, stackedBandSvg } from '@/ui/charts/svgCharts'
 
 describe('svg charts', () => {
   it('renders bar chart with values', () => {
@@ -14,6 +14,15 @@ describe('svg charts', () => {
   it('renders empty line chart gracefully', () => {
     const svg = lineChartSvg([])
     expect(svg).toContain('暂无数据')
+  })
+
+  it('renders cross section bar', () => {
+    const svg = crossSectionBarSvg([
+      { label: '人行', widthM: 3, color: '#ccc' },
+      { label: '车道', widthM: 3.5, color: '#666' },
+    ])
+    expect(svg).toContain('横断面')
+    expect(svg).toContain('总宽')
   })
 
   it('renders ring barrier and band', () => {

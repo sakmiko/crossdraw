@@ -1,5 +1,5 @@
 import { newId } from '@/shared/id'
-import type { Approach, ChannelizationScheme, FlowScheme, Lane, Project, SignalScheme, TurnVolumes } from '../types'
+import type { Approach, ChannelizationScheme, FlowScheme, IntersectionType, Lane, Project, SignalScheme, TurnVolumes } from '../types'
 
 function lane(widthM: number, movements: Lane['movements']): Lane {
   return { id: newId(), widthM, movements }
@@ -158,4 +158,106 @@ export function createCrossTemplate(name = '标准十字交叉口'): Project {
 
 export function createEmptyProject(): Project {
   return createCrossTemplate('未命名项目')
+}
+
+
+export function createTTemplate(name = 'T型交叉口'): Project {
+  const p = createCrossTemplate(name)
+  const ch = p.channelizationSchemes[0]
+  ch.intersectionType = 't'
+  ch.name = '渠化方案 T'
+  // drop west approach (270°) for classic T
+  ch.approaches = ch.approaches.filter((a) => a.bearingDeg !== 270)
+  // rebuild signal releases only for remaining
+  const fl = ch.flowSchemes[0]
+  const ids = new Set(ch.approaches.map((a) => a.id))
+  for (const id of Object.keys(fl.volumes)) {
+    if (!ids.has(id)) delete fl.volumes[id]
+  }
+  const sg = fl.signalSchemes[0]
+  for (const ph of sg.phases) {
+    for (const id of Object.keys(ph.releases)) {
+      if (!ids.has(id)) delete ph.releases[id]
+    }
+  }
+  p.bandCorridor.nodes = p.bandCorridor.nodes.slice(0, 2)
+  return p
+}
+
+export function createYTemplate(name = 'Y型交叉口'): Project {
+  const p = createCrossTemplate(name)
+  const ch = p.channelizationSchemes[0]
+  ch.intersectionType = 'y'
+  ch.name = '渠化方案 Y'
+  // three legs at 0, 120, 240
+  const legs = [
+    { name: '主线北', bearing: 0 },
+    { name: '分叉东南', bearing: 120 },
+    { name: '分叉西南', bearing: 240 },
+  ]
+  const old = ch.approaches
+  ch.approaches = legs.map((l, i) => {
+    const base = old[i] ?? old[0]
+    return {
+      ...JSON.parse(JSON.stringify(base)),
+      id: base.id,
+      name: l.name,
+      bearingDeg: l.bearing,
+    }
+  })
+  // reassign volumes keys
+  const fl = ch.flowSchemes[0]
+  const vols: Record<string, TurnVolumes> = {}
+  for (const a of ch.approaches) {
+    vols[a.id] = fl.volumes[a.id] ?? { U: 10, L: 100, T: 300, R: 80 }
+  }
+  fl.volumes = vols
+  return p
+}
+
+export function createSkewedTemplate(name = '斜交交叉口'): Project {
+  const p = createCrossTemplate(name)
+  const ch = p.channelizationSchemes[0]
+  ch.intersectionType = 'skewed'
+  ch.name = '渠化方案 斜交'
+  const bearings = [0, 70, 180, 250]
+  ch.approaches.forEach((a, i) => {
+    a.bearingDeg = bearings[i] ?? a.bearingDeg
+    a.name = ['北偏', '东偏', '南偏', '西偏'][i] + '进口'
+  })
+  return p
+}
+
+export function createRoundaboutTemplate(name = '环形交叉口（示意）'): Project {
+  const p = createCrossTemplate(name)
+  const ch = p.channelizationSchemes[0]
+  ch.intersectionType = 'roundabout'
+  ch.name = '渠化方案 环形'
+  // four legs, median wider, no signal default
+  for (const a of ch.approaches) {
+    a.median.widthM = Math.max(a.median.widthM, 4)
+    a.rightTurn.enabled = false
+    a.widen.entryWidenLengthM = 40
+  }
+  const sg = ch.flowSchemes[0].signalSchemes[0]
+  sg.unsignalized = true
+  sg.name = '无信号（环岛让行）'
+  sg.phases = []
+  sg.cycleSec = 0
+  return p
+}
+
+export function createTemplateByType(kind: IntersectionType | 'cross' | 't', name?: string): Project {
+  switch (kind) {
+    case 't':
+      return createTTemplate(name)
+    case 'y':
+      return createYTemplate(name)
+    case 'skewed':
+      return createSkewedTemplate(name)
+    case 'roundabout':
+      return createRoundaboutTemplate(name)
+    default:
+      return createCrossTemplate(name)
+  }
 }

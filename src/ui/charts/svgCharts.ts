@@ -309,6 +309,62 @@ export function losGaugeSvg(
   </svg>`
 }
 
+export function crossSectionBarSvg(
+  components: { label: string; widthM: number; color: string }[],
+  opts: { width?: number; height?: number } = {},
+): string {
+  const width = opts.width ?? 340
+  const height = opts.height ?? 120
+  const total = Math.max(0.1, components.reduce((s, c) => s + c.widthM, 0))
+  const pad = { t: 18, r: 10, b: 36, l: 10 }
+  const innerW = width - pad.l - pad.r
+  const barH = 36
+  const y = pad.t + 8
+  let x = pad.l
+  let body = ''
+  components.forEach((c) => {
+    const w = (c.widthM / total) * innerW
+    body += `<rect x="${x}" y="${y}" width="${Math.max(1, w)}" height="${barH}" fill="${c.color}" stroke="#0f172a" stroke-width="0.5"/>`
+    if (w > 28) {
+      body += `<text x="${x + w / 2}" y="${y + barH / 2 + 3}" text-anchor="middle" fill="#0f172a" font-size="9" font-weight="700">${escape(c.label)}</text>`
+      body += `<text x="${x + w / 2}" y="${y + barH + 12}" text-anchor="middle" fill="#94a3b8" font-size="9">${fmt(c.widthM)}m</text>`
+    } else if (w > 14) {
+      body += `<text x="${x + w / 2}" y="${y + barH + 12}" text-anchor="middle" fill="#94a3b8" font-size="8">${fmt(c.widthM)}</text>`
+    }
+    x += w
+  })
+  // dimension line
+  body += `<line x1="${pad.l}" y1="${height - 14}" x2="${width - pad.r}" y2="${height - 14}" stroke="#64748b" stroke-width="1"/>`
+  body += `<text x="${width / 2}" y="${height - 4}" text-anchor="middle" fill="#94a3b8" font-size="9">总宽 ${fmt(total)} m</text>`
+  return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" class="chart-svg">
+    <rect width="100%" height="100%" fill="#0a1020"/>
+    <text x="8" y="12" fill="#8494ab" font-size="9">横断面组成 · 与参数联动</text>
+    ${body}
+  </svg>`
+}
+
+export function compareSchemesBarSvg(
+  rows: { label: string; avgVc: number; avgDelay: number; los: string }[],
+  opts: { width?: number; height?: number; metric?: 'vc' | 'delay' } = {},
+): string {
+  const metric = opts.metric ?? 'delay'
+  const data = rows.map((r) => ({
+    label: r.label.length > 10 ? r.label.slice(0, 10) + '…' : r.label,
+    value: metric === 'vc' ? r.avgVc : r.avgDelay,
+    color:
+      r.los === 'F' || r.los === 'E'
+        ? '#e85d5d'
+        : r.los === 'D'
+          ? '#e5a54b'
+          : '#3ecf8e',
+  }))
+  return barChartSvg(data, {
+    width: opts.width,
+    height: opts.height ?? 160,
+    unit: metric === 'vc' ? 'v/c' : '延误 s',
+  })
+}
+
 function niceCeil(n: number): number {
   if (n <= 0) return 1
   const exp = Math.pow(10, Math.floor(Math.log10(n)))

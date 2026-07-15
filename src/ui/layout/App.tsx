@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { CanvasView, meshToPngBlob } from '@/canvas/CanvasView'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { CanvasView, meshToPngBlob, DEFAULT_LAYERS, type CanvasHandle, type LayerVisibility, type LayerKey } from '@/canvas/CanvasView'
 import { rebuildChannelMesh, THEME } from '@/domain/geometry/rebuild'
 import { analyzeIntersection, websterTiming } from '@/domain/analysis'
 import { buildCrossSection, markStaleIfNeeded } from '@/domain/xsection/build'
@@ -15,7 +15,16 @@ import { downloadBlob, downloadText } from '@/io/download'
 import { loadDraft, clearDraft } from '@/io/autosave'
 import { persistAutosave, redo, undo, useAppStore } from '@/state/store'
 import { CommandPalette } from '@/ui/common/CommandPalette'
-import { AnalysisCharts, BandCharts, FlowCharts, SignalCharts } from '@/ui/charts/ChartPanels'
+import { AnalysisCharts, BandCharts, CompareCharts, CrossSectionCharts, FlowCharts, SignalCharts } from '@/ui/charts/ChartPanels'
+import { ControlMatrixPanel, FlowDirectionPanel, SignalTimingPanel, TimeSpacePanel } from '@/ui/charts/ProfessionalPanels'
+import { optimizeSignalTiming, criticalFlowRatios } from '@/domain/analysis/timing'
+import { analysisMarkdown, exportJsonFile, exportSvgFile } from '@/io/exportCharts'
+import {
+  controlMatrixSvg,
+  flowMovementDiagramSvg,
+  signalTimingDiagramSvg,
+  timeSpaceDiagramSvg,
+} from '@/ui/charts/professionalDiagrams'
 import type { EditorMode, Movement, TurnVolumes } from '@/domain/types'
 import '@/ui/styles.css'
 
@@ -45,12 +54,14 @@ export default function App() {
   const updatePhaseGreen = useAppStore((s) => s.updatePhaseGreen)
   const updatePhaseTiming = useAppStore((s) => s.updatePhaseTiming)
   const addPhase = useAppStore((s) => s.addPhase)
+  const addOverlapPhase = useAppStore((s) => s.addOverlapPhase)
   const resetTemplate = useAppStore((s) => s.resetTemplate)
   const loadProject = useAppStore((s) => s.loadProject)
   const markClean = useAppStore((s) => s.markClean)
   const setProjectName = useAppStore((s) => s.setProjectName)
   const duplicateChannel = useAppStore((s) => s.duplicateChannel)
   const applyWebster = useAppStore((s) => s.applyWebster)
+  const applyOptimizedTiming = useAppStore((s) => s.applyOptimizedTiming)
   const setLaneWidth = useAppStore((s) => s.setLaneWidth)
   const setLaneMovements = useAppStore((s) => s.setLaneMovements)
   const togglePhaseRelease = useAppStore((s) => s.togglePhaseRelease)
@@ -74,6 +85,9 @@ export default function App() {
   const [restoreMsg, setRestoreMsg] = useState<string | null>(null)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [mobilePane, setMobilePane] = useState<'tree' | 'canvas' | 'inspector'>('canvas')
+  const [layerVis, setLayerVis] = useState<LayerVisibility>({ ...DEFAULT_LAYERS })
+  const canvasRef = useRef<CanvasHandle>(null)
+  const toggleLayer = (k: LayerKey) => setLayerVis((prev) => ({ ...prev, [k]: !prev[k] }))
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -193,11 +207,71 @@ export default function App() {
 
   function runWebster() {
     if (!channel || !flow || !signal) return
-    const r = websterTiming(channel.approaches, flow, signal, {
+    const r = optimizeSignalTiming(channel.approaches, flow, signal, {
       targetVc: project.settings.targetVc,
       startLoss: signal.startLossSec,
     })
-    applyWebster(r.phaseGreens, r.cycleSec)
+    applyOptimizedTiming(r.appliedPhases, r.cycleSec)
+  }
+
+  function exportProfessionalDiagrams() {
+    if (!channel || !flow || !signal) return
+    const timing = signalTimingDiagramSvg(
+      signal.phases.map((p) => ({
+        name: p.name,
+        greenSec: p.greenSec,
+        yellowSec: p.yellowSec,
+        allRedSec: p.allRedSec,
+        isOverlap: p.isOverlap,
+      })),
+      signal.cycleSec || 90,
+    )
+    exportSvgFile(`${project.name}-timing.svg`, timing)
+    exportSvgFile(
+      `${project.name}-control.svg`,
+      controlMatrixSvg(
+        channel.approaches.map((x) => x.name),
+        signal.phases.map((p) => ({ name: p.name, releases: p.releases })),
+        channel.approaches.map((x) => x.id),
+      ),
+    )
+    exportSvgFile(
+      `${project.name}-flow-arrows.svg`,
+      flowMovementDiagramSvg(
+        channel.approaches.map((ap) => {
+          const v = flow.volumes[ap.id] ?? { L: 0, T: 0, R: 0, U: 0 }
+          return { name: ap.name, bearingDeg: ap.bearingDeg, L: v.L, T: v.T, R: v.R }
+        }),
+      ),
+    )
+    exportSvgFile(
+      `${project.name}-timespace.svg`,
+      timeSpaceDiagramSvg(
+        project.bandCorridor.nodes.map((n) => ({
+          name: n.name,
+          distanceM: n.distanceM,
+          greenRatio: n.greenRatio,
+          offsetSec: n.offsetSec,
+          cycleSec: n.cycleSec,
+        })),
+        project.bandCorridor.speedKmh,
+      ),
+    )
+    if (analysis) {
+      exportJsonFile(`${project.name}-analysis.json`, analysis)
+      downloadText(
+        `${project.name}-report.md`,
+        analysisMarkdown(project.name, {
+          avgVc: analysis.avgVc,
+          avgDelay: analysis.avgDelay,
+          avgQueueM: analysis.avgQueueM,
+          losFinal: analysis.losFinal,
+          cycleSec: signal.cycleSec,
+          notes: ['依据 docs/research/05-professional-basis.md'],
+        }),
+        'text/markdown',
+      )
+    }
   }
 
   const band = useMemo(() => optimizeCorridor(project.bandCorridor), [project.bandCorridor])
@@ -227,8 +301,13 @@ export default function App() {
           aria-label="项目名称"
         />
         <div className="toolbar">
-          <button type="button" onClick={() => loadTemplate('cross')}>新建十字</button>
-          <button type="button" onClick={() => loadTemplate('t')}>新建T型</button>
+          <div className="template-menu" role="group" aria-label="路口类型">
+            <button type="button" onClick={() => loadTemplate('cross')}>十字</button>
+            <button type="button" onClick={() => loadTemplate('t')}>T型</button>
+            <button type="button" onClick={() => loadTemplate('y')}>Y型</button>
+            <button type="button" onClick={() => loadTemplate('skewed')}>斜交</button>
+            <button type="button" onClick={() => loadTemplate('roundabout')}>环形</button>
+          </div>
           <label style={{ margin: 0 }}>
             <span className="hint">打开</span>
             <input
@@ -356,11 +435,28 @@ export default function App() {
             <span>{MODES.find((m) => m.id === mode)?.label}</span>
           </div>
           <div className="stage-bar">
-            <span className="hint">平移 · 缩放 · 自适应 · 1–6 模式 · Ctrl+K</span>
-            <span className="legend" style={{ margin: 0 }}>
-              <span className="legend-item"><span className="legend-swatch" style={{ background: '#4b5563' }} />路面</span>
-              <span className="legend-item"><span className="legend-swatch" style={{ background: '#4ade80' }} />岛</span>
-              <span className="legend-item"><span className="legend-swatch" style={{ background: '#38bdf8' }} />流量</span>
+            <span className="hint">平移 · 缩放 · 1–6 · Ctrl+K</span>
+            <button type="button" className="ghost" onClick={() => canvasRef.current?.fitView()}>适应窗口</button>
+            <span className="legend layer-toggles" style={{ margin: 0 }}>
+              {([
+                ['ROAD', '路面', '#4b5563'],
+                ['MARKING', '标线', '#f8fafc'],
+                ['ISLAND', '岛', '#4ade80'],
+                ['FLOW', '流量', '#38bdf8'],
+                ['ANNO', '标注', '#94a3b8'],
+                ['FRAME', '图框', '#64748b'],
+              ] as [LayerKey, string, string][]).map(([k, lab, col]) => (
+                <button
+                  key={k}
+                  type="button"
+                  className={`layer-chip ${layerVis[k] ? 'on' : 'off'}`}
+                  onClick={() => toggleLayer(k)}
+                  title={`图层 ${lab}`}
+                >
+                  <span className="legend-swatch" style={{ background: col }} />
+                  {lab}
+                </button>
+              ))}
             </span>
             <span className={`pill ${summary.block ? 'block' : summary.warn ? 'warn' : 'ok'}`}>
               {summary.block ? `BLOCK ${summary.block}` : summary.warn ? `WARN ${summary.warn}` : 'OK'}
@@ -370,7 +466,13 @@ export default function App() {
             )}
           </div>
           <div className="canvas-shell">
-            <CanvasView mesh={mesh} selectedApproachId={selected?.id} height={typeof window !== 'undefined' && window.innerWidth < 720 ? Math.max(320, window.innerHeight - 160) : window.innerHeight - 180} />
+            <CanvasView
+              ref={canvasRef}
+              mesh={mesh}
+              selectedApproachId={selected?.id}
+              layers={layerVis}
+              height={typeof window !== 'undefined' && window.innerWidth < 720 ? Math.max(320, window.innerHeight - 160) : window.innerHeight - 180}
+            />
           </div>
         </main>
 
@@ -637,6 +739,7 @@ export default function App() {
               </div>
               <p className="hint">单位 veh/h · 图表与矩阵同步</p>
               <FlowCharts approaches={channel.approaches} flow={flow} />
+              <FlowDirectionPanel approaches={channel.approaches} flow={flow} />
             </div>
           )}
 
@@ -719,18 +822,38 @@ export default function App() {
               </div>
               <div className="toolbar" style={{ marginTop: 8 }}>
                 <button type="button" onClick={() => addPhase()}>添加相位</button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    addPhase()
-                    // mark last as overlap after state update is hard; user toggles checkbox
-                  }}
-                >
+                <button type="button" onClick={() => addOverlapPhase()}>
                   添加搭接
                 </button>
                 <button type="button" className="primary" onClick={runWebster}>Webster 自动配时</button>
               </div>
               <SignalCharts signal={signal} approaches={channel?.approaches} />
+              <SignalTimingPanel signal={signal} />
+              {channel && <ControlMatrixPanel signal={signal} approaches={channel.approaches} />}
+              {channel && flow && (
+                <div className="card" style={{ marginTop: 8 }}>
+                  <div className="section-title">关键流量比 y（Webster）</div>
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>相位</th>
+                        <th>y</th>
+                        <th>关键量</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {criticalFlowRatios(channel.approaches, flow, signal).map((r) => (
+                        <tr key={r.phase}>
+                          <td>{r.phase}</td>
+                          <td>{r.y.toFixed(3)}</td>
+                          <td>{r.volume.toFixed(0)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <p className="hint">C₀=(1.5L+5)/(1−Y) · Webster 1958 · 见专业依据文档</p>
+                </div>
+              )}
             </div>
           )}
 
@@ -748,6 +871,7 @@ export default function App() {
                 总宽 {xsection.components.reduce((s, c) => s + c.widthM, 0).toFixed(2)} m
                 {markStaleIfNeeded(xsection, selected).stale ? ' · 需刷新' : ' · 已同步'}
               </p>
+              <CrossSectionCharts section={xsection} />
             </div>
           )}
 
@@ -810,6 +934,14 @@ export default function App() {
                   </tbody>
                 </table>
               </div>
+              <CompareCharts
+                rows={collectCompareRows(project, analyzeIntersection).map((r) => ({
+                  label: `${r.channel}/${r.signal}`,
+                  avgVc: r.avgVc,
+                  avgDelay: r.avgDelay,
+                  los: r.los,
+                }))}
+              />
               <div className="toolbar" style={{ marginTop: 8 }}>
                 <button
                   type="button"
@@ -850,6 +982,9 @@ export default function App() {
                   }}
                 >
                   Vissim CSV 包
+                </button>
+                <button type="button" className="primary" onClick={exportProfessionalDiagrams}>
+                  导出专业图件包
                 </button>
               </div>
               <div className="section-title">方案对比摘要</div>
@@ -971,6 +1106,7 @@ export default function App() {
                 </button>
               </div>
               <BandCharts corridor={project.bandCorridor} />
+              <TimeSpacePanel corridor={project.bandCorridor} />
               <p className="hint">节点写入 .rtp；时空图与相位差曲线随数据联动。</p>
             </div>
           )}
@@ -988,7 +1124,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.4.5</span>
+        <span>Crossdraw v0.5.2</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

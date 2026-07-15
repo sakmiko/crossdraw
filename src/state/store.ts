@@ -5,7 +5,8 @@ import { newId } from '@/shared/id'
 import type { Approach, BandCorridor, EditorMode, Movement, Project, TurnVolumes } from '@/domain/types'
 
 export type UiTheme = 'dark' | 'light'
-import { createCrossTemplate } from '@/domain/templates/cross'
+import { createCrossTemplate, createTemplateByType } from '@/domain/templates/cross'
+import type { IntersectionType, Phase } from '@/domain/types'
 import { wrapProject, serializeRtp } from '@/domain/rtp'
 import { saveDraft } from '@/io/autosave'
 import { applyOffsetsToCorridor, optimizeCorridor } from '@/domain/analysis/corridor'
@@ -36,6 +37,7 @@ export type AppState = {
   ) => void
   togglePhaseRelease: (phaseId: string, approachId: string, movement: Movement) => void
   addPhase: () => void
+  addOverlapPhase: () => void
   setProjectName: (name: string) => void
   markClean: () => void
   touch: () => void
@@ -53,7 +55,8 @@ export type AppState = {
   addSignalScheme: () => void
   deleteChannel: (id: string) => void
   renameChannel: (id: string, name: string) => void
-  loadTemplate: (kind: 'cross' | 't') => void
+  loadTemplate: (kind: IntersectionType | 'cross' | 't') => void
+  applyOptimizedTiming: (phases: Phase[], cycle: number) => void
   updateBand: (patch: Partial<BandCorridor>) => void
   updateBandNode: (nodeId: string, patch: Partial<BandCorridor['nodes'][0]>) => void
   addBandNode: () => void
@@ -225,6 +228,22 @@ export const useAppStore = create<AppState>()(
             yellowSec: 3,
             allRedSec: 2,
             releases: {},
+            isOverlap: false,
+          })
+          s.dirty = true
+        }),
+      addOverlapPhase: () =>
+        set((s) => {
+          const sg = activeSignal(s.project)
+          if (!sg) return
+          sg.phases.push({
+            id: newId(),
+            name: `搭接${sg.phases.filter((p) => p.isOverlap).length + 1}`,
+            greenSec: 12,
+            yellowSec: 0,
+            allRedSec: 0,
+            releases: {},
+            isOverlap: true,
           })
           s.dirty = true
         }),
@@ -342,15 +361,18 @@ export const useAppStore = create<AppState>()(
         }),
       loadTemplate: (kind) =>
         set((s) => {
-          const p = createCrossTemplate(kind === 't' ? '标准T型交叉口' : '标准十字交叉口')
-          if (kind === 't') {
-            p.channelizationSchemes[0].intersectionType = 't'
-            p.channelizationSchemes[0].approaches = p.channelizationSchemes[0].approaches.filter((a) => a.bearingDeg !== 180)
-            p.channelizationSchemes[0].name = 'T型渠化 A'
-          }
+          const p = createTemplateByType(kind as IntersectionType)
           s.project = p
           s.dirty = true
           s.selectedApproachId = p.channelizationSchemes[0]?.approaches[0]?.id ?? null
+        }),
+      applyOptimizedTiming: (phases, cycle) =>
+        set((s) => {
+          const sg = activeSignal(s.project)
+          if (!sg) return
+          sg.cycleSec = cycle
+          sg.phases = phases.map((ph) => ({ ...ph }))
+          s.dirty = true
         }),
       updateBand: (patch) =>
         set((s) => {

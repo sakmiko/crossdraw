@@ -1,7 +1,9 @@
 import { useMemo } from 'react'
 import {
   barChartSvg,
+  compareSchemesBarSvg,
   conflictMatrixSvg,
+  crossSectionBarSvg,
   groupedBarSvg,
   lineChartSvg,
   losGaugeSvg,
@@ -9,7 +11,15 @@ import {
   ringBarrierSvg,
   stackedBandSvg,
 } from './svgCharts'
-import type { AnalysisResult, BandCorridor, FlowScheme, SignalScheme, Approach, Phase } from '@/domain/types'
+import type {
+  AnalysisResult,
+  BandCorridor,
+  CrossSection,
+  FlowScheme,
+  SignalScheme,
+  Approach,
+  Phase,
+} from '@/domain/types'
 import { buildConflictMatrix } from '@/domain/signal/conflictMatrix'
 import { useAppStore } from '@/state/store'
 
@@ -278,6 +288,81 @@ export function BandCharts({ corridor }: { corridor: BandCorridor }) {
         <small>s</small>
       </div>
       <div dangerouslySetInnerHTML={{ __html: offsets }} />
+    </div>
+  )
+}
+
+export function CrossSectionCharts({ section }: { section: CrossSection }) {
+  const colors = useChartColors()
+  const svg = useMemo(() => {
+    const raw = crossSectionBarSvg(
+      section.components.map((c) => ({ label: c.label, widthM: c.widthM, color: c.color })),
+      { height: 120 },
+    )
+    return themeSvg(raw, colors)
+  }, [section, colors])
+  const total = section.components.reduce((s, c) => s + c.widthM, 0)
+  return (
+    <div className="chart-card">
+      <div className="chart-title">
+        <span>断面组成图</span>
+        <small>总宽 {total.toFixed(2)} m</small>
+      </div>
+      <div dangerouslySetInnerHTML={{ __html: svg }} />
+      <div className="table-wrap" style={{ maxHeight: 140, marginTop: 8 }}>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>组件</th>
+              <th>宽度 m</th>
+              <th>占比</th>
+            </tr>
+          </thead>
+          <tbody>
+            {section.components.map((c, i) => (
+              <tr key={i}>
+                <td>
+                  <span className="legend-swatch" style={{ background: c.color, display: 'inline-block', marginRight: 6 }} />
+                  {c.label}
+                </td>
+                <td>{c.widthM.toFixed(2)}</td>
+                <td>{((c.widthM / Math.max(0.01, total)) * 100).toFixed(1)}%</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+export function CompareCharts({
+  rows,
+}: {
+  rows: { label: string; avgVc: number; avgDelay: number; los: string }[]
+}) {
+  const colors = useChartColors()
+  const delaySvg = useMemo(
+    () => themeSvg(compareSchemesBarSvg(rows, { metric: 'delay', height: 150 }), colors),
+    [rows, colors],
+  )
+  const vcSvg = useMemo(
+    () => themeSvg(compareSchemesBarSvg(rows, { metric: 'vc', height: 150 }), colors),
+    [rows, colors],
+  )
+  if (!rows.length) return <p className="hint">暂无多方案</p>
+  return (
+    <div className="chart-card">
+      <div className="chart-title">
+        <span>多方案延误对比</span>
+        <small>色=LOS</small>
+      </div>
+      <div dangerouslySetInnerHTML={{ __html: delaySvg }} />
+      <div className="chart-title" style={{ marginTop: 12 }}>
+        <span>多方案 v/c 对比</span>
+        <small>同源 evaluate</small>
+      </div>
+      <div dangerouslySetInnerHTML={{ __html: vcSvg }} />
     </div>
   )
 }
