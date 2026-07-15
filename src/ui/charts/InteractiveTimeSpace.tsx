@@ -57,15 +57,15 @@ export function InteractiveTimeSpace({
         card: 'rgba(15,23,42,0.94)',
       }
     : {
-        bg: '#f8fafc',
-        grid: '#e2e8f0',
-        axis: '#64748b',
+        bg: '#ffffff',
+        grid: '#cbd5e1',
+        axis: '#334155',
         text: '#0f172a',
-        green: '#16a34a',
-        fwd: '#0284c7',
-        bwd: '#db2777',
-        node: '#475569',
-        card: 'rgba(255,255,255,0.96)',
+        green: '#15803d',
+        fwd: '#0369a1',
+        bwd: '#be185d',
+        node: '#334155',
+        card: 'rgba(255,255,255,0.98)',
       }
 
   if (model.nodes.length < 2) {

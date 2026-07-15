@@ -413,26 +413,32 @@ export default function App() {
       </header>
 
       <div className="main">
-        <aside className="side">
-          <div className="section-title">方案树</div>
-          <div className="toolbar" style={{ marginBottom: 8 }}>
+        <aside className="side scheme-tree">
+          <div className="side-head">
+            <div className="section-title" style={{ margin: 0 }}>方案树</div>
+            <span className="side-count">{project.channelizationSchemes.length} 渠化</span>
+          </div>
+          <div className="tree-actions">
             <button type="button" onClick={() => duplicateChannel()}>+渠化</button>
             <button type="button" onClick={() => addFlowScheme()}>+流量</button>
             <button type="button" onClick={() => addSignalScheme()}>+信号</button>
           </div>
+          <div className="tree-scroll">
           {project.channelizationSchemes.map((ch) => (
             <div
               key={ch.id}
-              className={`tree-item ${ch.id === channel?.id ? 'active' : ''}`}
+              className={`tree-item tree-channel ${ch.id === channel?.id ? 'active' : ''}`}
               onClick={() => setActiveChannel(ch.id)}
             >
-              <strong>{ch.name}</strong>
-              <div className="hint">{ch.approaches.length} 进口 · {ch.intersectionType}</div>
+              <div className="tree-row">
+                <strong className="tree-name">{ch.name}</strong>
+                <span className="tree-badge">{ch.intersectionType}</span>
+              </div>
+              <div className="hint">{ch.approaches.length} 进口 · {ch.flowSchemes.length} 流量方案</div>
               {ch.id === channel?.id && project.channelizationSchemes.length > 1 && (
                 <button
                   type="button"
-                  className="ghost"
-                  style={{ marginTop: 4 }}
+                  className="ghost tree-del"
                   onClick={(e) => {
                     e.stopPropagation()
                     deleteChannel(ch.id)
@@ -444,19 +450,22 @@ export default function App() {
               {ch.flowSchemes.map((fl) => (
                 <div
                   key={fl.id}
-                  style={{ marginLeft: 8, marginTop: 6 }}
-                  className={fl.id === flow?.id ? 'hint' : 'hint'}
+                  className={`tree-child tree-flow ${fl.id === flow?.id && ch.id === channel?.id ? 'active' : ''}`}
                   onClick={(e) => {
                     e.stopPropagation()
                     setActiveChannel(ch.id)
                     setActiveFlow(fl.id)
                   }}
                 >
-                  流量：{fl.name}{fl.id === flow?.id ? ' · 当前' : ''}
+                  <span className="tree-dot" />
+                  <span className="tree-child-label">
+                    流量 · {fl.name}
+                    {fl.id === flow?.id && ch.id === channel?.id ? <em>当前</em> : null}
+                  </span>
                   {fl.signalSchemes.map((sg) => (
                     <div
                       key={sg.id}
-                      style={{ marginLeft: 8 }}
+                      className={`tree-child tree-signal ${sg.id === signal?.id && fl.id === flow?.id ? 'active' : ''}`}
                       onClick={(e) => {
                         e.stopPropagation()
                         setActiveChannel(ch.id)
@@ -464,24 +473,35 @@ export default function App() {
                         setActiveSignal(sg.id)
                       }}
                     >
-                      信号：{sg.name} · C={sg.cycleSec}s{sg.id === signal?.id ? ' · 当前' : ''}
+                      <span className="tree-dot signal" />
+                      <span className="tree-child-label">
+                        信号 · {sg.name}
+                        <span className="tree-meta">C={sg.cycleSec}s</span>
+                        {sg.id === signal?.id && fl.id === flow?.id ? <em>当前</em> : null}
+                      </span>
                     </div>
                   ))}
                 </div>
               ))}
             </div>
           ))}
+          </div>
           <div className="section-title">进口道</div>
+          <div className="tree-scroll tree-scroll-sm">
           {channel?.approaches.map((ap) => (
             <div
               key={ap.id}
-              className={`tree-item ${selected?.id === ap.id ? 'active' : ''}`}
+              className={`tree-item tree-approach ${selected?.id === ap.id ? 'active' : ''}`}
               onClick={() => selectApproach(ap.id)}
             >
-              {ap.name}
-              <div className="hint">{ap.entryLanes.length} 车道 · {ap.bearingDeg}°</div>
+              <div className="tree-row">
+                <span className="tree-name">{ap.name}</span>
+                <span className="tree-meta">{ap.bearingDeg}°</span>
+              </div>
+              <div className="hint">{ap.entryLanes.length} 车道</div>
             </div>
           ))}
+          </div>
           {restoreMsg && (
             <div className="card">
               <h3>发现自动保存</h3>
@@ -1743,7 +1763,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.19</span>
+        <span>Crossdraw v0.5.20</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

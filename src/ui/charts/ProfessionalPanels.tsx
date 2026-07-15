@@ -15,23 +15,11 @@ import {
   releaseMatrixAlignsWithPhases,
 } from '@/domain/signal/releaseAlign'
 import { useAppStore } from '@/state/store'
+import { chartColorsForTheme, themeSvg } from './chartTheme'
 
 function useChartColors() {
   const theme = useAppStore((s) => s.theme)
-  return theme === 'light'
-    ? { bg: '#ffffff', grid: '#e2e8f0', label: '#64748b', text: '#0f172a', muted: '#64748b' }
-    : { bg: '#0b1018', grid: '#1c2533', label: '#7d8b9e', text: '#e6edf5', muted: '#64748b' }
-}
-
-function themeSvg(svg: string, c: { bg: string; grid: string; label: string; text: string; muted: string }) {
-  return svg
-    .replaceAll('#0a1020', c.bg)
-    .replaceAll('#1e293b', c.grid)
-    .replaceAll('#334155', c.grid)
-    .replaceAll('#8494ab', c.label)
-    .replaceAll('#94a3b8', c.label)
-    .replaceAll('#64748b', c.muted)
-    .replaceAll('#e2e8f0', c.text)
+  return chartColorsForTheme(theme === 'light' ? 'light' : 'dark')
 }
 
 export function SignalTimingPanel({ signal }: { signal: SignalScheme }) {
