@@ -24,6 +24,7 @@ import { FlowWorkspace } from '@/ui/layout/FlowWorkspace'
 import { ChannelWorkspace } from '@/ui/layout/ChannelWorkspace'
 import { BandWorkspace } from '@/ui/layout/BandWorkspace'
 import { AnalysisWorkspace } from '@/ui/layout/AnalysisWorkspace'
+import { CompareWorkspace } from '@/ui/layout/CompareWorkspace'
 import { PrintPreviewModal } from '@/ui/common/PrintPreview'
 import { buildA4PrintSheet, printSheetHtml, type PrintPanel } from '@/io/printSheet'
 import { collectCorridorKpis, corridorKpiCompareSvg, multiBandMarkdown } from '@/ui/charts/bandCorridorCompare'
@@ -859,117 +860,22 @@ export default function App() {
 
           
           {mode === 'compare' && (
-            <div className="card" style={{ marginTop: 12 }}>
-              <div className="panel-header">
-                <h2 style={{ margin: 0 }}>方案比选</h2>
-                <span className="hint">渠化 × 流量 × 信号 组合评价</span>
-              </div>
-              <p className="hint">
-                对方案树中全部渠化/流量/信号组合运行同一评价模型；点击行可激活对应方案。
-              </p>
-              <CompareCharts
-                rows={collectCompareRows(project, analyzeIntersection).map((r) => ({
-                  label: `${r.channel}/${r.signal}`,
-                  avgVc: r.avgVc,
-                  avgDelay: r.avgDelay,
-                  los: r.los,
-                }))}
-              />
-              <SchemeCompareBoard project={project} />
-              <div className="table-wrap" style={{ marginTop: 10 }}>
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>渠化</th>
-                      <th>流量</th>
-                      <th>信号</th>
-                      <th>v/c</th>
-                      <th>延误</th>
-                      <th>LOS</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {collectCompareRows(project, analyzeIntersection).map((r, i) => (
-                      <tr key={i}>
-                        <td>{r.channel}</td>
-                        <td>{r.flow}</td>
-                        <td>{r.signal}</td>
-                        <td>
-                          <span className="vc-chip" style={{ background: vcHeatColor(r.avgVc) }}>{r.avgVc.toFixed(2)}</span>
-                        </td>
-                        <td>{r.avgDelay.toFixed(1)}</td>
-                        <td>
-                          <span className={`los-badge los-${r.los}`}>{r.los}</span>
-                        </td>
-                        <td>
-                          <button
-                            type="button"
-                            className="ghost"
-                            onClick={() => {
-                              const ch = project.channelizationSchemes.find((c) => c.name === r.channel)
-                              if (!ch) return
-                              setActiveChannel(ch.id)
-                              const fl = ch.flowSchemes.find((f) => f.name === r.flow)
-                              if (fl) {
-                                setActiveFlow(fl.id)
-                                const sg = fl.signalSchemes.find((s) => s.name === r.signal)
-                                if (sg) setActiveSignal(sg.id)
-                              }
-                              setMode('analysis')
-                            }}
-                          >
-                            打开
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="toolbar" style={{ marginTop: 8 }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const rows = collectCompareRows(project, analyzeIntersection)
-                    downloadText(`${project.name}-compare.csv`, compareSchemesCsv(rows), 'text/csv')
-                  }}
-                >
-                  导出比选 CSV
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const rows = collectCompareRows(project, analyzeIntersection)
-                    exportJsonFile(`${project.name}-compare.json`, rows)
-                  }}
-                >
-                  导出比选 JSON
-                </button>
-                <button
-                  type="button"
-                  className="primary"
-                  onClick={() => {
-                    const snaps = collectSchemeSnapshots(project, analyzeIntersection)
-                    exportSvgFile(
-                      `${project.name}-compare-timing.svg`,
-                      schemeTimingStripSvg(snaps, { max: 4, theme }),
-                    )
-                    exportSvgFile(
-                      `${project.name}-compare-delay.svg`,
-                      schemeMetricsCompareSvg(snaps, { metric: 'delay' }),
-                    )
-                    exportSvgFile(
-                      `${project.name}-compare-vc.svg`,
-                      schemeMetricsCompareSvg(snaps, { metric: 'vc' }),
-                    )
-                  }}
-                >
-                  导出并排配时图
-                </button>
-              </div>
-              <p className="hint">快捷键 6 · 从分析页迁出的独立比选工作区</p>
-            </div>
+            <CompareWorkspace
+              project={project}
+              theme={theme}
+              onActivateScheme={(channelName, flowName, signalName) => {
+                const ch = project.channelizationSchemes.find((c) => c.name === channelName)
+                if (!ch) return
+                setActiveChannel(ch.id)
+                const fl = ch.flowSchemes.find((f) => f.name === flowName)
+                if (fl) {
+                  setActiveFlow(fl.id)
+                  const sg = fl.signalSchemes.find((s) => s.name === signalName)
+                  if (sg) setActiveSignal(sg.id)
+                }
+                setMode('analysis')
+              }}
+            />
           )}
 
           {mode === 'band' && (
@@ -1006,7 +912,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.43</span>
+        <span>Crossdraw v0.5.44</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

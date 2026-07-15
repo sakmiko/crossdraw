@@ -14,10 +14,10 @@ async function openMode(page: Page, tablist: ReturnType<Page['getByRole']>, name
   await page.waitForTimeout(200)
 }
 
-test.describe('Crossdraw v0.5.43 smoke suite', () => {
+test.describe('Crossdraw v0.5.44 smoke suite', () => {
   test('shell: canvas tree and mode rail', async ({ page }) => {
     const tablist = await bootCross(page)
-    await expect(page.getByText('Crossdraw v0.5.43').or(page.getByText(/Crossdraw v0\./)).first()).toBeVisible()
+    await expect(page.getByText('Crossdraw v0.5.44').or(page.getByText(/Crossdraw v0\./)).first()).toBeVisible()
     await expect(tablist.getByRole('tab', { name: '渠化' })).toBeVisible()
     await expect(tablist.getByRole('tab', { name: '流量' })).toBeVisible()
     await expect(tablist.getByRole('tab', { name: '信号' })).toBeVisible()
@@ -81,7 +81,8 @@ test.describe('Crossdraw v0.5.43 smoke suite', () => {
     const tablist = await bootCross(page)
     await openMode(page, tablist, '比选')
     await expect(page.getByText('方案比选').first()).toBeVisible({ timeout: 10000 })
-    await expect(page.getByText(/渠化|信号|v\/c/).first()).toBeVisible()
+    await expect(page.getByRole('button', { name: '导出并排配时图' })).toBeVisible()
+    await expect(page.getByRole('button', { name: '打开' }).first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/06-compare.png', fullPage: true })
   })
 })
