@@ -3,6 +3,7 @@ import type { Approach, ChannelizationScheme, FlowScheme, Mesh, Movement } from 
 import { buildFlowMesh } from '../flow/convert'
 import { emptyMesh, pushLabel, pushLine, pushPoly, recomputeBBox } from './mesh'
 import { buildWidenProfile, entryLateralExtraAt, exitLateralExtraAt, widenAnnotation } from './widen'
+import { laneMovementLabel } from './laneGroups'
 
 export const THEME = {
   asphalt: '#374151',
@@ -716,12 +717,12 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
     })
   }
 
-  // movement arrows per entry lane (respect actual lane widths)
+  // movement arrows per entry lane (respect actual lane widths + variable)
   off = -half
   for (const ln of ap.entryLanes) {
     const mid = off + ln.widthM / 2
     const base = add(mul(ux, start + 12), mul(px, mid))
-    drawMovementArrow(mesh, base, ux, px, ln.movements)
+    drawMovementArrow(mesh, base, ux, px, ln.movements, !!ln.variable)
     // width label near stop line
     pushLabel(mesh, {
       text: `${ln.widthM.toFixed(2)}m`,
@@ -730,6 +731,26 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
       size: 1.8,
       align: 'center',
     })
+    if (ln.variable) {
+      // dashed side ticks mark variable lane
+      pushLine(mesh, {
+        layer: 'MARKING',
+        points: [
+          add(mul(ux, start + 1), mul(px, off + 0.2)),
+          add(mul(ux, start + 1), mul(px, off + ln.widthM - 0.2)),
+        ],
+        stroke: THEME.yellow,
+        strokeWidth: 0.35,
+        dashed: true,
+      })
+      pushLabel(mesh, {
+        text: '可变',
+        at: add(mul(ux, start + 7), mul(px, mid)),
+        color: THEME.yellow,
+        size: 1.8,
+        align: 'center',
+      })
+    }
     off += ln.widthM
   }
 
@@ -813,19 +834,26 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
   })
 }
 
-function drawMovementArrow(mesh: Mesh, base: Vec, ux: Vec, px: Vec, movements: Movement[]) {
+function drawMovementArrow(
+  mesh: Mesh,
+  base: Vec,
+  ux: Vec,
+  px: Vec,
+  movements: Movement[],
+  variable = false,
+) {
   const tip = sub(base, mul(ux, 4.8))
   pushLine(mesh, {
     layer: 'MARKING',
     points: [base, tip],
-    stroke: THEME.marking,
-    strokeWidth: 0.35,
+    stroke: variable ? THEME.yellow : THEME.marking,
+    strokeWidth: variable ? 0.42 : 0.35,
   })
   // head
   pushPoly(mesh, {
     layer: 'MARKING',
     points: [tip, add(add(tip, mul(ux, 1.5)), mul(px, 1.1)), add(add(tip, mul(ux, 1.5)), mul(px, -1.1))],
-    fill: THEME.marking,
+    fill: variable ? THEME.yellow : THEME.marking,
   })
   // L/R hooks
   if (movements.includes('L')) {
@@ -833,7 +861,7 @@ function drawMovementArrow(mesh: Mesh, base: Vec, ux: Vec, px: Vec, movements: M
     pushLine(mesh, {
       layer: 'MARKING',
       points: [p, add(p, mul(px, -2.2)), add(add(p, mul(px, -2.2)), mul(ux, -1))],
-      stroke: THEME.marking,
+      stroke: variable ? THEME.yellow : THEME.marking,
       strokeWidth: 0.28,
     })
   }
@@ -842,14 +870,14 @@ function drawMovementArrow(mesh: Mesh, base: Vec, ux: Vec, px: Vec, movements: M
     pushLine(mesh, {
       layer: 'MARKING',
       points: [p, add(p, mul(px, 2.2)), add(add(p, mul(px, 2.2)), mul(ux, -1))],
-      stroke: THEME.marking,
+      stroke: variable ? THEME.yellow : THEME.marking,
       strokeWidth: 0.28,
     })
   }
   pushLabel(mesh, {
-    text: movements.join('') || 'T',
+    text: variable ? `${movements.join('') || 'T'}·变` : movements.join('') || 'T',
     at: add(base, mul(ux, 2.5)),
-    color: '#e2e8f0',
+    color: variable ? THEME.yellow : '#e2e8f0',
     size: 2.1,
     align: 'center',
   })

@@ -15,6 +15,13 @@ import type {
 import { createCrossTemplate, createTemplateByType } from '@/domain/templates/cross'
 import { applyOffsetsToCorridor, optimizeCorridor, setSegmentLength } from '@/domain/analysis/corridor'
 import { cloneBandCorridor, defaultBandCorridor, normalizeBandCorridors } from '@/domain/band/corridors'
+import {
+  rebuildLaneGroupsFromLanes,
+  setLaneVariable as applyLaneVariable,
+  syncLaneGroupsForLane,
+  mergeAdjacentLaneGroups,
+  splitLaneGroup,
+} from '@/domain/geometry/laneGroups'
 import { wrapProject, serializeRtp } from '@/domain/rtp'
 import { saveDraft } from '@/io/autosave'
 
@@ -36,6 +43,9 @@ export type AppState = {
   setLaneCount: (approachId: string, count: number) => void
   setLaneWidth: (approachId: string, laneIndex: number, widthM: number) => void
   setLaneMovements: (approachId: string, laneIndex: number, movements: Movement[]) => void
+  setLaneVariable: (approachId: string, laneIndex: number, variable: boolean) => void
+  mergeLaneGroup: (approachId: string, laneIndexA: number, laneIndexB: number) => void
+  splitLaneGroupAt: (approachId: string, groupId: string) => void
   setVolume: (approachId: string, volumes: Partial<TurnVolumes>) => void
   setFlowParams: (patch: { heavyRatio?: number; phf?: number; defaultSatFlow?: number }) => void
   setCycle: (cycleSec: number) => void
@@ -151,11 +161,7 @@ export const useAppStore = create<AppState>()(
             })
           }
           while (ap.entryLanes.length > n) ap.entryLanes.pop()
-          ap.laneGroups = ap.entryLanes.map((ln) => ({
-            id: newId(),
-            laneIds: [ln.id],
-            movements: [...ln.movements],
-          }))
+          ap.laneGroups = rebuildLaneGroupsFromLanes(ap)
           s.dirty = true
           s.project.meta.updatedAt = new Date().toISOString()
         }),
@@ -175,6 +181,32 @@ export const useAppStore = create<AppState>()(
           const ln = ap?.entryLanes[laneIndex]
           if (!ln) return
           ln.movements = movements.length ? movements : ['T']
+          syncLaneGroupsForLane(ap, ln.id)
+          s.dirty = true
+        }),
+      setLaneVariable: (approachId, laneIndex, variable) =>
+        set((s) => {
+          const ch = activeChannel(s.project)
+          const ap = ch?.approaches.find((a) => a.id === approachId)
+          if (!ap) return
+          applyLaneVariable(ap, laneIndex, variable)
+          s.dirty = true
+          s.project.meta.updatedAt = new Date().toISOString()
+        }),
+      mergeLaneGroup: (approachId, laneIndexA, laneIndexB) =>
+        set((s) => {
+          const ch = activeChannel(s.project)
+          const ap = ch?.approaches.find((a) => a.id === approachId)
+          if (!ap) return
+          mergeAdjacentLaneGroups(ap, laneIndexA, laneIndexB)
+          s.dirty = true
+        }),
+      splitLaneGroupAt: (approachId, groupId) =>
+        set((s) => {
+          const ch = activeChannel(s.project)
+          const ap = ch?.approaches.find((a) => a.id === approachId)
+          if (!ap) return
+          splitLaneGroup(ap, groupId)
           s.dirty = true
         }),
       setVolume: (approachId, volumes) =>

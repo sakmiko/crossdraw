@@ -80,6 +80,9 @@ export default function App() {
   const applyOptimizedTiming = useAppStore((s) => s.applyOptimizedTiming)
   const setLaneWidth = useAppStore((s) => s.setLaneWidth)
   const setLaneMovements = useAppStore((s) => s.setLaneMovements)
+  const setLaneVariable = useAppStore((s) => s.setLaneVariable)
+  const mergeLaneGroup = useAppStore((s) => s.mergeLaneGroup)
+  const splitLaneGroupAt = useAppStore((s) => s.splitLaneGroupAt)
   const togglePhaseRelease = useAppStore((s) => s.togglePhaseRelease)
   const updateBand = useAppStore((s) => s.updateBand)
   const updateBandNode = useAppStore((s) => s.updateBandNode)
@@ -1236,34 +1239,89 @@ export default function App() {
                 </div>
               </details>
               <details className="details-block" open>
-                <summary>分车道宽 / 转向</summary>
+                <summary>分车道宽 / 转向 / 可变车道</summary>
                 <div className="details-body">
               <div className="section-title" style={{ marginTop: 0 }}>车道配置</div>
               {selected.entryLanes.map((ln, i) => (
-                <div key={ln.id} className="field-row" style={{ alignItems: 'end' }}>
-                  <label>
-                    车道{i + 1}宽
-                    <input
-                      type="number"
-                      step={0.05}
-                      value={ln.widthM}
-                      onChange={(e) => setLaneWidth(selected.id, i, Number(e.target.value))}
-                    />
-                  </label>
-                  <label>
-                    转向
-                    <input
-                      value={ln.movements.join('')}
-                      onChange={(e) => {
-                        const raw = e.target.value.toUpperCase().replace(/[^ULTR]/g, '')
-                        const movs = Array.from(new Set(raw.split(''))) as Movement[]
-                        setLaneMovements(selected.id, i, movs)
-                      }}
-                    />
-                  </label>
+                <div key={ln.id} className="lane-edit-row">
+                  <div className="field-row" style={{ alignItems: 'end' }}>
+                    <label>
+                      车道{i + 1}宽
+                      <input
+                        type="number"
+                        step={0.05}
+                        value={ln.widthM}
+                        onChange={(e) => setLaneWidth(selected.id, i, Number(e.target.value))}
+                      />
+                    </label>
+                    <label>
+                      转向 (ULTR)
+                      <input
+                        value={ln.movements.join('')}
+                        onChange={(e) => {
+                          const raw = e.target.value.toUpperCase().replace(/[^ULTR]/g, '')
+                          const movs = Array.from(new Set(raw.split(''))) as Movement[]
+                          setLaneMovements(selected.id, i, movs)
+                        }}
+                      />
+                    </label>
+                    <label className="check-inline">
+                      <input
+                        type="checkbox"
+                        checked={!!ln.variable}
+                        onChange={(e) => setLaneVariable(selected.id, i, e.target.checked)}
+                      />{' '}
+                      可变
+                    </label>
+                  </div>
+                  <div className="toolbar" style={{ gap: 6, marginBottom: 6 }}>
+                    {i < selected.entryLanes.length - 1 && (
+                      <button type="button" className="ghost" onClick={() => mergeLaneGroup(selected.id, i, i + 1)}>
+                        与下道合并组
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
-              <p className="hint">改参后画布即时联动。待转/借道/红灯右转参与几何与分析。</p>
+              {selected.laneGroups.length > 0 && (
+                <>
+                  <div className="section-title">车道组</div>
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>组</th>
+                        <th>车道</th>
+                        <th>转向</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selected.laneGroups.map((g, gi) => (
+                        <tr key={g.id}>
+                          <td>G{gi + 1}</td>
+                          <td>
+                            {g.laneIds
+                              .map((id) => selected.entryLanes.findIndex((l) => l.id === id) + 1)
+                              .filter((n) => n > 0)
+                              .join(',')}
+                          </td>
+                          <td>{g.movements.join('') || '—'}</td>
+                          <td>
+                            {g.laneIds.length > 1 && (
+                              <button type="button" className="ghost" onClick={() => splitLaneGroupAt(selected.id, g.id)}>
+                                拆组
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </>
+              )}
+              <p className="hint">
+                可变车道图面标黄「可变」；通行能力按多运动共享×0.85。合并组共享转向（非可变车道跟随组）。
+              </p>
                 </div>
               </details>
             </div>
@@ -2244,7 +2302,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.28</span>
+        <span>Crossdraw v0.5.29</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

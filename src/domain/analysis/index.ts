@@ -63,11 +63,20 @@ function greenExclusive(
 }
 
 function satFlowFor(ap: Approach, flow: FlowScheme, mov: 'L' | 'T' | 'R'): number {
-  const lane = ap.entryLanes.find((l) => l.movements.includes(mov))
-  if (lane?.satFlowPcu) return lane.satFlowPcu
-  // borrow-left default 1650 (RoadGee public note)
-  if (mov === 'L' && ap.borrowLeft) return 1650
-  return flow.defaultSatFlow
+  const lanes = ap.entryLanes.filter((l) => l.movements.includes(mov))
+  if (!lanes.length) {
+    if (mov === 'L' && ap.borrowLeft) return 1650
+    return flow.defaultSatFlow
+  }
+  // sum explicit sat if set; else base * lane count (shared groups already multi-lane)
+  let sum = 0
+  for (const lane of lanes) {
+    const base = lane.satFlowPcu ?? (mov === 'L' && ap.borrowLeft ? 1650 : flow.defaultSatFlow)
+    // variable lane: share capacity ~0.85 of exclusive when multi-movement
+    const factor = lane.variable && lane.movements.length > 1 ? 0.85 : 1
+    sum += base * factor
+  }
+  return sum
 }
 
 export function analyzeIntersection(
