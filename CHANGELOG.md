@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 0.5.39 — 2026-07-16
+
+- 阶段复盘 docs/plans/phase-review-0.5.38.md
+- FlowWorkspace 从 App 拆出（流量表/图/同源徽章）
+
+# CHANGELOG
+
 ## 0.5.38 — 2026-07-16
 
 - 行人–机动车并发冲突校核（右转/对向左转/邻向）

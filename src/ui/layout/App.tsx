@@ -20,6 +20,7 @@ import { CommandPalette } from '@/ui/common/CommandPalette'
 import { ExportCenter } from '@/ui/common/ExportCenter'
 import { SignalWorkspace } from '@/ui/layout/SignalWorkspace'
 import { AnalysisLaneTable } from '@/ui/layout/AnalysisLaneTable'
+import { FlowWorkspace } from '@/ui/layout/FlowWorkspace'
 import { BandCorridorSidebar } from '@/ui/layout/BandCorridorSidebar'
 import { PrintPreviewModal } from '@/ui/common/PrintPreview'
 import { buildA4PrintSheet, printSheetHtml, type PrintPanel } from '@/io/printSheet'
@@ -1359,95 +1360,14 @@ export default function App() {
           )}
 
           {mode === 'flow' && flow && channel && (
-            <div className="card" style={{ marginTop: 12 }}>
-              <div className="panel-header">
-                <h2 style={{ margin: 0 }}>流量 · {flow.name}</h2>
-                {(() => {
-                  const ok = flowChartsAlignWithTable(channel.approaches, flow, flowDisplayMode).ok
-                  return (
-                    <span className={`integrity-badge ${ok ? 'ok' : 'bad'}`}>
-                      {ok ? '表/图同源 ✓' : '表/图不一致'}
-                    </span>
-                  )
-                })()}
-              </div>
-              <div className="field-row">
-                <label>
-                  大车比例
-                  <input
-                    type="number"
-                    step={0.01}
-                    value={flow.heavyRatio}
-                    onChange={(e) => setFlowParams({ heavyRatio: Number(e.target.value) })}
-                  />
-                </label>
-                <label>
-                  PHF
-                  <input
-                    type="number"
-                    step={0.01}
-                    value={flow.phf}
-                    onChange={(e) => setFlowParams({ phf: Number(e.target.value) })}
-                  />
-                </label>
-                <label>
-                  图示数据
-                  <select
-                    value={flowDisplayMode}
-                    onChange={(e) => setFlowDisplayMode(e.target.value as FlowDisplayMode)}
-                  >
-                    <option value="natural">自然流量 veh/h（与表一致）</option>
-                    <option value="peak">高峰 pcu/h（计大车/PHF）</option>
-                  </select>
-                </label>
-              </div>
-              <div className="table-wrap" style={{ maxHeight: 200 }}>
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>进口</th>
-                      <th>L</th>
-                      <th>T</th>
-                      <th>R</th>
-                      <th>合计</th>
-                      <th>高峰Σ</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(() => {
-                      const al = buildFlowAlignment(channel.approaches, flow, 'natural')
-                      return channel.approaches.map((ap) => {
-                        const v = flow.volumes[ap.id] ?? { U: 0, L: 0, T: 0, R: 0 }
-                        const row = al.rows.find((r) => r.approachId === ap.id)
-                        const cell = (k: keyof TurnVolumes) => (
-                          <input
-                            type="number"
-                            value={v[k]}
-                            onChange={(e) => setVolume(ap.id, { [k]: Number(e.target.value) })}
-                          />
-                        )
-                        const sum = (v.L || 0) + (v.T || 0) + (v.R || 0)
-                        return (
-                          <tr key={ap.id}>
-                            <td>{ap.name}</td>
-                            <td>{cell('L')}</td>
-                            <td>{cell('T')}</td>
-                            <td>{cell('R')}</td>
-                            <td className="hint">{sum}</td>
-                            <td className="hint">{row ? Math.round(row.peakSum) : '—'}</td>
-                          </tr>
-                        )
-                      })
-                    })()}
-                  </tbody>
-                </table>
-              </div>
-              <p className="hint">
-                表内为自然流量 veh/h；图示可选高峰 pcu/h（大车×PCE、/PHF）。柱状图与流向图共用 buildFlowAlignment。
-              </p>
-              <FlowCharts approaches={channel.approaches} flow={flow} mode={flowDisplayMode} />
-              <FlowDirectionPanel approaches={channel.approaches} flow={flow} mode={flowDisplayMode} />
-            </div>
+            <FlowWorkspace
+              channel={channel}
+              flow={flow}
+              displayMode={flowDisplayMode}
+              onDisplayMode={setFlowDisplayMode}
+              onFlowParams={setFlowParams}
+              onVolume={setVolume}
+            />
           )}
 
           {mode === 'signal' && signal && (
@@ -2063,7 +1983,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.38</span>
+        <span>Crossdraw v0.5.39</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
