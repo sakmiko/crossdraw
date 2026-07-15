@@ -40,6 +40,7 @@ export type SignalWorkspaceProps = {
   ) => void
   onToggleRelease: (phaseId: string, approachId: string, m: Movement) => void
   onTogglePedestrian: (phaseId: string, approachId: string) => void
+  onSetPedExclusive?: (phaseId: string, approachId: string, exclusive: boolean) => void
   onAddPhase: () => void
   onAddOverlap: () => void
   onRunOptimize: () => void
@@ -67,6 +68,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
     onUpdatePhaseTiming,
     onToggleRelease,
     onTogglePedestrian,
+    onSetPedExclusive,
     onAddPhase,
     onAddOverlap,
     onRunOptimize,
@@ -182,6 +184,16 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
                   >
                     行人
                   </button>
+                  {pedOn && onSetPedExclusive && (
+                    <label className="check-inline" style={{ fontSize: 11 }} title="独占行人：人车冲突升为禁止">
+                      <input
+                        type="checkbox"
+                        checked={!!(ph.pedestrian ?? []).find((p) => p.approachId === ap.id)?.exclusive}
+                        onChange={(e) => onSetPedExclusive(ph.id, ap.id, e.target.checked)}
+                      />{' '}
+                      独占
+                    </label>
+                  )}
                 </div>
               </div>
               )

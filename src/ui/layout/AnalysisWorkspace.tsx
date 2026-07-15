@@ -16,6 +16,7 @@ import { AnalysisCharts, CompareCharts } from '@/ui/charts/ChartPanels'
 import { AnalysisLaneTable } from '@/ui/layout/AnalysisLaneTable'
 import { collectCompareRows, compareSchemesCsv } from '@/io/report'
 import { exportVissimCsvBundle } from '@/io/vissimCsv'
+import { buildVissimImportPack } from '@/io/vissimInpxSkeleton'
 import { analysisMarkdown, exportSvgFile } from '@/io/exportCharts'
 import { buildAnalysisReportSvg } from '@/io/analysisReportSvg'
 import { downloadText } from '@/io/download'
@@ -115,14 +116,15 @@ export function AnalysisWorkspace({
           type="button"
           onClick={() => {
             if (!channel || !flow || !signal) return
-            const b = exportVissimCsvBundle(channel.approaches, flow, signal)
-            downloadText(`${project.name}-vissim-links.csv`, b.links, 'text/csv')
-            downloadText(`${project.name}-vissim-routes.csv`, b.routes, 'text/csv')
-            downloadText(`${project.name}-vissim-volumes.csv`, b.volumes, 'text/csv')
-            downloadText(`${project.name}-vissim-signal.csv`, b.signal, 'text/csv')
+            const pack = buildVissimImportPack(project.name, channel.approaches, flow, signal)
+            downloadText(`${project.name}-vissim-README.md`, pack.readme, 'text/markdown')
+            downloadText(`${project.name}-vissim-links.csv`, pack.bundle.links, 'text/csv')
+            downloadText(`${project.name}-vissim-routes.csv`, pack.bundle.routes, 'text/csv')
+            downloadText(`${project.name}-vissim-volumes.csv`, pack.bundle.volumes, 'text/csv')
+            downloadText(`${project.name}-vissim-signal.csv`, pack.bundle.signal, 'text/csv')
           }}
         >
-          Vissim CSV 包
+          Vissim 导入骨架
         </button>
         <button type="button" className="primary" onClick={onExportProPack}>
           导出专业图件包

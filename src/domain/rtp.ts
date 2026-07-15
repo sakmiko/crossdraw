@@ -106,10 +106,17 @@ const signalSchema = z.object({
   unsignalized: z.boolean(),
 })
 
+const multimodalSchema = z.object({
+  ped: z.number(),
+  bike: z.number(),
+  other: z.number().optional(),
+})
+
 const flowSchema = z.object({
   id: z.string(),
   name: z.string(),
   volumes: z.record(turnSchema),
+  multimodal: z.record(multimodalSchema).optional(),
   heavyRatio: z.number(),
   phf: z.number(),
   pce: z.number(),

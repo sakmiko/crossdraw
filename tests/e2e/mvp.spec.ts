@@ -14,10 +14,10 @@ async function openMode(page: Page, tablist: ReturnType<Page['getByRole']>, name
   await page.waitForTimeout(200)
 }
 
-test.describe('Crossdraw v0.5.44 smoke suite', () => {
+test.describe('Crossdraw v0.5.64 smoke suite', () => {
   test('shell: canvas tree and mode rail', async ({ page }) => {
     const tablist = await bootCross(page)
-    await expect(page.getByText('Crossdraw v0.5.44').or(page.getByText(/Crossdraw v0\./)).first()).toBeVisible()
+    await expect(page.getByText('Crossdraw v0.5.64').or(page.getByText(/Crossdraw v0\./)).first()).toBeVisible()
     await expect(tablist.getByRole('tab', { name: '渠化' })).toBeVisible()
     await expect(tablist.getByRole('tab', { name: '流量' })).toBeVisible()
     await expect(tablist.getByRole('tab', { name: '信号' })).toBeVisible()
@@ -51,6 +51,8 @@ test.describe('Crossdraw v0.5.44 smoke suite', () => {
     await openMode(page, tablist, '信号')
     await expect(page.getByText(/配时闭合|配时/).first()).toBeVisible({ timeout: 10000 })
     await expect(page.getByRole('button', { name: '行人' }).first()).toBeVisible()
+    await page.getByRole('button', { name: '行人' }).first().click()
+    await expect(page.getByText('独占').first()).toBeVisible()
     await expect(page.getByText('冲突点示意图').or(page.getByText('冲突')).first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/03-signal.png', fullPage: true })
   })
@@ -75,6 +77,14 @@ test.describe('Crossdraw v0.5.44 smoke suite', () => {
     await page.waitForTimeout(150)
     await expect(page.getByRole('option').nth(1)).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/05-band.png', fullPage: true })
+  })
+
+  test('xsection: synced width strip', async ({ page }) => {
+    const tablist = await bootCross(page)
+    await openMode(page, tablist, '断面')
+    await expect(page.getByText(/横断面/).first()).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/断面同源|需重绘|总宽/).first()).toBeVisible()
+    await page.screenshot({ path: 'docs/screenshots/05-xsection.png', fullPage: true })
   })
 
   test('compare: scheme board opens', async ({ page }) => {

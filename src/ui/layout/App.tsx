@@ -25,6 +25,7 @@ import { ChannelWorkspace } from '@/ui/layout/ChannelWorkspace'
 import { BandWorkspace } from '@/ui/layout/BandWorkspace'
 import { AnalysisWorkspace } from '@/ui/layout/AnalysisWorkspace'
 import { CompareWorkspace } from '@/ui/layout/CompareWorkspace'
+import { XSectionWorkspace } from '@/ui/layout/XSectionWorkspace'
 import { PrintPreviewModal } from '@/ui/common/PrintPreview'
 import { buildA4PrintSheet, printSheetHtml, type PrintPanel } from '@/io/printSheet'
 import { collectCorridorKpis, corridorKpiCompareSvg, multiBandMarkdown } from '@/ui/charts/bandCorridorCompare'
@@ -74,6 +75,7 @@ export default function App() {
   const updateApproach = useAppStore((s) => s.updateApproach)
   const setLaneCount = useAppStore((s) => s.setLaneCount)
   const setVolume = useAppStore((s) => s.setVolume)
+  const setMultimodalVolume = useAppStore((s) => s.setMultimodalVolume)
   const setFlowParams = useAppStore((s) => s.setFlowParams)
   const setCycle = useAppStore((s) => s.setCycle)
   const updatePhaseGreen = useAppStore((s) => s.updatePhaseGreen)
@@ -94,6 +96,7 @@ export default function App() {
   const splitLaneGroupAt = useAppStore((s) => s.splitLaneGroupAt)
   const togglePhaseRelease = useAppStore((s) => s.togglePhaseRelease)
   const togglePhasePedestrian = useAppStore((s) => s.togglePhasePedestrian)
+  const setPhasePedExclusive = useAppStore((s) => s.setPhasePedExclusive)
   const updateBand = useAppStore((s) => s.updateBand)
   const updateBandNode = useAppStore((s) => s.updateBandNode)
   const addBandNode = useAppStore((s) => s.addBandNode)
@@ -760,6 +763,7 @@ export default function App() {
               onDisplayMode={setFlowDisplayMode}
               onFlowParams={setFlowParams}
               onVolume={setVolume}
+              onMultimodal={setMultimodalVolume}
             />
           )}
 
@@ -783,6 +787,7 @@ export default function App() {
               onUpdatePhaseTiming={updatePhaseTiming}
               onToggleRelease={togglePhaseRelease}
               onTogglePedestrian={togglePhasePedestrian}
+              onSetPedExclusive={setPhasePedExclusive}
               onAddPhase={addPhase}
               onAddOverlap={addOverlapPhase}
               onRunOptimize={runWebster}
@@ -792,56 +797,12 @@ export default function App() {
           )}
 
           {mode === 'xsection' && xsection && selected && (
-            <div className="card" style={{ marginTop: 12 }}>
-              <div className="panel-header">
-                <h2 style={{ margin: 0 }}>横断面 · {selected.name}</h2>
-                <span className="hint">
-                  总宽 {xsection.components.reduce((s, c) => s + c.widthM, 0).toFixed(2)} m
-                  {markStaleIfNeeded(xsection, selected).stale ? ' · 参数已变需重绘' : ' · 已同步渠化'}
-                </span>
-              </div>
-              <div className="metric-grid band-kpi" style={{ marginTop: 8 }}>
-                <div className="metric">
-                  <div className="label">总宽 B</div>
-                  <div className="value">{xsection.components.reduce((s, c) => s + c.widthM, 0).toFixed(2)}<small> m</small></div>
-                </div>
-                <div className="metric">
-                  <div className="label">进口车道</div>
-                  <div className="value">{selected.entryLanes.length}</div>
-                </div>
-                <div className="metric">
-                  <div className="label">出口车道</div>
-                  <div className="value">{selected.exitLanes.length}</div>
-                </div>
-                <div className="metric">
-                  <div className="label">中分带</div>
-                  <div className="value">{selected.median.widthM.toFixed(1)}<small> m</small></div>
-                </div>
-              </div>
-              <div className="xsection" style={{ marginTop: 8 }}>
-                {xsection.components.map((c, i) => (
-                  <div key={i} style={{ flex: c.widthM, background: c.color }} title={`${c.label} ${c.widthM}m`}>
-                    {c.widthM >= 2 ? `${c.label} ${c.widthM}m` : ''}
-                  </div>
-                ))}
-              </div>
-              <CrossSectionCharts section={xsection} approach={selected} />
-              <div className="toolbar" style={{ marginTop: 8 }}>
-                <button
-                  type="button"
-                  className="primary"
-                  onClick={() => {
-                    exportSvgFile(
-                      `${project.name}-${selected.name}-xsection.svg`,
-                      professionalCrossSectionSvg(xsection, selected, { theme }),
-                    )
-                  }}
-                >
-                  导出标准断面图
-                </button>
-              </div>
-              <p className="hint">修改渠化车道宽/中分带/人行道后，本图与 KPI 立即联动刷新。</p>
-            </div>
+            <XSectionWorkspace
+              projectName={project.name}
+              selected={selected}
+              xsection={xsection}
+              theme={theme}
+            />
           )}
 
           {mode === 'analysis' && analysis && analysisIntegrity && (
@@ -900,23 +861,41 @@ export default function App() {
 
 
           <div className="card">
-            <h3>校验</h3>
+            <div className="panel-header">
+              <h3 style={{ margin: 0 }}>校验</h3>
+              <span className="hint issues-summary">
+                {issues.length === 0
+                  ? '通过'
+                  : `共 ${issues.length} · 禁 ${issues.filter((x) => x.level === 'block').length} · 警 ${issues.filter((x) => x.level === 'warn').length}`}
+              </span>
+            </div>
             {issues.length === 0 && <p className="hint">无问题</p>}
-            {issues.slice(0, 10).map((i) => (
-              <div key={i.id} className={`pill ${i.level}`} style={{ display: 'flex', marginBottom: 6 }}>
-                {i.level.toUpperCase()} · {i.message}
+            {issues.slice(0, 12).map((i) => (
+              <div key={i.id} className={`pill ${i.level}`} style={{ display: 'flex', marginBottom: 6, flexWrap: 'wrap', gap: 4 }}>
+                <strong style={{ fontSize: 10 }}>{i.code}</strong>
+                <span>{i.level.toUpperCase()} · {i.message}</span>
               </div>
             ))}
+            {issues.length > 12 && <p className="hint">…另有 {issues.length - 12} 条</p>}
           </div>
         </aside>
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.44</span>
-        <span>Mesh polys {mesh.polygons.length}</span>
+        <span>Crossdraw v0.5.64</span>
+        <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
         </span>
+        <span className="status-issues">
+          校验 {issues.filter((x) => x.level === 'block').length}禁/{issues.filter((x) => x.level === 'warn').length}警
+        </span>
+        {signal && (
+          <span>
+            C={signal.cycleSec}s
+            {buildSignalTimingAlignment(signal).closed ? ' · 闭合✓' : ' · 未闭合'}
+          </span>
+        )}
         <span style={{ marginLeft: 'auto' }}>sakmiko/crossdraw · GPLv3</span>
       </footer>
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />

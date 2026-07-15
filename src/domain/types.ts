@@ -132,10 +132,25 @@ export interface FlowStyle {
   maxWidth: number
 }
 
+/** Per-approach non-motor / pedestrian counts (engineering skeleton). */
+export interface MultimodalVolumes {
+  /** pedestrian midblock / approach face peds/h */
+  ped: number
+  /** bike / e-bike veh/h */
+  bike: number
+  /** optional other non-motor */
+  other?: number
+}
+
 export interface FlowScheme {
   id: string
   name: string
   volumes: Record<string, TurnVolumes>
+  /**
+   * Optional multimodal volumes by approachId.
+   * Motor vehicle analysis still uses `volumes`; these feed charts/notes.
+   */
+  multimodal?: Record<string, MultimodalVolumes>
   heavyRatio: number
   phf: number
   pce: number

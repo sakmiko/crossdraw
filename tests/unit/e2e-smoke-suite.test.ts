@@ -7,7 +7,7 @@ describe('e2e smoke suite v0.5.43', () => {
     const p = resolve(__dirname, '../e2e/mvp.spec.ts')
     const t = readFileSync(p, 'utf8')
     expect(t).toContain("smoke suite")
-    for (const mode of ['渠化', '流量', '信号', '分析', '绿波', '比选']) {
+    for (const mode of ['渠化', '流量', '信号', '分析', '绿波', '比选', '断面']) {
       expect(t).toContain(mode)
     }
     expect(t).toContain('docs/screenshots/00-shell.png')

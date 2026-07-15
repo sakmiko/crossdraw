@@ -47,6 +47,7 @@ export type AppState = {
   mergeLaneGroup: (approachId: string, laneIndexA: number, laneIndexB: number) => void
   splitLaneGroupAt: (approachId: string, groupId: string) => void
   setVolume: (approachId: string, volumes: Partial<TurnVolumes>) => void
+  setMultimodalVolume: (approachId: string, patch: Partial<{ ped: number; bike: number; other: number }>) => void
   setFlowParams: (patch: { heavyRatio?: number; phf?: number; defaultSatFlow?: number }) => void
   setCycle: (cycleSec: number) => void
   updatePhaseGreen: (phaseId: string, greenSec: number) => void
@@ -217,6 +218,19 @@ export const useAppStore = create<AppState>()(
           const fl = activeFlow(s.project)
           if (!fl) return
           fl.volumes[approachId] = { ...(fl.volumes[approachId] ?? { U: 0, L: 0, T: 0, R: 0 }), ...volumes }
+          s.dirty = true
+        }),
+      setMultimodalVolume: (approachId, patch) =>
+        set((s) => {
+          const fl = activeFlow(s.project)
+          if (!fl) return
+          if (!fl.multimodal) fl.multimodal = {}
+          const cur = fl.multimodal[approachId] ?? { ped: 0, bike: 0 }
+          fl.multimodal[approachId] = {
+            ped: patch.ped ?? cur.ped,
+            bike: patch.bike ?? cur.bike,
+            other: patch.other ?? cur.other,
+          }
           s.dirty = true
         }),
       setFlowParams: (patch) =>

@@ -2,12 +2,14 @@
  * Flow workspace panel — extracted from App for maintainability.
  */
 import type { Approach, ChannelizationScheme, FlowScheme, TurnVolumes } from '@/domain/types'
+import { getMultimodal, sumMultimodal } from '@/domain/flow/multimodal'
 import {
   buildFlowAlignment,
   flowChartsAlignWithTable,
   type FlowDisplayMode,
 } from '@/domain/flow/flowAlign'
 import { FlowCharts } from '@/ui/charts/ChartPanels'
+import { multimodalBarSvg } from '@/ui/charts/multimodalChart'
 import { FlowDirectionPanel } from '@/ui/charts/ProfessionalPanels'
 
 export type FlowWorkspaceProps = {
@@ -17,6 +19,7 @@ export type FlowWorkspaceProps = {
   onDisplayMode: (m: FlowDisplayMode) => void
   onFlowParams: (patch: Partial<Pick<FlowScheme, 'heavyRatio' | 'phf' | 'pce' | 'defaultSatFlow'>>) => void
   onVolume: (approachId: string, volumes: Partial<TurnVolumes>) => void
+  onMultimodal?: (approachId: string, patch: Partial<{ ped: number; bike: number; other: number }>) => void
 }
 
 export function FlowWorkspace({
@@ -26,9 +29,11 @@ export function FlowWorkspace({
   onDisplayMode,
   onFlowParams,
   onVolume,
+  onMultimodal,
 }: FlowWorkspaceProps) {
   const ok = flowChartsAlignWithTable(channel.approaches, flow, displayMode).ok
   const naturalAlign = buildFlowAlignment(channel.approaches, flow, 'natural')
+  const mmSum = sumMultimodal(flow, channel.approaches)
 
   return (
     <div className="card" style={{ marginTop: 12 }}>
@@ -113,6 +118,54 @@ export function FlowWorkspace({
         表内为自然流量 veh/h；图示可选高峰 pcu/h（大车×PCE、/PHF）。柱状图与流向图共用
         buildFlowAlignment。
       </p>
+      <div className="section-title">行人 / 非机动车（示意骨架）</div>
+      <div className="table-wrap" style={{ maxHeight: 160 }}>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>进口</th>
+              <th>行人 peds/h</th>
+              <th>非机 veh/h</th>
+            </tr>
+          </thead>
+          <tbody>
+            {channel.approaches.map((ap: Approach) => {
+              const m = getMultimodal(flow, ap.id)
+              return (
+                <tr key={`mm-${ap.id}`}>
+                  <td>{ap.name}</td>
+                  <td>
+                    <input
+                      type="number"
+                      min={0}
+                      value={m.ped}
+                      disabled={!onMultimodal}
+                      onChange={(e) => onMultimodal?.(ap.id, { ped: Number(e.target.value) })}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      min={0}
+                      value={m.bike}
+                      disabled={!onMultimodal}
+                      onChange={(e) => onMultimodal?.(ap.id, { bike: Number(e.target.value) })}
+                    />
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+      <p className="hint">
+        行人合计 {mmSum.ped} · 非机合计 {mmSum.bike}（不并入机动车 v/c；供图注/校核扩展）
+      </p>
+      <div
+        className="chart-svg-host"
+        style={{ marginTop: 8 }}
+        dangerouslySetInnerHTML={{ __html: multimodalBarSvg(channel.approaches, flow) }}
+      />
       <FlowCharts approaches={channel.approaches} flow={flow} mode={displayMode} />
       <FlowDirectionPanel approaches={channel.approaches} flow={flow} mode={displayMode} />
     </div>

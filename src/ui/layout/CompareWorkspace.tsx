@@ -2,7 +2,7 @@
  * Scheme compare workspace — multi-scheme evaluation table and exports.
  * Extracted from App (v0.5.44).
  */
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import type { Project } from '@/domain/types'
 import { analyzeIntersection } from '@/domain/analysis'
 import { CompareCharts, SchemeCompareBoard } from '@/ui/charts/ChartPanels'
@@ -19,7 +19,15 @@ export type CompareWorkspaceProps = {
 }
 
 export function CompareWorkspace({ project, theme, onActivateScheme }: CompareWorkspaceProps) {
-  const rows = useMemo(() => collectCompareRows(project, analyzeIntersection), [project])
+  const [sortKey, setSortKey] = useState<'delay' | 'vc' | 'name'>('delay')
+  const rows = useMemo(() => {
+    const raw = collectCompareRows(project, analyzeIntersection)
+    return raw.slice().sort((a, b) => {
+      if (sortKey === 'vc') return b.avgVc - a.avgVc
+      if (sortKey === 'name') return a.channel.localeCompare(b.channel, 'zh')
+      return a.avgDelay - b.avgDelay
+    })
+  }, [project, sortKey])
 
   return (
     <div className="card" style={{ marginTop: 12 }}>
@@ -28,6 +36,16 @@ export function CompareWorkspace({ project, theme, onActivateScheme }: CompareWo
         <span className="hint">渠化 × 流量 × 信号 组合评价</span>
       </div>
       <p className="hint">对方案树中全部渠化/流量/信号组合运行同一评价模型；点击行可激活对应方案。</p>
+      <div className="toolbar" style={{ marginBottom: 8 }}>
+        <label>
+          排序
+          <select value={sortKey} onChange={(e) => setSortKey(e.target.value as typeof sortKey)}>
+            <option value="delay">延误升序</option>
+            <option value="vc">v/c 降序</option>
+            <option value="name">渠化名</option>
+          </select>
+        </label>
+      </div>
       <CompareCharts
         rows={rows.map((r) => ({
           label: `${r.channel}/${r.signal}`,

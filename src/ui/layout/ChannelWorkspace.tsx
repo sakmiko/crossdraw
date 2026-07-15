@@ -509,6 +509,18 @@ export function ChannelWorkspace({
                 />{' '}
                 非机动车道
               </label>
+              {selected.bikeEnabled && (
+                <label>
+                  非机动车道宽 (m)
+                  <input
+                    type="number"
+                    min={1}
+                    step={0.1}
+                    value={selected.bikeWidthM}
+                    onChange={(e) => updateApproach(selected.id, { bikeWidthM: Number(e.target.value) })}
+                />
+                </label>
+              )}
               <details className="details-block" open>
                 <summary>渠化选项 / 待转借道</summary>
                 <div className="details-body">

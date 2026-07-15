@@ -109,10 +109,15 @@ function defaultFlow(approaches: Approach[]): FlowScheme {
     // balanced demo volumes (not overloaded)
     volumes[a.id] = { U: 10, L: 120, T: 380, R: 100 }
   }
+  const multimodal: Record<string, { ped: number; bike: number }> = {}
+  for (const a of approaches) {
+    multimodal[a.id] = { ped: 180, bike: 90 }
+  }
   return {
     id: newId(),
     name: '高峰小时',
     volumes,
+    multimodal,
     heavyRatio: 0.08,
     phf: 0.95,
     pce: 2,
