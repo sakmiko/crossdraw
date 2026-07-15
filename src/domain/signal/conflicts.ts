@@ -1,5 +1,6 @@
 import { newId } from '@/shared/id'
 import type { Approach, Issue, Movement, Phase, Project } from '../types'
+import { detectPedVehicleConflicts } from './pedVehicleConflict'
 
 /** Standard 4-leg conflict pairs for concurrent green (simplified but production-usable). */
 const HARD_CONFLICTS: Array<[Movement, Movement]> = [
@@ -87,6 +88,10 @@ export function detectPhaseConflicts(phases: Phase[], approaches: Approach[] = [
         void HARD_CONFLICTS
       }
     }
+
+    // pedestrian vs vehicle concurrent greens
+    const ped = detectPedVehicleConflicts([ph], approaches)
+    issues.push(...ped.issues)
   }
 
   // cycle vs sum of phases soft check

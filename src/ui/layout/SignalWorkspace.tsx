@@ -10,6 +10,7 @@ import { recommendTimingRow, type TimingCompareRow } from '@/domain/analysis/tim
 import { buildSignalTimingAlignment } from '@/domain/signal/timingAlign'
 import { releaseMatrixAlignsWithPhases } from '@/domain/signal/releaseAlign'
 import { allPhasesConflictHits } from '@/domain/signal/phaseConflictView'
+import { detectPedVehicleConflicts, pedVehicleSummary } from '@/domain/signal/pedVehicleConflict'
 import { SignalCharts, TimingCompareCharts } from '@/ui/charts/ChartPanels'
 import { SignalTimingPanel, ControlMatrixPanel, PhaseFacePanel } from '@/ui/charts/ProfessionalPanels'
 import { vcHeatColor } from '@/ui/charts/svgCharts'
@@ -76,6 +77,10 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
   const al = buildSignalTimingAlignment(signal)
   const hits = channel ? allPhasesConflictHits(channel.approaches, signal) : []
   const blocks = hits.filter((h) => h.level === 'block').length
+  const pedVeh = channel
+    ? detectPedVehicleConflicts(signal.phases, channel.approaches)
+    : { issues: [], hits: [] as ReturnType<typeof detectPedVehicleConflicts>['hits'] }
+  const pedBlocks = pedVeh.hits.filter((h) => h.level === 'block').length
   const releaseHint = channel
     ? releaseMatrixAlignsWithPhases(signal, channel.approaches)
     : { ok: true, mismatches: [] as string[] }
@@ -91,6 +96,9 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         </span>
         <span className={`integrity-badge ${blocks ? 'bad' : hits.length ? 'warn' : 'ok'}`}>
           {blocks ? `相位相悖 ${blocks}` : hits.length ? `冲突警告 ${hits.length}` : '无相悖 ✓'}
+        </span>
+        <span className={`integrity-badge ${pedBlocks ? 'bad' : pedVeh.hits.length ? 'warn' : 'ok'}`}>
+          {pedVehicleSummary(pedVeh.hits)}
         </span>
       </div>
 
@@ -308,6 +316,40 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         focusPhaseId={focusPhaseId ?? signal.phases[0]?.id ?? null}
         onFocusPhase={onFocusPhase}
       />
+
+      {channel && pedVeh.hits.length > 0 && (
+        <div className="card" style={{ marginTop: 10 }}>
+          <div className="section-title">人车冲突明细</div>
+          <div className="table-wrap" style={{ maxHeight: 160 }}>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>相位</th>
+                  <th>行人面</th>
+                  <th>机动车</th>
+                  <th>原因</th>
+                  <th>等级</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pedVeh.hits.slice(0, 16).map((h, i) => (
+                  <tr key={`${h.phaseId}-${h.pedApproachId}-${h.vehicleApproachId}-${h.movement}-${i}`} className={h.level === 'block' ? 'row-block' : 'row-warn'}>
+                    <td>{h.phaseName}</td>
+                    <td>{h.pedApproachName.replace('进口', '')}</td>
+                    <td>
+                      {h.vehicleApproachName.replace('进口', '')}
+                      {h.movement}
+                    </td>
+                    <td>{h.reason}</td>
+                    <td>{h.level === 'block' ? '禁止' : '警告'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="hint">独占行人将冲突升为禁止；规则见 pedVehicleConflict。</p>
+        </div>
+      )}
 
       {channel && (
         <div className="toolbar" style={{ marginTop: 8 }}>
