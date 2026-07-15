@@ -208,6 +208,107 @@ export function ringBarrierSvg(
   </svg>`
 }
 
+export function radarChartSvg(
+  axes: { label: string; value: number; max?: number }[],
+  opts: { width?: number; height?: number; title?: string } = {},
+): string {
+  const width = opts.width ?? 340
+  const height = opts.height ?? 200
+  const cx = width / 2
+  const cy = height / 2 + 4
+  const R = Math.min(width, height) * 0.34
+  const n = Math.max(3, axes.length)
+  if (!axes.length) {
+    return `<svg viewBox="0 0 ${width} ${height}" class="chart-svg"><rect width="100%" height="100%" fill="#0a1020"/>
+      <text x="50%" y="50%" text-anchor="middle" fill="#8494ab" font-size="11">暂无数据</text></svg>`
+  }
+  const ang = (i: number) => -Math.PI / 2 + (i * 2 * Math.PI) / n
+  const pt = (i: number, r: number) => [cx + Math.cos(ang(i)) * r, cy + Math.sin(ang(i)) * r]
+
+  let grid = ''
+  for (const ring of [0.25, 0.5, 0.75, 1]) {
+    const pts = Array.from({ length: n }, (_, i) => pt(i, R * ring))
+    grid += `<polygon points="${pts.map((p) => p.join(',')).join(' ')}" fill="none" stroke="#1e293b" stroke-width="1"/>`
+  }
+  for (let i = 0; i < n; i++) {
+    const [x, y] = pt(i, R)
+    grid += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#1e293b" stroke-width="1"/>`
+    const [lx, ly] = pt(i, R + 16)
+    grid += `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" fill="#94a3b8" font-size="9">${escape(axes[i].label)}</text>`
+  }
+  const dataPts = axes.map((a, i) => {
+    const max = a.max && a.max > 0 ? a.max : 1
+    const t = Math.max(0, Math.min(1, a.value / max))
+    return pt(i, R * t)
+  })
+  const poly = dataPts.map((p) => p.join(',')).join(' ')
+  const dots = dataPts
+    .map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="#38bdf8"/><title>${escape(axes[i].label)}=${fmt(axes[i].value)}</title>`)
+    .join('')
+  return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" class="chart-svg">
+    <rect width="100%" height="100%" fill="#0a1020"/>
+    <text x="8" y="14" fill="#8494ab" font-size="9">${escape(opts.title ?? '雷达图')}</text>
+    ${grid}
+    <polygon points="${poly}" fill="rgba(56,189,248,0.22)" stroke="#38bdf8" stroke-width="2"/>
+    ${dots}
+  </svg>`
+}
+
+export function conflictMatrixSvg(
+  labels: string[],
+  levels: ('ok' | 'warn' | 'block' | 'same')[][],
+  opts: { width?: number; cell?: number; active?: Set<string>; keys?: string[] } = {},
+): string {
+  const n = labels.length
+  const cell = opts.cell ?? Math.max(14, Math.min(22, Math.floor(280 / Math.max(1, n))))
+  const left = 42
+  const top = 28
+  const width = opts.width ?? left + n * cell + 12
+  const height = top + n * cell + 12
+  const color = (lv: string) =>
+    lv === 'block' ? '#e85d5d' : lv === 'warn' ? '#e5a54b' : lv === 'same' ? '#334155' : '#1e3a2f'
+  let body = ''
+  for (let i = 0; i < n; i++) {
+    body += `<text x="${left - 4}" y="${top + i * cell + cell * 0.7}" text-anchor="end" fill="#94a3b8" font-size="8">${escape(labels[i])}</text>`
+    body += `<text x="${left + i * cell + cell / 2}" y="${top - 6}" text-anchor="middle" fill="#94a3b8" font-size="8">${escape(labels[i])}</text>`
+    for (let j = 0; j < n; j++) {
+      const lv = levels[i]?.[j] ?? 'ok'
+      const x = left + j * cell
+      const y = top + i * cell
+      body += `<rect x="${x}" y="${y}" width="${cell - 1}" height="${cell - 1}" rx="2" fill="${color(lv)}" opacity="0.9"/>`
+    }
+  }
+  return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" class="chart-svg">
+    <rect width="100%" height="100%" fill="#0a1020"/>
+    <text x="8" y="14" fill="#8494ab" font-size="9">冲突矩阵 · 红=禁止 黄=警告 绿=兼容</text>
+    ${body}
+  </svg>`
+}
+
+export function losGaugeSvg(
+  los: string,
+  delaySec: number,
+  opts: { width?: number; height?: number } = {},
+): string {
+  const width = opts.width ?? 340
+  const height = opts.height ?? 72
+  const order = ['A', 'B', 'C', 'D', 'E', 'F']
+  const colors = ['#22c55e', '#4ade80', '#a3e635', '#fbbf24', '#f97316', '#ef4444']
+  const idx = Math.max(0, order.indexOf(los.toUpperCase()))
+  const bw = (width - 24) / 6
+  let body = ''
+  order.forEach((L, i) => {
+    const x = 12 + i * bw
+    body += `<rect x="${x}" y="28" width="${bw - 4}" height="18" rx="3" fill="${colors[i]}" opacity="${i === idx ? 1 : 0.35}"/>`
+    body += `<text x="${x + (bw - 4) / 2}" y="41" text-anchor="middle" fill="#0f172a" font-size="10" font-weight="700">${L}</text>`
+  })
+  return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" class="chart-svg">
+    <rect width="100%" height="100%" fill="#0a1020"/>
+    <text x="12" y="16" fill="#8494ab" font-size="9">服务水平色带 · 当前 ${escape(los)} · 延误 ${fmt(delaySec)}s</text>
+    ${body}
+  </svg>`
+}
+
 function niceCeil(n: number): number {
   if (n <= 0) return 1
   const exp = Math.pow(10, Math.floor(Math.log10(n)))

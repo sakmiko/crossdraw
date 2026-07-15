@@ -1,12 +1,16 @@
 import { useMemo } from 'react'
 import {
   barChartSvg,
+  conflictMatrixSvg,
   groupedBarSvg,
   lineChartSvg,
+  losGaugeSvg,
+  radarChartSvg,
   ringBarrierSvg,
   stackedBandSvg,
 } from './svgCharts'
-import type { AnalysisResult, BandCorridor, FlowScheme, SignalScheme, Approach } from '@/domain/types'
+import type { AnalysisResult, BandCorridor, FlowScheme, SignalScheme, Approach, Phase } from '@/domain/types'
+import { buildConflictMatrix } from '@/domain/signal/conflictMatrix'
 import { useAppStore } from '@/state/store'
 
 function useChartColors() {
@@ -33,11 +37,12 @@ function themeSvg(svg: string, c: { bg: string; grid: string; label: string; tex
 export function AnalysisCharts({ analysis }: { analysis: AnalysisResult }) {
   const colors = useChartColors()
   const vcSvg = useMemo(() => {
-    const byAp = new Map<string, { name: string; sum: number; n: number }>()
+    const byAp = new Map<string, { name: string; sum: number; n: number; max: number }>()
     for (const l of analysis.lanes) {
-      const cur = byAp.get(l.approachId) ?? { name: l.approachName, sum: 0, n: 0 }
+      const cur = byAp.get(l.approachId) ?? { name: l.approachName, sum: 0, n: 0, max: 0 }
       cur.sum += l.vc
       cur.n += 1
+      cur.max = Math.max(cur.max, l.vc)
       byAp.set(l.approachId, cur)
     }
     const raw = barChartSvg(
@@ -49,7 +54,7 @@ export function AnalysisCharts({ analysis }: { analysis: AnalysisResult }) {
           color: avg > 0.85 ? '#e85d5d' : avg > 0.7 ? '#e5a54b' : '#3ecf8e',
         }
       }),
-      { height: 150, unit: 'v/c' },
+      { height: 150, unit: 'v/c 均值' },
     )
     return themeSvg(raw, colors)
   }, [analysis, colors])
@@ -59,16 +64,46 @@ export function AnalysisCharts({ analysis }: { analysis: AnalysisResult }) {
       analysis.lanes.slice(0, 12).map((l) => ({
         label: `${l.approachName.replace('进口', '')}${l.movement}`,
         value: l.delaySec,
-        color: '#6b8afd',
+        color: l.delaySec >= 80 ? '#e85d5d' : l.delaySec >= 55 ? '#e5a54b' : '#6b8afd',
       })),
       { height: 150, unit: 's' },
     )
     return themeSvg(raw, colors)
   }, [analysis, colors])
 
+  const radar = useMemo(() => {
+    // normalize metrics into comparable axes (lower better for delay/queue/vc; invert for shape)
+    const vc = Math.min(1.5, analysis.avgVc) / 1.5
+    const delay = Math.min(120, analysis.avgDelay) / 120
+    const queue = Math.min(300, analysis.avgQueueM) / 300
+    const losMap: Record<string, number> = { A: 0.1, B: 0.25, C: 0.4, D: 0.55, E: 0.75, F: 1 }
+    const los = losMap[analysis.losFinal] ?? 0.5
+    const raw = radarChartSvg(
+      [
+        { label: 'v/c', value: vc, max: 1 },
+        { label: '延误', value: delay, max: 1 },
+        { label: '排队', value: queue, max: 1 },
+        { label: 'LOS', value: los, max: 1 },
+        { label: '稳定', value: Math.min(1, analysis.avgVc), max: 1 },
+      ],
+      { height: 190, title: '运行质量雷达（越大越差）' },
+    )
+    return themeSvg(raw, colors)
+  }, [analysis, colors])
+
+  const gauge = useMemo(
+    () => themeSvg(losGaugeSvg(analysis.losFinal, analysis.avgDelay), colors),
+    [analysis, colors],
+  )
+
   return (
     <div className="chart-card">
       <div className="chart-title">
+        <span>服务水平</span>
+        <small>与 KPI 同源</small>
+      </div>
+      <div dangerouslySetInnerHTML={{ __html: gauge }} />
+      <div className="chart-title" style={{ marginTop: 12 }}>
         <span>饱和度 v/c（按进口）</span>
         <small>与评价表联动</small>
       </div>
@@ -78,6 +113,11 @@ export function AnalysisCharts({ analysis }: { analysis: AnalysisResult }) {
         <small>车道组/转向</small>
       </div>
       <div dangerouslySetInnerHTML={{ __html: delaySvg }} />
+      <div className="chart-title" style={{ marginTop: 12 }}>
+        <span>综合雷达</span>
+        <small>归一化指标</small>
+      </div>
+      <div dangerouslySetInnerHTML={{ __html: radar }} />
     </div>
   )
 }
@@ -133,16 +173,59 @@ export function FlowCharts({
   )
 }
 
-export function SignalCharts({ signal }: { signal: SignalScheme }) {
+export function SignalCharts({
+  signal,
+  approaches,
+}: {
+  signal: SignalScheme
+  approaches?: Approach[]
+}) {
   const colors = useChartColors()
-  const ring = useMemo(() => themeSvg(ringBarrierSvg(signal.phases, signal.cycleSec, { height: 70 }), colors), [signal, colors])
+  const ring = useMemo(
+    () =>
+      themeSvg(
+        ringBarrierSvg(
+          signal.phases.map((p) => ({
+            name: p.isOverlap ? `${p.name}*` : p.name,
+            greenSec: p.greenSec,
+            yellowSec: p.yellowSec,
+            allRedSec: p.allRedSec,
+          })),
+          signal.cycleSec,
+          { height: 78 },
+        ),
+        colors,
+      ),
+    [signal, colors],
+  )
+
+  const matrix = useMemo(() => {
+    if (!approaches?.length) return ''
+    const { keys, cells } = buildConflictMatrix(approaches)
+    const levels = cells.map((row) => row.map((c) => c.level))
+    const raw = conflictMatrixSvg(
+      keys.map((k) => k.label),
+      levels,
+    )
+    return themeSvg(raw, colors)
+  }, [approaches, colors])
+
   return (
     <div className="chart-card">
       <div className="chart-title">
         <span>相位时间条</span>
-        <small>绿/黄/全红</small>
+        <small>绿/黄/全红 · *搭接</small>
       </div>
       <div dangerouslySetInnerHTML={{ __html: ring }} />
+      {matrix && (
+        <>
+          <div className="chart-title" style={{ marginTop: 12 }}>
+            <span>转向冲突矩阵</span>
+            <small>与放行组合对照</small>
+          </div>
+          <div dangerouslySetInnerHTML={{ __html: matrix }} />
+        </>
+      )}
     </div>
   )
 }
@@ -198,3 +281,6 @@ export function BandCharts({ corridor }: { corridor: BandCorridor }) {
     </div>
   )
 }
+
+// re-export Phase type usage guard
+export type { Phase }

@@ -30,6 +30,10 @@ export type AppState = {
   setFlowParams: (patch: { heavyRatio?: number; phf?: number; defaultSatFlow?: number }) => void
   setCycle: (cycleSec: number) => void
   updatePhaseGreen: (phaseId: string, greenSec: number) => void
+  updatePhaseTiming: (
+    phaseId: string,
+    patch: { greenSec?: number; yellowSec?: number; allRedSec?: number; name?: string; isOverlap?: boolean },
+  ) => void
   togglePhaseRelease: (phaseId: string, approachId: string, movement: Movement) => void
   addPhase: () => void
   setProjectName: (name: string) => void
@@ -183,6 +187,18 @@ export const useAppStore = create<AppState>()(
           const ph = sg?.phases.find((p) => p.id === phaseId)
           if (!ph) return
           ph.greenSec = greenSec
+          s.dirty = true
+        }),
+      updatePhaseTiming: (phaseId, patch) =>
+        set((s) => {
+          const sg = activeSignal(s.project)
+          const ph = sg?.phases.find((p) => p.id === phaseId)
+          if (!ph) return
+          if (patch.greenSec !== undefined) ph.greenSec = patch.greenSec
+          if (patch.yellowSec !== undefined) ph.yellowSec = patch.yellowSec
+          if (patch.allRedSec !== undefined) ph.allRedSec = patch.allRedSec
+          if (patch.name !== undefined) ph.name = patch.name
+          if (patch.isOverlap !== undefined) ph.isOverlap = patch.isOverlap
           s.dirty = true
         }),
       togglePhaseRelease: (phaseId, approachId, movement) =>

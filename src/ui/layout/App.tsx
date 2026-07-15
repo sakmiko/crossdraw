@@ -43,6 +43,7 @@ export default function App() {
   const setFlowParams = useAppStore((s) => s.setFlowParams)
   const setCycle = useAppStore((s) => s.setCycle)
   const updatePhaseGreen = useAppStore((s) => s.updatePhaseGreen)
+  const updatePhaseTiming = useAppStore((s) => s.updatePhaseTiming)
   const addPhase = useAppStore((s) => s.addPhase)
   const resetTemplate = useAppStore((s) => s.resetTemplate)
   const loadProject = useAppStore((s) => s.loadProject)
@@ -355,7 +356,12 @@ export default function App() {
             <span>{MODES.find((m) => m.id === mode)?.label}</span>
           </div>
           <div className="stage-bar">
-            <span className="hint">平移 · 缩放 · 1–6 模式 · Ctrl+K</span>
+            <span className="hint">平移 · 缩放 · 自适应 · 1–6 模式 · Ctrl+K</span>
+            <span className="legend" style={{ margin: 0 }}>
+              <span className="legend-item"><span className="legend-swatch" style={{ background: '#4b5563' }} />路面</span>
+              <span className="legend-item"><span className="legend-swatch" style={{ background: '#4ade80' }} />岛</span>
+              <span className="legend-item"><span className="legend-swatch" style={{ background: '#38bdf8' }} />流量</span>
+            </span>
             <span className={`pill ${summary.block ? 'block' : summary.warn ? 'warn' : 'ok'}`}>
               {summary.block ? `BLOCK ${summary.block}` : summary.warn ? `WARN ${summary.warn}` : 'OK'}
             </span>
@@ -643,16 +649,49 @@ export default function App() {
               </label>
               <div className="ring">
                 {signal.phases.map((ph) => (
-                  <div key={ph.id} className="phase" style={{ minWidth: 150 }}>
-                    <div>{ph.name}</div>
+                  <div key={ph.id} className="phase" style={{ minWidth: 168 }}>
                     <input
-                      type="number"
-                      value={ph.greenSec}
-                      onChange={(e) => updatePhaseGreen(ph.id, Number(e.target.value))}
+                      value={ph.name}
+                      onChange={(e) => updatePhaseTiming(ph.id, { name: e.target.value })}
+                      aria-label="相位名称"
+                      style={{ marginBottom: 6, fontWeight: 650 }}
                     />
-                    <div className="hint">G={ph.greenSec} Y={ph.yellowSec}</div>
+                    <div className="field-row-3">
+                      <label>
+                        G
+                        <input
+                          type="number"
+                          value={ph.greenSec}
+                          onChange={(e) => updatePhaseTiming(ph.id, { greenSec: Number(e.target.value) })}
+                        />
+                      </label>
+                      <label>
+                        Y
+                        <input
+                          type="number"
+                          value={ph.yellowSec}
+                          onChange={(e) => updatePhaseTiming(ph.id, { yellowSec: Number(e.target.value) })}
+                        />
+                      </label>
+                      <label>
+                        AR
+                        <input
+                          type="number"
+                          value={ph.allRedSec}
+                          onChange={(e) => updatePhaseTiming(ph.id, { allRedSec: Number(e.target.value) })}
+                        />
+                      </label>
+                    </div>
+                    <label style={{ marginTop: 4 }}>
+                      <input
+                        type="checkbox"
+                        checked={!!ph.isOverlap}
+                        onChange={(e) => updatePhaseTiming(ph.id, { isOverlap: e.target.checked })}
+                      />{' '}
+                      搭接相位 Overlap
+                    </label>
                     <div className="hint" style={{ marginTop: 6 }}>
-                      放行转向
+                      放行矩阵
                     </div>
                     {channel?.approaches.map((ap) => (
                       <div key={ap.id} style={{ marginTop: 4 }}>
@@ -680,9 +719,18 @@ export default function App() {
               </div>
               <div className="toolbar" style={{ marginTop: 8 }}>
                 <button type="button" onClick={() => addPhase()}>添加相位</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    addPhase()
+                    // mark last as overlap after state update is hard; user toggles checkbox
+                  }}
+                >
+                  添加搭接
+                </button>
                 <button type="button" className="primary" onClick={runWebster}>Webster 自动配时</button>
               </div>
-              <SignalCharts signal={signal} />
+              <SignalCharts signal={signal} approaches={channel?.approaches} />
             </div>
           )}
 
@@ -940,7 +988,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.4.2</span>
+        <span>Crossdraw v0.4.5</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
