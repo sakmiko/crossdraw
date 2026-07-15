@@ -9,15 +9,12 @@ build/
 out/
 release/
 *.local
-
 # Electron
 *.asar
-
 # Env / secrets
 .env
 .env.*
 !.env.example
-
 # IDE
 .idea/
 .vscode/*
@@ -26,18 +23,32 @@ release/
 *.swp
 .DS_Store
 Thumbs.db
-
 # Test / coverage
 coverage/
 playwright-report/
 test-results/
 *.log
-
 # OS / temp
 tmp/
 temp/
 .cache/
-
 # Project local
 *.rtp.bak
 .autosave/
+# Logs
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+node_modules
+dist
+dist-ssr
+# Editor directories and files
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

@@ -1,0 +1,500 @@
+{
+  "format": "crossdraw.rtp",
+  "schemaVersion": 1,
+  "appVersion": "0.1.0",
+  "project": {
+    "id": "01KXK3H6FPC3ZJX8W23DC8JA4T",
+    "name": "宽进口示例",
+    "units": "metric",
+    "channelizationSchemes": [
+      {
+        "id": "01KXK3H6FMQK71K9WP608HVJR2",
+        "name": "渠化方案 A",
+        "intersectionType": "cross",
+        "approaches": [
+          {
+            "id": "01KXK3H6FHMSTGCC2SV1GKJM5Z",
+            "name": "北进口",
+            "bearingDeg": 0,
+            "designSpeedKmh": 50,
+            "entryLanes": [
+              {
+                "id": "01KXK3H6FHEA58HFENV1TZCS1G",
+                "widthM": 3.5,
+                "movements": [
+                  "L"
+                ]
+              },
+              {
+                "id": "01KXK3H6FH273AN7BH77N7E9EA",
+                "widthM": 3.5,
+                "movements": [
+                  "T"
+                ]
+              },
+              {
+                "id": "01KXK3H6FH9176NE8WEQZ8K4AA",
+                "widthM": 3.5,
+                "movements": [
+                  "R"
+                ]
+              },
+              {
+                "id": "01KXK3H6FQ6BA8C2HKTBAK0M5R",
+                "widthM": 3.5,
+                "movements": [
+                  "T"
+                ]
+              }
+            ],
+            "exitLanes": [
+              {
+                "id": "01KXK3H6FHMCTSQWGMXJPDYB2S",
+                "widthM": 3.5,
+                "movements": [
+                  "T"
+                ]
+              },
+              {
+                "id": "01KXK3H6FJ27S5XWGCA633S1BV",
+                "widthM": 3.5,
+                "movements": [
+                  "T"
+                ]
+              }
+            ],
+            "laneGroups": [],
+            "widen": {
+              "entryWidenCount": 1,
+              "entryWidenWidthM": 3.5,
+              "entryWidenLengthM": 70,
+              "entryTaperM": 30,
+              "exitWidenCount": 0,
+              "exitWidenWidthM": 3.5,
+              "exitWidenLengthM": 50,
+              "exitTaperM": 25,
+              "innerOffsetM": 0
+            },
+            "rightTurn": {
+              "enabled": true,
+              "style": "solid",
+              "separateEntry": true,
+              "separateExit": true,
+              "widthM": 4.5,
+              "radiusM": 15
+            },
+            "median": {
+              "style": "greenBelt",
+              "widthM": 2
+            },
+            "sidewalkWidthM": 3,
+            "bikeEnabled": true,
+            "bikeWidthM": 2.5,
+            "leftWait": false,
+            "throughWait": false,
+            "borrowLeft": false,
+            "redRightTurn": false,
+            "redRightTurnRatio": 0.25,
+            "tiltEntryDeg": 0,
+            "tiltExitDeg": 0
+          },
+          {
+            "id": "01KXK3H6FJJWJHEWX299JQK23V",
+            "name": "东进口",
+            "bearingDeg": 90,
+            "designSpeedKmh": 50,
+            "entryLanes": [
+              {
+                "id": "01KXK3H6FJRXJ1V3KB42ZCY54C",
+                "widthM": 3.5,
+                "movements": [
+                  "L"
+                ]
+              },
+              {
+                "id": "01KXK3H6FJRKPZTE3PHZ3RFCJ6",
+                "widthM": 3.5,
+                "movements": [
+                  "T"
+                ]
+              },
+              {
+                "id": "01KXK3H6FJKSSJSXE08K3MM55B",
+                "widthM": 3.5,
+                "movements": [
+                  "R"
+                ]
+              },
+              {
+                "id": "01KXK3H6FQVF5PTH0NWKDYRVA1",
+                "widthM": 3.5,
+                "movements": [
+                  "T"
+                ]
+              }
+            ],
+            "exitLanes": [
+              {
+                "id": "01KXK3H6FJYPE65AT16FQ88JWD",
+                "widthM": 3.5,
+                "movements": [
+                  "T"
+                ]
+              },
+              {
+                "id": "01KXK3H6FJ44VWRGSFH2H6GSQQ",
+                "widthM": 3.5,
+                "movements": [
+                  "T"
+                ]
+              }
+            ],
+            "laneGroups": [],
+            "widen": {
+              "entryWidenCount": 1,
+              "entryWidenWidthM": 3.5,
+              "entryWidenLengthM": 70,
+              "entryTaperM": 30,
+              "exitWidenCount": 0,
+              "exitWidenWidthM": 3.5,
+              "exitWidenLengthM": 50,
+              "exitTaperM": 25,
+              "innerOffsetM": 0
+            },
+            "rightTurn": {
+              "enabled": true,
+              "style": "solid",
+              "separateEntry": true,
+              "separateExit": true,
+              "widthM": 4.5,
+              "radiusM": 15
+            },
+            "median": {
+              "style": "greenBelt",
+              "widthM": 2
+            },
+            "sidewalkWidthM": 3,
+            "bikeEnabled": true,
+            "bikeWidthM": 2.5,
+            "leftWait": false,
+            "throughWait": false,
+            "borrowLeft": false,
+            "redRightTurn": false,
+            "redRightTurnRatio": 0.25,
+            "tiltEntryDeg": 0,
+            "tiltExitDeg": 0
+          },
+          {
+            "id": "01KXK3H6FJMV11SC2XXJ9D7NMA",
+            "name": "南进口",
+            "bearingDeg": 180,
+            "designSpeedKmh": 50,
+            "entryLanes": [
+              {
+                "id": "01KXK3H6FK32B5RNDNMTKCJM5A",
+                "widthM": 3.5,
+                "movements": [
+                  "L"
+                ]
+              },
+              {
+                "id": "01KXK3H6FKFZA3ZZG0PFZMQMHZ",
+                "widthM": 3.5,
+                "movements": [
+                  "T"
+                ]
+              },
+              {
+                "id": "01KXK3H6FK665KV935G0449R6G",
+                "widthM": 3.5,
+                "movements": [
+                  "R"
+                ]
+              },
+              {
+                "id": "01KXK3H6FQEQ2TMQMEB98NN8SG",
+                "widthM": 3.5,
+                "movements": [
+                  "T"
+                ]
+              }
+            ],
+            "exitLanes": [
+              {
+                "id": "01KXK3H6FKDR35AFDFTPBQ0J2R",
+                "widthM": 3.5,
+                "movements": [
+                  "T"
+                ]
+              },
+              {
+                "id": "01KXK3H6FKWKWCGH05GN0XSWRC",
+                "widthM": 3.5,
+                "movements": [
+                  "T"
+                ]
+              }
+            ],
+            "laneGroups": [],
+            "widen": {
+              "entryWidenCount": 1,
+              "entryWidenWidthM": 3.5,
+              "entryWidenLengthM": 70,
+              "entryTaperM": 30,
+              "exitWidenCount": 0,
+              "exitWidenWidthM": 3.5,
+              "exitWidenLengthM": 50,
+              "exitTaperM": 25,
+              "innerOffsetM": 0
+            },
+            "rightTurn": {
+              "enabled": true,
+              "style": "solid",
+              "separateEntry": true,
+              "separateExit": true,
+              "widthM": 4.5,
+              "radiusM": 15
+            },
+            "median": {
+              "style": "greenBelt",
+              "widthM": 2
+            },
+            "sidewalkWidthM": 3,
+            "bikeEnabled": true,
+            "bikeWidthM": 2.5,
+            "leftWait": false,
+            "throughWait": false,
+            "borrowLeft": false,
+            "redRightTurn": false,
+            "redRightTurnRatio": 0.25,
+            "tiltEntryDeg": 0,
+            "tiltExitDeg": 0
+          },
+          {
+            "id": "01KXK3H6FM7MZZBTAQ0HJK892G",
+            "name": "西进口",
+            "bearingDeg": 270,
+            "designSpeedKmh": 50,
+            "entryLanes": [
+              {
+                "id": "01KXK3H6FMCTMNTP2DYV2DZDCJ",
+                "widthM": 3.5,
+                "movements": [
+                  "L"
+                ]
+              },
+              {
+                "id": "01KXK3H6FMF6EM212HRG9R8JB6",
+                "widthM": 3.5,
+                "movements": [
+                  "T"
+                ]
+              },
+              {
+                "id": "01KXK3H6FMBJBNDXCXT4V6BQM9",
+                "widthM": 3.5,
+                "movements": [
+                  "R"
+                ]
+              },
+              {
+                "id": "01KXK3H6FQ0JGFB16C7D36W8MM",
+                "widthM": 3.5,
+                "movements": [
+                  "T"
+                ]
+              }
+            ],
+            "exitLanes": [
+              {
+                "id": "01KXK3H6FMTWJ7VWYJ1GC110RT",
+                "widthM": 3.5,
+                "movements": [
+                  "T"
+                ]
+              },
+              {
+                "id": "01KXK3H6FMQB2BY6M6DF9NH8HP",
+                "widthM": 3.5,
+                "movements": [
+                  "T"
+                ]
+              }
+            ],
+            "laneGroups": [],
+            "widen": {
+              "entryWidenCount": 1,
+              "entryWidenWidthM": 3.5,
+              "entryWidenLengthM": 70,
+              "entryTaperM": 30,
+              "exitWidenCount": 0,
+              "exitWidenWidthM": 3.5,
+              "exitWidenLengthM": 50,
+              "exitTaperM": 25,
+              "innerOffsetM": 0
+            },
+            "rightTurn": {
+              "enabled": true,
+              "style": "solid",
+              "separateEntry": true,
+              "separateExit": true,
+              "widthM": 4.5,
+              "radiusM": 15
+            },
+            "median": {
+              "style": "greenBelt",
+              "widthM": 2
+            },
+            "sidewalkWidthM": 3,
+            "bikeEnabled": true,
+            "bikeWidthM": 2.5,
+            "leftWait": false,
+            "throughWait": false,
+            "borrowLeft": false,
+            "redRightTurn": false,
+            "redRightTurnRatio": 0.25,
+            "tiltEntryDeg": 0,
+            "tiltExitDeg": 0
+          }
+        ],
+        "display": {
+          "background": "#e8eef5",
+          "northArrow": true,
+          "paperSize": "A3"
+        },
+        "flowSchemes": [
+          {
+            "id": "01KXK3H6FNXJ1FTCE2R4Z41F7K",
+            "name": "高峰小时",
+            "volumes": {
+              "01KXK3H6FHMSTGCC2SV1GKJM5Z": {
+                "U": 20,
+                "L": 180,
+                "T": 620,
+                "R": 150
+              },
+              "01KXK3H6FJJWJHEWX299JQK23V": {
+                "U": 20,
+                "L": 180,
+                "T": 620,
+                "R": 150
+              },
+              "01KXK3H6FJMV11SC2XXJ9D7NMA": {
+                "U": 20,
+                "L": 180,
+                "T": 620,
+                "R": 150
+              },
+              "01KXK3H6FM7MZZBTAQ0HJK892G": {
+                "U": 20,
+                "L": 180,
+                "T": 620,
+                "R": 150
+              }
+            },
+            "heavyRatio": 0.08,
+            "phf": 0.95,
+            "pce": 2,
+            "defaultSatFlow": 1750,
+            "style": {
+              "colorScheme": "blue",
+              "minWidth": 1.5,
+              "maxWidth": 14
+            },
+            "signalSchemes": [
+              {
+                "id": "01KXK3H6FNQG2Z0SZW7TS88BV9",
+                "name": "两相位",
+                "cycleSec": 90,
+                "phases": [
+                  {
+                    "id": "01KXK3H6FN26FEKH88M60D2C5R",
+                    "name": "南北直行+右转",
+                    "greenSec": 28,
+                    "yellowSec": 3,
+                    "allRedSec": 2,
+                    "releases": {
+                      "01KXK3H6FHMSTGCC2SV1GKJM5Z": [
+                        "T",
+                        "R"
+                      ],
+                      "01KXK3H6FJMV11SC2XXJ9D7NMA": [
+                        "T",
+                        "R"
+                      ]
+                    }
+                  },
+                  {
+                    "id": "01KXK3H6FNC6K9AH68772S8EXP",
+                    "name": "南北左转",
+                    "greenSec": 28,
+                    "yellowSec": 3,
+                    "allRedSec": 2,
+                    "releases": {
+                      "01KXK3H6FHMSTGCC2SV1GKJM5Z": [
+                        "L"
+                      ],
+                      "01KXK3H6FJMV11SC2XXJ9D7NMA": [
+                        "L"
+                      ]
+                    }
+                  },
+                  {
+                    "id": "01KXK3H6FP64C5MAMJ8PJP80M0",
+                    "name": "东西直行+右转",
+                    "greenSec": 28,
+                    "yellowSec": 3,
+                    "allRedSec": 2,
+                    "releases": {
+                      "01KXK3H6FJJWJHEWX299JQK23V": [
+                        "T",
+                        "R"
+                      ],
+                      "01KXK3H6FM7MZZBTAQ0HJK892G": [
+                        "T",
+                        "R"
+                      ]
+                    }
+                  },
+                  {
+                    "id": "01KXK3H6FP5FZ24PVY1JB97F3K",
+                    "name": "东西左转",
+                    "greenSec": 28,
+                    "yellowSec": 3,
+                    "allRedSec": 2,
+                    "releases": {
+                      "01KXK3H6FJJWJHEWX299JQK23V": [
+                        "L"
+                      ],
+                      "01KXK3H6FM7MZZBTAQ0HJK892G": [
+                        "L"
+                      ]
+                    }
+                  }
+                ],
+                "yellowDefault": 3,
+                "allRedDefault": 2,
+                "startLossSec": 3,
+                "unsignalized": false
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "crossSections": [],
+    "active": {
+      "channelId": "01KXK3H6FMQK71K9WP608HVJR2",
+      "flowId": "01KXK3H6FNXJ1FTCE2R4Z41F7K",
+      "signalId": "01KXK3H6FNQG2Z0SZW7TS88BV9"
+    },
+    "meta": {
+      "createdAt": "2026-07-15T14:40:13.302Z",
+      "updatedAt": "2026-07-15T14:40:13.302Z"
+    },
+    "settings": {
+      "maxSchemes": 10,
+      "targetVc": 0.85
+    }
+  }
+}

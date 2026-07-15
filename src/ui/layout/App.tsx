@@ -1,0 +1,575 @@
+import { useEffect, useMemo, useState } from 'react'
+import { CanvasView, meshToPngBlob } from '@/canvas/CanvasView'
+import { rebuildChannelMesh, THEME } from '@/domain/geometry/rebuild'
+import { analyzeIntersection, websterTiming } from '@/domain/analysis'
+import { optimizeBandClassic } from '@/domain/analysis/band'
+import { buildCrossSection, markStaleIfNeeded } from '@/domain/xsection/build'
+import { validateProject, summarizeIssues } from '@/domain/validate'
+import { wrapProject, serializeRtp, parseRtp } from '@/domain/rtp'
+import { meshToSvg } from '@/io/exportSvg'
+import { meshToDxf } from '@/io/exportDxf'
+import { downloadBlob, downloadText } from '@/io/download'
+import { loadDraft, clearDraft } from '@/io/autosave'
+import { persistAutosave, redo, undo, useAppStore } from '@/state/store'
+import type { EditorMode, TurnVolumes } from '@/domain/types'
+import '@/ui/styles.css'
+
+const MODES: { id: EditorMode; label: string }[] = [
+  { id: 'channel', label: '渠化' },
+  { id: 'flow', label: '流量' },
+  { id: 'signal', label: '信号' },
+  { id: 'xsection', label: '断面' },
+  { id: 'analysis', label: '分析' },
+  { id: 'band', label: '绿波' },
+]
+
+export default function App() {
+  const project = useAppStore((s) => s.project)
+  const mode = useAppStore((s) => s.mode)
+  const dirty = useAppStore((s) => s.dirty)
+  const selectedApproachId = useAppStore((s) => s.selectedApproachId)
+  const setMode = useAppStore((s) => s.setMode)
+  const selectApproach = useAppStore((s) => s.selectApproach)
+  const updateApproach = useAppStore((s) => s.updateApproach)
+  const setLaneCount = useAppStore((s) => s.setLaneCount)
+  const setVolume = useAppStore((s) => s.setVolume)
+  const setFlowParams = useAppStore((s) => s.setFlowParams)
+  const setCycle = useAppStore((s) => s.setCycle)
+  const updatePhaseGreen = useAppStore((s) => s.updatePhaseGreen)
+  const addPhase = useAppStore((s) => s.addPhase)
+  const resetTemplate = useAppStore((s) => s.resetTemplate)
+  const loadProject = useAppStore((s) => s.loadProject)
+  const markClean = useAppStore((s) => s.markClean)
+  const setProjectName = useAppStore((s) => s.setProjectName)
+  const duplicateChannel = useAppStore((s) => s.duplicateChannel)
+  const applyWebster = useAppStore((s) => s.applyWebster)
+
+  const channel = useAppStore((s) => s.getActiveChannel())
+  const flow = useAppStore((s) => s.getActiveFlow())
+  const signal = useAppStore((s) => s.getActiveSignal())
+
+  const [restoreMsg, setRestoreMsg] = useState<string | null>(null)
+
+  useEffect(() => {
+    const d = loadDraft()
+    if (d?.json) {
+      setRestoreMsg(new Date(d.ts).toLocaleString())
+    }
+  }, [])
+
+  useEffect(() => {
+    const t = window.setInterval(() => {
+      if (useAppStore.getState().dirty) persistAutosave()
+    }, 15000)
+    return () => clearInterval(t)
+  }, [])
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key.toLowerCase() === 's') {
+        e.preventDefault()
+        saveRtp()
+      }
+      if (e.ctrlKey && e.key.toLowerCase() === 'z') {
+        e.preventDefault()
+        undo()
+      }
+      if (e.ctrlKey && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) {
+        e.preventDefault()
+        redo()
+      }
+      if (!e.ctrlKey && ['1', '2', '3', '4', '5', '6'].includes(e.key)) {
+        const map: EditorMode[] = ['channel', 'flow', 'signal', 'xsection', 'analysis', 'band']
+        setMode(map[Number(e.key) - 1])
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [setMode])
+
+  const mesh = useMemo(() => {
+    if (!channel) return rebuildChannelMesh({
+      id: 'x', name: '', intersectionType: 'cross', approaches: [], display: { background: THEME.paper, northArrow: true, paperSize: 'A3' }, flowSchemes: [],
+    })
+    return rebuildChannelMesh(channel)
+  }, [channel])
+
+  const issues = useMemo(() => validateProject(project), [project])
+  const summary = summarizeIssues(issues)
+
+  const analysis = useMemo(() => {
+    if (!channel || !flow || !signal) return null
+    return analyzeIntersection(channel.approaches, flow, signal)
+  }, [channel, flow, signal])
+
+  const selected = channel?.approaches.find((a) => a.id === selectedApproachId) ?? channel?.approaches[0]
+
+  function saveRtp() {
+    const file = wrapProject(project)
+    downloadText(`${project.name || 'project'}.rtp`, serializeRtp(file), 'application/json')
+    markClean()
+    clearDraft()
+  }
+
+  async function exportPng() {
+    const blob = await meshToPngBlob(mesh, 2)
+    downloadBlob(`${project.name}.png`, blob)
+  }
+
+  function exportSvg() {
+    downloadText(`${project.name}.svg`, meshToSvg(mesh, project.name), 'image/svg+xml')
+  }
+
+  function exportDxf() {
+    downloadText(`${project.name}.dxf`, meshToDxf(mesh), 'application/dxf')
+  }
+
+  function onOpenFile(file: File) {
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const pf = parseRtp(String(reader.result))
+        loadProject(pf.project)
+        clearDraft()
+        setRestoreMsg(null)
+      } catch (e) {
+        alert(String(e))
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  function restoreDraft() {
+    const d = loadDraft()
+    if (!d) return
+    try {
+      loadProject(parseRtp(d.json).project)
+      setRestoreMsg(null)
+    } catch (e) {
+      alert(String(e))
+    }
+  }
+
+  function runWebster() {
+    if (!channel || !flow || !signal) return
+    const r = websterTiming(channel.approaches, flow, signal, {
+      targetVc: project.settings.targetVc,
+      startLoss: signal.startLossSec,
+    })
+    applyWebster(r.phaseGreens, r.cycleSec)
+  }
+
+  const band = useMemo(() => {
+    const nodes = [
+      { id: 'A', name: '路口A', distanceM: 0, greenRatio: 0.45, offsetSec: 0 },
+      { id: 'B', name: '路口B', distanceM: 520, greenRatio: 0.5, offsetSec: 0 },
+      { id: 'C', name: '路口C', distanceM: 1040, greenRatio: 0.4, offsetSec: 0 },
+      { id: 'D', name: '路口D', distanceM: 1600, greenRatio: 0.55, offsetSec: 0 },
+    ]
+    return optimizeBandClassic(nodes, signal?.cycleSec ?? 90, 40)
+  }, [signal?.cycleSec])
+
+  const xsection = selected ? buildCrossSection(selected) : null
+
+  return (
+    <div className="app">
+      <header className="topbar">
+        <div className="brand">
+          <div className="brand-badge" />
+          <span>Crossdraw</span>
+        </div>
+        <input
+          style={{ maxWidth: 220 }}
+          value={project.name}
+          onChange={(e) => setProjectName(e.target.value)}
+          aria-label="项目名称"
+        />
+        <div className="toolbar">
+          <button type="button" onClick={() => resetTemplate()}>新建十字</button>
+          <label style={{ margin: 0 }}>
+            <span className="hint">打开</span>
+            <input
+              type="file"
+              accept=".rtp,application/json"
+              style={{ display: 'none' }}
+              onChange={(e) => e.target.files?.[0] && onOpenFile(e.target.files[0])}
+            />
+            <button type="button" onClick={(e) => (e.currentTarget.previousElementSibling as HTMLInputElement)?.click()}>
+              打开 .rtp
+            </button>
+          </label>
+          <button type="button" className="primary" onClick={saveRtp}>保存</button>
+          <button type="button" onClick={() => undo()}>撤销</button>
+          <button type="button" onClick={() => redo()}>重做</button>
+          <button type="button" onClick={exportPng}>PNG</button>
+          <button type="button" onClick={exportSvg}>SVG</button>
+          <button type="button" onClick={exportDxf}>DXF</button>
+          <button type="button" onClick={() => duplicateChannel()}>复制渠化</button>
+        </div>
+        <div style={{ marginLeft: 'auto' }} className="hint">
+          {dirty ? '未保存' : '已保存'} · 本地免费 · GPLv3
+        </div>
+      </header>
+
+      <div className="main">
+        <aside className="side">
+          <div className="section-title">方案树</div>
+          {project.channelizationSchemes.map((ch) => (
+            <div key={ch.id} className={`tree-item ${ch.id === channel?.id ? 'active' : ''}`}>
+              <strong>{ch.name}</strong>
+              <div className="hint">{ch.approaches.length} 进口 · {ch.flowSchemes.length} 流量方案</div>
+              {ch.flowSchemes.map((fl) => (
+                <div key={fl.id} style={{ marginLeft: 8, marginTop: 6 }}>
+                  <div className="hint">流量：{fl.name}</div>
+                  {fl.signalSchemes.map((sg) => (
+                    <div key={sg.id} className="hint" style={{ marginLeft: 8 }}>信号：{sg.name} · C={sg.cycleSec}s</div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          ))}
+          <div className="section-title">进口道</div>
+          {channel?.approaches.map((ap) => (
+            <div
+              key={ap.id}
+              className={`tree-item ${selected?.id === ap.id ? 'active' : ''}`}
+              onClick={() => selectApproach(ap.id)}
+            >
+              {ap.name}
+              <div className="hint">{ap.entryLanes.length} 车道 · {ap.bearingDeg}°</div>
+            </div>
+          ))}
+          {restoreMsg && (
+            <div className="card">
+              <h3>发现自动保存</h3>
+              <p className="hint">{restoreMsg}</p>
+              <button type="button" className="primary" onClick={restoreDraft}>恢复</button>
+              <button type="button" className="ghost" onClick={() => { clearDraft(); setRestoreMsg(null) }}>丢弃</button>
+            </div>
+          )}
+          <div className="card">
+            <h3>差异化</h3>
+            <p className="hint">无限本地保存 · 方案上限 {project.settings.maxSchemes} · 国标默认提示 · 开源可审计引擎</p>
+          </div>
+        </aside>
+
+        <main className="center">
+          <div className="toolbar">
+            <span className="hint">拖动画布平移 · 滚轮缩放 · 1-6 切换模式</span>
+            <span className={`pill ${summary.block ? 'block' : summary.warn ? 'warn' : 'ok'}`}>
+              {summary.block ? `BLOCK ${summary.block}` : summary.warn ? `WARN ${summary.warn}` : 'OK'}
+            </span>
+            {analysis && (
+              <span className="pill ok">LOS {analysis.losFinal} · v/c {analysis.avgVc.toFixed(2)} · 延误 {analysis.avgDelay.toFixed(1)}s</span>
+            )}
+          </div>
+          <CanvasView mesh={mesh} selectedApproachId={selected?.id} height={window.innerHeight - 140} />
+        </main>
+
+        <aside className="right">
+          <div className="mode-tabs">
+            {MODES.map((m) => (
+              <button key={m.id} type="button" className={mode === m.id ? 'active' : ''} onClick={() => setMode(m.id)}>
+                {m.label}
+              </button>
+            ))}
+          </div>
+
+          {mode === 'channel' && selected && (
+            <div className="card" style={{ marginTop: 12 }}>
+              <h2>渠化 · {selected.name}</h2>
+              <label>
+                进口车道数
+                <input
+                  type="number"
+                  min={1}
+                  max={8}
+                  value={selected.entryLanes.length}
+                  onChange={(e) => setLaneCount(selected.id, Number(e.target.value))}
+                />
+              </label>
+              <div className="field-row">
+                <label>
+                  展宽段长 (m)
+                  <input
+                    type="number"
+                    value={selected.widen.entryWidenLengthM}
+                    onChange={(e) =>
+                      updateApproach(selected.id, {
+                        widen: { ...selected.widen, entryWidenLengthM: Number(e.target.value) },
+                      })
+                    }
+                  />
+                </label>
+                <label>
+                  中分带宽 (m)
+                  <input
+                    type="number"
+                    value={selected.median.widthM}
+                    onChange={(e) =>
+                      updateApproach(selected.id, {
+                        median: { ...selected.median, widthM: Number(e.target.value) },
+                      })
+                    }
+                  />
+                </label>
+              </div>
+              <div className="field-row">
+                <label>
+                  人行道宽
+                  <input
+                    type="number"
+                    value={selected.sidewalkWidthM}
+                    onChange={(e) => updateApproach(selected.id, { sidewalkWidthM: Number(e.target.value) })}
+                  />
+                </label>
+                <label>
+                  右转半径
+                  <input
+                    type="number"
+                    value={selected.rightTurn.radiusM}
+                    onChange={(e) =>
+                      updateApproach(selected.id, {
+                        rightTurn: { ...selected.rightTurn, radiusM: Number(e.target.value) },
+                      })
+                    }
+                  />
+                </label>
+              </div>
+              <label>
+                中分样式
+                <select
+                  value={selected.median.style}
+                  onChange={(e) =>
+                    updateApproach(selected.id, {
+                      median: { ...selected.median, style: e.target.value as typeof selected.median.style },
+                    })
+                  }
+                >
+                  <option value="greenBelt">绿化带</option>
+                  <option value="doubleYellow">双黄线</option>
+                  <option value="barrier">护栏</option>
+                  <option value="yellowHatch">黄斜线</option>
+                  <option value="singleYellow">单黄线</option>
+                  <option value="fishBelly">鱼肚线</option>
+                </select>
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={selected.rightTurn.enabled}
+                  onChange={(e) =>
+                    updateApproach(selected.id, {
+                      rightTurn: { ...selected.rightTurn, enabled: e.target.checked },
+                    })
+                  }
+                />{' '}
+                右转渠化
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={selected.bikeEnabled}
+                  onChange={(e) => updateApproach(selected.id, { bikeEnabled: e.target.checked })}
+                />{' '}
+                非机动车道
+              </label>
+              <p className="hint">改参后画布即时联动重建。默认值参考 CJJ 推荐，可覆盖。</p>
+            </div>
+          )}
+
+          {mode === 'flow' && flow && channel && (
+            <div className="card" style={{ marginTop: 12 }}>
+              <h2>流量 · {flow.name}</h2>
+              <div className="field-row">
+                <label>
+                  大车比例
+                  <input
+                    type="number"
+                    step={0.01}
+                    value={flow.heavyRatio}
+                    onChange={(e) => setFlowParams({ heavyRatio: Number(e.target.value) })}
+                  />
+                </label>
+                <label>
+                  PHF
+                  <input
+                    type="number"
+                    step={0.01}
+                    value={flow.phf}
+                    onChange={(e) => setFlowParams({ phf: Number(e.target.value) })}
+                  />
+                </label>
+              </div>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>进口</th>
+                    <th>L</th>
+                    <th>T</th>
+                    <th>R</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {channel.approaches.map((ap) => {
+                    const v = flow.volumes[ap.id] ?? { U: 0, L: 0, T: 0, R: 0 }
+                    const cell = (k: keyof TurnVolumes) => (
+                      <input
+                        type="number"
+                        value={v[k]}
+                        onChange={(e) => setVolume(ap.id, { [k]: Number(e.target.value) })}
+                      />
+                    )
+                    return (
+                      <tr key={ap.id}>
+                        <td>{ap.name}</td>
+                        <td>{cell('L')}</td>
+                        <td>{cell('T')}</td>
+                        <td>{cell('R')}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {mode === 'signal' && signal && (
+            <div className="card" style={{ marginTop: 12 }}>
+              <h2>信号 · {signal.name}</h2>
+              <label>
+                周期 C (s)
+                <input type="number" value={signal.cycleSec} onChange={(e) => setCycle(Number(e.target.value))} />
+              </label>
+              <div className="ring">
+                {signal.phases.map((ph) => (
+                  <div key={ph.id} className="phase">
+                    <div>{ph.name}</div>
+                    <input
+                      type="number"
+                      value={ph.greenSec}
+                      onChange={(e) => updatePhaseGreen(ph.id, Number(e.target.value))}
+                    />
+                    <div className="hint">G={ph.greenSec} Y={ph.yellowSec}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="toolbar" style={{ marginTop: 8 }}>
+                <button type="button" onClick={() => addPhase()}>添加相位</button>
+                <button type="button" className="primary" onClick={runWebster}>Webster 自动配时</button>
+              </div>
+            </div>
+          )}
+
+          {mode === 'xsection' && xsection && selected && (
+            <div className="card" style={{ marginTop: 12 }}>
+              <h2>横断面 · {selected.name}</h2>
+              <div className="xsection">
+                {xsection.components.map((c, i) => (
+                  <div key={i} style={{ flex: c.widthM, background: c.color }} title={`${c.label} ${c.widthM}m`}>
+                    {c.widthM >= 2 ? `${c.label}\n${c.widthM}m` : ''}
+                  </div>
+                ))}
+              </div>
+              <p className="hint">
+                总宽 {xsection.components.reduce((s, c) => s + c.widthM, 0).toFixed(2)} m
+                {markStaleIfNeeded(xsection, selected).stale ? ' · 需刷新' : ' · 已同步'}
+              </p>
+            </div>
+          )}
+
+          {mode === 'analysis' && analysis && (
+            <div className="card" style={{ marginTop: 12 }}>
+              <h2>评价分析</h2>
+              <p className="hint">
+                平均饱和度 {analysis.avgVc.toFixed(3)} · 车均延误 {analysis.avgDelay.toFixed(1)} s · 排队{' '}
+                {analysis.avgQueueM.toFixed(1)} m · LOS {analysis.losFinal}
+              </p>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>进口</th>
+                    <th>转向</th>
+                    <th>v/c</th>
+                    <th>延误</th>
+                    <th>排队m</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {analysis.lanes.map((l, i) => (
+                    <tr key={i}>
+                      <td>{l.approachName}</td>
+                      <td>{l.movement}</td>
+                      <td>{l.vc.toFixed(2)}</td>
+                      <td>{l.delaySec.toFixed(1)}</td>
+                      <td>{l.queueM.toFixed(1)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <button
+                type="button"
+                onClick={() => {
+                  const rows = [
+                    'approach,movement,vc,delay,queue_m',
+                    ...analysis.lanes.map(
+                      (l) =>
+                        `${l.approachName},${l.movement},${l.vc.toFixed(3)},${l.delaySec.toFixed(2)},${l.queueM.toFixed(2)}`,
+                    ),
+                  ]
+                  downloadText(`${project.name}-analysis.csv`, rows.join('\n'), 'text/csv')
+                }}
+              >
+                导出 CSV
+              </button>
+            </div>
+          )}
+
+          {mode === 'band' && (
+            <div className="card" style={{ marginTop: 12 }}>
+              <h2>干道绿波（经典数解）</h2>
+              <p className="hint">
+                半周期距离 {band.halfCycleDistanceM.toFixed(0)} m · 带宽比 {(band.bandwidthRatio * 100).toFixed(1)}% ·
+                带宽 {band.bandwidthSec.toFixed(1)} s · 标准带速 {band.standardSpeedKmh.toFixed(1)} km/h
+              </p>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>路口</th>
+                    <th>相位差 (s)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {band.offsets.map((o) => (
+                    <tr key={o.id}>
+                      <td>{o.id}</td>
+                      <td>{o.offsetSec.toFixed(1)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="hint">示意模块：可在 V2 接入真实多路口项目坐标。</p>
+            </div>
+          )}
+
+          <div className="card">
+            <h3>校验</h3>
+            {issues.length === 0 && <p className="hint">无问题</p>}
+            {issues.slice(0, 8).map((i) => (
+              <div key={i.id} className={`pill ${i.level}`} style={{ display: 'flex', marginBottom: 6 }}>
+                {i.level.toUpperCase()} · {i.message}
+              </div>
+            ))}
+          </div>
+        </aside>
+      </div>
+
+      <footer className="status">
+        <span>Crossdraw v0.1.0</span>
+        <span>Mesh polys {mesh.polygons.length}</span>
+        <span>bbox {mesh.bbox.maxX - mesh.bbox.minX | 0}×{mesh.bbox.maxY - mesh.bbox.minY | 0} m</span>
+        <span style={{ marginLeft: 'auto' }}>sakmiko/crossdraw · GPLv3</span>
+      </footer>
+    </div>
+  )
+}
