@@ -144,6 +144,16 @@ const projectSchema = z.object({
   settings: z.object({
     maxSchemes: z.number(),
     targetVc: z.number(),
+    basemap: z
+      .object({
+        enabled: z.boolean(),
+        provider: z.enum(['osm', 'none']),
+        latitude: z.number(),
+        longitude: z.number(),
+        metersPerUnit: z.number().optional(),
+        opacity: z.number().optional(),
+      })
+      .optional(),
   }),
   bandCorridor: z
     .object({

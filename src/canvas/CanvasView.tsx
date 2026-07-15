@@ -71,6 +71,7 @@ export const CanvasView = forwardRef<CanvasHandle, Props>(function CanvasView(
     ;(async () => {
       await app.init({
         background: theme === 'light' ? '#d7dee8' : '#0a0e14',
+        backgroundAlpha: 0.88,
         antialias: true,
         resizeTo: host,
         resolution: Math.min(window.devicePixelRatio || 1, 3),

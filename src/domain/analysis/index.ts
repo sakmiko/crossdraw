@@ -94,7 +94,9 @@ export function analyzeIntersection(
       // HCM-like delay simplified
       const x = Math.min(vc, 1.2)
       const C = Math.max(1, signal.cycleSec)
-      const uniform = (C * (1 - lambda) ** 2) / (2 * (1 - Math.min(1, lambda * x) * 0.99))
+      const xmin = Math.min(1, x)
+      const denom = Math.max(0.01, 1 - lambda * xmin)
+      const uniform = (0.5 * C * (1 - lambda) ** 2) / denom
       const random =
         capacity > 0
           ? 900 *

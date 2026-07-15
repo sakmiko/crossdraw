@@ -1,3 +1,4 @@
+import { niceCeil as niceCeilStd, fmtNum, vcHeatAccurate } from './chartStandards'
 /** Lightweight SVG charts — data-linked, no external chart lib */
 
 export type BarDatum = { label: string; value: number; color?: string }
@@ -365,18 +366,12 @@ export function compareSchemesBarSvg(
   })
 }
 
-function niceCeil(n: number): number {
-  if (n <= 0) return 1
-  const exp = Math.pow(10, Math.floor(Math.log10(n)))
-  const f = n / exp
-  const nf = f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10
-  return nf * exp
+function niceCeil(max: number): number {
+  return niceCeilStd(max)
 }
 
-function fmt(n: number): string {
-  if (Math.abs(n) >= 100) return n.toFixed(0)
-  if (Math.abs(n) >= 10) return n.toFixed(1)
-  return n.toFixed(2)
+function fmt(v: number): string {
+  return fmtNum(v, Math.abs(v) >= 10 ? 'flow' : 'delay')
 }
 
 function escape(s: string): string {
@@ -385,12 +380,7 @@ function escape(s: string): string {
 
 /** Saturation (v/c) continuous heat color — textbook capacity diagram style */
 export function vcHeatColor(vc: number): string {
-  if (vc <= 0.5) return '#22c55e'
-  if (vc <= 0.7) return '#84cc16'
-  if (vc <= 0.85) return '#eab308'
-  if (vc <= 0.95) return '#f97316'
-  if (vc <= 1.05) return '#ef4444'
-  return '#b91c1c'
+  return vcHeatAccurate(vc)
 }
 
 export function timingCompareBarSvg(

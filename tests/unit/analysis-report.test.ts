@@ -31,7 +31,7 @@ describe('analysis report board', () => {
       { name: '北', bearingDeg: 0, L: 100, T: 400, R: 80 },
       { name: '南', bearingDeg: 180, L: 90, T: 350, R: 70 },
     ])
-    expect(svg).toContain('总量')
+    expect(svg).toContain('Σ =')
     expect(svg).toContain('直行')
   })
 })

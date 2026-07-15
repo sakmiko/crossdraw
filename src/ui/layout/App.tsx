@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CanvasView, meshToPngBlob, DEFAULT_LAYERS, type CanvasHandle, type LayerVisibility, type LayerKey } from '@/canvas/CanvasView'
+import { BasemapLayer } from '@/canvas/BasemapLayer'
 import { rebuildChannelMesh, THEME } from '@/domain/geometry/rebuild'
 import { analyzeIntersection, websterTiming } from '@/domain/analysis'
 import { buildCrossSection, markStaleIfNeeded } from '@/domain/xsection/build'
@@ -80,6 +81,7 @@ export default function App() {
   const removeBandNode = useAppStore((s) => s.removeBandNode)
   const optimizeBand = useAppStore((s) => s.optimizeBand)
   const setBandSegmentLength = useAppStore((s) => s.setBandSegmentLength)
+  const updateBasemap = useAppStore((s) => s.updateBasemap)
   const setActiveChannel = useAppStore((s) => s.setActiveChannel)
   const setActiveFlow = useAppStore((s) => s.setActiveFlow)
   const setActiveSignal = useAppStore((s) => s.setActiveSignal)
@@ -525,6 +527,14 @@ export default function App() {
             )}
           </div>
           <div className="canvas-shell">
+            {project.settings.basemap?.enabled ? (
+              <BasemapLayer
+                enabled
+                latitude={project.settings.basemap.latitude}
+                longitude={project.settings.basemap.longitude}
+                opacity={project.settings.basemap.opacity ?? 0.55}
+              />
+            ) : null}
             <CanvasView
               ref={canvasRef}
               mesh={mesh}
@@ -550,6 +560,57 @@ export default function App() {
               </button>
             ))}
           </div>
+
+          {mode === 'channel' && (
+            <div className="card" style={{ marginTop: 12 }}>
+              <div className="panel-header">
+                <h2 style={{ margin: 0 }}>地图底图（骨架）</h2>
+                <span className="hint">示意定位 · 非测绘</span>
+              </div>
+              <label className="timing-fixed">
+                <input
+                  type="checkbox"
+                  checked={!!project.settings.basemap?.enabled}
+                  onChange={(e) => updateBasemap({ enabled: e.target.checked })}
+                />{' '}
+                显示 OSM 底图
+              </label>
+              <div className="field-grid" style={{ marginTop: 8 }}>
+                <label>
+                  纬度
+                  <input
+                    type="number"
+                    step={0.0001}
+                    value={project.settings.basemap?.latitude ?? 36.0611}
+                    onChange={(e) => updateBasemap({ latitude: Number(e.target.value) })}
+                  />
+                </label>
+                <label>
+                  经度
+                  <input
+                    type="number"
+                    step={0.0001}
+                    value={project.settings.basemap?.longitude ?? 103.8343}
+                    onChange={(e) => updateBasemap({ longitude: Number(e.target.value) })}
+                  />
+                </label>
+                <label>
+                  透明度
+                  <input
+                    type="number"
+                    min={0.15}
+                    max={0.9}
+                    step={0.05}
+                    value={project.settings.basemap?.opacity ?? 0.55}
+                    onChange={(e) => updateBasemap({ opacity: Number(e.target.value) })}
+                  />
+                </label>
+              </div>
+              <p className="hint">
+                默认兰州附近坐标；瓦片来自 OpenStreetMap。几何仍为本地米制，底图仅作空间语境参考。写入 .rtp。
+              </p>
+            </div>
+          )}
 
           {mode === 'channel' && selected && (
             <div className="card" style={{ marginTop: 12 }}>
@@ -1559,7 +1620,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.12</span>
+        <span>Crossdraw v0.5.13</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

@@ -21,6 +21,6 @@ describe('timing compare', () => {
 describe('vc heat', () => {
   it('returns warmer color for higher vc', () => {
     expect(vcHeatColor(0.3)).toContain('#')
-    expect(vcHeatColor(1.2)).toBe('#b91c1c')
+    expect(vcHeatColor(1.2)).toBe('#991b1b')
   })
 })

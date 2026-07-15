@@ -204,6 +204,16 @@ export interface Project {
   settings: {
     maxSchemes: number
     targetVc: number
+    /** optional site anchor for basemap (WGS84) */
+    basemap?: {
+      enabled: boolean
+      provider: 'osm' | 'none'
+      latitude: number
+      longitude: number
+      /** meters per canvas unit (approx) — used for scale bar only */
+      metersPerUnit?: number
+      opacity?: number
+    }
   }
   bandCorridor: BandCorridor
 }

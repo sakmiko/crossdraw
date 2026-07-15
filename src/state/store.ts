@@ -71,6 +71,7 @@ export type AppState = {
   removeBandNode: (nodeId: string) => void
   optimizeBand: () => void
   setBandSegmentLength: (toNodeId: string, lengthM: number) => void
+  updateBasemap: (patch: Partial<NonNullable<Project["settings"]["basemap"]>>) => void
 }
 
 function activeChannel(p: Project) {
@@ -424,6 +425,19 @@ export const useAppStore = create<AppState>()(
       setBandSegmentLength: (toNodeId, lengthM) =>
         set((s) => {
           s.project.bandCorridor = setSegmentLength(s.project.bandCorridor, toNodeId, lengthM)
+          s.dirty = true
+        }),
+      updateBasemap: (patch) =>
+        set((s) => {
+          const cur = s.project.settings.basemap ?? {
+            enabled: false,
+            provider: 'osm' as const,
+            latitude: 36.0611,
+            longitude: 103.8343,
+            metersPerUnit: 1,
+            opacity: 0.55,
+          }
+          s.project.settings.basemap = { ...cur, ...patch }
           s.dirty = true
         }),
     })),

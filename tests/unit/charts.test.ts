@@ -8,7 +8,7 @@ describe('svg charts', () => {
       { label: 'E', value: 0.9, color: '#f87171' },
     ])
     expect(svg).toContain('<svg')
-    expect(svg).toContain('0.60')
+    expect(svg).toMatch(/0\.6/)
   })
 
   it('renders empty line chart gracefully', () => {

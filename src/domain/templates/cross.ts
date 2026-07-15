@@ -140,7 +140,19 @@ export function createCrossTemplate(name = '标准十字交叉口'): Project {
       signalId: channel.flowSchemes[0]?.signalSchemes[0]?.id ?? null,
     },
     meta: { createdAt: now, updatedAt: now },
-    settings: { maxSchemes: 10, targetVc: 0.85 },
+    settings: {
+      maxSchemes: 10,
+      targetVc: 0.85,
+      basemap: {
+        enabled: false,
+        provider: 'osm',
+        // Lanzhou approx default for demos
+        latitude: 36.0611,
+        longitude: 103.8343,
+        metersPerUnit: 1,
+        opacity: 0.55,
+      },
+    },
     bandCorridor: {
       id: newId(),
       name: '主干路绿波走廊',
