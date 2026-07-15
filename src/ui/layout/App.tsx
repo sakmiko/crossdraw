@@ -554,6 +554,24 @@ export default function App() {
         </main>
 
         <aside className="right">
+          <div className="mode-hierarchy" aria-label="当前编辑层次">
+            <span className="mh-step">工程</span>
+            <span className="mh-sep">/</span>
+            <span className="mh-step">方案</span>
+            <span className="mh-sep">/</span>
+            <span className="mh-step active">
+              {{
+                channel: '渠化',
+                flow: '流量',
+                signal: '信号',
+                xsection: '断面',
+                analysis: '分析',
+                compare: '比选',
+                band: '绿波',
+              }[mode] ?? mode}
+            </span>
+            <span className="mh-hint">层次渐进 · 数据向下联动</span>
+          </div>
           <div className="mode-rail" role="tablist" aria-label="编辑模式">
             {MODES.map((m) => (
               <button
@@ -1725,7 +1743,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.18</span>
+        <span>Crossdraw v0.5.19</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1744,6 +1762,9 @@ export default function App() {
           hasAnalysis: !!analysis,
           hasSelected: !!selected,
           hasBand: project.bandCorridor.nodes.length >= 2,
+          timingClosed: signal ? buildSignalTimingAlignment(signal).closed : undefined,
+          flowAligned: flow && channel ? flowChartsAlignWithTable(channel.approaches, flow, flowDisplayMode).ok : undefined,
+          analysisOk: analysisIntegrity ? analysisIntegrity.ok : undefined,
         }}
         handlers={{
           'project-rtp': () => saveRtp(),

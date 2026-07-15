@@ -34,7 +34,7 @@ export type ExportItem = {
   description: string
   /** modes where this export is most relevant */
   modes?: string[]
-  requires: Array<'channel' | 'flow' | 'signal' | 'analysis' | 'selected' | 'band'>
+  requires: Array<'channel' | 'flow' | 'signal' | 'analysis' | 'selected' | 'band' | 'timingClosed' | 'flowAligned' | 'analysisOk'>
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
@@ -87,9 +87,9 @@ export const EXPORT_CATALOG: ExportItem[] = [
     category: 'signal',
     title: '信号配时图',
     format: 'SVG',
-    description: '绿/黄/红相位条',
+    description: '绿/黄/红相位条 · 需周期闭合',
     modes: ['signal'],
-    requires: ['signal'],
+    requires: ['signal', 'timingClosed'],
   },
   {
     id: 'control-svg',
@@ -107,7 +107,7 @@ export const EXPORT_CATALOG: ExportItem[] = [
     format: 'SVG',
     description: '线宽∝流量的 L/T/R 箭头图',
     modes: ['flow', 'analysis'],
-    requires: ['channel', 'flow'],
+    requires: ['flow', 'flowAligned'],
   },
   {
     id: 'pro-pack',
@@ -125,7 +125,7 @@ export const EXPORT_CATALOG: ExportItem[] = [
     format: 'SVG+MD',
     description: 'KPI / 流向 / 雷达 / 延误 / 相位灯态 / 表',
     modes: ['analysis'],
-    requires: ['channel', 'flow', 'signal', 'analysis'],
+    requires: ['analysis', 'analysisOk'],
   },
   {
     id: 'analysis-csv',
@@ -134,7 +134,7 @@ export const EXPORT_CATALOG: ExportItem[] = [
     format: 'CSV',
     description: '车道组 v/c 延误排队',
     modes: ['analysis'],
-    requires: ['analysis'],
+    requires: ['analysis', 'analysisOk'],
   },
   {
     id: 'analysis-xls',
@@ -210,17 +210,22 @@ export const CATEGORY_LABEL: Record<ExportCategory, string> = {
   package: '打包导出',
 }
 
-export function isExportAvailable(
-  item: ExportItem,
-  ctx: {
-    hasChannel: boolean
-    hasFlow: boolean
-    hasSignal: boolean
-    hasAnalysis: boolean
-    hasSelected: boolean
-    hasBand: boolean
-  },
-): boolean {
+export type ExportContext = {
+  hasChannel: boolean
+  hasFlow: boolean
+  hasSignal: boolean
+  hasAnalysis: boolean
+  hasSelected: boolean
+  hasBand: boolean
+  /** signal main phases Σ ≈ C */
+  timingClosed?: boolean
+  /** flow table/chart homology */
+  flowAligned?: boolean
+  /** analysis volume-weighted integrity */
+  analysisOk?: boolean
+}
+
+export function isExportAvailable(item: ExportItem, ctx: ExportContext): boolean {
   return item.requires.every((r) => {
     if (r === 'channel') return ctx.hasChannel
     if (r === 'flow') return ctx.hasFlow
@@ -228,6 +233,18 @@ export function isExportAvailable(
     if (r === 'analysis') return ctx.hasAnalysis
     if (r === 'selected') return ctx.hasSelected
     if (r === 'band') return ctx.hasBand
+    if (r === 'timingClosed') return ctx.timingClosed !== false
+    if (r === 'flowAligned') return ctx.flowAligned !== false
+    if (r === 'analysisOk') return ctx.analysisOk !== false
     return true
   })
+}
+
+export function exportIntegrityNotes(ctx: ExportContext): string[] {
+  const notes: string[] = []
+  if (ctx.hasSignal && ctx.timingClosed === false) notes.push('信号配时未闭合（主相位 Σ ≠ C）')
+  if (ctx.hasFlow && ctx.flowAligned === false) notes.push('流量表/图同源校验未通过')
+  if (ctx.hasAnalysis && ctx.analysisOk === false) notes.push('分析汇总与车道表不一致')
+  if (!notes.length) notes.push('同源校验正常：可导出专业图件')
+  return notes
 }

@@ -2,8 +2,10 @@ import { useMemo, useState } from 'react'
 import {
   CATEGORY_LABEL,
   EXPORT_CATALOG,
+  exportIntegrityNotes,
   isExportAvailable,
   type ExportCategory,
+  type ExportContext,
   type ExportItem,
   type ExportItemId,
 } from '@/io/exportCatalog'
@@ -19,14 +21,7 @@ export function ExportCenter({
 }: {
   open: boolean
   onClose: () => void
-  ctx: {
-    hasChannel: boolean
-    hasFlow: boolean
-    hasSignal: boolean
-    hasAnalysis: boolean
-    hasSelected: boolean
-    hasBand: boolean
-  }
+  ctx: ExportContext
   handlers: ExportCenterHandlers
   currentMode?: string
 }) {
@@ -105,6 +100,17 @@ export function ExportCenter({
           </button>
         </div>
 
+        <div className="export-integrity">
+          {exportIntegrityNotes(ctx).map((n) => (
+            <span
+              key={n}
+              className={`integrity-badge ${n.includes('正常') ? 'ok' : n.includes('未') || n.includes('不') ? 'bad' : 'ok'}`}
+            >
+              {n}
+            </span>
+          ))}
+        </div>
+
         <div className="export-toolbar">
           <input
             placeholder="搜索导出项…"
@@ -143,7 +149,17 @@ export function ExportCenter({
                       <div className="export-item-title">{item.title}</div>
                       <div className="export-item-fmt">{item.format}</div>
                       <div className="export-item-desc">{item.description}</div>
-                      {!ok && <div className="export-item-miss">条件不足</div>}
+                      {!ok && (
+                        <div className="export-item-miss">
+                          {item.requires.includes('timingClosed') && ctx.timingClosed === false
+                            ? '需配时闭合'
+                            : item.requires.includes('flowAligned') && ctx.flowAligned === false
+                              ? '需流量同源'
+                              : item.requires.includes('analysisOk') && ctx.analysisOk === false
+                                ? '需分析同源'
+                                : '条件不足'}
+                        </div>
+                      )}
                     </button>
                   )
                 })}

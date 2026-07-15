@@ -1019,3 +1019,173 @@ tr.row-locked td {
   color: #dc2626;
   background: color-mix(in srgb, #dc2626 12%, transparent);
 }
+
+
+/* === v0.5.19 hierarchy & density polish === */
+.mode-hierarchy {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 10px;
+  margin: 0 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  font-size: 11px;
+  color: var(--muted);
+}
+.mode-hierarchy .mh-step {
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+.mode-hierarchy .mh-step.active {
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.mode-hierarchy .mh-sep { opacity: 0.45; }
+.mode-hierarchy .mh-hint {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--muted);
+  opacity: 0.9;
+}
+
+.export-integrity {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 10px;
+}
+
+.inspector .card {
+  padding: 12px 12px 14px;
+}
+.inspector .card + .card {
+  margin-top: 10px;
+}
+.inspector .hint {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.inspector .section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 12px 0 6px;
+}
+.inspector label {
+  font-size: 11.5px;
+  gap: 4px;
+}
+.inspector input[type='number'],
+.inspector input[type='text'],
+.inspector select {
+  min-height: 30px;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+}
+.inspector .field-row {
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.inspector .table {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.inspector .table th {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.inspector .chart-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.inspector .chart-title small {
+  font-weight: 500;
+  font-size: 10.5px;
+  color: var(--muted);
+  margin-left: 6px;
+}
+.chart-card {
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+}
+.metric-grid {
+  gap: 8px;
+}
+.metric {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+}
+.metric .label {
+  font-size: 10px;
+}
+.metric .value {
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+
+.export-center.card {
+  max-width: min(920px, 96vw);
+  max-height: min(86vh, 800px);
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+}
+.export-body {
+  overflow: auto;
+  flex: 1;
+  padding-right: 4px;
+}
+.export-item {
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  min-height: 88px;
+}
+.export-item.focus {
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.export-item-title {
+  font-weight: 700;
+  font-size: 13px;
+}
+.export-item-fmt {
+  font-size: 10px;
+  color: var(--accent);
+  font-family: var(--mono);
+  margin-top: 2px;
+}
+.export-item-desc {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+  line-height: 1.35;
+}
+
+.topbar .brand {
+  letter-spacing: -0.02em;
+}
+.status {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 900px) {
+  .mode-hierarchy .mh-hint { display: none; }
+}
