@@ -25,6 +25,7 @@ import type {
   Project,
 } from '@/domain/types'
 import { buildConflictMatrix } from '@/domain/signal/conflictMatrix'
+import { buildPhaseConflictReport, phaseConflictSummaryText } from '@/domain/signal/phaseConflictView'
 import { useAppStore } from '@/state/store'
 import {
   collectSchemeSnapshots,
@@ -176,11 +177,16 @@ export function FlowCharts({
 export function SignalCharts({
   signal,
   approaches,
+  focusPhaseId,
+  onFocusPhase,
 }: {
   signal: SignalScheme
   approaches?: Approach[]
+  focusPhaseId?: string | null
+  onFocusPhase?: (id: string) => void
 }) {
   const colors = useChartColors()
+  const phaseId = focusPhaseId ?? signal.phases[0]?.id ?? null
   const ring = useMemo(
     () =>
       themeSvg(
@@ -200,16 +206,29 @@ export function SignalCharts({
     [signal, colors],
   )
 
+  const report = useMemo(() => {
+    if (!approaches?.length) return null
+    return buildPhaseConflictReport(approaches, signal, phaseId)
+  }, [approaches, signal, phaseId])
+
   const matrix = useMemo(() => {
-    if (!approaches?.length) return ''
-    const { keys, cells } = buildConflictMatrix(approaches)
-    const levels = cells.map((row) => row.map((c) => c.level))
+    if (!report) return ''
+    const levels = report.cells.map((row) => row.map((c) => c.level))
+    const hot = new Set(
+      report.activeHits.map((h) => [h.aKey, h.bKey].sort().join('|')),
+    )
     const raw = conflictMatrixSvg(
-      keys.map((k) => k.label),
+      report.keys.map((k) => k.label),
       levels,
+      {
+        keys: report.keys.map((k) => `${k.approachId}:${k.movement}`),
+        active: report.activeKeys,
+        hotPairs: hot,
+        subtitle: phaseConflictSummaryText(report),
+      },
     )
     return themeSvg(raw, colors)
-  }, [approaches, colors])
+  }, [report, colors])
 
   return (
     <div className="chart-card">
@@ -218,13 +237,56 @@ export function SignalCharts({
         <small>轴=C · 与相位表 G/Y/AR 同源</small>
       </div>
       <div dangerouslySetInnerHTML={{ __html: ring }} />
-      {matrix && (
+      {matrix && report && (
         <>
           <div className="chart-title" style={{ marginTop: 12 }}>
-            <span>转向冲突矩阵</span>
-            <small>与放行组合对照</small>
+            <span>转向冲突 / 相位相悖</span>
+            <small>{phaseConflictSummaryText(report)}</small>
+          </div>
+          <div className="toolbar" style={{ flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
+            {signal.phases.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                className={p.id === phaseId ? 'primary' : 'ghost'}
+                onClick={() => onFocusPhase?.(p.id)}
+              >
+                {p.name}
+              </button>
+            ))}
           </div>
           <div dangerouslySetInnerHTML={{ __html: matrix }} />
+          {report.activeHits.length > 0 ? (
+            <div className="table-wrap" style={{ marginTop: 8, maxHeight: 140 }}>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>等级</th>
+                    <th>运动对</th>
+                    <th>原因</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {report.activeHits.slice(0, 12).map((h, i) => (
+                    <tr key={`${h.aKey}-${h.bKey}-${i}`} className={h.level === 'block' ? 'row-block' : 'row-warn'}>
+                      <td>{h.level === 'block' ? '禁止' : '警告'}</td>
+                      <td>
+                        {h.aLabel} × {h.bLabel}
+                      </td>
+                      <td>{h.reason}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="hint" style={{ marginTop: 8 }}>
+              当前相位放行组合在矩阵上无相悖高亮。切换相位或改 L/T/R 即时刷新。
+            </p>
+          )}
+          <p className="hint">
+            矩阵全局：禁止 {report.counts.block} · 警告 {report.counts.warn} · 与 detectPhaseConflicts 规则同源
+          </p>
         </>
       )}
     </div>

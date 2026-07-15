@@ -276,30 +276,64 @@ export function radarChartSvg(
 export function conflictMatrixSvg(
   labels: string[],
   levels: ('ok' | 'warn' | 'block' | 'same')[][],
-  opts: { width?: number; cell?: number; active?: Set<string>; keys?: string[] } = {},
+  opts: {
+    width?: number
+    cell?: number
+    /** movement keys parallel to labels, e.g. approachId:T */
+    keys?: string[]
+    /** currently green movement keys */
+    active?: Set<string>
+    /** pairs that are active conflicts (aKey|bKey sorted join) */
+    hotPairs?: Set<string>
+    subtitle?: string
+  } = {},
 ): string {
   const n = labels.length
   const cell = opts.cell ?? Math.max(14, Math.min(22, Math.floor(280 / Math.max(1, n))))
-  const left = 42
-  const top = 28
-  const width = opts.width ?? left + n * cell + 12
-  const height = top + n * cell + 12
+  const left = 48
+  const top = 36
+  const width = opts.width ?? left + n * cell + 16
+  const height = top + n * cell + 28
   const color = (lv: string) =>
     lv === 'block' ? '#e85d5d' : lv === 'warn' ? '#e5a54b' : lv === 'same' ? '#334155' : '#1e3a2f'
+  const keys = opts.keys ?? labels.map((_, i) => String(i))
+  const active = opts.active
+  const hot = opts.hotPairs
   let body = ''
+  // active row/col wash
+  if (active && active.size) {
+    for (let i = 0; i < n; i++) {
+      if (!active.has(keys[i])) continue
+      body += `<rect x="${left}" y="${top + i * cell}" width="${n * cell}" height="${cell - 1}" fill="#38bdf8" opacity="0.08"/>`
+      body += `<rect x="${left + i * cell}" y="${top}" width="${cell - 1}" height="${n * cell}" fill="#38bdf8" opacity="0.08"/>`
+    }
+  }
   for (let i = 0; i < n; i++) {
-    body += `<text x="${left - 4}" y="${top + i * cell + cell * 0.7}" text-anchor="end" fill="#94a3b8" font-size="8">${escape(labels[i])}</text>`
-    body += `<text x="${left + i * cell + cell / 2}" y="${top - 6}" text-anchor="middle" fill="#94a3b8" font-size="8">${escape(labels[i])}</text>`
+    const rowActive = active?.has(keys[i])
+    body += `<text x="${left - 4}" y="${top + i * cell + cell * 0.7}" text-anchor="end" fill="${rowActive ? '#7dd3fc' : '#94a3b8'}" font-size="8" font-weight="${rowActive ? 700 : 400}">${escape(labels[i])}</text>`
+    body += `<text x="${left + i * cell + cell / 2}" y="${top - 8}" text-anchor="middle" fill="${rowActive ? '#7dd3fc' : '#94a3b8'}" font-size="8" font-weight="${rowActive ? 700 : 400}">${escape(labels[i])}</text>`
     for (let j = 0; j < n; j++) {
       const lv = levels[i]?.[j] ?? 'ok'
       const x = left + j * cell
       const y = top + i * cell
-      body += `<rect x="${x}" y="${y}" width="${cell - 1}" height="${cell - 1}" rx="2" fill="${color(lv)}" opacity="0.9"/>`
+      const pairKey = [keys[i], keys[j]].sort().join('|')
+      const isHot = !!hot?.has(pairKey) && i !== j
+      const bothOn = !!(active?.has(keys[i]) && active?.has(keys[j]) && i !== j)
+      const op = bothOn ? 1 : 0.75
+      body += `<rect x="${x}" y="${y}" width="${cell - 1}" height="${cell - 1}" rx="2" fill="${color(lv)}" opacity="${op}"/>`
+      if (isHot) {
+        body += `<rect x="${x + 0.5}" y="${y + 0.5}" width="${cell - 2}" height="${cell - 2}" rx="2" fill="none" stroke="#f8fafc" stroke-width="1.4"/>`
+        body += `<text x="${x + cell / 2}" y="${y + cell * 0.68}" text-anchor="middle" fill="#0f172a" font-size="${Math.max(7, cell * 0.45)}" font-weight="800">!</text>`
+      } else if (bothOn && lv === 'ok') {
+        body += `<circle cx="${x + cell / 2}" cy="${y + cell / 2}" r="${cell * 0.12}" fill="#38bdf8" opacity="0.9"/>`
+      }
     }
   }
+  const sub = opts.subtitle ?? '红=禁止 黄=警告 青绿=兼容 · 亮边=当前相位相悖'
   return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" class="chart-svg">
     <rect width="100%" height="100%" fill="#0a1020"/>
-    <text x="8" y="14" fill="#8494ab" font-size="9">冲突矩阵 · 红=禁止 黄=警告 绿=兼容</text>
+    <text x="8" y="14" fill="#8494ab" font-size="10" font-weight="700">转向冲突矩阵</text>
+    <text x="8" y="26" fill="#64748b" font-size="8">${escape(sub)}</text>
     ${body}
   </svg>`
 }

@@ -6,6 +6,7 @@ import { analyzeIntersection, websterTiming } from '@/domain/analysis'
 import { buildCrossSection, markStaleIfNeeded } from '@/domain/xsection/build'
 import { validateProject, summarizeIssues } from '@/domain/validate'
 import { detectProjectSignalIssues } from '@/domain/signal/conflicts'
+import { allPhasesConflictHits } from '@/domain/signal/phaseConflictView'
 import { wrapProject, serializeRtp, parseRtp } from '@/domain/rtp'
 import { meshToSvg } from '@/io/exportSvg'
 import { meshToDxf } from '@/io/exportDxf'
@@ -123,6 +124,7 @@ export default function App() {
   const [printOpen, setPrintOpen] = useState(false)
   const [printPaper, setPrintPaper] = useState<'A4' | 'A4-landscape'>('A4')
   const [flowDisplayMode, setFlowDisplayMode] = useState<FlowDisplayMode>('natural')
+  const [focusPhaseId, setFocusPhaseId] = useState<string | null>(null)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -1425,12 +1427,19 @@ export default function App() {
                 <h2 style={{ margin: 0 }}>信号 · {signal.name}</h2>
                 {(() => {
                   const al = buildSignalTimingAlignment(signal)
+                  const hits = channel ? allPhasesConflictHits(channel.approaches, signal) : []
+                  const blocks = hits.filter((h) => h.level === 'block').length
                   return (
-                    <span className={`integrity-badge ${al.closed ? 'ok' : 'bad'}`}>
-                      {al.closed
-                        ? `配时闭合 Σ=${al.mainSumSec.toFixed(1)}=C`
-                        : `未闭合 Σ=${al.mainSumSec.toFixed(1)} C=${al.cycleSec} 差${al.balanceSec > 0 ? '+' : ''}${al.balanceSec}`}
-                    </span>
+                    <>
+                      <span className={`integrity-badge ${al.closed ? 'ok' : 'bad'}`}>
+                        {al.closed
+                          ? `配时闭合 Σ=${al.mainSumSec.toFixed(1)}=C`
+                          : `未闭合 Σ=${al.mainSumSec.toFixed(1)} C=${al.cycleSec} 差${al.balanceSec > 0 ? '+' : ''}${al.balanceSec}`}
+                      </span>
+                      <span className={`integrity-badge ${blocks ? 'bad' : hits.length ? 'warn' : 'ok'}`}>
+                        {blocks ? `相位相悖 ${blocks}` : hits.length ? `冲突警告 ${hits.length}` : '无相悖 ✓'}
+                      </span>
+                    </>
                   )
                 })()}
               </div>
@@ -1626,7 +1635,12 @@ export default function App() {
                   />
                 </div>
               )}
-              <SignalCharts signal={signal} approaches={channel?.approaches} />
+              <SignalCharts
+                  signal={signal}
+                  approaches={channel?.approaches}
+                  focusPhaseId={focusPhaseId ?? signal.phases[0]?.id ?? null}
+                  onFocusPhase={setFocusPhaseId}
+                />
               <SignalTimingPanel signal={signal} />
               {channel && <ControlMatrixPanel signal={signal} approaches={channel.approaches} />}
               {channel && <PhaseFacePanel signal={signal} approaches={channel.approaches} />}
@@ -2302,7 +2316,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.29</span>
+        <span>Crossdraw v0.5.30</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

@@ -1414,3 +1414,13 @@ html[data-theme='light'] .print-stage {
   font-size: 12px;
   min-width: 64px;
 }
+
+
+/* === v0.5.30 conflict === */
+.row-block td { color: var(--block); }
+.row-warn td { color: var(--warn); }
+.integrity-badge.warn {
+  background: color-mix(in srgb, var(--warn) 18%, transparent);
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 40%, transparent);
+}
