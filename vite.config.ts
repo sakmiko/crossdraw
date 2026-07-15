@@ -17,4 +17,10 @@ export default defineConfig({
     port: 5173,
     host: true,
   },
+  preview: {
+    host: '127.0.0.1',
+    port: 4175,
+    // Cloudflare Tunnel forwards external Host header
+    allowedHosts: true,
+  },
 })
