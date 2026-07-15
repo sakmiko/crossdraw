@@ -23,6 +23,7 @@ import { optimizeSignalTiming, criticalFlowRatios, TIMING_METHOD_LABELS, type Ti
 import { compareTimingMethods, recommendTimingRow, type TimingCompareRow } from '@/domain/analysis/timingCompare'
 import { vcHeatColor } from '@/ui/charts/svgCharts'
 import { analysisMarkdown, bandMarkdown, exportJsonFile, exportSvgFile } from '@/io/exportCharts'
+import { buildAnalysisReportSvg } from '@/io/analysisReportSvg'
 import {
   controlMatrixSvg,
   flowMovementDiagramSvg,
@@ -1150,6 +1151,37 @@ export default function App() {
                 <button type="button" className="primary" onClick={exportProfessionalDiagrams}>
                   导出专业图件包
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!channel || !flow || !signal || !analysis) return
+                    const svg = buildAnalysisReportSvg({
+                      projectName: project.name,
+                      channelName: channel.name,
+                      signalName: signal.name,
+                      approaches: channel.approaches,
+                      flow,
+                      signal,
+                      analysis,
+                      theme,
+                    })
+                    exportSvgFile(`${project.name}-analysis-board.svg`, svg)
+                    downloadText(
+                      `${project.name}-report.md`,
+                      analysisMarkdown(project.name, {
+                        avgVc: analysis.avgVc,
+                        avgDelay: analysis.avgDelay,
+                        avgQueueM: analysis.avgQueueM,
+                        losFinal: analysis.losFinal,
+                        cycleSec: signal.cycleSec,
+                        notes: ['分析拼图 SVG 已同步导出'],
+                      }),
+                      'text/markdown',
+                    )
+                  }}
+                >
+                  导出分析拼图
+                </button>
               </div>
               <div className="section-title">方案对比摘要</div>
               <table className="table">
@@ -1364,7 +1396,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.7</span>
+        <span>Crossdraw v0.5.8</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

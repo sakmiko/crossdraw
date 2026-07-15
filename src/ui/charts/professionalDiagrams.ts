@@ -76,33 +76,55 @@ export function flowMovementDiagramSvg(
   const size = opts.size ?? 360
   const cx = size / 2
   const cy = size / 2
-  const R = size * 0.32
+  const R = size * 0.30
   const maxV = Math.max(1, ...approaches.flatMap((a) => [a.L, a.T, a.R]))
-  let body = `<circle cx="${cx}" cy="${cy}" r="${R * 0.55}" fill="none" stroke="#334155" stroke-width="2"/>`
-  body += `<text x="8" y="16" fill="#94a3b8" font-size="9">流量流向图 · 线宽∝流量（方案附图常用）</text>`
+  const total = approaches.reduce((s, a) => s + a.L + a.T + a.R, 0)
+  let body = ''
+  body += `<text x="8" y="16" fill="#94a3b8" font-size="9">流量流向图 · 线宽∝流量 · 总量 ${Math.round(total)} pcu/h</text>`
+  // intersection disc
+  body += `<circle cx="${cx}" cy="${cy}" r="${R * 0.42}" fill="#111827" stroke="#475569" stroke-width="2"/>`
+  body += `<circle cx="${cx}" cy="${cy}" r="${R * 0.12}" fill="#1e293b" stroke="#64748b" stroke-width="1"/>`
   for (const ap of approaches) {
     const rad = ((ap.bearingDeg - 90) * Math.PI) / 180
+    const cos = Math.cos(rad)
+    const sin = Math.sin(rad)
+    // road stub
+    const xOut = cx + cos * R * 1.42
+    const yOut = cy + sin * R * 1.42
+    const xIn = cx + cos * R * 0.55
+    const yIn = cy + sin * R * 0.55
+    body += `<line x1="${xOut}" y1="${yOut}" x2="${xIn}" y2="${yIn}" stroke="#334155" stroke-width="16" stroke-linecap="round" opacity="0.85"/>`
+    body += `<line x1="${xOut}" y1="${yOut}" x2="${xIn}" y2="${yIn}" stroke="#1e293b" stroke-width="1.5"/>`
     // approach from outside toward center
-    const x1 = cx + Math.cos(rad) * R * 1.35
-    const y1 = cy + Math.sin(rad) * R * 1.35
-    const x0 = cx + Math.cos(rad) * R * 0.7
-    const y0 = cy + Math.sin(rad) * R * 0.7
-    // through
-    const tw = 1 + (ap.T / maxV) * 10
+    const x1 = cx + cos * R * 1.28
+    const y1 = cy + sin * R * 1.28
+    const x0 = cx + cos * R * 0.62
+    const y0 = cy + sin * R * 0.62
+    const tw = 1.5 + (ap.T / maxV) * 11
     body += arrow(x1, y1, x0, y0, '#3b82f6', tw, `${Math.round(ap.T)}`)
-    // left (perp)
     const lx = Math.cos(rad + Math.PI / 2)
     const ly = Math.sin(rad + Math.PI / 2)
-    const lw = 1 + (ap.L / maxV) * 8
-    body += arrow(x1 + lx * 14, y1 + ly * 14, x0 + lx * 28, y0 + ly * 28, '#06b6d4', lw, `${Math.round(ap.L)}`)
-    // right
+    const lw = 1.2 + (ap.L / maxV) * 9
+    body += arrow(x1 + lx * 12, y1 + ly * 12, x0 + lx * 26, y0 + ly * 26, '#06b6d4', lw, `${Math.round(ap.L)}`)
     const rx = Math.cos(rad - Math.PI / 2)
     const ry = Math.sin(rad - Math.PI / 2)
-    const rw = 1 + (ap.R / maxV) * 8
-    body += arrow(x1 + rx * 14, y1 + ry * 14, x0 + rx * 28, y0 + ry * 28, '#a855f7', rw, `${Math.round(ap.R)}`)
-    body += `<text x="${cx + Math.cos(rad) * R * 1.55}" y="${cy + Math.sin(rad) * R * 1.55}" text-anchor="middle" fill="#e2e8f0" font-size="11">${escape(ap.name)}</text>`
+    const rw = 1.2 + (ap.R / maxV) * 9
+    body += arrow(x1 + rx * 12, y1 + ry * 12, x0 + rx * 26, y0 + ry * 26, '#a855f7', rw, `${Math.round(ap.R)}`)
+    const sum = ap.L + ap.T + ap.R
+    body += `<text x="${cx + cos * R * 1.58}" y="${cy + sin * R * 1.58}" text-anchor="middle" fill="#e2e8f0" font-size="11" font-weight="700">${escape(ap.name)}</text>`
+    body += `<text x="${cx + cos * R * 1.58}" y="${cy + sin * R * 1.58 + 12}" text-anchor="middle" fill="#94a3b8" font-size="9">Σ${Math.round(sum)}</text>`
   }
-  body += `<text x="8" y="${size - 10}" fill="#64748b" font-size="9">蓝=直行 青=左转 紫=右转</text>`
+  // legend chips
+  const chips = [
+    ['#3b82f6', '直行 T'],
+    ['#06b6d4', '左转 L'],
+    ['#a855f7', '右转 R'],
+  ]
+  chips.forEach((c, i) => {
+    const x = 10 + i * 72
+    body += `<rect x="${x}" y="${size - 22}" width="10" height="10" rx="2" fill="${c[0]}"/>`
+    body += `<text x="${x + 14}" y="${size - 13}" fill="#94a3b8" font-size="9">${c[1]}</text>`
+  })
   return svgShell(size, size, body)
 }
 
