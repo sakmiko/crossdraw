@@ -188,7 +188,8 @@ export interface BandCorridor {
   id: string
   name: string
   speedKmh: number
-  method: 'classic' | 'optimized-scan' | 'one-way'
+  /** classic=数解双向, optimized-scan=MAXBAND启发, one-way=单向, two-way-equal=双向等带, graphical=图解半周期 */
+  method: 'classic' | 'optimized-scan' | 'one-way' | 'two-way-equal' | 'graphical'
   nodes: BandNodeEditable[]
 }
 
@@ -300,4 +301,8 @@ export interface BandResult {
   bandwidthSec: number
   offsets: { id: string; offsetSec: number }[]
   standardSpeedKmh: number
+  /** forward progressive band estimate (s) */
+  forwardBandwidthSec?: number
+  /** backward progressive band estimate (s) */
+  backwardBandwidthSec?: number
 }

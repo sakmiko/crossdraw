@@ -9,6 +9,9 @@
 
 | 方法 | 依据 | 实现落点 |
 |------|------|----------|
+| 固定周期分绿 | 给定 C，有效绿灯按 y_i/Y | `optimizeSignalTiming` method=fixed-cycle |
+| 等绿灯 | 实用近似 | method=equal |
+| 延误最小 | HCM 延误代理扫周期 | method=hcm-delay |
 | Webster 最优周期 | Webster, F.V. (1958). *Traffic Signal Settings*. Road Research Technical Paper No. 39. `C0 ≈ (1.5L+5)/(1−Y)` | `domain/analysis` `websterTiming` |
 | 有效绿灯 / 损失时间 | HCM 系列；国内教材常用启动损失≈3s、黄灯利用 | `effectiveGreen`, `startLossSec` |
 | 绿信比分配 | 按关键流向流量比 y_i / Y 分配有效绿灯 | `websterTiming` |

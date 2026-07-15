@@ -2,14 +2,22 @@ import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 import { temporal } from 'zundo'
 import { newId } from '@/shared/id'
-import type { Approach, BandCorridor, EditorMode, Movement, Project, TurnVolumes } from '@/domain/types'
-
-export type UiTheme = 'dark' | 'light'
+import type {
+  Approach,
+  BandCorridor,
+  EditorMode,
+  IntersectionType,
+  Movement,
+  Phase,
+  Project,
+  TurnVolumes,
+} from '@/domain/types'
 import { createCrossTemplate, createTemplateByType } from '@/domain/templates/cross'
-import type { IntersectionType, Phase } from '@/domain/types'
+import { applyOffsetsToCorridor, optimizeCorridor, setSegmentLength } from '@/domain/analysis/corridor'
 import { wrapProject, serializeRtp } from '@/domain/rtp'
 import { saveDraft } from '@/io/autosave'
-import { applyOffsetsToCorridor, optimizeCorridor } from '@/domain/analysis/corridor'
+
+export type UiTheme = 'dark' | 'light'
 
 export type AppState = {
   project: Project
@@ -62,6 +70,7 @@ export type AppState = {
   addBandNode: () => void
   removeBandNode: (nodeId: string) => void
   optimizeBand: () => void
+  setBandSegmentLength: (toNodeId: string, lengthM: number) => void
 }
 
 function activeChannel(p: Project) {
@@ -410,6 +419,11 @@ export const useAppStore = create<AppState>()(
         set((s) => {
           const result = optimizeCorridor(s.project.bandCorridor)
           s.project.bandCorridor = applyOffsetsToCorridor(s.project.bandCorridor, result)
+          s.dirty = true
+        }),
+      setBandSegmentLength: (toNodeId, lengthM) =>
+        set((s) => {
+          s.project.bandCorridor = setSegmentLength(s.project.bandCorridor, toNodeId, lengthM)
           s.dirty = true
         }),
     })),

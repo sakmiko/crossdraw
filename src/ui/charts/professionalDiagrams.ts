@@ -139,7 +139,7 @@ export function timeSpaceDiagramSvg(
     body += `<rect x="${x - 8}" y="${Math.min(y0, y1)}" width="16" height="${Math.max(3, Math.abs(y0 - y1))}" fill="#22c55e" opacity="0.85"/>`
     body += `<text x="${x}" y="${height - 12}" text-anchor="middle" fill="#94a3b8" font-size="9">${escape(n.name)}</text>`
   })
-  // trajectory band along speed
+  // forward / backward trajectories (two-way band sketch)
   if (nodes.length >= 2) {
     const a = nodes[0]
     const b = nodes[nodes.length - 1]
@@ -150,10 +150,48 @@ export function timeSpaceDiagramSvg(
     const t1 = (t0 + travel) % C
     const yA = pad.t + (1 - t0 / C) * innerH
     const yB = pad.t + (1 - t1 / C) * innerH
-    body += `<path d="M${x0},${yA} L${x1},${yB}" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="6 3" fill="none"/>`
+    body += `<path d="M${x0},${yA} L${x1},${yB}" stroke="#38bdf8" stroke-width="2.5" fill="none"/>`
+    // backward: from B green start reverse
+    const tB = ((b.offsetSec % C) + C) % C
+    const tA2 = (tB + travel) % C
+    const yB0 = pad.t + (1 - tB / C) * innerH
+    const yA2 = pad.t + (1 - tA2 / C) * innerH
+    body += `<path d="M${x1},${yB0} L${x0},${yA2}" stroke="#f472b6" stroke-width="2.2" stroke-dasharray="5 3" fill="none"/>`
+    body += `<text x="${width - pad.r}" y="${pad.t + 12}" text-anchor="end" fill="#38bdf8" font-size="8">→上行</text>`
+    body += `<text x="${width - pad.r}" y="${pad.t + 24}" text-anchor="end" fill="#f472b6" font-size="8">←下行</text>`
   }
-  body += `<text x="${pad.l}" y="${height - 4}" fill="#64748b" font-size="8">横轴距离 · 纵轴周期内时间 · 绿条=有效绿窗</text>`
+  body += `<text x="${pad.l}" y="${height - 4}" fill="#64748b" font-size="8">横轴距离 · 纵轴周期内时间 · 绿条=有效绿窗 · 双向轨迹</text>`
   return svgShell(width, height, body)
+}
+
+/** Approach lamp face by phase — textbook "灯态/放行示意" */
+export function phaseFaceDiagramSvg(
+  approaches: { name: string; bearingDeg: number; id: string }[],
+  phase: { name: string; releases: Record<string, string[]> },
+  opts: { size?: number } = {},
+): string {
+  const size = opts.size ?? 320
+  const cx = size / 2
+  const cy = size / 2
+  const R = size * 0.34
+  let body = `<text x="8" y="16" fill="#94a3b8" font-size="9">相位灯态图 · ${escape(phase.name)} · 绿=放行</text>`
+  body += `<circle cx="${cx}" cy="${cy}" r="${R * 0.22}" fill="#111827" stroke="#334155"/>`
+  for (const ap of approaches) {
+    const rad = ((ap.bearingDeg - 90) * Math.PI) / 180
+    const x = cx + Math.cos(rad) * R
+    const y = cy + Math.sin(rad) * R
+    const movs = phase.releases[ap.id] ?? []
+    const on = movs.length > 0
+    body += `<circle cx="${x}" cy="${y}" r="18" fill="${on ? '#14532d' : '#1f2937'}" stroke="${on ? '#22c55e' : '#475569'}" stroke-width="2"/>`
+    body += `<text x="${x}" y="${y - 2}" text-anchor="middle" fill="${on ? '#86efac' : '#94a3b8'}" font-size="10" font-weight="700">${escape(ap.name.replace('进口', ''))}</text>`
+    body += `<text x="${x}" y="${y + 12}" text-anchor="middle" fill="${on ? '#bbf7d0' : '#64748b'}" font-size="9">${escape(movs.join('') || '红')}</text>`
+    // road stub
+    const x0 = cx + Math.cos(rad) * R * 0.35
+    const y0 = cy + Math.sin(rad) * R * 0.35
+    body += `<line x1="${x0}" y1="${y0}" x2="${x}" y2="${y}" stroke="#374151" stroke-width="10" stroke-linecap="round"/>`
+  }
+  body += `<text x="8" y="${size - 10}" fill="#64748b" font-size="8">与相位放行矩阵同源 · 方案说明书常用图</text>`
+  return svgShell(size, size, body)
 }
 
 function arrow(x1: number, y1: number, x2: number, y2: number, color: string, w: number, label: string): string {

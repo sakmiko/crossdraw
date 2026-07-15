@@ -1,7 +1,8 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   controlMatrixSvg,
   flowMovementDiagramSvg,
+  phaseFaceDiagramSvg,
   signalTimingDiagramSvg,
   timeSpaceDiagramSvg,
 } from './professionalDiagrams'
@@ -87,6 +88,47 @@ export function ControlMatrixPanel({
   )
 }
 
+export function PhaseFacePanel({
+  signal,
+  approaches,
+}: {
+  signal: SignalScheme
+  approaches: Approach[]
+}) {
+  const colors = useChartColors()
+  const phases = signal.phases
+  const [idx, setIdx] = useState(0)
+  const ph = phases[Math.min(idx, Math.max(0, phases.length - 1))] ?? phases[0]
+  const svg = useMemo(() => {
+    if (!ph) return ''
+    return themeSvg(
+      phaseFaceDiagramSvg(
+        approaches.map((a) => ({ name: a.name, bearingDeg: a.bearingDeg, id: a.id })),
+        { name: ph.name, releases: ph.releases },
+        { size: 300 },
+      ),
+      colors,
+    )
+  }, [ph, approaches, colors])
+  if (!phases.length) return null
+  return (
+    <div className="chart-card">
+      <div className="chart-title">
+        <span>相位灯态图</span>
+        <small>切换相位预览</small>
+      </div>
+      <div className="toolbar" style={{ marginBottom: 8 }}>
+        {phases.map((p, i) => (
+          <button key={p.id} type="button" className={i === idx ? 'primary' : 'ghost'} onClick={() => setIdx(i)}>
+            {p.name}
+          </button>
+        ))}
+      </div>
+      <div dangerouslySetInnerHTML={{ __html: svg }} />
+    </div>
+  )
+}
+
 export function FlowDirectionPanel({
   approaches,
   flow,
@@ -137,7 +179,7 @@ export function TimeSpacePanel({ corridor }: { corridor: BandCorridor }) {
     <div className="chart-card">
       <div className="chart-title">
         <span>绿波时距图</span>
-        <small>教材图解风格</small>
+        <small>双向轨迹 · 教材图解</small>
       </div>
       <div dangerouslySetInnerHTML={{ __html: svg }} />
     </div>

@@ -1,5 +1,11 @@
 import type { BandCorridor, BandIntersection, BandResult } from '../types'
-import { optimizeBandClassic, optimizeBandMaxScan } from './band'
+import {
+  optimizeBandClassic,
+  optimizeBandGraphical,
+  optimizeBandMaxScan,
+  optimizeBandOneWay,
+  optimizeBandTwoWayEqual,
+} from './band'
 
 export function corridorToIntersections(c: BandCorridor): BandIntersection[] {
   return c.nodes.map((n) => ({
@@ -14,28 +20,19 @@ export function corridorToIntersections(c: BandCorridor): BandIntersection[] {
 export function optimizeCorridor(c: BandCorridor): BandResult {
   const nodes = corridorToIntersections(c)
   const cycle = c.nodes[0]?.cycleSec ?? 90
-  if (c.method === 'one-way') {
-    const v = (c.speedKmh * 1000) / 3600
-    const offsets = c.nodes.map((n, i) => {
-      if (i === 0) return { id: n.id, offsetSec: 0 }
-      const dist = n.distanceM - c.nodes[0].distanceM
-      const off = ((dist / v) % cycle + cycle) % cycle
-      return { id: n.id, offsetSec: off }
-    })
-    const band = Math.min(...c.nodes.map((n) => n.greenRatio)) * cycle
-    return {
-      method: 'one-way',
-      halfCycleDistanceM: (v * cycle) / 2,
-      bandwidthRatio: Math.min(0.5, band / cycle),
-      bandwidthSec: band,
-      offsets,
-      standardSpeedKmh: c.speedKmh,
-    }
+  switch (c.method) {
+    case 'one-way':
+      return optimizeBandOneWay(nodes, cycle, c.speedKmh)
+    case 'optimized-scan':
+      return optimizeBandMaxScan(nodes, cycle, c.speedKmh)
+    case 'two-way-equal':
+      return optimizeBandTwoWayEqual(nodes, cycle, c.speedKmh)
+    case 'graphical':
+      return optimizeBandGraphical(nodes, cycle, c.speedKmh)
+    case 'classic':
+    default:
+      return optimizeBandClassic(nodes, cycle, c.speedKmh)
   }
-  if (c.method === 'optimized-scan') {
-    return optimizeBandMaxScan(nodes, cycle, c.speedKmh)
-  }
-  return optimizeBandClassic(nodes, cycle, c.speedKmh)
 }
 
 export function applyOffsetsToCorridor(c: BandCorridor, result: BandResult): BandCorridor {
@@ -47,4 +44,48 @@ export function applyOffsetsToCorridor(c: BandCorridor, result: BandResult): Ban
       offsetSec: n.lockedOffset ? n.offsetSec : (map.get(n.id) ?? n.offsetSec),
     })),
   }
+}
+
+/** Segment lengths between successive nodes (for UI: 路段距离). */
+export function corridorSegments(c: BandCorridor): {
+  fromId: string
+  toId: string
+  fromName: string
+  toName: string
+  lengthM: number
+}[] {
+  const nodes = [...c.nodes].sort((a, b) => a.distanceM - b.distanceM)
+  const out = []
+  for (let i = 1; i < nodes.length; i++) {
+    out.push({
+      fromId: nodes[i - 1].id,
+      toId: nodes[i].id,
+      fromName: nodes[i - 1].name,
+      toName: nodes[i].name,
+      lengthM: nodes[i].distanceM - nodes[i - 1].distanceM,
+    })
+  }
+  return out
+}
+
+/** Set segment length by moving downstream node pile (keeps upstream fixed). */
+export function setSegmentLength(
+  c: BandCorridor,
+  toNodeId: string,
+  lengthM: number,
+): BandCorridor {
+  const nodes = [...c.nodes].sort((a, b) => a.distanceM - b.distanceM)
+  const idx = nodes.findIndex((n) => n.id === toNodeId)
+  if (idx <= 0) return c
+  const prev = nodes[idx - 1]
+  const next = nodes[idx]
+  const newPos = prev.distanceM + Math.max(50, lengthM)
+  const delta = newPos - next.distanceM
+  const map = new Map(c.nodes.map((n) => [n.id, { ...n }]))
+  // shift this and all downstream
+  for (let i = idx; i < nodes.length; i++) {
+    const n = map.get(nodes[i].id)!
+    n.distanceM = Math.max(0, n.distanceM + delta)
+  }
+  return { ...c, nodes: c.nodes.map((n) => map.get(n.id) ?? n) }
 }

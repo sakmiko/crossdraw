@@ -150,7 +150,7 @@ const projectSchema = z.object({
       id: z.string(),
       name: z.string(),
       speedKmh: z.number(),
-      method: z.enum(['classic', 'optimized-scan', 'one-way']),
+      method: z.enum(['classic', 'optimized-scan', 'one-way', 'two-way-equal', 'graphical']),
       nodes: z.array(
         z.object({
           id: z.string(),

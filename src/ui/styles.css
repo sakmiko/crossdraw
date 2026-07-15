@@ -719,3 +719,15 @@ label {
   padding: 4px 8px;
 }
 .chart-card { margin-top: 10px; }
+
+.timing-method, .timing-fixed {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.timing-method select {
+  max-width: 160px;
+}
+.ts-svg { touch-action: none; }

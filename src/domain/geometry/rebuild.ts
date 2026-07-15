@@ -224,7 +224,7 @@ function buildIntersectionCurb(approaches: Approach[], core: number): Vec[] {
     let d = a1 - a0
     while (d <= -Math.PI) d += Math.PI * 2
     while (d > Math.PI) d -= Math.PI * 2
-    const arc = arcPoints(mid, r * 0.9, a0, a0 + d, 12)
+    const arc = arcPoints(mid, r * 0.9, a0, a0 + d, 20)
     pts.push(...arc)
   }
   return pts.map(([x, y]) => [round(x), round(y)] as Vec)
@@ -242,7 +242,7 @@ function drawCornerFillets(mesh: Mesh, approaches: Approach[], core: number) {
       const half = totalWidth(a) / 2
       const r = a.rightTurn.radiusM
       const center = add(mul(ux, core + r * 0.35), mul(px, half + r * 0.25))
-      const island = arcPoints(center, r * 0.55, degToRad(a.bearingDeg), degToRad(a.bearingDeg) + Math.PI * 0.65, 14)
+      const island = arcPoints(center, r * 0.55, degToRad(a.bearingDeg), degToRad(a.bearingDeg) + Math.PI * 0.65, 22)
       island.push(add(center, mul(px, r * 0.2)))
       pushPoly(mesh, {
         layer: 'ISLAND',

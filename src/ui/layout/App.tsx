@@ -16,8 +16,10 @@ import { loadDraft, clearDraft } from '@/io/autosave'
 import { persistAutosave, redo, undo, useAppStore } from '@/state/store'
 import { CommandPalette } from '@/ui/common/CommandPalette'
 import { AnalysisCharts, BandCharts, CompareCharts, CrossSectionCharts, FlowCharts, SignalCharts } from '@/ui/charts/ChartPanels'
-import { ControlMatrixPanel, FlowDirectionPanel, SignalTimingPanel, TimeSpacePanel } from '@/ui/charts/ProfessionalPanels'
-import { optimizeSignalTiming, criticalFlowRatios } from '@/domain/analysis/timing'
+import { ControlMatrixPanel, FlowDirectionPanel, PhaseFacePanel, SignalTimingPanel, TimeSpacePanel } from '@/ui/charts/ProfessionalPanels'
+import { InteractiveTimeSpace } from '@/ui/charts/InteractiveTimeSpace'
+import { corridorSegments } from '@/domain/analysis/corridor'
+import { optimizeSignalTiming, criticalFlowRatios, TIMING_METHOD_LABELS, type TimingMethod } from '@/domain/analysis/timing'
 import { analysisMarkdown, exportJsonFile, exportSvgFile } from '@/io/exportCharts'
 import {
   controlMatrixSvg,
@@ -70,6 +72,7 @@ export default function App() {
   const addBandNode = useAppStore((s) => s.addBandNode)
   const removeBandNode = useAppStore((s) => s.removeBandNode)
   const optimizeBand = useAppStore((s) => s.optimizeBand)
+  const setBandSegmentLength = useAppStore((s) => s.setBandSegmentLength)
   const setActiveChannel = useAppStore((s) => s.setActiveChannel)
   const setActiveFlow = useAppStore((s) => s.setActiveFlow)
   const setActiveSignal = useAppStore((s) => s.setActiveSignal)
@@ -88,6 +91,10 @@ export default function App() {
   const [layerVis, setLayerVis] = useState<LayerVisibility>({ ...DEFAULT_LAYERS })
   const canvasRef = useRef<CanvasHandle>(null)
   const toggleLayer = (k: LayerKey) => setLayerVis((prev) => ({ ...prev, [k]: !prev[k] }))
+  const [timingMethod, setTimingMethod] = useState<TimingMethod>('webster')
+  const [fixedCycleOn, setFixedCycleOn] = useState(false)
+  const [fixedCycleSec, setFixedCycleSec] = useState(90)
+  const [timingNotes, setTimingNotes] = useState<string[]>([])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -207,12 +214,17 @@ export default function App() {
 
   function runWebster() {
     if (!channel || !flow || !signal) return
+    const useFixed = fixedCycleOn || timingMethod === 'fixed-cycle'
     const r = optimizeSignalTiming(channel.approaches, flow, signal, {
+      method: useFixed && timingMethod === 'webster' ? 'webster' : useFixed && timingMethod === 'equal' ? 'equal' : useFixed && timingMethod === 'hcm-delay' ? 'hcm-delay' : useFixed ? 'fixed-cycle' : timingMethod,
       targetVc: project.settings.targetVc,
       startLoss: signal.startLossSec,
+      fixedCycle: useFixed ? fixedCycleSec : undefined,
     })
     applyOptimizedTiming(r.appliedPhases, r.cycleSec)
+    setTimingNotes(r.notes)
   }
+
 
   function exportProfessionalDiagrams() {
     if (!channel || !flow || !signal) return
@@ -825,11 +837,57 @@ export default function App() {
                 <button type="button" onClick={() => addOverlapPhase()}>
                   添加搭接
                 </button>
-                <button type="button" className="primary" onClick={runWebster}>Webster 自动配时</button>
+                <label className="timing-method">
+                  配时方法
+                  <select value={timingMethod} onChange={(e) => setTimingMethod(e.target.value as TimingMethod)}>
+                    <option value="webster">Webster 最优周期</option>
+                    <option value="hcm-delay">延误最小 (HCM)</option>
+                    <option value="equal">等绿灯</option>
+                    <option value="fixed-cycle">固定周期分绿</option>
+                  </select>
+                </label>
+                <label className="timing-fixed">
+                  <input
+                    type="checkbox"
+                    checked={fixedCycleOn || timingMethod === 'fixed-cycle'}
+                    onChange={(e) => {
+                      setFixedCycleOn(e.target.checked)
+                      if (e.target.checked && signal) setFixedCycleSec(signal.cycleSec)
+                    }}
+                  />{' '}
+                  固定周期
+                </label>
+                {(fixedCycleOn || timingMethod === 'fixed-cycle') && (
+                  <label>
+                    C(s)
+                    <input
+                      type="number"
+                      min={40}
+                      max={180}
+                      value={fixedCycleSec}
+                      onChange={(e) => setFixedCycleSec(Number(e.target.value))}
+                      style={{ width: 72 }}
+                    />
+                  </label>
+                )}
+                <button type="button" className="primary" onClick={runWebster}>
+                  一键优化配时
+                </button>
               </div>
               <SignalCharts signal={signal} approaches={channel?.approaches} />
               <SignalTimingPanel signal={signal} />
               {channel && <ControlMatrixPanel signal={signal} approaches={channel.approaches} />}
+              {channel && <PhaseFacePanel signal={signal} approaches={channel.approaches} />}
+              {timingNotes.length > 0 && (
+                <div className="card" style={{ marginTop: 8 }}>
+                  <div className="section-title">配时优化说明 · {TIMING_METHOD_LABELS[timingMethod]}</div>
+                  <ul className="hint" style={{ margin: '6px 0 0', paddingLeft: 18 }}>
+                    {timingNotes.map((n) => (
+                      <li key={n}>{n}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               {channel && flow && (
                 <div className="card" style={{ marginTop: 8 }}>
                   <div className="section-title">关键流量比 y（Webster）</div>
@@ -1035,15 +1093,18 @@ export default function App() {
                       updateBand({ method: e.target.value as typeof project.bandCorridor.method })
                     }
                   >
-                    <option value="classic">经典数解</option>
-                    <option value="optimized-scan">优化扫描</option>
-                    <option value="one-way">单向协调</option>
+                    <option value="classic">经典数解（双向）</option>
+                    <option value="two-way-equal">双向等带宽</option>
+                    <option value="optimized-scan">优化扫描 (MAXBAND启发)</option>
+                    <option value="graphical">图解法（半周期）</option>
+                    <option value="one-way">单向绿波</option>
                   </select>
                 </label>
               </div>
               <p className="hint">
                 半周期距离 {band.halfCycleDistanceM.toFixed(0)} m · 带宽比 {(band.bandwidthRatio * 100).toFixed(1)}% ·
-                带宽 {band.bandwidthSec.toFixed(1)} s · 标准带速 {band.standardSpeedKmh.toFixed(1)} km/h
+                带宽 {band.bandwidthSec.toFixed(1)} s · 上行 {band.forwardBandwidthSec?.toFixed(1) ?? '—'} s · 下行{' '}
+                {band.backwardBandwidthSec?.toFixed(1) ?? '—'} s · 标准带速 {band.standardSpeedKmh.toFixed(1)} km/h
               </p>
               <table className="table">
                 <thead>
@@ -1097,6 +1158,33 @@ export default function App() {
                   ))}
                 </tbody>
               </table>
+              <div className="section-title" style={{ marginTop: 10 }}>路段距离（m）</div>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>路段</th>
+                    <th>长度 m</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {corridorSegments(project.bandCorridor).map((seg) => (
+                    <tr key={seg.toId}>
+                      <td>
+                        {seg.fromName} → {seg.toName}
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          min={50}
+                          value={Math.round(seg.lengthM)}
+                          onChange={(e) => setBandSegmentLength(seg.toId, Number(e.target.value))}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="hint">修改路段长度会移动下游桩号；多路口走廊支持添加/删除节点。</p>
               <div className="toolbar" style={{ marginTop: 8 }}>
                 <button type="button" onClick={() => addBandNode()}>
                   添加路口
@@ -1105,9 +1193,10 @@ export default function App() {
                   优化相位差
                 </button>
               </div>
+              <InteractiveTimeSpace corridor={project.bandCorridor} result={band} />
               <BandCharts corridor={project.bandCorridor} />
               <TimeSpacePanel corridor={project.bandCorridor} />
-              <p className="hint">节点写入 .rtp；时空图与相位差曲线随数据联动。</p>
+              <p className="hint">时距图悬停显示 λ、相位差、路段长度、行程时间；数据写入 .rtp。</p>
             </div>
           )}
 
@@ -1124,7 +1213,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.2</span>
+        <span>Crossdraw v0.5.4</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
