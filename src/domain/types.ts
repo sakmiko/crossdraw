@@ -172,6 +172,24 @@ export interface ActivePointers {
   signalId: string | null
 }
 
+export interface BandNodeEditable {
+  id: string
+  name: string
+  distanceM: number
+  greenRatio: number
+  cycleSec: number
+  lockedOffset?: boolean
+  offsetSec: number
+}
+
+export interface BandCorridor {
+  id: string
+  name: string
+  speedKmh: number
+  method: 'classic' | 'optimized-scan' | 'one-way'
+  nodes: BandNodeEditable[]
+}
+
 export interface Project {
   id: string
   name: string
@@ -184,6 +202,7 @@ export interface Project {
     maxSchemes: number
     targetVc: number
   }
+  bandCorridor: BandCorridor
 }
 
 export interface ProjectFile {

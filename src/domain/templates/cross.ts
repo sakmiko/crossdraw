@@ -21,7 +21,7 @@ function makeApproach(name: string, bearingDeg: number): Approach {
       lane(3.5, ['R']),
     ],
     exitLanes: [lane(3.5, ['T']), lane(3.5, ['T'])],
-    laneGroups: [],
+    laneGroups: [], // filled below after lanes created
     widen: {
       entryWidenCount: 1,
       entryWidenWidthM: 3.5,
@@ -54,6 +54,16 @@ function makeApproach(name: string, bearingDeg: number): Approach {
     tiltExitDeg: 0,
   }
 }
+
+function withLaneGroups(ap: Approach): Approach {
+  ap.laneGroups = ap.entryLanes.map((ln) => ({
+    id: newId(),
+    laneIds: [ln.id],
+    movements: [...ln.movements],
+  }))
+  return ap
+}
+
 
 function defaultSignal(approaches: Approach[]): SignalScheme {
   const ns = approaches.filter((a) => a.bearingDeg % 180 === 0)
@@ -103,10 +113,10 @@ function defaultFlow(approaches: Approach[]): FlowScheme {
 
 export function createCrossTemplate(name = '标准十字交叉口'): Project {
   const approaches = [
-    makeApproach('北进口', 0),
-    makeApproach('东进口', 90),
-    makeApproach('南进口', 180),
-    makeApproach('西进口', 270),
+    withLaneGroups(makeApproach('北进口', 0)),
+    withLaneGroups(makeApproach('东进口', 90)),
+    withLaneGroups(makeApproach('南进口', 180)),
+    withLaneGroups(makeApproach('西进口', 270)),
   ]
   const channel: ChannelizationScheme = {
     id: newId(),
@@ -130,6 +140,18 @@ export function createCrossTemplate(name = '标准十字交叉口'): Project {
     },
     meta: { createdAt: now, updatedAt: now },
     settings: { maxSchemes: 10, targetVc: 0.85 },
+    bandCorridor: {
+      id: newId(),
+      name: '主干路绿波走廊',
+      speedKmh: 40,
+      method: 'classic',
+      nodes: [
+        { id: newId(), name: '路口A', distanceM: 0, greenRatio: 0.45, cycleSec: 90, offsetSec: 0 },
+        { id: newId(), name: '路口B', distanceM: 480, greenRatio: 0.5, cycleSec: 90, offsetSec: 0 },
+        { id: newId(), name: '路口C', distanceM: 980, greenRatio: 0.42, cycleSec: 90, offsetSec: 0 },
+        { id: newId(), name: '路口D', distanceM: 1500, greenRatio: 0.48, cycleSec: 90, offsetSec: 0 },
+      ],
+    },
   }
 }
 

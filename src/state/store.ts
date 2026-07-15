@@ -2,10 +2,11 @@ import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 import { temporal } from 'zundo'
 import { newId } from '@/shared/id'
-import type { Approach, EditorMode, Project, TurnVolumes } from '@/domain/types'
+import type { Approach, BandCorridor, EditorMode, Movement, Project, TurnVolumes } from '@/domain/types'
 import { createCrossTemplate } from '@/domain/templates/cross'
 import { wrapProject, serializeRtp } from '@/domain/rtp'
 import { saveDraft } from '@/io/autosave'
+import { applyOffsetsToCorridor, optimizeCorridor } from '@/domain/analysis/corridor'
 
 export type AppState = {
   project: Project
@@ -19,10 +20,13 @@ export type AppState = {
   resetTemplate: () => void
   updateApproach: (approachId: string, patch: Partial<Approach>) => void
   setLaneCount: (approachId: string, count: number) => void
+  setLaneWidth: (approachId: string, laneIndex: number, widthM: number) => void
+  setLaneMovements: (approachId: string, laneIndex: number, movements: Movement[]) => void
   setVolume: (approachId: string, volumes: Partial<TurnVolumes>) => void
   setFlowParams: (patch: { heavyRatio?: number; phf?: number; defaultSatFlow?: number }) => void
   setCycle: (cycleSec: number) => void
   updatePhaseGreen: (phaseId: string, greenSec: number) => void
+  togglePhaseRelease: (phaseId: string, approachId: string, movement: Movement) => void
   addPhase: () => void
   setProjectName: (name: string) => void
   markClean: () => void
@@ -42,6 +46,11 @@ export type AppState = {
   deleteChannel: (id: string) => void
   renameChannel: (id: string, name: string) => void
   loadTemplate: (kind: 'cross' | 't') => void
+  updateBand: (patch: Partial<BandCorridor>) => void
+  updateBandNode: (nodeId: string, patch: Partial<BandCorridor['nodes'][0]>) => void
+  addBandNode: () => void
+  removeBandNode: (nodeId: string) => void
+  optimizeBand: () => void
 }
 
 function activeChannel(p: Project) {
@@ -106,8 +115,31 @@ export const useAppStore = create<AppState>()(
             })
           }
           while (ap.entryLanes.length > n) ap.entryLanes.pop()
+          ap.laneGroups = ap.entryLanes.map((ln) => ({
+            id: newId(),
+            laneIds: [ln.id],
+            movements: [...ln.movements],
+          }))
           s.dirty = true
           s.project.meta.updatedAt = new Date().toISOString()
+        }),
+      setLaneWidth: (approachId, laneIndex, widthM) =>
+        set((s) => {
+          const ch = activeChannel(s.project)
+          const ap = ch?.approaches.find((a) => a.id === approachId)
+          const ln = ap?.entryLanes[laneIndex]
+          if (!ln) return
+          ln.widthM = Math.max(2.5, Math.min(4.5, widthM))
+          s.dirty = true
+        }),
+      setLaneMovements: (approachId, laneIndex, movements) =>
+        set((s) => {
+          const ch = activeChannel(s.project)
+          const ap = ch?.approaches.find((a) => a.id === approachId)
+          const ln = ap?.entryLanes[laneIndex]
+          if (!ln) return
+          ln.movements = movements.length ? movements : ['T']
+          s.dirty = true
         }),
       setVolume: (approachId, volumes) =>
         set((s) => {
@@ -138,6 +170,19 @@ export const useAppStore = create<AppState>()(
           const ph = sg?.phases.find((p) => p.id === phaseId)
           if (!ph) return
           ph.greenSec = greenSec
+          s.dirty = true
+        }),
+      togglePhaseRelease: (phaseId, approachId, movement) =>
+        set((s) => {
+          const sg = activeSignal(s.project)
+          const ph = sg?.phases.find((p) => p.id === phaseId)
+          if (!ph) return
+          const cur = new Set(ph.releases[approachId] ?? [])
+          if (cur.has(movement)) cur.delete(movement)
+          else cur.add(movement)
+          const arr = Array.from(cur) as Movement[]
+          if (arr.length) ph.releases[approachId] = arr
+          else delete ph.releases[approachId]
           s.dirty = true
         }),
       addPhase: () =>
@@ -175,7 +220,6 @@ export const useAppStore = create<AppState>()(
           const copy = structuredClone(ch)
           copy.id = newId()
           copy.name = ch.name + ' 副本'
-          // regenerate nested ids lightly
           copy.flowSchemes.forEach((f) => {
             f.id = newId()
             f.signalSchemes.forEach((sg) => {
@@ -278,6 +322,44 @@ export const useAppStore = create<AppState>()(
           s.project = p
           s.dirty = true
           s.selectedApproachId = p.channelizationSchemes[0]?.approaches[0]?.id ?? null
+        }),
+      updateBand: (patch) =>
+        set((s) => {
+          Object.assign(s.project.bandCorridor, patch)
+          s.dirty = true
+        }),
+      updateBandNode: (nodeId, patch) =>
+        set((s) => {
+          const n = s.project.bandCorridor.nodes.find((x) => x.id === nodeId)
+          if (!n) return
+          Object.assign(n, patch)
+          s.dirty = true
+        }),
+      addBandNode: () =>
+        set((s) => {
+          const nodes = s.project.bandCorridor.nodes
+          const last = nodes[nodes.length - 1]
+          nodes.push({
+            id: newId(),
+            name: `路口${String.fromCharCode(65 + nodes.length)}`,
+            distanceM: (last?.distanceM ?? 0) + 450,
+            greenRatio: 0.45,
+            cycleSec: last?.cycleSec ?? 90,
+            offsetSec: 0,
+          })
+          s.dirty = true
+        }),
+      removeBandNode: (nodeId) =>
+        set((s) => {
+          if (s.project.bandCorridor.nodes.length <= 2) return
+          s.project.bandCorridor.nodes = s.project.bandCorridor.nodes.filter((n) => n.id !== nodeId)
+          s.dirty = true
+        }),
+      optimizeBand: () =>
+        set((s) => {
+          const result = optimizeCorridor(s.project.bandCorridor)
+          s.project.bandCorridor = applyOffsetsToCorridor(s.project.bandCorridor, result)
+          s.dirty = true
         }),
     })),
     {

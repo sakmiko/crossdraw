@@ -145,6 +145,25 @@ const projectSchema = z.object({
     maxSchemes: z.number(),
     targetVc: z.number(),
   }),
+  bandCorridor: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      speedKmh: z.number(),
+      method: z.enum(['classic', 'optimized-scan', 'one-way']),
+      nodes: z.array(
+        z.object({
+          id: z.string(),
+          name: z.string(),
+          distanceM: z.number(),
+          greenRatio: z.number(),
+          cycleSec: z.number(),
+          lockedOffset: z.boolean().optional(),
+          offsetSec: z.number(),
+        }),
+      ),
+    })
+    .optional(),
 })
 
 export const projectFileSchema = z.object({
@@ -153,6 +172,21 @@ export const projectFileSchema = z.object({
   appVersion: z.string(),
   project: projectSchema,
 })
+
+function defaultBand() {
+  return {
+    id: 'band-default',
+    name: '主干路绿波走廊',
+    speedKmh: 40,
+    method: 'classic' as const,
+    nodes: [
+      { id: 'n1', name: '路口A', distanceM: 0, greenRatio: 0.45, cycleSec: 90, offsetSec: 0 },
+      { id: 'n2', name: '路口B', distanceM: 480, greenRatio: 0.5, cycleSec: 90, offsetSec: 0 },
+      { id: 'n3', name: '路口C', distanceM: 980, greenRatio: 0.42, cycleSec: 90, offsetSec: 0 },
+      { id: 'n4', name: '路口D', distanceM: 1500, greenRatio: 0.48, cycleSec: 90, offsetSec: 0 },
+    ],
+  }
+}
 
 export function parseRtp(text: string): ProjectFile {
   const raw = JSON.parse(normalizeNewlines(text))
@@ -163,14 +197,18 @@ export function parseRtp(text: string): ProjectFile {
   if (parsed.data.schemaVersion !== 1) {
     throw new Error(`Unsupported schemaVersion ${parsed.data.schemaVersion}`)
   }
-  return parsed.data as ProjectFile
+  const file = parsed.data as ProjectFile
+  if (!file.project.bandCorridor) {
+    file.project.bandCorridor = defaultBand()
+  }
+  return file
 }
 
 export function serializeRtp(file: ProjectFile): string {
   return JSON.stringify(file, null, 2) + '\n'
 }
 
-export function wrapProject(project: Project, appVersion = '0.1.0'): ProjectFile {
+export function wrapProject(project: Project, appVersion = '0.2.0'): ProjectFile {
   return {
     format: 'crossdraw.rtp',
     schemaVersion: 1,

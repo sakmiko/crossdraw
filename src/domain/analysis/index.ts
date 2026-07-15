@@ -35,8 +35,23 @@ function greenRatioForApproach(
   signal: SignalScheme,
   approachId: string,
   movement: 'L' | 'T' | 'R' | 'U',
+  approach?: Approach,
 ): number {
   if (signal.unsignalized) return 1
+  // Red-light right turns: permitted during all reds of other phases (ratio of cycle)
+  if (movement === 'R' && approach?.redRightTurn) {
+    const exclusive = greenExclusive(signal, approachId, 'R')
+    const permitted = Math.min(0.95, Math.max(0, approach.redRightTurnRatio))
+    return Math.min(1, Math.max(exclusive, exclusive + (1 - exclusive) * permitted * 0.85))
+  }
+  return greenExclusive(signal, approachId, movement)
+}
+
+function greenExclusive(
+  signal: SignalScheme,
+  approachId: string,
+  movement: 'L' | 'T' | 'R' | 'U',
+): number {
   let g = 0
   for (const ph of signal.phases) {
     const rel = ph.releases[approachId] ?? []
@@ -45,6 +60,14 @@ function greenRatioForApproach(
     }
   }
   return Math.min(1, g / Math.max(1, signal.cycleSec))
+}
+
+function satFlowFor(ap: Approach, flow: FlowScheme, mov: 'L' | 'T' | 'R'): number {
+  const lane = ap.entryLanes.find((l) => l.movements.includes(mov))
+  if (lane?.satFlowPcu) return lane.satFlowPcu
+  // borrow-left default 1650 (RoadGee public note)
+  if (mov === 'L' && ap.borrowLeft) return 1650
+  return flow.defaultSatFlow
 }
 
 export function analyzeIntersection(
@@ -64,8 +87,8 @@ export function analyzeIntersection(
     for (const mov of ['L', 'T', 'R'] as const) {
       const volumePeak = peak.peak[mov]
       if (volumePeak <= 0) continue
-      const sat = flow.defaultSatFlow
-      const lambda = greenRatioForApproach(signal, ap.id, mov)
+      const sat = satFlowFor(ap, flow, mov)
+      const lambda = greenRatioForApproach(signal, ap.id, mov, ap)
       const capacity = sat * lambda
       const vc = capacity > 0 ? volumePeak / capacity : 9
       // HCM-like delay simplified
@@ -106,8 +129,8 @@ export function analyzeIntersection(
   const avgQueueM = lanes.reduce((s, l) => s + l.queueM * l.volumePeak, 0) / wsum
   const dLos = losByDelay(avgDelay)
   const vLos = losByVc(avgVc)
-  // CJJ idea: if conflict, prefer delay
-  const losFinal = dLos > vLos ? dLos : dLos
+  // CJJ idea: when saturated, prefer delay LOS
+  const losFinal = avgVc > 0.85 ? dLos : dLos >= vLos ? dLos : vLos
 
   return {
     lanes,

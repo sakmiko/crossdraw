@@ -421,34 +421,113 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
     })
   }
 
-  // wait areas
-  if (ap.leftWait || ap.throughWait) {
+  // wait areas — distinct left / through bay
+  if (ap.leftWait) {
+    const bay = Math.min(half * 0.35, Math.max(2.5, (ap.entryLanes.find((l) => l.movements.includes('L'))?.widthM ?? 3.5)))
     pushPoly(mesh, {
       layer: 'MARKING',
       points: [
-        add(mul(ux, start + 1), mul(px, -half * 0.2)),
-        add(mul(ux, start + 8), mul(px, -half * 0.2)),
-        add(mul(ux, start + 8), mul(px, half * 0.2)),
-        add(mul(ux, start + 1), mul(px, half * 0.2)),
+        add(mul(ux, start + 0.8), mul(px, -half + 0.2)),
+        add(mul(ux, start + 10), mul(px, -half + 0.2)),
+        add(mul(ux, start + 10), mul(px, -half + bay)),
+        add(mul(ux, start + 0.8), mul(px, -half + bay)),
+      ],
+      fill: '#fbbf24',
+      alpha: 0.4,
+    })
+    pushLabel(mesh, {
+      text: '左转待转',
+      at: add(mul(ux, start + 5.5), mul(px, -half + bay * 0.55)),
+      color: '#78350f',
+      size: 2,
+      align: 'center',
+    })
+  }
+  if (ap.throughWait) {
+    pushPoly(mesh, {
+      layer: 'MARKING',
+      points: [
+        add(mul(ux, start + 0.8), mul(px, -1.6)),
+        add(mul(ux, start + 9), mul(px, -1.6)),
+        add(mul(ux, start + 9), mul(px, 1.6)),
+        add(mul(ux, start + 0.8), mul(px, 1.6)),
       ],
       fill: '#fde68a',
       alpha: 0.35,
     })
+    pushLabel(mesh, {
+      text: '直行待行',
+      at: add(mul(ux, start + 5), [0, 0]),
+      color: '#713f12',
+      size: 2,
+      align: 'center',
+    })
   }
 
-  // movement arrows per entry lane
+  // borrow-left: dashed pocket into opposing half
+  if (ap.borrowLeft) {
+    pushPoly(mesh, {
+      layer: 'MARKING',
+      points: [
+        add(mul(ux, start + 2), mul(px, medL - 0.2)),
+        add(mul(ux, start + 14), mul(px, medL - 0.2)),
+        add(mul(ux, start + 14), mul(px, medL + med * 0.55)),
+        add(mul(ux, start + 2), mul(px, medL + med * 0.55)),
+      ],
+      fill: '#f97316',
+      alpha: 0.22,
+    })
+    pushLine(mesh, {
+      layer: 'MARKING',
+      points: [
+        add(mul(ux, start + 2), mul(px, medL)),
+        add(mul(ux, start + 14), mul(px, medL)),
+      ],
+      stroke: '#fb923c',
+      strokeWidth: 0.25,
+      dashed: true,
+    })
+    pushLabel(mesh, {
+      text: '借道左转',
+      at: add(mul(ux, start + 8), mul(px, medL + 1)),
+      color: '#9a3412',
+      size: 2,
+      align: 'center',
+    })
+  }
+
+  // red-light right-turn annotation
+  if (ap.redRightTurn) {
+    pushLabel(mesh, {
+      text: `红灯右转 ${(ap.redRightTurnRatio * 100).toFixed(0)}%`,
+      at: add(mul(ux, start + 18), mul(px, half * 0.55)),
+      color: '#b91c1c',
+      size: 2.2,
+      align: 'center',
+    })
+  }
+
+  // movement arrows per entry lane (respect actual lane widths)
   off = -half
   for (const ln of ap.entryLanes) {
     const mid = off + ln.widthM / 2
     const base = add(mul(ux, start + 12), mul(px, mid))
     drawMovementArrow(mesh, base, ux, px, ln.movements)
+    // width label near stop line
+    pushLabel(mesh, {
+      text: `${ln.widthM.toFixed(2)}m`,
+      at: add(mul(ux, start + 3.5), mul(px, mid)),
+      color: '#e2e8f0',
+      size: 1.8,
+      align: 'center',
+    })
     off += ln.widthM
   }
 
   // widen dimension annotation
   if (widenExtra > 0) {
     pushLabel(mesh, {
-      text: `展宽 ${ap.widen.entryWidenLengthM}m`,
+      text: `展宽 ${ap.widen.entryWidenLengthM}m / 渐变 ${ap.widen.entryTaperM}m`,
       at: add(mul(ux, start + widenLen * 0.35), mul(px, -half - 4)),
       color: '#334155',
       size: 2.4,

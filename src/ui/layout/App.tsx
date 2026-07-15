@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { CanvasView, meshToPngBlob } from '@/canvas/CanvasView'
 import { rebuildChannelMesh, THEME } from '@/domain/geometry/rebuild'
 import { analyzeIntersection, websterTiming } from '@/domain/analysis'
-import { optimizeBandClassic } from '@/domain/analysis/band'
 import { buildCrossSection, markStaleIfNeeded } from '@/domain/xsection/build'
 import { validateProject, summarizeIssues } from '@/domain/validate'
 import { detectProjectSignalIssues } from '@/domain/signal/conflicts'
@@ -10,11 +9,13 @@ import { wrapProject, serializeRtp, parseRtp } from '@/domain/rtp'
 import { meshToSvg } from '@/io/exportSvg'
 import { meshToDxf } from '@/io/exportDxf'
 import { analysisToCsv, analysisToExcelHtml, collectCompareRows, compareSchemesCsv } from '@/io/report'
+import { exportVissimCsvBundle } from '@/io/vissimCsv'
+import { optimizeCorridor } from '@/domain/analysis/corridor'
 import { downloadBlob, downloadText } from '@/io/download'
 import { loadDraft, clearDraft } from '@/io/autosave'
 import { persistAutosave, redo, undo, useAppStore } from '@/state/store'
 import { CommandPalette } from '@/ui/common/CommandPalette'
-import type { EditorMode, TurnVolumes } from '@/domain/types'
+import type { EditorMode, Movement, TurnVolumes } from '@/domain/types'
 import '@/ui/styles.css'
 
 const MODES: { id: EditorMode; label: string }[] = [
@@ -46,6 +47,14 @@ export default function App() {
   const setProjectName = useAppStore((s) => s.setProjectName)
   const duplicateChannel = useAppStore((s) => s.duplicateChannel)
   const applyWebster = useAppStore((s) => s.applyWebster)
+  const setLaneWidth = useAppStore((s) => s.setLaneWidth)
+  const setLaneMovements = useAppStore((s) => s.setLaneMovements)
+  const togglePhaseRelease = useAppStore((s) => s.togglePhaseRelease)
+  const updateBand = useAppStore((s) => s.updateBand)
+  const updateBandNode = useAppStore((s) => s.updateBandNode)
+  const addBandNode = useAppStore((s) => s.addBandNode)
+  const removeBandNode = useAppStore((s) => s.removeBandNode)
+  const optimizeBand = useAppStore((s) => s.optimizeBand)
   const setActiveChannel = useAppStore((s) => s.setActiveChannel)
   const setActiveFlow = useAppStore((s) => s.setActiveFlow)
   const setActiveSignal = useAppStore((s) => s.setActiveSignal)
@@ -182,15 +191,7 @@ export default function App() {
     applyWebster(r.phaseGreens, r.cycleSec)
   }
 
-  const band = useMemo(() => {
-    const nodes = [
-      { id: 'A', name: '路口A', distanceM: 0, greenRatio: 0.45, offsetSec: 0 },
-      { id: 'B', name: '路口B', distanceM: 520, greenRatio: 0.5, offsetSec: 0 },
-      { id: 'C', name: '路口C', distanceM: 1040, greenRatio: 0.4, offsetSec: 0 },
-      { id: 'D', name: '路口D', distanceM: 1600, greenRatio: 0.55, offsetSec: 0 },
-    ]
-    return optimizeBandClassic(nodes, signal?.cycleSec ?? 90, 40)
-  }, [signal?.cycleSec])
+  const band = useMemo(() => optimizeCorridor(project.bandCorridor), [project.bandCorridor])
 
   const xsection = selected ? buildCrossSection(selected) : null
 
@@ -441,7 +442,81 @@ export default function App() {
                 />{' '}
                 非机动车道
               </label>
-              <p className="hint">改参后画布即时联动重建。默认值参考 CJJ 推荐，可覆盖。</p>
+              <div className="field-row">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={selected.leftWait}
+                    onChange={(e) => updateApproach(selected.id, { leftWait: e.target.checked })}
+                  />{' '}
+                  左转待转
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={selected.throughWait}
+                    onChange={(e) => updateApproach(selected.id, { throughWait: e.target.checked })}
+                  />{' '}
+                  直行待行
+                </label>
+              </div>
+              <div className="field-row">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={selected.borrowLeft}
+                    onChange={(e) => updateApproach(selected.id, { borrowLeft: e.target.checked })}
+                  />{' '}
+                  借道左转
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={selected.redRightTurn}
+                    onChange={(e) => updateApproach(selected.id, { redRightTurn: e.target.checked })}
+                  />{' '}
+                  红灯右转
+                </label>
+              </div>
+              {selected.redRightTurn && (
+                <label>
+                  红灯右转比例
+                  <input
+                    type="number"
+                    step={0.05}
+                    min={0}
+                    max={1}
+                    value={selected.redRightTurnRatio}
+                    onChange={(e) => updateApproach(selected.id, { redRightTurnRatio: Number(e.target.value) })}
+                  />
+                </label>
+              )}
+              <div className="section-title">分车道宽 / 转向</div>
+              {selected.entryLanes.map((ln, i) => (
+                <div key={ln.id} className="field-row" style={{ alignItems: 'end' }}>
+                  <label>
+                    车道{i + 1}宽
+                    <input
+                      type="number"
+                      step={0.05}
+                      value={ln.widthM}
+                      onChange={(e) => setLaneWidth(selected.id, i, Number(e.target.value))}
+                    />
+                  </label>
+                  <label>
+                    转向
+                    <input
+                      value={ln.movements.join('')}
+                      onChange={(e) => {
+                        const raw = e.target.value.toUpperCase().replace(/[^ULTR]/g, '')
+                        const movs = Array.from(new Set(raw.split(''))) as Movement[]
+                        setLaneMovements(selected.id, i, movs)
+                      }}
+                    />
+                  </label>
+                </div>
+              ))}
+              <p className="hint">改参后画布即时联动。待转/借道/红灯右转参与几何与分析。</p>
             </div>
           )}
 
@@ -510,7 +585,7 @@ export default function App() {
               </label>
               <div className="ring">
                 {signal.phases.map((ph) => (
-                  <div key={ph.id} className="phase">
+                  <div key={ph.id} className="phase" style={{ minWidth: 150 }}>
                     <div>{ph.name}</div>
                     <input
                       type="number"
@@ -518,6 +593,30 @@ export default function App() {
                       onChange={(e) => updatePhaseGreen(ph.id, Number(e.target.value))}
                     />
                     <div className="hint">G={ph.greenSec} Y={ph.yellowSec}</div>
+                    <div className="hint" style={{ marginTop: 6 }}>
+                      放行转向
+                    </div>
+                    {channel?.approaches.map((ap) => (
+                      <div key={ap.id} style={{ marginTop: 4 }}>
+                        <span className="hint">{ap.name}</span>
+                        <div className="toolbar" style={{ gap: 4, marginTop: 2 }}>
+                          {(['L', 'T', 'R'] as Movement[]).map((m) => {
+                            const on = (ph.releases[ap.id] ?? []).includes(m)
+                            return (
+                              <button
+                                key={m}
+                                type="button"
+                                className={on ? 'primary' : 'ghost'}
+                                style={{ padding: '2px 6px', fontSize: 11 }}
+                                onClick={() => togglePhaseRelease(ph.id, ap.id, m)}
+                              >
+                                {m}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ))}
               </div>
@@ -602,6 +701,19 @@ export default function App() {
                 >
                   多方案对比 CSV
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!channel || !flow || !signal) return
+                    const b = exportVissimCsvBundle(channel.approaches, flow, signal)
+                    downloadText(`${project.name}-vissim-links.csv`, b.links, 'text/csv')
+                    downloadText(`${project.name}-vissim-routes.csv`, b.routes, 'text/csv')
+                    downloadText(`${project.name}-vissim-volumes.csv`, b.volumes, 'text/csv')
+                    downloadText(`${project.name}-vissim-signal.csv`, b.signal, 'text/csv')
+                  }}
+                >
+                  Vissim CSV 包
+                </button>
               </div>
               <div className="section-title">方案对比摘要</div>
               <table className="table">
@@ -633,7 +745,30 @@ export default function App() {
 
           {mode === 'band' && (
             <div className="card" style={{ marginTop: 12 }}>
-              <h2>干道绿波（经典数解）</h2>
+              <h2>干道绿波 · {project.bandCorridor.name}</h2>
+              <div className="field-row">
+                <label>
+                  走廊速度 km/h
+                  <input
+                    type="number"
+                    value={project.bandCorridor.speedKmh}
+                    onChange={(e) => updateBand({ speedKmh: Number(e.target.value) })}
+                  />
+                </label>
+                <label>
+                  方法
+                  <select
+                    value={project.bandCorridor.method}
+                    onChange={(e) =>
+                      updateBand({ method: e.target.value as typeof project.bandCorridor.method })
+                    }
+                  >
+                    <option value="classic">经典数解</option>
+                    <option value="optimized-scan">优化扫描</option>
+                    <option value="one-way">单向协调</option>
+                  </select>
+                </label>
+              </div>
               <p className="hint">
                 半周期距离 {band.halfCycleDistanceM.toFixed(0)} m · 带宽比 {(band.bandwidthRatio * 100).toFixed(1)}% ·
                 带宽 {band.bandwidthSec.toFixed(1)} s · 标准带速 {band.standardSpeedKmh.toFixed(1)} km/h
@@ -642,19 +777,63 @@ export default function App() {
                 <thead>
                   <tr>
                     <th>路口</th>
-                    <th>相位差 (s)</th>
+                    <th>桩号m</th>
+                    <th>λ</th>
+                    <th>C</th>
+                    <th>相位差</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {band.offsets.map((o) => (
-                    <tr key={o.id}>
-                      <td>{o.id}</td>
-                      <td>{o.offsetSec.toFixed(1)}</td>
+                  {project.bandCorridor.nodes.map((n) => (
+                    <tr key={n.id}>
+                      <td>
+                        <input
+                          value={n.name}
+                          onChange={(e) => updateBandNode(n.id, { name: e.target.value })}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={n.distanceM}
+                          onChange={(e) => updateBandNode(n.id, { distanceM: Number(e.target.value) })}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          step={0.01}
+                          value={n.greenRatio}
+                          onChange={(e) => updateBandNode(n.id, { greenRatio: Number(e.target.value) })}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={n.cycleSec}
+                          onChange={(e) => updateBandNode(n.id, { cycleSec: Number(e.target.value) })}
+                        />
+                      </td>
+                      <td>{n.offsetSec.toFixed(1)}</td>
+                      <td>
+                        <button type="button" className="ghost" onClick={() => removeBandNode(n.id)}>
+                          删
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              <p className="hint">干道协调模块：默认 4 节点示意；可按实际间距扩展为项目坐标驱动。</p>
+              <div className="toolbar" style={{ marginTop: 8 }}>
+                <button type="button" onClick={() => addBandNode()}>
+                  添加路口
+                </button>
+                <button type="button" className="primary" onClick={() => optimizeBand()}>
+                  优化相位差
+                </button>
+              </div>
+              <p className="hint">节点坐标可编辑并写入 .rtp；优化结果写回相位差，锁定点保留原值（lockedOffset）。</p>
             </div>
           )}
 
@@ -671,7 +850,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.2.0</span>
+        <span>Crossdraw v0.3.0</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

@@ -1,32 +1,32 @@
 {
   "format": "crossdraw.rtp",
   "schemaVersion": 1,
-  "appVersion": "0.1.0",
+  "appVersion": "0.2.0",
   "project": {
-    "id": "01KXK4BHGPHDPW89G2QMTQMGAM",
+    "id": "01KXK535YA6WQ90E552NQGCWPQ",
     "name": "紧凑十字",
     "units": "metric",
     "channelizationSchemes": [
       {
-        "id": "01KXK4BHGM4QK0DS33F5C18QQV",
+        "id": "01KXK535Y9QDN1ASXR0079MKEA",
         "name": "渠化方案 A",
         "intersectionType": "cross",
         "approaches": [
           {
-            "id": "01KXK4BHGEB1GWSHTW6126S725",
+            "id": "01KXK535Y5HFX41WJHEZA0STCK",
             "name": "北进口",
             "bearingDeg": 0,
             "designSpeedKmh": 50,
             "entryLanes": [
               {
-                "id": "01KXK4BHGEC0P2P1YEME2V9H6C",
+                "id": "01KXK535Y5KF4QKZZ0QEMYHEZ7",
                 "widthM": 3.5,
                 "movements": [
                   "L"
                 ]
               },
               {
-                "id": "01KXK4BHGEDDP0CS2D2G9ZS6SC",
+                "id": "01KXK535Y56F77HQFQRJ314D0M",
                 "widthM": 3.5,
                 "movements": [
                   "T"
@@ -35,21 +35,49 @@
             ],
             "exitLanes": [
               {
-                "id": "01KXK4BHGF201PBRT467RC0Z3M",
+                "id": "01KXK535Y5AHD6H41KM4F69K2Z",
                 "widthM": 3.5,
                 "movements": [
                   "T"
                 ]
               },
               {
-                "id": "01KXK4BHGF5CZYBP7TYFV4YHHH",
+                "id": "01KXK535Y5PVZCRDD7FMNNG2C5",
                 "widthM": 3.5,
                 "movements": [
                   "T"
                 ]
               }
             ],
-            "laneGroups": [],
+            "laneGroups": [
+              {
+                "id": "01KXK535Y5W0FRD9FPSK8WN203",
+                "laneIds": [
+                  "01KXK535Y5KF4QKZZ0QEMYHEZ7"
+                ],
+                "movements": [
+                  "L"
+                ]
+              },
+              {
+                "id": "01KXK535Y52DHGEGKHVBS0D75F",
+                "laneIds": [
+                  "01KXK535Y56F77HQFQRJ314D0M"
+                ],
+                "movements": [
+                  "T"
+                ]
+              },
+              {
+                "id": "01KXK535Y676YPQ3H153GMAAAV",
+                "laneIds": [
+                  "01KXK535Y5S0B5CPC99RS172G7"
+                ],
+                "movements": [
+                  "R"
+                ]
+              }
+            ],
             "widen": {
               "entryWidenCount": 1,
               "entryWidenWidthM": 3.5,
@@ -85,20 +113,20 @@
             "tiltExitDeg": 0
           },
           {
-            "id": "01KXK4BHGGFQCWAKHH27WPTBPX",
+            "id": "01KXK535Y6CRS6QA0NVZC089KX",
             "name": "东进口",
             "bearingDeg": 90,
             "designSpeedKmh": 50,
             "entryLanes": [
               {
-                "id": "01KXK4BHGGASTCBCQNBVJ4TAXG",
+                "id": "01KXK535Y62Y5XS0N14QZT0E97",
                 "widthM": 3.5,
                 "movements": [
                   "L"
                 ]
               },
               {
-                "id": "01KXK4BHGGD58YR2N6G4683AV0",
+                "id": "01KXK535Y6TH8TVNRKN189XCXY",
                 "widthM": 3.5,
                 "movements": [
                   "T"
@@ -107,21 +135,49 @@
             ],
             "exitLanes": [
               {
-                "id": "01KXK4BHGGR82WC00Y3H13D5PR",
+                "id": "01KXK535Y6F1ZE9KYWJVB73KVD",
                 "widthM": 3.5,
                 "movements": [
                   "T"
                 ]
               },
               {
-                "id": "01KXK4BHGHVDEXA4CVBBCXHHSY",
+                "id": "01KXK535Y66CSQ758DCTVFD4VN",
                 "widthM": 3.5,
                 "movements": [
                   "T"
                 ]
               }
             ],
-            "laneGroups": [],
+            "laneGroups": [
+              {
+                "id": "01KXK535Y6NCD0QNHTKMHKR0VZ",
+                "laneIds": [
+                  "01KXK535Y62Y5XS0N14QZT0E97"
+                ],
+                "movements": [
+                  "L"
+                ]
+              },
+              {
+                "id": "01KXK535Y75RBZDRDPCT2NJYMV",
+                "laneIds": [
+                  "01KXK535Y6TH8TVNRKN189XCXY"
+                ],
+                "movements": [
+                  "T"
+                ]
+              },
+              {
+                "id": "01KXK535Y7SZYF1PBAEFYAA59X",
+                "laneIds": [
+                  "01KXK535Y6MA5E4RK2XHF2HGJ6"
+                ],
+                "movements": [
+                  "R"
+                ]
+              }
+            ],
             "widen": {
               "entryWidenCount": 1,
               "entryWidenWidthM": 3.5,
@@ -157,20 +213,20 @@
             "tiltExitDeg": 0
           },
           {
-            "id": "01KXK4BHGH99B4YE513VHGJ4D4",
+            "id": "01KXK535Y7GTCPXZ6P0M5B6DV2",
             "name": "南进口",
             "bearingDeg": 180,
             "designSpeedKmh": 50,
             "entryLanes": [
               {
-                "id": "01KXK4BHGHC4RFTXZ2A8H63SAH",
+                "id": "01KXK535Y7HTWQ4EFMKKCT1MN7",
                 "widthM": 3.5,
                 "movements": [
                   "L"
                 ]
               },
               {
-                "id": "01KXK4BHGHJER9P5Y9003DWYNR",
+                "id": "01KXK535Y7H0R3FEB6H7D2C0JQ",
                 "widthM": 3.5,
                 "movements": [
                   "T"
@@ -179,21 +235,49 @@
             ],
             "exitLanes": [
               {
-                "id": "01KXK4BHGJDX95D743WQMC70VV",
+                "id": "01KXK535Y8BCFP02W7JCA359FM",
                 "widthM": 3.5,
                 "movements": [
                   "T"
                 ]
               },
               {
-                "id": "01KXK4BHGJXHJQH13XWEH5TWSA",
+                "id": "01KXK535Y8PA02YWDRF7ZK6PKT",
                 "widthM": 3.5,
                 "movements": [
                   "T"
                 ]
               }
             ],
-            "laneGroups": [],
+            "laneGroups": [
+              {
+                "id": "01KXK535Y833EEYHG96605C3S1",
+                "laneIds": [
+                  "01KXK535Y7HTWQ4EFMKKCT1MN7"
+                ],
+                "movements": [
+                  "L"
+                ]
+              },
+              {
+                "id": "01KXK535Y8ZD9JM0E1W0BNWDPS",
+                "laneIds": [
+                  "01KXK535Y7H0R3FEB6H7D2C0JQ"
+                ],
+                "movements": [
+                  "T"
+                ]
+              },
+              {
+                "id": "01KXK535Y8MYYH7F85XMRCRFHV",
+                "laneIds": [
+                  "01KXK535Y7X4SQQMY3JXSF01JA"
+                ],
+                "movements": [
+                  "R"
+                ]
+              }
+            ],
             "widen": {
               "entryWidenCount": 1,
               "entryWidenWidthM": 3.5,
@@ -229,20 +313,20 @@
             "tiltExitDeg": 0
           },
           {
-            "id": "01KXK4BHGJZTTXAAGA2B2HB3NC",
+            "id": "01KXK535Y89BZ8GCDTPKFFTY0J",
             "name": "西进口",
             "bearingDeg": 270,
             "designSpeedKmh": 50,
             "entryLanes": [
               {
-                "id": "01KXK4BHGJ2XCNV45XNM7EPEGF",
+                "id": "01KXK535Y8H92YYJ3EAXWMNAP1",
                 "widthM": 3.5,
                 "movements": [
                   "L"
                 ]
               },
               {
-                "id": "01KXK4BHGK5RR6PS9MDX54ASJX",
+                "id": "01KXK535Y9A0SWXDGMEQN4T01C",
                 "widthM": 3.5,
                 "movements": [
                   "T"
@@ -251,21 +335,49 @@
             ],
             "exitLanes": [
               {
-                "id": "01KXK4BHGKVTQDCA7BNYTKVJZQ",
+                "id": "01KXK535Y9W22R0SSPZM6K1QGN",
                 "widthM": 3.5,
                 "movements": [
                   "T"
                 ]
               },
               {
-                "id": "01KXK4BHGKSNJNGNFWH6H6AZ7S",
+                "id": "01KXK535Y9C67P91926YH7YBNB",
                 "widthM": 3.5,
                 "movements": [
                   "T"
                 ]
               }
             ],
-            "laneGroups": [],
+            "laneGroups": [
+              {
+                "id": "01KXK535Y9R25WJ6JDJGBN4SNT",
+                "laneIds": [
+                  "01KXK535Y8H92YYJ3EAXWMNAP1"
+                ],
+                "movements": [
+                  "L"
+                ]
+              },
+              {
+                "id": "01KXK535Y9ECV1ST31NBQVZ2FF",
+                "laneIds": [
+                  "01KXK535Y9A0SWXDGMEQN4T01C"
+                ],
+                "movements": [
+                  "T"
+                ]
+              },
+              {
+                "id": "01KXK535Y937Q9DF08PPS74K8A",
+                "laneIds": [
+                  "01KXK535Y9R58MWS0CSP9HHWFH"
+                ],
+                "movements": [
+                  "R"
+                ]
+              }
+            ],
             "widen": {
               "entryWidenCount": 1,
               "entryWidenWidthM": 3.5,
@@ -308,28 +420,28 @@
         },
         "flowSchemes": [
           {
-            "id": "01KXK4BHGM2F5R6TXTADR4DYRX",
+            "id": "01KXK535Y9D5VP3D1GE3XMG1DS",
             "name": "高峰小时",
             "volumes": {
-              "01KXK4BHGEB1GWSHTW6126S725": {
+              "01KXK535Y5HFX41WJHEZA0STCK": {
                 "U": 20,
                 "L": 180,
                 "T": 620,
                 "R": 150
               },
-              "01KXK4BHGGFQCWAKHH27WPTBPX": {
+              "01KXK535Y6CRS6QA0NVZC089KX": {
                 "U": 20,
                 "L": 180,
                 "T": 620,
                 "R": 150
               },
-              "01KXK4BHGH99B4YE513VHGJ4D4": {
+              "01KXK535Y7GTCPXZ6P0M5B6DV2": {
                 "U": 20,
                 "L": 180,
                 "T": 620,
                 "R": 150
               },
-              "01KXK4BHGJZTTXAAGA2B2HB3NC": {
+              "01KXK535Y89BZ8GCDTPKFFTY0J": {
                 "U": 20,
                 "L": 180,
                 "T": 620,
@@ -347,70 +459,70 @@
             },
             "signalSchemes": [
               {
-                "id": "01KXK4BHGMNT9V9073KRYCE168",
+                "id": "01KXK535YA0NGY8KH99MNFNV1R",
                 "name": "两相位",
                 "cycleSec": 90,
                 "phases": [
                   {
-                    "id": "01KXK4BHGNR7KQRJ2FCGHMCJKM",
+                    "id": "01KXK535YAX3XV3JKWRCV1DQZT",
                     "name": "南北直行+右转",
                     "greenSec": 28,
                     "yellowSec": 3,
                     "allRedSec": 2,
                     "releases": {
-                      "01KXK4BHGEB1GWSHTW6126S725": [
+                      "01KXK535Y5HFX41WJHEZA0STCK": [
                         "T",
                         "R"
                       ],
-                      "01KXK4BHGH99B4YE513VHGJ4D4": [
+                      "01KXK535Y7GTCPXZ6P0M5B6DV2": [
                         "T",
                         "R"
                       ]
                     }
                   },
                   {
-                    "id": "01KXK4BHGNF25N0B7N14F4CYSY",
+                    "id": "01KXK535YAM5R89TKSYX1P5WFA",
                     "name": "南北左转",
                     "greenSec": 28,
                     "yellowSec": 3,
                     "allRedSec": 2,
                     "releases": {
-                      "01KXK4BHGEB1GWSHTW6126S725": [
+                      "01KXK535Y5HFX41WJHEZA0STCK": [
                         "L"
                       ],
-                      "01KXK4BHGH99B4YE513VHGJ4D4": [
+                      "01KXK535Y7GTCPXZ6P0M5B6DV2": [
                         "L"
                       ]
                     }
                   },
                   {
-                    "id": "01KXK4BHGNKK8E3XKMEJY1HR09",
+                    "id": "01KXK535YAHQ9VQSXGAC3TGYCD",
                     "name": "东西直行+右转",
                     "greenSec": 28,
                     "yellowSec": 3,
                     "allRedSec": 2,
                     "releases": {
-                      "01KXK4BHGGFQCWAKHH27WPTBPX": [
+                      "01KXK535Y6CRS6QA0NVZC089KX": [
                         "T",
                         "R"
                       ],
-                      "01KXK4BHGJZTTXAAGA2B2HB3NC": [
+                      "01KXK535Y89BZ8GCDTPKFFTY0J": [
                         "T",
                         "R"
                       ]
                     }
                   },
                   {
-                    "id": "01KXK4BHGPEV7KT5E1SKTPXCWC",
+                    "id": "01KXK535YA8KTYPY4WHN8DWQ7G",
                     "name": "东西左转",
                     "greenSec": 28,
                     "yellowSec": 3,
                     "allRedSec": 2,
                     "releases": {
-                      "01KXK4BHGGFQCWAKHH27WPTBPX": [
+                      "01KXK535Y6CRS6QA0NVZC089KX": [
                         "L"
                       ],
-                      "01KXK4BHGJZTTXAAGA2B2HB3NC": [
+                      "01KXK535Y89BZ8GCDTPKFFTY0J": [
                         "L"
                       ]
                     }
@@ -428,17 +540,57 @@
     ],
     "crossSections": [],
     "active": {
-      "channelId": "01KXK4BHGM4QK0DS33F5C18QQV",
-      "flowId": "01KXK4BHGM2F5R6TXTADR4DYRX",
-      "signalId": "01KXK4BHGMNT9V9073KRYCE168"
+      "channelId": "01KXK535Y9QDN1ASXR0079MKEA",
+      "flowId": "01KXK535Y9D5VP3D1GE3XMG1DS",
+      "signalId": "01KXK535YA0NGY8KH99MNFNV1R"
     },
     "meta": {
-      "createdAt": "2026-07-15T14:54:36.566Z",
-      "updatedAt": "2026-07-15T14:54:36.566Z"
+      "createdAt": "2026-07-15T15:07:31.146Z",
+      "updatedAt": "2026-07-15T15:07:31.146Z"
     },
     "settings": {
       "maxSchemes": 10,
       "targetVc": 0.85
+    },
+    "bandCorridor": {
+      "id": "01KXK535YAD12CCAF1NZ41APEM",
+      "name": "主干路绿波走廊",
+      "speedKmh": 40,
+      "method": "classic",
+      "nodes": [
+        {
+          "id": "01KXK535YB38HJ8XEWJY0HNT56",
+          "name": "路口A",
+          "distanceM": 0,
+          "greenRatio": 0.45,
+          "cycleSec": 90,
+          "offsetSec": 0
+        },
+        {
+          "id": "01KXK535YBESVC4RPNGQZHK43H",
+          "name": "路口B",
+          "distanceM": 480,
+          "greenRatio": 0.5,
+          "cycleSec": 90,
+          "offsetSec": 0
+        },
+        {
+          "id": "01KXK535YBDFG9FBSQC4AWZA75",
+          "name": "路口C",
+          "distanceM": 980,
+          "greenRatio": 0.42,
+          "cycleSec": 90,
+          "offsetSec": 0
+        },
+        {
+          "id": "01KXK535YBA44T0D2PA156HFC1",
+          "name": "路口D",
+          "distanceM": 1500,
+          "greenRatio": 0.48,
+          "cycleSec": 90,
+          "offsetSec": 0
+        }
+      ]
     }
   }
 }
