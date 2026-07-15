@@ -25,6 +25,7 @@ export type ExportItemId =
   | 'xsection-svg'
   | 'band-pack'
   | 'pro-pack'
+  | 'print-a4'
 
 export type ExportItem = {
   id: ExportItemId
@@ -108,6 +109,15 @@ export const EXPORT_CATALOG: ExportItem[] = [
     description: '线宽∝流量的 L/T/R 箭头图',
     modes: ['flow', 'analysis'],
     requires: ['flow', 'flowAligned'],
+  },
+  {
+    id: 'print-a4',
+    category: 'package',
+    title: 'A4 打印拼版',
+    format: 'SVG/HTML',
+    description: '最多 4 图 A4 矢量拼版预览与导出',
+    modes: ['analysis', 'signal', 'flow'],
+    requires: ['channel', 'flow', 'signal'],
   },
   {
     id: 'pro-pack',

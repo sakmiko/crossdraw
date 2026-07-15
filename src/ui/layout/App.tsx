@@ -17,6 +17,8 @@ import { loadDraft, clearDraft } from '@/io/autosave'
 import { persistAutosave, redo, undo, useAppStore } from '@/state/store'
 import { CommandPalette } from '@/ui/common/CommandPalette'
 import { ExportCenter } from '@/ui/common/ExportCenter'
+import { PrintPreviewModal } from '@/ui/common/PrintPreview'
+import { buildA4PrintSheet, printSheetHtml, type PrintPanel } from '@/io/printSheet'
 import { checkAnalysisIntegrity } from '@/domain/analysis/integrity'
 import { buildFlowAlignment, flowChartsAlignWithTable, type FlowDisplayMode } from '@/domain/flow/flowAlign'
 import { buildSignalTimingAlignment } from '@/domain/signal/timingAlign'
@@ -109,6 +111,8 @@ export default function App() {
   const [timingNotes, setTimingNotes] = useState<string[]>([])
   const [timingCompare, setTimingCompare] = useState<TimingCompareRow[]>([])
   const [exportOpen, setExportOpen] = useState(false)
+  const [printOpen, setPrintOpen] = useState(false)
+  const [printPaper, setPrintPaper] = useState<'A4' | 'A4-landscape'>('A4')
   const [flowDisplayMode, setFlowDisplayMode] = useState<FlowDisplayMode>('natural')
 
   useEffect(() => {
@@ -280,6 +284,86 @@ export default function App() {
   }
 
 
+
+  function collectPrintPanels(): PrintPanel[] {
+    const panels: PrintPanel[] = []
+    if (signal) {
+      panels.push({
+        id: 'timing',
+        title: '信号配时图',
+        svg: signalTimingDiagramSvg(
+          signal.phases.map((p) => ({
+            name: p.name,
+            greenSec: p.greenSec,
+            yellowSec: p.yellowSec,
+            allRedSec: p.allRedSec,
+            isOverlap: p.isOverlap,
+          })),
+          signal.cycleSec || 90,
+        ),
+      })
+    }
+    if (channel && signal) {
+      panels.push({
+        id: 'control',
+        title: '放行管控图',
+        svg: controlMatrixSvg(
+          channel.approaches.map((x) => x.name),
+          signal.phases.map((p) => ({ name: p.name, releases: p.releases })),
+          channel.approaches.map((x) => x.id),
+        ),
+      })
+    }
+    if (channel && flow) {
+      panels.push({
+        id: 'flow',
+        title: '流量流向图',
+        svg: flowMovementDiagramSvg(
+          channel.approaches.map((ap) => {
+            const v = flow.volumes[ap.id] ?? { L: 0, T: 0, R: 0, U: 0 }
+            return { name: ap.name, bearingDeg: ap.bearingDeg, L: v.L, T: v.T, R: v.R }
+          }),
+        ),
+      })
+    }
+    if (analysis && channel && flow && signal) {
+      panels.push({
+        id: 'board',
+        title: '运行评价拼图',
+        svg: buildAnalysisReportSvg({
+          projectName: project.name,
+          channelName: channel.name,
+          signalName: signal.name,
+          approaches: channel.approaches,
+          flow,
+          signal,
+          analysis,
+          theme: 'light',
+        }),
+      })
+    } else if (project.bandCorridor.nodes.length >= 2) {
+      panels.push({
+        id: 'band',
+        title: '绿波时距图',
+        svg: timeSpaceDiagramSvg(
+          project.bandCorridor.nodes.map((n) => ({
+            name: n.name,
+            distanceM: n.distanceM,
+            greenRatio: n.greenRatio,
+            offsetSec: n.offsetSec,
+            cycleSec: n.cycleSec,
+          })),
+          project.bandCorridor.speedKmh,
+        ),
+      })
+    }
+    return panels.slice(0, 4)
+  }
+
+  function openPrintPreview() {
+    setPrintOpen(true)
+  }
+
   function exportProfessionalDiagrams() {
     if (!channel || !flow || !signal) return
     const timing = signalTimingDiagramSvg(
@@ -392,6 +476,9 @@ export default function App() {
           <div className="toolbar-secondary">
             <button type="button" className="primary" onClick={() => setExportOpen(true)}>
               导出中心
+            </button>
+            <button type="button" onClick={() => openPrintPreview()}>
+              打印拼版
             </button>
             <button type="button" onClick={exportPng}>PNG</button>
             <button type="button" onClick={exportSvg}>SVG</button>
@@ -1763,7 +1850,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.23</span>
+        <span>Crossdraw v0.5.24</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1771,6 +1858,17 @@ export default function App() {
         <span style={{ marginLeft: 'auto' }}>sakmiko/crossdraw · GPLv3</span>
       </footer>
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+      <PrintPreviewModal
+        open={printOpen}
+        onClose={() => setPrintOpen(false)}
+        panels={printOpen ? collectPrintPanels() : []}
+        projectName={project.name}
+        schemeName={channel?.name ?? '—'}
+        paper={printPaper}
+        onPaperChange={setPrintPaper}
+        onExportSvg={(svg) => exportSvgFile(`${project.name}-print-a4.svg`, svg)}
+        onExportHtml={(html) => downloadText(`${project.name}-print-a4.html`, html, 'text/html')}
+      />
       <ExportCenter
         open={exportOpen}
         onClose={() => setExportOpen(false)}
@@ -1838,6 +1936,7 @@ export default function App() {
             )
           },
           'pro-pack': () => exportProfessionalDiagrams(),
+          'print-a4': () => openPrintPreview(),
           'analysis-board': () => {
             if (!channel || !flow || !signal || !analysis) return
             exportSvgFile(

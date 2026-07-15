@@ -1350,3 +1350,34 @@ html[data-theme='light'] .tree-item.active {
 html[data-theme='light'] .mode-hierarchy {
   background: linear-gradient(180deg, #ffffff, #f1f5f9);
 }
+
+
+/* === v0.5.24 print preview === */
+.print-preview {
+  width: min(960px, 96vw);
+  max-height: min(92vh, 900px);
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px;
+}
+.print-stage {
+  flex: 1;
+  overflow: auto;
+  background: #94a3b8;
+  border-radius: var(--radius);
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+.print-sheet-host {
+  display: flex;
+  justify-content: center;
+}
+.print-sheet-host svg {
+  max-width: 100%;
+  height: auto;
+  background: #fff;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+html[data-theme='light'] .print-stage {
+  background: #cbd5e1;
+}
