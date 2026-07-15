@@ -731,3 +731,53 @@ label {
   max-width: 160px;
 }
 .ts-svg { touch-action: none; }
+
+.vc-chip {
+  display: inline-block;
+  min-width: 3.2em;
+  padding: 2px 6px;
+  border-radius: 6px;
+  color: #0b1020;
+  font-weight: 700;
+  font-size: 11px;
+  text-align: center;
+}
+.los-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6em;
+  height: 1.6em;
+  border-radius: 6px;
+  font-weight: 800;
+  font-size: 12px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+}
+.los-A, .los-B { color: #22c55e; }
+.los-C { color: #eab308; }
+.los-D { color: #f97316; }
+.los-E, .los-F { color: #ef4444; }
+tr.row-recommend td {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+.panel-stack .panel-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.inspector .card > h2 {
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  margin: 0 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.inspector .chart-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  background: var(--panel-2);
+}

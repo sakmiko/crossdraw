@@ -382,3 +382,51 @@ function fmt(n: number): string {
 function escape(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
+
+/** Saturation (v/c) continuous heat color — textbook capacity diagram style */
+export function vcHeatColor(vc: number): string {
+  if (vc <= 0.5) return '#22c55e'
+  if (vc <= 0.7) return '#84cc16'
+  if (vc <= 0.85) return '#eab308'
+  if (vc <= 0.95) return '#f97316'
+  if (vc <= 1.05) return '#ef4444'
+  return '#b91c1c'
+}
+
+export function timingCompareBarSvg(
+  rows: { label: string; avgDelay: number; avgVc: number; los: string }[],
+  opts: { width?: number; height?: number; metric?: 'delay' | 'vc' } = {},
+): string {
+  const metric = opts.metric ?? 'delay'
+  const data = rows.map((r) => ({
+    label: r.label.length > 8 ? r.label.slice(0, 8) : r.label,
+    value: metric === 'delay' ? r.avgDelay : r.avgVc,
+    color: metric === 'vc' ? vcHeatColor(r.avgVc) : r.avgDelay >= 80 ? '#ef4444' : r.avgDelay >= 55 ? '#eab308' : '#38bdf8',
+  }))
+  return barChartSvg(data, {
+    width: opts.width ?? 360,
+    height: opts.height ?? 160,
+    unit: metric === 'delay' ? '车均延误 s' : '平均 v/c',
+  })
+}
+
+export function saturationHeatLegendSvg(width = 320): string {
+  const stops = [
+    [0.25, '#22c55e', 'A'],
+    [0.5, '#84cc16', 'B'],
+    [0.7, '#eab308', 'C'],
+    [0.85, '#f97316', 'D'],
+    [0.95, '#ef4444', 'E'],
+    [1.1, '#b91c1c', 'F'],
+  ]
+  const h = 36
+  const pad = 12
+  const bw = (width - pad * 2) / stops.length
+  let body = `<text x="${pad}" y="12" fill="#94a3b8" font-size="9">饱和度 v/c 色阶</text>`
+  stops.forEach((s, i) => {
+    const x = pad + i * bw
+    body += `<rect x="${x}" y="16" width="${bw - 2}" height="12" fill="${s[1]}" rx="2"/>`
+    body += `<text x="${x + (bw - 2) / 2}" y="32" text-anchor="middle" fill="#94a3b8" font-size="8">${s[2]}</text>`
+  })
+  return `<svg viewBox="0 0 ${width} ${h}" xmlns="http://www.w3.org/2000/svg" class="chart-svg"><rect width="100%" height="100%" fill="#0a1020"/>${body}</svg>`
+}

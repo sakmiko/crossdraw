@@ -15,11 +15,13 @@ import { downloadBlob, downloadText } from '@/io/download'
 import { loadDraft, clearDraft } from '@/io/autosave'
 import { persistAutosave, redo, undo, useAppStore } from '@/state/store'
 import { CommandPalette } from '@/ui/common/CommandPalette'
-import { AnalysisCharts, BandCharts, CompareCharts, CrossSectionCharts, FlowCharts, SignalCharts } from '@/ui/charts/ChartPanels'
+import { AnalysisCharts, BandCharts, CompareCharts, CrossSectionCharts, FlowCharts, SignalCharts, TimingCompareCharts } from '@/ui/charts/ChartPanels'
 import { ControlMatrixPanel, FlowDirectionPanel, PhaseFacePanel, SignalTimingPanel, TimeSpacePanel } from '@/ui/charts/ProfessionalPanels'
 import { InteractiveTimeSpace } from '@/ui/charts/InteractiveTimeSpace'
 import { corridorSegments } from '@/domain/analysis/corridor'
 import { optimizeSignalTiming, criticalFlowRatios, TIMING_METHOD_LABELS, type TimingMethod } from '@/domain/analysis/timing'
+import { compareTimingMethods, recommendTimingRow, type TimingCompareRow } from '@/domain/analysis/timingCompare'
+import { vcHeatColor } from '@/ui/charts/svgCharts'
 import { analysisMarkdown, exportJsonFile, exportSvgFile } from '@/io/exportCharts'
 import {
   controlMatrixSvg,
@@ -95,6 +97,7 @@ export default function App() {
   const [fixedCycleOn, setFixedCycleOn] = useState(false)
   const [fixedCycleSec, setFixedCycleSec] = useState(90)
   const [timingNotes, setTimingNotes] = useState<string[]>([])
+  const [timingCompare, setTimingCompare] = useState<TimingCompareRow[]>([])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -223,6 +226,41 @@ export default function App() {
     })
     applyOptimizedTiming(r.appliedPhases, r.cycleSec)
     setTimingNotes(r.notes)
+  }
+
+  function runTimingCompare() {
+    if (!channel || !flow || !signal) return
+    const rows = compareTimingMethods(channel.approaches, flow, signal, {
+      targetVc: project.settings.targetVc,
+      fixedCycle: fixedCycleSec,
+      forceFixedCycle: false,
+    })
+    setTimingCompare(rows)
+    const rec = recommendTimingRow(rows)
+    if (rec) {
+      setTimingNotes([
+        `比选完成：推荐「${rec.label}」C=${rec.cycleSec}s · v/c=${rec.avgVc.toFixed(3)} · 延误=${rec.avgDelay.toFixed(1)}s · LOS ${rec.los}`,
+        ...rec.notes.slice(0, 2),
+      ])
+    }
+  }
+
+  function applyTimingCompareRow(row: TimingCompareRow) {
+    if (!channel || !flow || !signal) return
+    setTimingMethod(row.method)
+    const useFixed = row.method === 'fixed-cycle'
+    if (useFixed) {
+      setFixedCycleOn(true)
+      setFixedCycleSec(row.cycleSec)
+    }
+    const r = optimizeSignalTiming(channel.approaches, flow, signal, {
+      method: row.method,
+      targetVc: project.settings.targetVc,
+      startLoss: signal.startLossSec,
+      fixedCycle: useFixed || fixedCycleOn ? row.cycleSec : row.method === 'equal' ? row.cycleSec : undefined,
+    })
+    applyOptimizedTiming(r.appliedPhases, r.cycleSec)
+    setTimingNotes([`已应用比选方案：${row.label}`, ...r.notes])
   }
 
 
@@ -873,7 +911,73 @@ export default function App() {
                 <button type="button" className="primary" onClick={runWebster}>
                   一键优化配时
                 </button>
+                <button type="button" onClick={runTimingCompare}>
+                  多方法比选
+                </button>
               </div>
+              {timingCompare.length > 0 && (
+                <div className="card panel-stack" style={{ marginTop: 10 }}>
+                  <div className="panel-header">
+                    <h2 style={{ margin: 0, fontSize: 15 }}>配时方法比选</h2>
+                    <span className="hint">同渠化·同流量 · 点击应用</span>
+                  </div>
+                  <div className="table-wrap">
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th>方法</th>
+                          <th>C(s)</th>
+                          <th>Y</th>
+                          <th>v/c</th>
+                          <th>延误s</th>
+                          <th>LOS</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {timingCompare.map((r) => {
+                          const rec = recommendTimingRow(timingCompare)
+                          const isRec = rec?.method === r.method
+                          return (
+                            <tr key={r.method} className={isRec ? 'row-recommend' : ''}>
+                              <td>
+                                {r.label}
+                                {isRec ? ' ★' : ''}
+                              </td>
+                              <td>{r.cycleSec}</td>
+                              <td>{r.Y.toFixed(3)}</td>
+                              <td>
+                                <span className="vc-chip" style={{ background: vcHeatColor(r.avgVc) }}>
+                                  {r.avgVc.toFixed(3)}
+                                </span>
+                              </td>
+                              <td>{r.avgDelay.toFixed(1)}</td>
+                              <td>
+                                <span className={`los-badge los-${r.los}`}>{r.los}</span>
+                              </td>
+                              <td>
+                                <button type="button" className="ghost" onClick={() => applyTimingCompareRow(r)}>
+                                  应用
+                                </button>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  <TimingCompareCharts
+                    rows={timingCompare.map((r) => ({
+                      label: r.label,
+                      avgDelay: r.avgDelay,
+                      avgVc: r.avgVc,
+                      los: r.los,
+                      cycleSec: r.cycleSec,
+                      method: r.method,
+                    }))}
+                  />
+                </div>
+              )}
               <SignalCharts signal={signal} approaches={channel?.approaches} />
               <SignalTimingPanel signal={signal} />
               {channel && <ControlMatrixPanel signal={signal} approaches={channel.approaches} />}
@@ -984,7 +1088,9 @@ export default function App() {
                       <tr key={i}>
                         <td>{l.approachName}</td>
                         <td>{l.movement}</td>
-                        <td className={l.vc >= 1 ? 'cell-hot' : l.vc >= 0.85 ? 'cell-warm' : ''}>{l.vc.toFixed(2)}</td>
+                        <td>
+                          <span className="vc-chip" style={{ background: vcHeatColor(l.vc) }}>{l.vc.toFixed(2)}</span>
+                        </td>
                         <td className={l.delaySec >= 80 ? 'cell-hot' : l.delaySec >= 55 ? 'cell-warm' : ''}>{l.delaySec.toFixed(1)}</td>
                         <td>{l.queueM.toFixed(1)}</td>
                       </tr>
@@ -1213,7 +1319,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.4</span>
+        <span>Crossdraw v0.5.5</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

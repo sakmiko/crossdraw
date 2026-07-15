@@ -9,7 +9,10 @@ import {
   losGaugeSvg,
   radarChartSvg,
   ringBarrierSvg,
+  saturationHeatLegendSvg,
   stackedBandSvg,
+  timingCompareBarSvg,
+  vcHeatColor,
 } from './svgCharts'
 import type {
   AnalysisResult,
@@ -61,7 +64,7 @@ export function AnalysisCharts({ analysis }: { analysis: AnalysisResult }) {
         return {
           label: v.name.replace('进口', ''),
           value: avg,
-          color: avg > 0.85 ? '#e85d5d' : avg > 0.7 ? '#e5a54b' : '#3ecf8e',
+          color: vcHeatColor(avg),
         }
       }),
       { height: 150, unit: 'v/c 均值' },
@@ -368,4 +371,37 @@ export function CompareCharts({
 }
 
 // re-export Phase type usage guard
+export function TimingCompareCharts({
+  rows,
+}: {
+  rows: { label: string; avgDelay: number; avgVc: number; los: string; cycleSec: number; method: string }[]
+}) {
+  const colors = useChartColors()
+  const delaySvg = useMemo(
+    () => themeSvg(timingCompareBarSvg(rows, { metric: 'delay', height: 150 }), colors),
+    [rows, colors],
+  )
+  const vcSvg = useMemo(
+    () => themeSvg(timingCompareBarSvg(rows, { metric: 'vc', height: 150 }), colors),
+    [rows, colors],
+  )
+  const legend = useMemo(() => themeSvg(saturationHeatLegendSvg(340), colors), [colors])
+  if (!rows.length) return <p className="hint">暂无比选数据</p>
+  return (
+    <div className="chart-card">
+      <div className="chart-title">
+        <span>配时方法比选图</span>
+        <small>同流量·同渠化</small>
+      </div>
+      <div dangerouslySetInnerHTML={{ __html: delaySvg }} />
+      <div className="chart-title" style={{ marginTop: 10 }}>
+        <span>比选饱和度 v/c</span>
+        <small>色阶=服务水平区</small>
+      </div>
+      <div dangerouslySetInnerHTML={{ __html: vcSvg }} />
+      <div dangerouslySetInnerHTML={{ __html: legend }} />
+    </div>
+  )
+}
+
 export type { Phase }
