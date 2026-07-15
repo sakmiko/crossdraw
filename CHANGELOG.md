@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 0.5.33 — 2026-07-16
+
+- 分析明细表：进口/转向筛选、最小 v/c·延误、列排序
+- CSV 导出与当前筛选/排序列对齐；行级 LOS
+- Excel 全量表增加 LOS 列
+
+# CHANGELOG
+
 ## 0.5.32 — 2026-07-16
 
 - 信号工作区拆至 SignalWorkspace.tsx（App 减负）

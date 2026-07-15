@@ -1,32 +1,32 @@
 import type { AnalysisResult, Project } from '@/domain/types'
+import {
+  ANALYSIS_CSV_HEADER,
+  analysisLanesToCsvRows,
+  enrichLaneRows,
+  filterAnalysisLanes,
+  sortAnalysisLanes,
+  type AnalysisFilter,
+  type AnalysisSortKey,
+} from '@/domain/analysis/laneTable'
 
-export function analysisToCsv(result: AnalysisResult): string {
-  const rows = [
-    'approach,movement,volume_peak,sat_flow,green_ratio,capacity,vc,delay_s,queue_m,los_delay,los_vc,los_final',
-    ...result.lanes.map(
-      (l) =>
-        [
-          csv(l.approachName),
-          l.movement,
-          l.volumePeak.toFixed(2),
-          l.satFlow.toFixed(1),
-          l.greenRatio.toFixed(3),
-          l.capacity.toFixed(1),
-          l.vc.toFixed(3),
-          l.delaySec.toFixed(2),
-          l.queueM.toFixed(2),
-          result.losByDelay,
-          result.losByVc,
-          result.losFinal,
-        ].join(','),
-    ),
+export function analysisToCsv(
+  result: AnalysisResult,
+  opts?: { filter?: AnalysisFilter; sortKey?: AnalysisSortKey; sortDir?: 'asc' | 'desc' },
+): string {
+  let rows = enrichLaneRows(result)
+  if (opts?.filter) rows = filterAnalysisLanes(rows, opts.filter)
+  if (opts?.sortKey) rows = sortAnalysisLanes(rows, opts.sortKey, opts.sortDir ?? 'desc')
+  const body = [
+    ANALYSIS_CSV_HEADER,
+    ...analysisLanesToCsvRows(rows),
     '',
     `summary_avg_vc,${result.avgVc.toFixed(3)}`,
     `summary_avg_delay_s,${result.avgDelay.toFixed(2)}`,
     `summary_avg_queue_m,${result.avgQueueM.toFixed(2)}`,
     `summary_los,${result.losFinal}`,
+    `summary_rows_exported,${rows.length}`,
   ]
-  return rows.join('\n') + '\n'
+  return body.join('\n') + '\n'
 }
 
 export function analysisToExcelHtml(projectName: string, result: AnalysisResult): string {
@@ -34,11 +34,12 @@ export function analysisToExcelHtml(projectName: string, result: AnalysisResult)
   const head = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"></head><body>`
   const title = `<h2>${escapeHtml(projectName)} — 交叉口评价</h2>`
   const summary = `<p>平均 v/c=${result.avgVc.toFixed(3)}；车均延误=${result.avgDelay.toFixed(1)} s；平均排队=${result.avgQueueM.toFixed(1)} m；LOS=${result.losFinal}</p>`
+  const lanes = enrichLaneRows(result)
   const table = [
-    '<table border="1"><tr><th>进口</th><th>转向</th><th>高峰量</th><th>饱和流率</th><th>绿信比</th><th>通行能力</th><th>v/c</th><th>延误(s)</th><th>排队(m)</th></tr>',
-    ...result.lanes.map(
+    '<table border="1"><tr><th>进口</th><th>转向</th><th>高峰量</th><th>饱和流率</th><th>绿信比</th><th>通行能力</th><th>v/c</th><th>延误(s)</th><th>排队(m)</th><th>LOS延误</th><th>LOS_v/c</th><th>LOS行</th></tr>',
+    ...lanes.map(
       (l) =>
-        `<tr><td>${escapeHtml(l.approachName)}</td><td>${l.movement}</td><td>${l.volumePeak.toFixed(1)}</td><td>${l.satFlow.toFixed(0)}</td><td>${l.greenRatio.toFixed(3)}</td><td>${l.capacity.toFixed(0)}</td><td>${l.vc.toFixed(3)}</td><td>${l.delaySec.toFixed(1)}</td><td>${l.queueM.toFixed(1)}</td></tr>`,
+        `<tr><td>${escapeHtml(l.approachName)}</td><td>${l.movement}</td><td>${l.volumePeak.toFixed(1)}</td><td>${l.satFlow.toFixed(0)}</td><td>${l.greenRatio.toFixed(3)}</td><td>${l.capacity.toFixed(0)}</td><td>${l.vc.toFixed(3)}</td><td>${l.delaySec.toFixed(1)}</td><td>${l.queueM.toFixed(1)}</td><td>${l.losDelay}</td><td>${l.losVc}</td><td>${l.losFinal}</td></tr>`,
     ),
     '</table>',
   ].join('')

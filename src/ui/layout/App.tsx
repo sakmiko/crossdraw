@@ -19,6 +19,7 @@ import { persistAutosave, redo, undo, useAppStore } from '@/state/store'
 import { CommandPalette } from '@/ui/common/CommandPalette'
 import { ExportCenter } from '@/ui/common/ExportCenter'
 import { SignalWorkspace } from '@/ui/layout/SignalWorkspace'
+import { AnalysisLaneTable } from '@/ui/layout/AnalysisLaneTable'
 import { PrintPreviewModal } from '@/ui/common/PrintPreview'
 import { buildA4PrintSheet, printSheetHtml, type PrintPanel } from '@/io/printSheet'
 import { collectCorridorKpis, corridorKpiCompareSvg, multiBandMarkdown } from '@/ui/charts/bandCorridorCompare'
@@ -1569,32 +1570,7 @@ export default function App() {
                 平均饱和度 {analysis.avgVc.toFixed(3)} · 车均延误 {analysis.avgDelay.toFixed(1)} s · 排队{' '}
                 {analysis.avgQueueM.toFixed(1)} m · LOS {analysis.losFinal}
               </p>
-              <div className="table-wrap">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>进口</th>
-                      <th>转向</th>
-                      <th>v/c</th>
-                      <th>延误</th>
-                      <th>排队m</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {analysis.lanes.map((l, i) => (
-                      <tr key={i}>
-                        <td>{l.approachName}</td>
-                        <td>{l.movement}</td>
-                        <td>
-                          <span className="vc-chip" style={{ background: vcHeatColor(l.vc) }}>{l.vc.toFixed(2)}</span>
-                        </td>
-                        <td className={l.delaySec >= 80 ? 'cell-hot' : l.delaySec >= 55 ? 'cell-warm' : ''}>{l.delaySec.toFixed(1)}</td>
-                        <td>{l.queueM.toFixed(1)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <AnalysisLaneTable analysis={analysis} projectName={project.name} />
               <CompareCharts
                 rows={collectCompareRows(project, analyzeIntersection).map((r) => ({
                   label: `${r.channel}/${r.signal}`,
@@ -1604,24 +1580,6 @@ export default function App() {
                 }))}
               />
               <div className="toolbar" style={{ marginTop: 8 }}>
-                <button
-                  type="button"
-                  onClick={() => downloadText(`${project.name}-analysis.csv`, analysisToCsv(analysis), 'text/csv')}
-                >
-                  导出 CSV
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    downloadText(
-                      `${project.name}-analysis.xls`,
-                      analysisToExcelHtml(project.name, analysis),
-                      'application/vnd.ms-excel',
-                    )
-                  }
-                >
-                  导出 Excel
-                </button>
                 <button
                   type="button"
                   onClick={() => {
@@ -2107,7 +2065,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.32</span>
+        <span>Crossdraw v0.5.33</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
