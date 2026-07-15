@@ -24,6 +24,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       { id: 'mode-signal', label: '切换到信号', run: () => setMode('signal') },
       { id: 'mode-xsection', label: '切换到断面', run: () => setMode('xsection') },
       { id: 'mode-analysis', label: '切换到分析', run: () => setMode('analysis') },
+      { id: 'mode-compare', label: '模式：方案比选', run: () => setMode('compare') },
       { id: 'mode-band', label: '切换到绿波', run: () => setMode('band') },
       { id: 'dup-ch', label: '复制当前渠化方案', run: () => duplicateChannel() },
       { id: 'add-flow', label: '新增流量方案', run: () => addFlowScheme() },

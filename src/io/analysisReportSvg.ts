@@ -3,7 +3,7 @@
  * Layout: title · KPI strip · flow diagram · v/c bars · lane table excerpt.
  */
 import type { AnalysisResult, Approach, FlowScheme, SignalScheme } from '@/domain/types'
-import { flowMovementDiagramSvg } from '@/ui/charts/professionalDiagrams'
+import { flowMovementDiagramSvg, phaseFaceDiagramSvg } from '@/ui/charts/professionalDiagrams'
 import { barChartSvg, losGaugeSvg, radarChartSvg, vcHeatColor } from '@/ui/charts/svgCharts'
 
 export function buildAnalysisReportSvg(opts: {
@@ -23,7 +23,7 @@ export function buildAnalysisReportSvg(opts: {
   const text = dark ? '#e6edf5' : '#0f172a'
   const muted = dark ? '#94a3b8' : '#64748b'
   const W = 900
-  const H = 1180
+  const H = 1360
 
   const flowData = opts.approaches.map((a) => {
     const v = opts.flow.volumes[a.id] ?? { L: 0, T: 0, R: 0, U: 0 }
@@ -119,14 +119,30 @@ export function buildAnalysisReportSvg(opts: {
   body += `<text x="40" y="672" fill="${text}" font-size="14" font-weight="600">转向延误（前 10）</text>`
   body += `<g transform="translate(40,688)">${delayInner}</g>`
 
-  body += `<rect x="24" y="896" width="852" height="250" rx="10" fill="${panel}" stroke="${grid}"/>`
-  body += `<text x="40" y="920" fill="${text}" font-size="14" font-weight="600">车道组评价明细</text>`
+  const mainPhases = opts.signal.phases.filter((p) => !p.isOverlap).slice(0, 4)
+  let tableTop = 896
+  if (mainPhases.length) {
+    body += `<rect x="24" y="888" width="852" height="168" rx="10" fill="${panel}" stroke="${grid}"/>`
+    body += `<text x="40" y="910" fill="${text}" font-size="14" font-weight="600">相位灯态（与放行矩阵同源）</text>`
+    mainPhases.forEach((ph, i) => {
+      const face = phaseFaceDiagramSvg(
+        opts.approaches.map((a) => ({ name: a.name, bearingDeg: a.bearingDeg, id: a.id })),
+        { name: ph.name, releases: ph.releases },
+        { size: 150 },
+      )
+      const inner = stripSvgShell(recolorSvg(face, dark))
+      body += `<g transform="translate(${36 + i * 205}, 918)">${inner}</g>`
+    })
+    tableTop = 1072
+  }
+  body += `<rect x="24" y="${tableTop}" width="852" height="250" rx="10" fill="${panel}" stroke="${grid}"/>`
+  body += `<text x="40" y="${tableTop + 24}" fill="${text}" font-size="14" font-weight="600">车道组评价明细</text>`
   const heads = ['进口', '转向', '流量', 'v/c', '延误s', '排队m']
   heads.forEach((h, i) => {
-    body += `<text x="${40 + i * 130}" y="948" fill="${muted}" font-size="11" font-weight="600">${h}</text>`
+    body += `<text x="${40 + i * 130}" y="${tableTop + 52}" fill="${muted}" font-size="11" font-weight="600">${h}</text>`
   })
   opts.analysis.lanes.slice(0, 12).forEach((l, row) => {
-    const y = 972 + row * 14
+    const y = tableTop + 76 + row * 14
     const cells = [
       l.approachName.replace('进口', ''),
       l.movement,

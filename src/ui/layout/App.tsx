@@ -39,6 +39,7 @@ const MODES: { id: EditorMode; label: string }[] = [
   { id: 'signal', label: '信号' },
   { id: 'xsection', label: '断面' },
   { id: 'analysis', label: '分析' },
+  { id: 'compare', label: '比选' },
   { id: 'band', label: '绿波' },
 ]
 
@@ -137,7 +138,7 @@ export default function App() {
         redo()
       }
       if (!e.ctrlKey && ['1', '2', '3', '4', '5', '6'].includes(e.key)) {
-        const map: EditorMode[] = ['channel', 'flow', 'signal', 'xsection', 'analysis', 'band']
+        const map: EditorMode[] = ['channel', 'flow', 'signal', 'xsection', 'analysis', 'compare', 'band']
         setMode(map[Number(e.key) - 1])
       }
     }
@@ -486,7 +487,7 @@ export default function App() {
             <span>{MODES.find((m) => m.id === mode)?.label}</span>
           </div>
           <div className="stage-bar">
-            <span className="hint">平移 · 缩放 · 1–6 · Ctrl+K</span>
+            <span className="hint">平移 · 缩放 · 1–7 · Ctrl+K</span>
             <button type="button" className="ghost" onClick={() => canvasRef.current?.fitView()}>适应窗口</button>
             <span className="legend layer-toggles" style={{ margin: 0 }}>
               {([
@@ -1183,6 +1184,11 @@ export default function App() {
                   导出分析拼图
                 </button>
               </div>
+              <div className="toolbar" style={{ marginTop: 8 }}>
+                <button type="button" className="primary" onClick={() => setMode('compare')}>
+                  打开方案比选工作区
+                </button>
+              </div>
               <div className="section-title">方案对比摘要</div>
               <table className="table">
                 <thead>
@@ -1208,6 +1214,99 @@ export default function App() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          
+          {mode === 'compare' && (
+            <div className="card" style={{ marginTop: 12 }}>
+              <div className="panel-header">
+                <h2 style={{ margin: 0 }}>方案比选</h2>
+                <span className="hint">渠化 × 流量 × 信号 组合评价</span>
+              </div>
+              <p className="hint">
+                对方案树中全部渠化/流量/信号组合运行同一评价模型；点击行可激活对应方案。
+              </p>
+              <CompareCharts
+                rows={collectCompareRows(project, analyzeIntersection).map((r) => ({
+                  label: `${r.channel}/${r.signal}`,
+                  avgVc: r.avgVc,
+                  avgDelay: r.avgDelay,
+                  los: r.los,
+                }))}
+              />
+              <div className="table-wrap" style={{ marginTop: 10 }}>
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>渠化</th>
+                      <th>流量</th>
+                      <th>信号</th>
+                      <th>v/c</th>
+                      <th>延误</th>
+                      <th>LOS</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {collectCompareRows(project, analyzeIntersection).map((r, i) => (
+                      <tr key={i}>
+                        <td>{r.channel}</td>
+                        <td>{r.flow}</td>
+                        <td>{r.signal}</td>
+                        <td>
+                          <span className="vc-chip" style={{ background: vcHeatColor(r.avgVc) }}>{r.avgVc.toFixed(2)}</span>
+                        </td>
+                        <td>{r.avgDelay.toFixed(1)}</td>
+                        <td>
+                          <span className={`los-badge los-${r.los}`}>{r.los}</span>
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            className="ghost"
+                            onClick={() => {
+                              const ch = project.channelizationSchemes.find((c) => c.name === r.channel)
+                              if (!ch) return
+                              setActiveChannel(ch.id)
+                              const fl = ch.flowSchemes.find((f) => f.name === r.flow)
+                              if (fl) {
+                                setActiveFlow(fl.id)
+                                const sg = fl.signalSchemes.find((s) => s.name === r.signal)
+                                if (sg) setActiveSignal(sg.id)
+                              }
+                              setMode('analysis')
+                            }}
+                          >
+                            打开
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="toolbar" style={{ marginTop: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const rows = collectCompareRows(project, analyzeIntersection)
+                    downloadText(`${project.name}-compare.csv`, compareSchemesCsv(rows), 'text/csv')
+                  }}
+                >
+                  导出比选 CSV
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const rows = collectCompareRows(project, analyzeIntersection)
+                    exportJsonFile(`${project.name}-compare.json`, rows)
+                  }}
+                >
+                  导出比选 JSON
+                </button>
+              </div>
+              <p className="hint">快捷键 6 · 从分析页迁出的独立比选工作区</p>
             </div>
           )}
 
@@ -1396,7 +1495,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.8</span>
+        <span>Crossdraw v0.5.9</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

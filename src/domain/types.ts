@@ -10,7 +10,7 @@ export type ChannelizeStyle = 'solid' | 'painted' | 'none'
 
 export type IssueLevel = 'ok' | 'warn' | 'block'
 
-export type EditorMode = 'channel' | 'flow' | 'signal' | 'xsection' | 'analysis' | 'band'
+export type EditorMode = 'channel' | 'flow' | 'signal' | 'xsection' | 'analysis' | 'compare' | 'band'
 
 export interface Issue {
   id: string
