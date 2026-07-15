@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 0.5.35 — 2026-07-16
+
+- 绿波走廊列表侧栏：KPI 卡片切换
+- 批量优化全部走廊（保留锁定 o）
+- optimizeAllCorridors domain API
+
+# CHANGELOG
+
 ## 0.5.34 — 2026-07-16
 
 - 渠化图注：进口车道编号 E1…（中分→路缘）、出口 X1…

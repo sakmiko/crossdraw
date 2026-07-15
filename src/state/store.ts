@@ -13,7 +13,7 @@ import type {
   TurnVolumes,
 } from '@/domain/types'
 import { createCrossTemplate, createTemplateByType } from '@/domain/templates/cross'
-import { applyOffsetsToCorridor, optimizeCorridor, setSegmentLength } from '@/domain/analysis/corridor'
+import { applyOffsetsToCorridor, optimizeAllCorridors, optimizeCorridor, setSegmentLength } from '@/domain/analysis/corridor'
 import { cloneBandCorridor, defaultBandCorridor, normalizeBandCorridors } from '@/domain/band/corridors'
 import {
   rebuildLaneGroupsFromLanes,
@@ -81,6 +81,7 @@ export type AppState = {
   addBandNode: () => void
   removeBandNode: (nodeId: string) => void
   optimizeBand: () => void
+  optimizeAllBands: () => { count: number; improved: number }
   setBandSegmentLength: (toNodeId: string, lengthM: number) => void
   updateBasemap: (patch: Partial<NonNullable<Project["settings"]["basemap"]>>) => void
   setActiveBand: (id: string) => void
@@ -470,6 +471,22 @@ export const useAppStore = create<AppState>()(
           if (i >= 0) s.project.bandCorridors[i] = s.project.bandCorridor
           s.dirty = true
         }),
+      optimizeAllBands: () => {
+        let count = 0
+        let improved = 0
+        set((s) => {
+          normalizeBandCorridors(s.project)
+          const { corridors, summaries } = optimizeAllCorridors(s.project.bandCorridors)
+          s.project.bandCorridors = corridors
+          const active = corridors.find((c) => c.id === s.project.activeBandId) ?? corridors[0]
+          s.project.activeBandId = active.id
+          s.project.bandCorridor = active
+          s.dirty = true
+          count = summaries.length
+          improved = summaries.filter((x) => x.improved).length
+        })
+        return { count, improved }
+      },
       setBandSegmentLength: (toNodeId, lengthM) =>
         set((s) => {
           normalizeBandCorridors(s.project)

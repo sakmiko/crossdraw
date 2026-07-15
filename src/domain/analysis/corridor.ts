@@ -112,3 +112,36 @@ export function setSegmentLength(
   }
   return { ...c, nodes: c.nodes.map((n) => map.get(n.id) ?? n) }
 }
+
+
+export type CorridorOptimizeSummary = {
+  id: string
+  name: string
+  before: BandResult
+  after: BandResult
+  improved: boolean
+}
+
+/** Optimize every corridor independently; returns new corridors + per-corridor KPI delta. */
+export function optimizeAllCorridors(corridors: BandCorridor[]): {
+  corridors: BandCorridor[]
+  summaries: CorridorOptimizeSummary[]
+} {
+  const summaries: CorridorOptimizeSummary[] = []
+  const out: BandCorridor[] = []
+  for (const c of corridors) {
+    const before = measureCorridor(c)
+    const opt = optimizeCorridor(c)
+    const applied = applyOffsetsToCorridor(c, opt)
+    const after = measureCorridor(applied)
+    summaries.push({
+      id: c.id,
+      name: c.name,
+      before,
+      after,
+      improved: after.bandwidthRatio + 1e-9 >= before.bandwidthRatio,
+    })
+    out.push(applied)
+  }
+  return { corridors: out, summaries }
+}

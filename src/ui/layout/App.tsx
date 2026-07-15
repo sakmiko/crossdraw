@@ -20,6 +20,7 @@ import { CommandPalette } from '@/ui/common/CommandPalette'
 import { ExportCenter } from '@/ui/common/ExportCenter'
 import { SignalWorkspace } from '@/ui/layout/SignalWorkspace'
 import { AnalysisLaneTable } from '@/ui/layout/AnalysisLaneTable'
+import { BandCorridorSidebar } from '@/ui/layout/BandCorridorSidebar'
 import { PrintPreviewModal } from '@/ui/common/PrintPreview'
 import { buildA4PrintSheet, printSheetHtml, type PrintPanel } from '@/io/printSheet'
 import { collectCorridorKpis, corridorKpiCompareSvg, multiBandMarkdown } from '@/ui/charts/bandCorridorCompare'
@@ -93,6 +94,7 @@ export default function App() {
   const addBandNode = useAppStore((s) => s.addBandNode)
   const removeBandNode = useAppStore((s) => s.removeBandNode)
   const optimizeBand = useAppStore((s) => s.optimizeBand)
+  const optimizeAllBands = useAppStore((s) => s.optimizeAllBands)
   const setBandSegmentLength = useAppStore((s) => s.setBandSegmentLength)
   const setActiveBand = useAppStore((s) => s.setActiveBand)
   const addBandCorridor = useAppStore((s) => s.addBandCorridor)
@@ -128,6 +130,7 @@ export default function App() {
   const [printPaper, setPrintPaper] = useState<'A4' | 'A4-landscape'>('A4')
   const [flowDisplayMode, setFlowDisplayMode] = useState<FlowDisplayMode>('natural')
   const [focusPhaseId, setFocusPhaseId] = useState<string | null>(null)
+  const [bandBatchNote, setBandBatchNote] = useState<string | null>(null)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -1791,46 +1794,37 @@ export default function App() {
                 <h2 style={{ margin: 0 }}>干道绿波 · {project.bandCorridor.name}</h2>
                 <span className="hint">{(project.bandCorridors ?? [project.bandCorridor]).length} 条走廊</span>
               </div>
-              <div className="band-corridor-bar">
-                <label>
-                  当前走廊
-                  <select
-                    value={project.activeBandId ?? project.bandCorridor.id}
-                    onChange={(e) => setActiveBand(e.target.value)}
-                  >
-                    {(project.bandCorridors ?? [project.bandCorridor]).map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name} · {c.nodes.length} 节点 · {c.speedKmh}km/h
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <div className="toolbar" style={{ marginTop: 6, flexWrap: 'wrap', gap: 6 }}>
-                  <button type="button" onClick={() => addBandCorridor()}>
-                    + 新建走廊
-                  </button>
-                  <button type="button" onClick={() => duplicateBandCorridor()}>
-                    复制走廊
-                  </button>
-                  <button
-                    type="button"
-                    className="ghost"
-                    disabled={(project.bandCorridors ?? []).length <= 1}
-                    onClick={() => removeBandCorridor(project.activeBandId ?? project.bandCorridor.id)}
-                  >
-                    删除走廊
-                  </button>
-                </div>
-                <label>
-                  走廊名称
-                  <input
-                    value={project.bandCorridor.name}
-                    onChange={(e) =>
-                      renameBandCorridor(project.bandCorridor.id, e.target.value)
-                    }
-                  />
-                </label>
-              </div>
+              <div className="band-workspace-grid">
+                <BandCorridorSidebar
+                  corridors={project.bandCorridors ?? [project.bandCorridor]}
+                  activeId={project.activeBandId ?? project.bandCorridor.id}
+                  onSelect={(id) => setActiveBand(id)}
+                  onAdd={() => {
+                    addBandCorridor()
+                    setBandBatchNote(null)
+                  }}
+                  onDuplicate={() => {
+                    duplicateBandCorridor()
+                    setBandBatchNote(null)
+                  }}
+                  onRemove={(id) => {
+                    removeBandCorridor(id)
+                    setBandBatchNote(null)
+                  }}
+                  onOptimizeAll={() => {
+                    const r = optimizeAllBands()
+                    setBandBatchNote(`已批量优化 ${r.count} 条走廊（带宽未降 ${r.improved}/${r.count}）`)
+                  }}
+                  batchNote={bandBatchNote}
+                />
+                <div className="band-corridor-main">
+              <label>
+                走廊名称
+                <input
+                  value={project.bandCorridor.name}
+                  onChange={(e) => renameBandCorridor(project.bandCorridor.id, e.target.value)}
+                />
+              </label>
               <div className="field-row">
                 <label>
                   走廊速度 km/h
@@ -2049,6 +2043,8 @@ export default function App() {
                 </button>
               </div>
               <p className="hint">时距图悬停显示 λ、相位差、路段长度、行程时间；数据写入 .rtp。</p>
+                </div>
+              </div>
             </div>
           )}
 
@@ -2065,7 +2061,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.34</span>
+        <span>Crossdraw v0.5.35</span>
         <span>Mesh polys {mesh.polygons.length}</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
