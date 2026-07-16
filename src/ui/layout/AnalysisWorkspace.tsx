@@ -36,6 +36,12 @@ import {
   queueStorageBoardSvg,
   queueStorageCsv,
 } from '@/ui/charts/queueStorageBoard'
+import {
+  storageCheckBoardSvg,
+  collectStorageCheckRows,
+  storageCheckMarkdown,
+  storageCheckCsv,
+} from '@/ui/charts/storageCheckBoard' 
 import { queueTableMarkdown } from '@/domain/analysis/queueStorage'
 import {
   cleanAnalysisPlanSvg,
@@ -447,6 +453,43 @@ export function AnalysisWorkspace({
         }))}
       />
       
+      {channel && signal && !signal.unsignalized && (
+        <div className="flat-section">
+          <div className="rg-section-title">进口道储存校核</div>
+          <div
+            className="chart-svg-host"
+            style={{ overflow: 'auto' }}
+            dangerouslySetInnerHTML={{
+              __html: storageCheckBoardSvg(channel.approaches, signal, analysis, { width: 800 }),
+            }}
+          />
+          <div className="toolbar dense" style={{ marginTop: 6 }}>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => {
+                const rows = collectStorageCheckRows(channel.approaches, signal, analysis)
+                exportSvgFile(
+                  `${project.name}-进口道储存校核.svg`,
+                  storageCheckBoardSvg(channel.approaches, signal, analysis, { width: 860 }),
+                )
+                downloadText(
+                  `${project.name}-进口道储存校核.md`,
+                  storageCheckMarkdown(project.name, rows),
+                  'text/markdown',
+                )
+                downloadText(
+                  `${project.name}-进口道储存校核.csv`,
+                  storageCheckCsv(rows),
+                  'text/csv',
+                )
+              }}
+            >
+              储存校核导出
+            </button>
+          </div>
+        </div>
+      )}
       {channel && signal && !signal.unsignalized && (
         <div className="flat-section">
           <div className="rg-section-title">排队储存审查</div>

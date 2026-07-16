@@ -35,6 +35,12 @@ import {
   queueStorageBoardSvg,
   queueStorageCsv,
 } from '@/ui/charts/queueStorageBoard'
+import {
+  storageCheckBoardSvg,
+  collectStorageCheckRows,
+  storageCheckMarkdown,
+  storageCheckCsv,
+} from '@/ui/charts/storageCheckBoard' 
 import { queueTableMarkdown } from '@/domain/analysis/queueStorage'  
 import {
   professionalMultiCorridorReportSvg,
@@ -630,7 +636,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.107 · 绿波专页</span>
+          <span>Crossdraw v0.5.108 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -652,7 +658,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.107</span>
+            <span className="brand-ver">v0.5.108</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -981,7 +987,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.107</span>
+        <span>Crossdraw v0.5.108</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1319,6 +1325,32 @@ export default function App() {
             downloadText(
               `${project.name}-Y分解.csv`,
               criticalYCsv(channel.approaches, flow, signal),
+              'text/csv',
+            )
+          },
+          'storage-check-svg': () => {
+            if (!channel || !signal || !analysis) return
+            exportSvgFile(
+              `${project.name}-进口道储存校核.svg`,
+              storageCheckBoardSvg(channel.approaches, signal, analysis, { width: 860 }),
+            )
+          },
+          'storage-check-md': () => {
+            if (!channel || !signal || !analysis) return
+            downloadText(
+              `${project.name}-进口道储存校核.md`,
+              storageCheckMarkdown(
+                project.name,
+                collectStorageCheckRows(channel.approaches, signal, analysis),
+              ),
+              'text/markdown',
+            )
+          },
+          'storage-check-csv': () => {
+            if (!channel || !signal || !analysis) return
+            downloadText(
+              `${project.name}-进口道储存校核.csv`,
+              storageCheckCsv(collectStorageCheckRows(channel.approaches, signal, analysis)),
               'text/csv',
             )
           },

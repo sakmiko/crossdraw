@@ -105,6 +105,9 @@ export type ExportItemId =
   | 'ped-timing-opt-svg'
   | 'ped-timing-opt-md'
   | 'ped-timing-opt-csv'
+  | 'storage-check-svg'
+  | 'storage-check-md'
+  | 'storage-check-csv'
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
@@ -123,6 +126,34 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'storage-check-svg',
+    category: 'analysis',
+    title: '进口道储存校核',
+    format: 'SVG',
+    description: '排队 vs 入口展宽段 · 溢出/紧张/正常',
+    modes: ['analysis', 'channel'],
+    requires: ['analysis', 'signal'],
+  },
+  {
+    id: 'storage-check-md',
+    category: 'analysis',
+    title: '进口道储存校核 MD',
+    format: 'MD',
+    description: '储存长度校核表',
+    modes: ['analysis'],
+    requires: ['analysis'],
+  },
+  {
+    id: 'storage-check-csv',
+    category: 'analysis',
+    title: '进口道储存校核 CSV',
+    format: 'CSV',
+    description: '储存校核数据',
+    modes: ['analysis'],
+    requires: ['analysis'],
+  },
+
   {
     id: 'lost-time-board-svg',
     category: 'signal',
