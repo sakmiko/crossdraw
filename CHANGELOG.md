@@ -1,6 +1,20 @@
 # CHANGELOG
 
-## 0.5.105 — 2026-07-16
+## 0.5.106 — 2026-07-16
+
+### 配时方法比选看板
+- `timingCompareBoardSvg`：Webster / HCM延误 / 等绿 / 固定C 并排 + 推荐★
+- 信号页「多方法比选」后显示看板 + 表 + SVG/MD/CSV 导出
+- 导出中心：`timing-compare-board-svg|md|csv`
+
+### 搭接相位审查
+- `overlapReviewSvg`：搭接不计入主环 Σ；G/Y/AR/放行
+- 信号页常驻审查区；导出 `overlap-review-*`
+
+### 诚实边界
+- 比选为同需求下工程近似对比；搭接为示意，非完整搭接控制器
+
+0.5.105 — 2026-07-16
 
 ### 调研补强
 - `docs/research/07-online-methods-supplement-20260716.md`：方法要点与竞品动作映射

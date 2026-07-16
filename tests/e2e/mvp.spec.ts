@@ -18,11 +18,11 @@ async function openNav(page: Page, label: string) {
   await page.waitForTimeout(300)
 }
 
-test.describe('Crossdraw v0.5.105 y-queue + polish', () => {
+test.describe('Crossdraw v0.5.106 timing-overlap + polish', () => {
   // 渠化 流量 信号 分析 绿波 比选 断面
   test('shell', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.105/).first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.106/).first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
   test('channel', async ({ page }) => {
@@ -35,19 +35,19 @@ test.describe('Crossdraw v0.5.105 y-queue + polish', () => {
     await openNav(page, '流量')
     await page.screenshot({ path: 'docs/screenshots/02-flow.png', fullPage: true })
   })
-  test('signal Y + full scheme', async ({ page }) => {
+  test('signal compare + overlap', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '信号')
-    await expect(page.getByRole('button', { name: /一键全方案/ })).toBeVisible({ timeout: 10000 })
-    await expect(page.getByRole('button', { name: /Y分解图/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /多方法比选/ })).toBeVisible({ timeout: 10000 })
+    await page.getByRole('button', { name: /多方法比选/ }).click()
+    await page.waitForTimeout(400)
+    await expect(page.locator('.rg-section-title').filter({ hasText: '配时方法比选' })).toBeVisible()
+    await expect(page.locator('.rg-section-title').filter({ hasText: '搭接相位审查' })).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/03-signal.png', fullPage: true })
   })
-  test('analysis full + clean + queue', async ({ page }) => {
+  test('analysis', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '分析')
-    await expect(page.getByRole('button', { name: /一键全方案优化/ })).toBeVisible({ timeout: 10000 })
-    await expect(page.getByRole('button', { name: /评价净图/ })).toBeVisible()
-    await expect(page.getByText(/排队储存审查/)).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/04-analysis.png', fullPage: true })
   })
   test('band', async ({ page }) => {

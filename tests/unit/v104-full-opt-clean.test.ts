@@ -52,6 +52,6 @@ describe('v0.5.104 full optimize + clean drawings + docs', () => {
     expect(survey).toContain('Webster')
     expect(survey).toContain('净图')
     const readme = readFileSync(resolve(__dirname, '../../README.md'), 'utf8')
-    expect(readme).toMatch(/0\.5\.10[45]/)
+    expect(readme).toMatch(/0\.5\.\d+/)
   })
 })

@@ -93,6 +93,12 @@ export type ExportItemId =
   | 'queue-storage-svg'
   | 'queue-storage-md'
   | 'queue-storage-csv'
+  | 'timing-compare-board-svg'
+  | 'timing-compare-md'
+  | 'timing-compare-csv'
+  | 'overlap-review-svg'
+  | 'overlap-review-md'
+  | 'overlap-review-csv'
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
@@ -111,6 +117,61 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'timing-compare-board-svg',
+    category: 'signal',
+    title: '配时方法比选看板',
+    format: 'SVG',
+    description: 'Webster/HCM/等绿/固定C 并排 · 可推荐',
+    modes: ['signal'],
+    requires: ['signal', 'flow'],
+  },
+  {
+    id: 'timing-compare-md',
+    category: 'signal',
+    title: '配时方法比选 MD',
+    format: 'MD',
+    description: '四方法延误/v/c 表',
+    modes: ['signal'],
+    requires: ['signal'],
+  },
+  {
+    id: 'timing-compare-csv',
+    category: 'signal',
+    title: '配时方法比选 CSV',
+    format: 'CSV',
+    description: '比选数据表',
+    modes: ['signal'],
+    requires: ['signal'],
+  },
+  {
+    id: 'overlap-review-svg',
+    category: 'signal',
+    title: '搭接相位审查',
+    format: 'SVG',
+    description: '搭接不计入主环 Σ',
+    modes: ['signal'],
+    requires: ['signal'],
+  },
+  {
+    id: 'overlap-review-md',
+    category: 'signal',
+    title: '搭接审查 MD',
+    format: 'MD',
+    description: '搭接相位表',
+    modes: ['signal'],
+    requires: ['signal'],
+  },
+  {
+    id: 'overlap-review-csv',
+    category: 'signal',
+    title: '搭接审查 CSV',
+    format: 'CSV',
+    description: '搭接数据',
+    modes: ['signal'],
+    requires: ['signal'],
+  },
+
   {
     id: 'critical-y-board-svg',
     category: 'signal',

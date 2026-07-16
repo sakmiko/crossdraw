@@ -14,6 +14,17 @@ import {
   criticalYCsv,
 } from '@/ui/charts/criticalYBoard' 
 import { recommendTimingRow, type TimingCompareRow } from '@/domain/analysis/timingCompare'
+import {
+  timingCompareBoardSvg,
+  timingCompareMarkdown,
+  timingCompareCsv,
+} from '@/ui/charts/timingCompareBoard'
+import {
+  overlapReviewSvg,
+  overlapReviewMarkdown,
+  overlapReviewCsv,
+  collectOverlapRows,
+} from '@/ui/charts/overlapReviewBoard' 
 import { buildSignalTimingAlignment } from '@/domain/signal/timingAlign'
 import { releaseMatrixAlignsWithPhases } from '@/domain/signal/releaseAlign'
 import { allPhasesConflictHits } from '@/domain/signal/phaseConflictView'
@@ -710,9 +721,41 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       </div>
 
       {timingCompare.length > 0 && (
-        <div className="flat-params panel-stack" style={{ marginTop: 10 }}>
+        <div className="flat-section" style={{ marginTop: 10 }}>
+          <div className="rg-section-title">配时方法比选</div>
+          <div
+            className="chart-svg-host"
+            style={{ overflow: 'auto', marginBottom: 8 }}
+            dangerouslySetInnerHTML={{
+              __html: timingCompareBoardSvg(timingCompare, { width: 860 }),
+            }}
+          />
+          <div className="toolbar dense" style={{ marginBottom: 8 }}>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => {
+                exportSvgFile(
+                  `${projectName}-配时方法比选.svg`,
+                  timingCompareBoardSvg(timingCompare, { width: 880 }),
+                )
+                downloadText(
+                  `${projectName}-配时方法比选.md`,
+                  timingCompareMarkdown(projectName, timingCompare),
+                  'text/markdown',
+                )
+                downloadText(
+                  `${projectName}-配时方法比选.csv`,
+                  timingCompareCsv(timingCompare),
+                  'text/csv',
+                )
+              }}
+            >
+              比选 SVG/MD/CSV
+            </button>
+          </div>
           <div className="panel-header">
-            <h2 style={{ margin: 0, fontSize: 15 }}>配时方法比选</h2>
+            <h2 style={{ margin: 0, fontSize: 15 }}>配时方法比选表</h2>
             <span className="hint">同渠化·同流量 · 点击应用</span>
           </div>
           <div className="table-wrap">
@@ -772,6 +815,36 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
           />
         </div>
       )}
+
+      <div className="flat-section" style={{ marginTop: 10 }}>
+        <div className="rg-section-title">搭接相位审查 <span className="subpanel-tag">{collectOverlapRows(signal).length}</span></div>
+        <div
+          className="chart-svg-host"
+          style={{ overflow: 'auto' }}
+          dangerouslySetInnerHTML={{ __html: overlapReviewSvg(signal, { width: 720 }) }}
+        />
+        <div className="toolbar dense" style={{ marginTop: 6 }}>
+          <button
+            type="button"
+            className="ghost"
+            onClick={() => {
+              exportSvgFile(`${projectName}-搭接审查.svg`, overlapReviewSvg(signal, { width: 760 }))
+              downloadText(
+                `${projectName}-搭接审查.md`,
+                overlapReviewMarkdown(projectName, signal),
+                'text/markdown',
+              )
+              downloadText(
+                `${projectName}-搭接审查.csv`,
+                overlapReviewCsv(signal),
+                'text/csv',
+              )
+            }}
+          >
+            搭接 SVG/MD/CSV
+          </button>
+        </div>
+      </div>
 
       {signal.dualRing?.enabled && (
           <div className="chart-svg-host chart-svg-host--pro" style={{ marginTop: 8 }}

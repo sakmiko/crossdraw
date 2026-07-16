@@ -135,3 +135,6 @@
 
 | 关键流 Y 分解图 | computeSchemeY | 教材临界流比 |
 | 排队储存审查 | 红灯到达×间距/车道 | 工程示意非仿真 |
+
+| 配时方法比选看板 | compareTimingMethods | Webster/HCM/等绿/固定C |
+| 搭接相位审查 | isOverlap 不计入主环Σ | 教材搭接示意 |
