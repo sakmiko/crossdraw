@@ -62,6 +62,22 @@ export type SignalWorkspaceProps = {
   onRunOptimize: () => void
   onRunCompare: () => void
   onApplyCompareRow: (row: TimingCompareRow) => void
+  /** RoadGee auto-timing pack */
+  designTargetVc?: number
+  onDesignTargetVc?: (v: number) => void
+  designStartLoss?: number
+  onDesignStartLoss?: (v: number) => void
+  designPhf?: number
+  onDesignPhf?: (v: number) => void
+  designCycleSec?: number
+  onDesignCycleSec?: (v: number) => void
+  designLockCycle?: boolean
+  onDesignLockCycle?: (v: boolean) => void
+  onComputeY?: () => void
+  onGenerateScheme?: () => void
+  onClearScheme?: () => void
+  onExportAutoTimingReport?: () => void
+  yReportText?: string
 }
 
 export function SignalWorkspace(props: SignalWorkspaceProps) {
@@ -99,6 +115,21 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
     onRunOptimize,
     onRunCompare,
     onApplyCompareRow,
+    designTargetVc = 0.9,
+    onDesignTargetVc,
+    designStartLoss = 3,
+    onDesignStartLoss,
+    designPhf = 0.95,
+    onDesignPhf,
+    designCycleSec,
+    onDesignCycleSec,
+    designLockCycle = false,
+    onDesignLockCycle,
+    onComputeY,
+    onGenerateScheme,
+    onClearScheme,
+    onExportAutoTimingReport,
+    yReportText,
   } = props
 
   const al = buildSignalTimingAlignment(signal)
@@ -333,6 +364,18 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         <button type="button" className="primary" onClick={onRunOptimize}>
           <Icon name="optimize" size={14} /><span>自动配时</span>
         </button>
+        <button type="button" className="ghost" onClick={() => onComputeY?.()} title="计算关键流量比 Y">
+          计算Y值
+        </button>
+        <button type="button" className="ghost" onClick={() => onGenerateScheme?.()} title="按进口生成保护相位方案">
+          生成方案
+        </button>
+        <button type="button" className="ghost" onClick={() => onClearScheme?.()} title="清空绿灯（保留结构）">
+          清空方案
+        </button>
+        <button type="button" className="ghost" onClick={() => onExportAutoTimingReport?.()}>
+          导出配时报告
+        </button>
         <button type="button" onClick={onRunCompare}>
           多方法比选
         </button>
@@ -353,6 +396,69 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
             </div>
           </div>
         )}
+        <div className="rg-section" style={{ marginTop: 10 }}>
+          <div className="rg-section-title">自动配时设计参数</div>
+          <div className="field-row">
+            <label>
+              设计目标VC
+              <input
+                type="number"
+                step={0.01}
+                min={0.5}
+                max={1}
+                value={designTargetVc}
+                onChange={(e) => onDesignTargetVc?.(Number(e.target.value))}
+              />
+            </label>
+            <label>
+              启动损失(s)
+              <input
+                type="number"
+                step={0.5}
+                min={1}
+                max={8}
+                value={designStartLoss}
+                onChange={(e) => onDesignStartLoss?.(Number(e.target.value))}
+              />
+            </label>
+          </div>
+          <div className="field-row">
+            <label>
+              设计PHF
+              <input
+                type="number"
+                step={0.01}
+                min={0.25}
+                max={1}
+                value={designPhf}
+                onChange={(e) => onDesignPhf?.(Number(e.target.value))}
+              />
+            </label>
+            <label>
+              设计周期
+              <input
+                type="number"
+                min={40}
+                max={180}
+                value={designCycleSec ?? signal.cycleSec}
+                onChange={(e) => onDesignCycleSec?.(Number(e.target.value))}
+              />
+            </label>
+          </div>
+          <label className="check-inline" style={{ marginTop: 6 }}>
+            <input
+              type="checkbox"
+              checked={designLockCycle}
+              onChange={(e) => onDesignLockCycle?.(e.target.checked)}
+            />{' '}
+            锁定设计周期（固定C分绿）
+          </label>
+          {yReportText && (
+            <pre className="y-report-pre" style={{ marginTop: 8, fontSize: 11, whiteSpace: 'pre-wrap' }}>
+              {yReportText}
+            </pre>
+          )}
+        </div>
       </details>
 
       {timingCompare.length > 0 && (

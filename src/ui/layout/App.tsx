@@ -45,6 +45,14 @@ import { AnalysisCharts, BandCharts, CompareCharts, CorridorCompareCharts, Cross
 import { ControlMatrixPanel, FlowDirectionPanel, PhaseFacePanel, SignalTimingPanel, TimeSpacePanel } from '@/ui/charts/ProfessionalPanels'
 import { InteractiveTimeSpace, buildTimeSpaceExportSvg } from '@/ui/charts/InteractiveTimeSpace'
 import { optimizeSignalTiming, criticalFlowRatios, TIMING_METHOD_LABELS, type TimingMethod } from '@/domain/analysis/timing'
+import {
+  runAutoTimingPack,
+  generateProtectedPhases,
+  clearPhaseGreens,
+  computeSchemeY,
+  autoTimingMarkdown,
+  type AutoTimingDesign,
+} from '@/domain/signal/autoTimingPack'
 import { compareTimingMethods, recommendTimingRow, type TimingCompareRow } from '@/domain/analysis/timingCompare'
 import { vcHeatColor } from '@/ui/charts/svgCharts'
 import { analysisMarkdown, bandMarkdown, exportJsonFile, exportSvgFile } from '@/io/exportCharts'
@@ -100,6 +108,8 @@ export default function App() {
   const duplicateChannel = useAppStore((s) => s.duplicateChannel)
   const applyWebster = useAppStore((s) => s.applyWebster)
   const applyOptimizedTiming = useAppStore((s) => s.applyOptimizedTiming)
+  const replaceSignalScheme = useAppStore((s) => s.replaceSignalScheme)
+  const setSignalMeta = useAppStore((s) => s.setSignalMeta)
   const setLaneWidth = useAppStore((s) => s.setLaneWidth)
   const setLaneMovements = useAppStore((s) => s.setLaneMovements)
   const setLaneVariable = useAppStore((s) => s.setLaneVariable)
@@ -167,6 +177,12 @@ export default function App() {
   const [printOpen, setPrintOpen] = useState(false)
   const [printPaper, setPrintPaper] = useState<'A4' | 'A4-landscape'>('A4')
   const [flowDisplayMode, setFlowDisplayMode] = useState<FlowDisplayMode>('natural')
+  const [designTargetVc, setDesignTargetVc] = useState(0.9)
+  const [designStartLoss, setDesignStartLoss] = useState(3)
+  const [designPhf, setDesignPhf] = useState(0.95)
+  const [designCycleSec, setDesignCycleSec] = useState(90)
+  const [designLockCycle, setDesignLockCycle] = useState(false)
+  const [yReportText, setYReportText] = useState('')
   const [flowDiagramStyle, setFlowDiagramStyle] = useState(() => ({ ...DEFAULT_ROADGEE_FLOW_STYLE }))
   const [focusPhaseId, setFocusPhaseId] = useState<string | null>(null)
 
@@ -295,13 +311,58 @@ export default function App() {
     const useFixed = fixedCycleOn || timingMethod === 'fixed-cycle'
     const r = optimizeSignalTiming(channel.approaches, flow, signal, {
       method: useFixed && timingMethod === 'webster' ? 'webster' : useFixed && timingMethod === 'equal' ? 'equal' : useFixed && timingMethod === 'hcm-delay' ? 'hcm-delay' : useFixed ? 'fixed-cycle' : timingMethod,
-      targetVc: project.settings.targetVc,
-      startLoss: signal.startLossSec,
-      fixedCycle: useFixed ? fixedCycleSec : undefined,
+      targetVc: designTargetVc,
+      startLoss: designStartLoss,
+      fixedCycle: designLockCycle ? designCycleSec : useFixed ? fixedCycleSec : undefined,
     })
     applyOptimizedTiming(r.appliedPhases, r.cycleSec)
     setTimingNotes(r.notes)
   }
+
+  function buildDesign(): AutoTimingDesign {
+    return {
+      targetVc: designTargetVc,
+      startLossSec: designStartLoss,
+      designPhf,
+      designCycleSec,
+      lockCycle: designLockCycle,
+      method: timingMethod,
+    }
+  }
+
+  function onComputeY() {
+    if (!channel || !flow || !signal) return
+    const y = computeSchemeY(channel.approaches, flow, signal)
+    const lines = [
+      `Y = ${y.Y.toFixed(3)}${y.dualRing ? '（双环）' : ''}`,
+      ...y.phaseRows.map((r) => `  ${r.phase}: y=${r.y.toFixed(3)} V=${Math.round(r.volume)} (${(r.share * 100).toFixed(1)}%)`),
+      ...y.notes,
+    ]
+    setYReportText(lines.join('\n'))
+    setTimingNotes(y.notes)
+  }
+
+  function onGenerateScheme() {
+    if (!channel || !signal) return
+    const gen = generateProtectedPhases(channel.approaches, signal)
+    replaceSignalScheme(gen)
+    setTimingNotes(['已生成保护相位方案（每进口一相位）· 工程示意', `C=${gen.cycleSec}s · 相位 ${gen.phases.length}`])
+    setYReportText('')
+  }
+
+  function onClearScheme() {
+    if (!signal) return
+    const cleared = clearPhaseGreens(signal, 8)
+    replaceSignalScheme(cleared)
+    setTimingNotes(['已清空绿灯至最小绿（保留相位结构/放行）', `C=${cleared.cycleSec}s`])
+  }
+
+  function onExportAutoTimingReport() {
+    if (!channel || !flow || !signal) return
+    const r = runAutoTimingPack(channel.approaches, flow, signal, buildDesign())
+    downloadText(`${project.name}-自动配时.md`, autoTimingMarkdown(project.name, r), 'text/markdown')
+  }
+
 
   function runTimingCompare() {
     if (!channel || !flow || !signal) return
@@ -330,8 +391,8 @@ export default function App() {
     }
     const r = optimizeSignalTiming(channel.approaches, flow, signal, {
       method: row.method,
-      targetVc: project.settings.targetVc,
-      startLoss: signal.startLossSec,
+      targetVc: designTargetVc,
+      startLoss: designStartLoss,
       fixedCycle: useFixed || fixedCycleOn ? row.cycleSec : row.method === 'equal' ? row.cycleSec : undefined,
     })
     applyOptimizedTiming(r.appliedPhases, r.cycleSec)
@@ -539,7 +600,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.81 · 绿波专页</span>
+          <span>Crossdraw v0.5.82 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -561,7 +622,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.81</span>
+            <span className="brand-ver">v0.5.82</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -777,6 +838,24 @@ export default function App() {
                   onRunOptimize={runWebster}
                   onRunCompare={runTimingCompare}
                   onApplyCompareRow={applyTimingCompareRow}
+                  designTargetVc={designTargetVc}
+                  onDesignTargetVc={setDesignTargetVc}
+                  designStartLoss={designStartLoss}
+                  onDesignStartLoss={(v) => {
+                    setDesignStartLoss(v)
+                    setSignalMeta({ startLossSec: v })
+                  }}
+                  designPhf={designPhf}
+                  onDesignPhf={setDesignPhf}
+                  designCycleSec={designCycleSec}
+                  onDesignCycleSec={setDesignCycleSec}
+                  designLockCycle={designLockCycle}
+                  onDesignLockCycle={setDesignLockCycle}
+                  onComputeY={onComputeY}
+                  onGenerateScheme={onGenerateScheme}
+                  onClearScheme={onClearScheme}
+                  onExportAutoTimingReport={onExportAutoTimingReport}
+                  yReportText={yReportText}
                 />
               )}
               {mode === 'xsection' && xsection && selected && (
@@ -826,7 +905,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.81</span>
+        <span>Crossdraw v0.5.82</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

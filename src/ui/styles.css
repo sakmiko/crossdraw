@@ -2790,3 +2790,15 @@ button.primary .cd-icon {
     grid-template-columns: minmax(0, 1fr) minmax(300px, 36%);
   }
 }
+
+.y-report-pre {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  max-height: 160px;
+  overflow: auto;
+  font-family: var(--mono);
+}

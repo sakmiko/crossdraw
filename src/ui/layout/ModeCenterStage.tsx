@@ -207,6 +207,18 @@ export function ModeCenterStage(props: ModeCenterProps) {
       ['queue', '排队长度'],
       ['vc', '饱和度'],
     ]
+    const exportPlanCsv = () => {
+      const rows = analysis.lanes.map((l) =>
+        [l.approachName, l.movement, l.volumePeak.toFixed(0), l.vc.toFixed(3), l.delaySec.toFixed(1), l.queueM.toFixed(1)].join(','),
+      )
+      const head = 'approach,movement,volume,vc,delay_s,queue_m'
+      const blob = new Blob([[head, ...rows].join('\n')], { type: 'text/csv;charset=utf-8' })
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = `crossdraw-analysis-${planMetric}.csv`
+      a.click()
+      URL.revokeObjectURL(a.href)
+    }
     return (
       <StageChrome
         title="平面评价图"
@@ -224,6 +236,9 @@ export function ModeCenterStage(props: ModeCenterProps) {
               {lab}
             </button>
           ))}
+          <button type="button" className="ghost" onClick={exportPlanCsv}>
+            导出数据
+          </button>
         </div>
         <div
           className="chart-svg-host chart-svg-host--pro mode-stage-svg"

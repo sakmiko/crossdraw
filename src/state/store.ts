@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 import { temporal } from 'zundo'
 import { newId } from '@/shared/id'
-import type {
+import type { SignalScheme,
   Approach,
   BandCorridor,
   EditorMode,
@@ -93,6 +93,8 @@ export type AppState = {
   renameChannel: (id: string, name: string) => void
   loadTemplate: (kind: IntersectionType | 'cross' | 't') => void
   applyOptimizedTiming: (phases: Phase[], cycle: number) => void
+  replaceSignalScheme: (signal: SignalScheme) => void
+  setSignalMeta: (patch: Partial<Pick<SignalScheme, 'startLossSec' | 'lostTimeSec' | 'name'>>) => void
   updateBand: (patch: Partial<BandCorridor>) => void
   updateBandNode: (nodeId: string, patch: Partial<BandCorridor['nodes'][0]>) => void
   addBandNode: () => void
@@ -572,6 +574,30 @@ export const useAppStore = create<AppState>()(
           if (!sg) return
           sg.cycleSec = cycle
           sg.phases = phases.map((ph) => ({ ...ph }))
+          s.dirty = true
+        }),
+      replaceSignalScheme: (signal) =>
+        set((s) => {
+          const fl = activeFlow(s.project)
+          if (!fl) return
+          const i = fl.signalSchemes.findIndex(
+            (x) => x.id === signal.id || x.id === s.project.active.signalId,
+          )
+          if (i >= 0) fl.signalSchemes[i] = signal
+          else {
+            fl.signalSchemes.push(signal)
+          }
+          s.project.active.signalId = signal.id
+          s.dirty = true
+          s.project.meta.updatedAt = new Date().toISOString()
+        }),
+      setSignalMeta: (patch) =>
+        set((s) => {
+          const sg = activeSignal(s.project)
+          if (!sg) return
+          if (patch.startLossSec !== undefined) sg.startLossSec = patch.startLossSec
+          if (patch.lostTimeSec !== undefined) sg.lostTimeSec = patch.lostTimeSec
+          if (patch.name !== undefined) sg.name = patch.name
           s.dirty = true
         }),
       updateBand: (patch) =>
