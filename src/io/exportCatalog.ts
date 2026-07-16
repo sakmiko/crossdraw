@@ -36,6 +36,7 @@ export type ExportItemId =
   | 'roadgee-plan-delay'
   | 'roadgee-plan-queue'
   | 'roadgee-plan-vc'
+  | 'roadgee-signal-board'
 
 export type ExportItem = {
   id: ExportItemId
@@ -49,6 +50,16 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'roadgee-signal-board',
+    category: 'signal',
+    title: '相位灯态配时图',
+    format: 'SVG',
+    description: '多相位十字灯态 + G/Y 配时条 · 与相位表同源 · 无水印',
+    modes: ['signal'],
+    requires: ['channel', 'signal'],
+  },
+
   {
     id: 'roadgee-flow-svg',
     category: 'drawing',

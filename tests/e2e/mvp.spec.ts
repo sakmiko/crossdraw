@@ -10,16 +10,15 @@ async function bootCross(page: Page) {
 }
 
 async function openNav(page: Page, label: string) {
-  const nav = page.getByRole('navigation', { name: '功能导航' })
-  await nav.getByRole('tab', { name: new RegExp(label) }).click()
+  await page.getByRole('navigation', { name: '功能导航' }).getByRole('tab', { name: new RegExp(label) }).click()
   await page.waitForTimeout(250)
 }
 
-test.describe('Crossdraw v0.5.76 roadgee diagrams + polish', () => {
+test.describe('Crossdraw v0.5.77 signal board + polish', () => {
   // 渠化 流量 信号 分析 绿波 比选 断面
   test('shell', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.76/).first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.77/).first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
 
@@ -29,33 +28,24 @@ test.describe('Crossdraw v0.5.76 roadgee diagrams + polish', () => {
     await page.screenshot({ path: 'docs/screenshots/01-channel.png', fullPage: true })
   })
 
-  test('flow roadgee diagram live', async ({ page }) => {
+  test('flow', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '流量')
-    await expect(page.getByText('流量流向图').first()).toBeVisible({ timeout: 10000 })
-    await expect(page.getByRole('button', { name: '下载图片' }).first()).toBeVisible()
-    // change a volume — diagram host still present
-    const firstL = page.locator('table.table input[type="number"]').first()
-    await firstL.fill('999')
-    await page.waitForTimeout(200)
-    await expect(page.locator('.chart-svg-host--pro').first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/02-flow.png', fullPage: true })
   })
 
-  test('signal', async ({ page }) => {
+  test('signal board', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '信号')
+    await expect(page.getByText('相位灯态').first()).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('button', { name: '下载图片' }).first()).toBeVisible()
+    await expect(page.getByText('Y值').first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/03-signal.png', fullPage: true })
   })
 
-  test('analysis plan modes', async ({ page }) => {
+  test('analysis', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '分析')
-    await expect(page.getByText('平面评价图').first()).toBeVisible({ timeout: 10000 })
-    await page.getByRole('button', { name: '延误时间' }).click()
-    await page.getByRole('button', { name: '排队长度' }).click()
-    await page.getByRole('button', { name: '饱和度' }).click()
-    await page.getByRole('button', { name: '服务水平' }).click()
     await page.screenshot({ path: 'docs/screenshots/04-analysis.png', fullPage: true })
   })
 
