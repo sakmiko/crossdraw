@@ -18,6 +18,7 @@ import {
 import { schemeDeltas, schemeDeltaMarkdown } from '@/domain/analysis/schemeDiff' 
 import { exportJsonFile, exportSvgFile } from '@/io/exportCharts'
 import { downloadText } from '@/io/download'
+import { downloadEchartsPng } from '@/io/exportEchartsPng'
 import {
   buildTimingCompareRows,
   timingCompareBoardSvg,
@@ -178,7 +179,29 @@ export function CompareWorkspace({ project, theme, onActivateScheme }: CompareWo
         </div>
       )}
       <div className="rg-section" id="compare-echarts">
-        <div className="rg-section-title">交互比选 · 延误 / v/c</div>
+        <div className="rg-section-title">
+          交互比选 · 延误 / v/c
+          <button
+            type="button"
+            className="ghost"
+            onClick={() =>
+              void downloadEchartsPng(
+                `${project.name}-方案比选.png`,
+                compareSchemesOption(
+                  rows.map((r) => ({
+                    label: `${r.channel}/${r.signal}`,
+                    avgVc: r.avgVc,
+                    avgDelay: r.avgDelay,
+                    los: r.los,
+                  })),
+                ),
+                { width: 1000, height: 420 },
+              )
+            }
+          >
+            导出 PNG
+          </button>
+        </div>
         <EChart
           option={compareSchemesOption(
             rows.map((r) => ({

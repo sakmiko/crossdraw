@@ -24,6 +24,7 @@ import { corridorMapSvg } from '@/ui/charts/corridorMap'
 import { corridorNetworkPreviewSvg } from '@/ui/charts/corridorNetworkPreview'
 import { exportSvgFile } from '@/io/exportCharts'
 import { downloadText } from '@/io/download'
+import { downloadEchartsPng } from '@/io/exportEchartsPng'
 import { corridorSegments } from '@/domain/analysis/corridor'
 import { Icon } from '@/ui/icons/Icons'
 import { computeCoordinationIndex } from '@/domain/analysis/coordinationIndex'
@@ -340,6 +341,21 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
         )}
       </div>
       <div id="band-echarts" className="band-echarts-host" aria-label="绿波交互指标">
+        <div className="rg-section-title" style={{ padding: '0 4px 4px' }}>
+          绿波交互 · 相位差 / 带宽
+          <button
+            type="button"
+            className="ghost"
+            onClick={() =>
+              void downloadEchartsPng(`${project.name}-绿波带宽.png`, bandBandwidthOption(corridor, band), {
+                width: 1000,
+                height: 400,
+              })
+            }
+          >
+            导出 PNG
+          </button>
+        </div>
         <EChart option={bandBandwidthOption(corridor, band)} style={{ height: 260 }} className="echart-host" />
       </div>
 

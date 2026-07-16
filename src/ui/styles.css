@@ -3472,3 +3472,41 @@ button,
   border-radius: 8px;
   background: color-mix(in srgb, var(--panel) 92%, transparent);
 }
+
+
+/* v0.5.127 topbar density */
+.topbar {
+  min-height: 44px;
+  padding: 4px 10px;
+  gap: 8px;
+}
+.topbar .brand {
+  gap: 6px;
+}
+.topbar .brand-ver {
+  font-size: 10px;
+  opacity: 0.85;
+}
+.topbar-actions .ghost,
+.topbar-actions .primary,
+.menu-dropdown > summary {
+  padding: 4px 8px;
+  font-size: 12px;
+  min-height: var(--ctrl-h, 30px);
+}
+.menu-dropdown .menu-panel {
+  min-width: 168px;
+  padding: 4px;
+}
+.menu-dropdown .menu-panel [role='menuitem'] {
+  padding: 6px 8px;
+  font-size: 12px;
+}
+.band-echarts-host .rg-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 650;
+  margin: 0 0 4px;
+}

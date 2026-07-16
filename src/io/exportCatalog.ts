@@ -134,6 +134,8 @@ export type ExportItemId =
   | 'echarts-vc-delay-png'
   | 'echarts-flow-ltr-png'
   | 'echarts-phase-timing-png'
+  | 'echarts-band-png'
+  | 'echarts-compare-png'
 
 export type ExportItem = {
   id: ExportItemId
@@ -147,6 +149,24 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'echarts-band-png',
+    category: 'band',
+    title: '绿波带宽交互 PNG',
+    format: 'PNG',
+    description: 'ECharts 同源 BandResult / 路口相位差',
+    modes: ['band'],
+    requires: ['band'],
+  },
+  {
+    id: 'echarts-compare-png',
+    category: 'analysis',
+    title: '多方案比选交互 PNG',
+    format: 'PNG',
+    description: 'ECharts 同源 analyzeIntersection 行',
+    modes: ['compare'],
+    requires: ['analysis'],
+  },
   {
     id: 'echarts-vc-delay-png',
     category: 'analysis',

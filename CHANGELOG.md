@@ -1,3 +1,9 @@
+## 0.5.127 — Band/Compare ECharts PNG + topbar density
+
+- Export center `echarts-band-png` / `echarts-compare-png` (homology BandResult / compare rows).
+- Band & Compare workspaces「导出 PNG」buttons.
+- Tighter topbar / menu control height. Schematic PNG — not GIS.
+
 ## 0.5.126 — Aux road glyph + ECharts PNG export + density
 
 - `placeAuxRoadRibbon` for frontage/aux road (homology auxRoad width/offset/openNear).

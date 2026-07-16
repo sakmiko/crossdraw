@@ -90,7 +90,7 @@ import { pedestrianRingSvg } from '@/ui/charts/pedestrianRing'
 import { optimizeCorridor, measureCorridor, corridorSegments } from '@/domain/analysis/corridor'
 import { downloadBlob, downloadText } from '@/io/download'
 import { downloadEchartsPng } from '@/io/exportEchartsPng'
-import { vcDelayOption, flowLtrOption, phaseTimingOption } from '@/ui/charts/interactiveBoards'
+import { bandBandwidthOption, compareSchemesOption, flowLtrOption, phaseTimingOption, vcDelayOption } from '@/ui/charts/interactiveBoards'
 import { loadDraft, clearDraft } from '@/io/autosave'
 import { persistAutosave, redo, undo, useAppStore } from '@/state/store'
 import { CommandPalette } from '@/ui/common/CommandPalette'
@@ -669,7 +669,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.126 · 绿波专页</span>
+          <span>Crossdraw v0.5.127 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -691,7 +691,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.126</span>
+            <span className="brand-ver">v0.5.127</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -1026,7 +1026,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.126</span>
+        <span>Crossdraw v0.5.127</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1086,6 +1086,29 @@ export default function App() {
               flowLtrOption(channel.approaches, flow, flowDisplayMode ?? 'natural'),
               { width: 960, height: 400 },
             )
+          },
+                    'echarts-band-png': async () => {
+            const corridor = project.bandCorridor
+            if (!corridor || corridor.nodes.length < 2) return
+            const band = measureCorridor(corridor)
+            await downloadEchartsPng(
+              `${project.name}-绿波带宽.png`,
+              bandBandwidthOption(corridor, band),
+              { width: 1000, height: 400 },
+            )
+          },
+          'echarts-compare-png': async () => {
+            const rows = collectCompareRows(project, analyzeIntersection).map((r) => ({
+              label: `${r.channel}/${r.signal}`,
+              avgVc: r.avgVc,
+              avgDelay: r.avgDelay,
+              los: r.los,
+            }))
+            if (!rows.length) return
+            await downloadEchartsPng(`${project.name}-方案比选.png`, compareSchemesOption(rows), {
+              width: 1000,
+              height: 420,
+            })
           },
           'echarts-phase-timing-png': async () => {
             if (!signal) return

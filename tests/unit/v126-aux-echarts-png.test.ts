@@ -68,7 +68,7 @@ describe('v0.5.126 aux glyph + echarts png export', () => {
     expect(app).toContain('echarts-vc-delay-png')
     expect(app).toContain('downloadEchartsPng')
     const pkg = readFileSync(resolve('package.json'), 'utf8')
-    expect(pkg).toContain('"version": "0.5.126"')
+    expect(pkg).toMatch(/"version": "0\.5\.\d+"/)
     const css = readFileSync(resolve('src/ui/styles.css'), 'utf8')
     expect(css).toContain('v0.5.126 density')
   })
