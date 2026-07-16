@@ -44,6 +44,12 @@ import {
   collectPedOptRows,
 } from '@/ui/charts/pedTimingOptBoard'
 import { criticalApproachBoardSvg } from '@/ui/charts/criticalApproachBoard'
+import {
+  cycleScanBoardSvg,
+  scanCycleSensitivity,
+  cycleScanMarkdown,
+  cycleScanCsv,
+} from '@/ui/charts/cycleScanBoard' 
 import { analyzeIntersection } from '@/domain/analysis'  
 import { allocateGreensByBarrierCriticalY } from '@/domain/signal/barrierGreenAlloc'
 import { dualRingPhaseNumberSvg } from '@/ui/charts/phaseNumberDiagram'
@@ -113,6 +119,7 @@ export type SignalWorkspaceProps = {
   onApplyPedTiming?: () => void
   onAllocateBarrierGreens?: () => void
   onApplyFullSchemeOptimize?: () => void
+  onApplyCycleScan?: (cycleSec: number) => void
   onExportCriticalY?: () => void
   onRunOptimize: () => void
   onRunCompare: () => void
@@ -170,6 +177,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
   onAllocateBarrierGreens,
     onRunOptimize,
   onApplyFullSchemeOptimize,
+    onApplyCycleScan,
   onExportCriticalY,
     onRunCompare,
     onApplyCompareRow,
@@ -575,6 +583,81 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
               ),
             }}
           />
+        </div>
+      )}
+      {channel && flow && !signal.unsignalized && (
+        <div className="flat-section" style={{ marginBottom: 10 }}>
+          <div className="rg-section-title">周期 C 敏感性</div>
+          <div
+            className="chart-svg-host"
+            style={{ overflow: 'auto' }}
+            dangerouslySetInnerHTML={{
+              __html: cycleScanBoardSvg(channel.approaches, flow, signal, {
+                width: 860,
+                height: 280,
+                minCycle: 50,
+                maxCycle: 150,
+                stepSec: 5,
+              }),
+            }}
+          />
+          <div className="toolbar dense" style={{ marginTop: 6 }}>
+            <button
+              type="button"
+              className="primary"
+              onClick={() => {
+                const r = scanCycleSensitivity(channel.approaches, flow, signal, {
+                  minCycle: 50,
+                  maxCycle: 150,
+                  stepSec: 5,
+                })
+                onApplyCycleScan?.(r.bestDelay.cycleSec)
+              }}
+            >
+              应用最小延误 C
+            </button>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => {
+                const r = scanCycleSensitivity(channel.approaches, flow, signal, {
+                  minCycle: 50,
+                  maxCycle: 150,
+                  stepSec: 5,
+                })
+                onApplyCycleScan?.(r.bestVc.cycleSec)
+              }}
+            >
+              应用最小maxVC C
+            </button>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => {
+                const r = scanCycleSensitivity(channel.approaches, flow, signal, {
+                  minCycle: 50,
+                  maxCycle: 150,
+                  stepSec: 5,
+                })
+                exportSvgFile(
+                  `${projectName}-周期敏感性.svg`,
+                  cycleScanBoardSvg(channel.approaches, flow, signal, { width: 900, scan: r }),
+                )
+                downloadText(
+                  `${projectName}-周期敏感性.md`,
+                  cycleScanMarkdown(projectName, r),
+                  'text/markdown',
+                )
+                downloadText(
+                  `${projectName}-周期敏感性.csv`,
+                  cycleScanCsv(r),
+                  'text/csv',
+                )
+              }}
+            >
+              周期扫描导出
+            </button>
+          </div>
         </div>
       )}
       {kpi && !signal.unsignalized && (

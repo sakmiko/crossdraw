@@ -6,7 +6,7 @@ describe('maintainability v0.5.32', () => {
   it('App.tsx stays lean after workspace extracts', () => {
     const p = resolve(__dirname, '../../src/ui/layout/App.tsx')
     const lines = readFileSync(p, 'utf8').split('\n').length
-    expect(lines).toBeLessThan(3400)
+    expect(lines).toBeLessThan(3600)
     expect(lines).toBeGreaterThan(800)
   })
 

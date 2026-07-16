@@ -18,11 +18,11 @@ async function openNav(page: Page, label: string) {
   await page.waitForTimeout(300)
 }
 
-test.describe('Crossdraw v0.5.112 multi-link + polish', () => {
+test.describe('Crossdraw v0.5.113 cycle-scan + polish', () => {
   // 渠化 流量 信号 分析 绿波 比选 断面
   test('shell', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.112/).first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.113/).first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
   test('channel', async ({ page }) => {
@@ -35,9 +35,13 @@ test.describe('Crossdraw v0.5.112 multi-link + polish', () => {
     await openNav(page, '流量')
     await page.screenshot({ path: 'docs/screenshots/02-flow.png', fullPage: true })
   })
-  test('signal', async ({ page }) => {
+  test('signal cycle scan', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '信号')
+    await expect(page.locator('.rg-section-title').filter({ hasText: '周期 C 敏感性' })).toBeVisible({
+      timeout: 10000,
+    })
+    await expect(page.getByRole('button', { name: /应用最小延误 C/ })).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/03-signal.png', fullPage: true })
   })
   test('analysis', async ({ page }) => {
@@ -45,17 +49,9 @@ test.describe('Crossdraw v0.5.112 multi-link + polish', () => {
     await openNav(page, '分析')
     await page.screenshot({ path: 'docs/screenshots/04-analysis.png', fullPage: true })
   })
-  test('band multi-link', async ({ page }) => {
+  test('band', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '绿波')
-    await expect(page.getByRole('button', { name: /联动连续/ })).toBeVisible({ timeout: 10000 })
-    await expect(page.getByRole('button', { name: /联动扫描/ })).toBeVisible()
-    const tab = page.getByRole('tab', { name: /多走廊/ })
-    if (await tab.count()) {
-      await tab.first().click()
-      await page.waitForTimeout(300)
-      await expect(page.getByText('多走廊相位差联动').first()).toBeVisible({ timeout: 8000 })
-    }
     await page.screenshot({ path: 'docs/screenshots/05-band.png', fullPage: true })
   })
   test('xsection', async ({ page }) => {

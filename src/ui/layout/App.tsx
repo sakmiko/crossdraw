@@ -261,6 +261,7 @@ export default function App() {
   const applyOffsetScanBest = useAppStore((s) => s.applyOffsetScanBest)
   const applySpeedScanBest = useAppStore((s) => s.applySpeedScanBest)
   const applyFullSchemeOptimize = useAppStore((s) => s.applyFullSchemeOptimize)
+  const applyCycleScanChoice = useAppStore((s) => s.applyCycleScanChoice)
   const setBandSegmentLength = useAppStore((s) => s.setBandSegmentLength)
   const setActiveBand = useAppStore((s) => s.setActiveBand)
   const addBandCorridor = useAppStore((s) => s.addBandCorridor)
@@ -665,7 +666,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.112 · 绿波专页</span>
+          <span>Crossdraw v0.5.113 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -687,7 +688,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.112</span>
+            <span className="brand-ver">v0.5.113</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -877,6 +878,9 @@ export default function App() {
               )}
               {mode === 'signal' && signal && (
                 <SignalWorkspace
+                  onApplyCycleScan={(c) => {
+                    applyCycleScanChoice(c)
+                  }}
                   onApplyFullSchemeOptimize={() => {
                     const r = applyFullSchemeOptimize()
                     if (r) {
@@ -1016,7 +1020,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.112</span>
+        <span>Crossdraw v0.5.113</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

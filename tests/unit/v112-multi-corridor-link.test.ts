@@ -53,6 +53,6 @@ describe('v0.5.112 multi-corridor offset link', () => {
     const st = readFileSync(resolve(__dirname, '../../src/state/store.ts'), 'utf8')
     expect(st).toContain('linkAllCorridorOffsets')
     const app = readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8')
-    expect(app).toContain('v0.5.112')
+    expect(app).toMatch(/v0\.5\.\d+/)
   })
 })

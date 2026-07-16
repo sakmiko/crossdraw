@@ -120,6 +120,9 @@ export type ExportItemId =
   | 'multi-corridor-link-svg'
   | 'multi-corridor-link-md'
   | 'multi-corridor-link-csv'
+  | 'cycle-scan-svg'
+  | 'cycle-scan-md'
+  | 'cycle-scan-csv'
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
@@ -138,6 +141,34 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'cycle-scan-svg',
+    category: 'signal',
+    title: '周期 C 敏感性',
+    format: 'SVG',
+    description: '固定分绿 · 延误/maxVC vs C',
+    modes: ['signal', 'analysis'],
+    requires: ['signal'],
+  },
+  {
+    id: 'cycle-scan-md',
+    category: 'signal',
+    title: '周期敏感性 MD',
+    format: 'MD',
+    description: 'C 扫描表',
+    modes: ['signal'],
+    requires: ['signal'],
+  },
+  {
+    id: 'cycle-scan-csv',
+    category: 'signal',
+    title: '周期敏感性 CSV',
+    format: 'CSV',
+    description: 'C–延误–v/c 点',
+    modes: ['signal'],
+    requires: ['signal'],
+  },
+
   {
     id: 'multi-corridor-link-svg',
     category: 'band',

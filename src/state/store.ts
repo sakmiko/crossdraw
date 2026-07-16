@@ -35,7 +35,8 @@ import {
   linkMultiCorridorOffsets,
   type MultiCorridorLinkMode,
   type MultiCorridorLinkResult,
-} from '@/domain/analysis/multiCorridorLink'   
+} from '@/domain/analysis/multiCorridorLink'
+import { applyCycleScanBest as applyCycleAtC, scanCycleSensitivity } from '@/domain/analysis/cycleScan'    
 import {
   runFullSchemeOptimize,
   projectAfterFullOptimize,
@@ -120,6 +121,7 @@ export type AppState = {
   optimizeAllBands: () => { count: number; improved: number }
   linkAllCorridorOffsets: (mode?: MultiCorridorLinkMode) => MultiCorridorLinkResult | null
   applyFullSchemeOptimize: () => FullOptimizeResult | null
+  applyCycleScanChoice: (cycleSec: number) => { cycleSec: number } | null
   setBandSegmentLength: (toNodeId: string, lengthM: number) => void
   updateBasemap: (patch: Partial<NonNullable<Project["settings"]["basemap"]>>) => void
   setActiveBand: (id: string) => void
@@ -772,6 +774,36 @@ export const useAppStore = create<AppState>()(
           dirty: true,
         })
         return { bestSpeed: scan.best.speedKmh, totalSec: scan.best.totalSec }
+      },
+      applyCycleScanChoice: (cycleSec: number) => {
+        const st = get()
+        const p = st.project
+        const ch =
+          p.channelizationSchemes.find((c) => c.id === p.active?.channelId) ??
+          p.channelizationSchemes[0]
+        if (!ch) return null
+        const fl = ch.flowSchemes.find((f) => f.id === p.active?.flowId) ?? ch.flowSchemes[0]
+        if (!fl) return null
+        const sg =
+          fl.signalSchemes.find((x) => x.id === p.active?.signalId) ?? fl.signalSchemes[0]
+        if (!sg || sg.unsignalized) return null
+        const next = applyCycleAtC(ch.approaches, fl, sg, cycleSec)
+        set((state) => {
+          const ch2 =
+            state.project.channelizationSchemes.find(
+              (c) => c.id === state.project.active?.channelId,
+            ) ?? state.project.channelizationSchemes[0]
+          if (!ch2) return
+          const fl2 =
+            ch2.flowSchemes.find((f) => f.id === state.project.active?.flowId) ??
+            ch2.flowSchemes[0]
+          if (!fl2) return
+          const si = fl2.signalSchemes.findIndex((x) => x.id === next.id)
+          if (si >= 0) fl2.signalSchemes[si] = next
+          else if (fl2.signalSchemes[0]) fl2.signalSchemes[0] = next
+          state.dirty = true
+        })
+        return { cycleSec: next.cycleSec }
       },
       applyFullSchemeOptimize: () => {
         const s = get()

@@ -151,3 +151,5 @@
 | 速度敏感性扫描 | 固定相位差 · scoreOffsets vs v | 工程扫描非 MIP |
 
 | 多走廊相位差联动 | progressive / offset-scan 批量 | 独立走廊；非联合 MIP |
+
+| 周期 C 敏感性 | 固定 C 按 y 分绿 + 延误/v/c | 工程扫描非完整 HCM |
