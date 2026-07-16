@@ -1,3 +1,9 @@
+## 0.5.124 — Cycle-scan ECharts + unified responsive shell
+
+- Live `cycleScanOption` on Signal「周期 C 敏感性」(`#cycle-scan-echarts`, homology `scanCycleSensitivity`).
+- Unified responsive grid: 1280/1100 left|right tighten; ≤900 stack with stage min-height.
+- Schematic fixed-cycle scan — not full HCM optimizer.
+
 ## 0.5.123 — Cross-section width ECharts
 
 - `xsectionWidthOption`: component width bars + type share pie (homology section.components / diagramComps).

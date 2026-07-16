@@ -31,7 +31,7 @@ import { allPhasesConflictHits } from '@/domain/signal/phaseConflictView'
 import { detectPedVehicleConflicts, pedVehicleSummary } from '@/domain/signal/pedVehicleConflict'
 import { SignalCharts, TimingCompareCharts } from '@/ui/charts/ChartPanels'
 import { EChart } from '@/ui/charts/EChart'
-import { phaseTimingOption } from '@/ui/charts/interactiveBoards'
+import { phaseTimingOption, cycleScanOption } from '@/ui/charts/interactiveBoards'
 import { buildDualRingAlignment, dualRingSummaryText } from '@/domain/signal/dualRing'
 import { applyPedTimingToSignal } from '@/domain/signal/pedTiming'
 import {
@@ -208,6 +208,28 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
     yReportText,
     onToggleUnsignalized,
   } = props
+
+  const cycleScanLive = useMemo(() => {
+    if (!channel || !flow || signal.unsignalized) return null
+    try {
+      return scanCycleSensitivity(channel.approaches, flow, signal, {
+        minCycle: 50,
+        maxCycle: 150,
+        stepSec: 5,
+      })
+    } catch {
+      return null
+    }
+  }, [channel, flow, signal])
+
+  const cycleScanChartOpt = useMemo(() => {
+    if (!cycleScanLive) return null
+    return cycleScanOption(
+      cycleScanLive.points.map((p) => ({ c: p.cycleSec, delay: p.avgDelay, maxVc: p.maxVc })),
+      signal.cycleSec,
+    )
+  }, [cycleScanLive, signal.cycleSec])
+
 
   const kpi = useMemo(() => {
     if (!channel || !flow) return null
@@ -647,8 +669,12 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         </div>
       )}
       {channel && flow && !signal.unsignalized && (
-        <div className="flat-section" style={{ marginBottom: 10 }}>
-          <div className="rg-section-title">周期 C 敏感性</div>
+        <div className="flat-section" id="cycle-scan-echarts" style={{ marginBottom: 10 }}>
+          <div className="rg-section-title">周期 C 敏感性 · 交互</div>
+          {cycleScanChartOpt ? (
+            <EChart option={cycleScanChartOpt} style={{ height: 280 }} className="echart-host" />
+          ) : null}
+          <div className="rg-section-title" style={{ marginTop: 8 }}>静态扫描图</div>
           <div
             className="chart-svg-host"
             style={{ overflow: 'auto' }}

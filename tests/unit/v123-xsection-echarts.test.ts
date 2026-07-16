@@ -24,7 +24,7 @@ describe('v0.5.123 xsection ECharts', () => {
     const cp = readFileSync(resolve('src/ui/charts/ChartPanels.tsx'), 'utf8')
     expect(cp).toContain('xsectionWidthOption')
     const pkg = readFileSync(resolve('package.json'), 'utf8')
-    expect(pkg).toContain('"version": "0.5.123"')
+    expect(pkg).toMatch(/"version": "0\.5\.\d+"/)
     const css = readFileSync(resolve('src/ui/styles.css'), 'utf8')
     expect(css).toContain('v0.5.123 xsection')
   })
