@@ -12,6 +12,7 @@ import { xsectionWidthOption } from '@/ui/charts/interactiveBoards'
 import { professionalCrossSectionSvg } from '@/ui/charts/crossSectionDiagram'
 import { exportSvgFile } from '@/io/exportCharts'
 import { downloadText } from '@/io/download'
+import { downloadEchartsPng } from '@/io/exportEchartsPng'
 import {
   buildSectionReport,
   componentsForDiagram,
@@ -269,7 +270,22 @@ export function XSectionWorkspace({
       <p className="hint quiet">{report.honesty}</p>
 
       <div className="rg-section" id="xsection-echarts">
-        <div className="rg-section-title">交互断面 · 构件宽度 / 类型占比</div>
+        <div className="rg-section-title">
+          交互断面 · 构件宽度 / 类型占比
+          <button
+            type="button"
+            className="ghost"
+            onClick={() =>
+              void downloadEchartsPng(
+                `${projectName}-断面宽度.png`,
+                xsectionWidthOption(diagramComps.length ? diagramComps : xsection.components),
+                { width: 960, height: 420 },
+              )
+            }
+          >
+            导出 PNG
+          </button>
+        </div>
         <EChart
           option={xsectionWidthOption(diagramComps.length ? diagramComps : xsection.components)}
           style={{ height: 280 }}

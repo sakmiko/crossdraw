@@ -136,6 +136,7 @@ export type ExportItemId =
   | 'echarts-phase-timing-png'
   | 'echarts-band-png'
   | 'echarts-compare-png'
+  | 'echarts-xsection-png'
 
 export type ExportItem = {
   id: ExportItemId
@@ -149,6 +150,15 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'echarts-xsection-png',
+    category: 'drawing',
+    title: '断面构件宽度 PNG',
+    format: 'PNG',
+    description: 'ECharts 同源 section.components',
+    modes: ['xsection'],
+    requires: ['selected'],
+  },
   {
     id: 'echarts-band-png',
     category: 'band',

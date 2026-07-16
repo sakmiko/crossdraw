@@ -565,6 +565,47 @@ export function placeAuxRoadRibbon(
 }
 
 
+
+/**
+ * Left-turn / through wait bay rectangle (schematic paint).
+ * s0..s1 along ux; lat0..lat1 along px (entry side typically negative).
+ */
+export function placeWaitBay(
+  mesh: Mesh,
+  f: Frame,
+  s0: number,
+  s1: number,
+  lat0: number,
+  lat1: number,
+  fill: string,
+  opts?: { alpha?: number; stroke?: string; dashed?: boolean },
+) {
+  if (s1 <= s0) return
+  const a = at(f, s0, lat0)
+  const b = at(f, s1, lat0)
+  const c = at(f, s1, lat1)
+  const d = at(f, s0, lat1)
+  pushPoly(mesh, {
+    layer: 'MARKING',
+    points: [a, b, c, d],
+    fill,
+    stroke: opts?.stroke,
+    strokeWidth: opts?.stroke ? 0.12 : undefined,
+    alpha: opts?.alpha ?? 0.4,
+    meta: { kind: 'wait-bay' },
+  })
+  if (opts?.dashed) {
+    pushLine(mesh, {
+      layer: 'MARKING',
+      points: [at(f, s0, (lat0 + lat1) / 2), at(f, s1, (lat0 + lat1) / 2)],
+      stroke: opts.stroke ?? fill,
+      strokeWidth: 0.12,
+      dashed: true,
+      alpha: 0.65,
+    })
+  }
+}
+
 /** Rectangle lane strip between lat a..b and s0..s1 along frame. */
 export function placeLaneStrip(
   mesh: Mesh,

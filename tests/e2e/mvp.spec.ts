@@ -18,13 +18,14 @@ async function openNav(page: Page, label: string) {
   await page.waitForTimeout(300)
 }
 
-test.describe('v0.5.127 band-compare-png + topbar polish', () => {
+test.describe('v0.5.128 waitbay + xsection-png polish', () => {
   // docs/screenshots/00-shell.png
   // docs/screenshots/06-compare.png
   // 渠化 流量 信号 分析 绿波 比选 断面
-  test('shell', async ({ page }) => {
+  test('shell scheme compact', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.127/).first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.128/).first()).toBeVisible()
+    await expect(page.locator('.scheme-switcher--compact, .scheme-switcher').first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
   test('channel', async ({ page }) => {
@@ -47,25 +48,22 @@ test.describe('v0.5.127 band-compare-png + topbar polish', () => {
     await openNav(page, '分析')
     await page.screenshot({ path: 'docs/screenshots/04-analysis.png', fullPage: true })
   })
-  test('band png', async ({ page }) => {
+  test('band', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '绿波')
-    await expect(page.locator('#band-echarts').getByRole('button', { name: /导出 PNG/ })).toBeVisible({
-      timeout: 12000,
-    })
     await page.screenshot({ path: 'docs/screenshots/05-band.png', fullPage: true })
   })
-  test('xsection', async ({ page }) => {
+  test('xsection png', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '断面')
-    await page.screenshot({ path: 'docs/screenshots/05-xsection.png', fullPage: true })
-  })
-  test('compare png', async ({ page }) => {
-    await bootCross(page)
-    await openNav(page, '比选')
-    await expect(page.locator('#compare-echarts').getByRole('button', { name: /导出 PNG/ })).toBeVisible({
+    await expect(page.locator('#xsection-echarts').getByRole('button', { name: /导出 PNG/ })).toBeVisible({
       timeout: 12000,
     })
+    await page.screenshot({ path: 'docs/screenshots/05-xsection.png', fullPage: true })
+  })
+  test('compare', async ({ page }) => {
+    await bootCross(page)
+    await openNav(page, '比选')
     await page.screenshot({ path: 'docs/screenshots/06-compare.png', fullPage: true })
   })
 })

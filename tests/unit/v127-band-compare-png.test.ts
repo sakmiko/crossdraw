@@ -35,6 +35,6 @@ describe('v0.5.127 band/compare echarts PNG + topbar', () => {
     const css = readFileSync(resolve('src/ui/styles.css'), 'utf8')
     expect(css).toContain('v0.5.127 topbar')
     const pkg = readFileSync(resolve('package.json'), 'utf8')
-    expect(pkg).toContain('"version": "0.5.127"')
+    expect(pkg).toMatch(/"version": "0\.5\.\d+"/)
   })
 })

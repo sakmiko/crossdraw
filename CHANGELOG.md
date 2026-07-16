@@ -1,3 +1,9 @@
+## 0.5.128 — Wait-bay glyph + xsection PNG + scheme strip
+
+- `placeWaitBay` for left/through wait areas (homology leftWait/throughWait).
+- Export `echarts-xsection-png` + section workspace PNG button.
+- Compact scheme switcher (+渠/+流/+信). Schematic paint — not design-code bay.
+
 ## 0.5.127 — Band/Compare ECharts PNG + topbar density
 
 - Export center `echarts-band-png` / `echarts-compare-png` (homology BandResult / compare rows).

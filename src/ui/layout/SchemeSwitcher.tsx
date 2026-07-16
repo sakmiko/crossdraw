@@ -30,7 +30,7 @@ export function SchemeSwitcher({
   onAddSignal,
 }: SchemeSwitcherProps) {
   return (
-    <div className="scheme-switcher" role="group" aria-label="方案切换">
+    <div className="scheme-switcher scheme-switcher--compact" role="group" aria-label="方案切换">
       <label className="scheme-switch-field">
         <span className="scheme-switch-lab">
           <Icon name="channel" size={13} />
@@ -87,17 +87,17 @@ export function SchemeSwitcher({
       <div className="scheme-switch-actions">
         {onAddChannel && (
           <button type="button" className="ghost scheme-add" onClick={onAddChannel} title="复制渠化方案">
-            +渠化
+            +渠
           </button>
         )}
         {onAddFlow && (
           <button type="button" className="ghost scheme-add" onClick={onAddFlow} title="新增流量方案">
-            +流量
+            +流
           </button>
         )}
         {onAddSignal && (
           <button type="button" className="ghost scheme-add" onClick={onAddSignal} title="新增信号方案">
-            +信号
+            +信
           </button>
         )}
       </div>

@@ -26,6 +26,7 @@ import {
   placeRibbonBetween,
   placeCurbStroke,
   placeAuxRoadRibbon,
+  placeWaitBay,
   placeCirclePoly,
   placeCircleLine,
   type Frame,
@@ -620,33 +621,26 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
     }
   }
 
-  // wait areas — distinct left / through bay
-  if (ap.leftWait) {
-    const bay = Math.min(half * 0.35, Math.max(2.5, (ap.entryLanes.find((l) => l.movements.includes('L'))?.widthM ?? 3.5)))
-    pushPoly(mesh, {
-      layer: 'MARKING',
-      points: [
-        add(mul(ux, start + 0.8), mul(px, -half + 0.2)),
-        add(mul(ux, start + 10), mul(px, -half + 0.2)),
-        add(mul(ux, start + 10), mul(px, -half + bay)),
-        add(mul(ux, start + 0.8), mul(px, -half + bay)),
-      ],
-      fill: '#fbbf24',
-      alpha: 0.4,
-    })
-  }
-  if (ap.throughWait) {
-    pushPoly(mesh, {
-      layer: 'MARKING',
-      points: [
-        add(mul(ux, start + 0.8), mul(px, -1.6)),
-        add(mul(ux, start + 9), mul(px, -1.6)),
-        add(mul(ux, start + 9), mul(px, 1.6)),
-        add(mul(ux, start + 0.8), mul(px, 1.6)),
-      ],
-      fill: '#fde68a',
-      alpha: 0.35,
-    })
+  // wait areas — glyph bays (left / through)
+  if (ap.leftWait || ap.throughWait) {
+    const f: Frame = { origin: [0, 0], ux, px }
+    if (ap.leftWait) {
+      const bay = Math.min(
+        half * 0.35,
+        Math.max(2.5, ap.entryLanes.find((l) => l.movements.includes('L'))?.widthM ?? 3.5),
+      )
+      placeWaitBay(mesh, f, start + 0.8, start + 10, -half + 0.2, -half + bay, '#fbbf24', {
+        alpha: 0.4,
+        stroke: THEME.yellow,
+      })
+    }
+    if (ap.throughWait) {
+      placeWaitBay(mesh, f, start + 0.8, start + 9, -1.6, 1.6, '#fde68a', {
+        alpha: 0.35,
+        stroke: THEME.yellow,
+        dashed: true,
+      })
+    }
   }
 
   // borrow-left: dashed pocket into opposing half
