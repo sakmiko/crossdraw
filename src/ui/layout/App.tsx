@@ -26,6 +26,7 @@ import { FlowWorkspace } from '@/ui/layout/FlowWorkspace'
 import { ChannelWorkspace } from '@/ui/layout/ChannelWorkspace'
 import { BandWorkspace } from '@/ui/layout/BandWorkspace'
 import { BandPage } from '@/ui/layout/BandPage'
+import { LeftNav, NAV_ITEMS } from '@/ui/layout/LeftNav'
 import { AnalysisWorkspace } from '@/ui/layout/AnalysisWorkspace'
 import { CompareWorkspace } from '@/ui/layout/CompareWorkspace'
 import { XSectionWorkspace } from '@/ui/layout/XSectionWorkspace'
@@ -56,15 +57,7 @@ import {
 import type { EditorMode, Movement, TurnVolumes } from '@/domain/types'
 import '@/ui/styles.css'
 
-const MODES: { id: EditorMode; label: string }[] = [
-  { id: 'channel', label: '渠化' },
-  { id: 'flow', label: '流量' },
-  { id: 'signal', label: '信号' },
-  { id: 'xsection', label: '断面' },
-  { id: 'analysis', label: '分析' },
-  { id: 'compare', label: '比选' },
-  { id: 'band', label: '绿波' },
-]
+const MODES = NAV_ITEMS.map((m) => ({ id: m.id, label: m.label }))
 
 export default function App() {
   const project = useAppStore((s) => s.project)
@@ -134,6 +127,24 @@ export default function App() {
   const [restoreMsg, setRestoreMsg] = useState<string | null>(null)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [mobilePane, setMobilePane] = useState<'tree' | 'canvas' | 'inspector'>('canvas')
+  const [navCollapsed, setNavCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('crossdraw-nav-collapsed') === '1'
+    } catch {
+      return false
+    }
+  })
+  const toggleNavCollapsed = () => {
+    setNavCollapsed((c) => {
+      const next = !c
+      try {
+        localStorage.setItem('crossdraw-nav-collapsed', next ? '1' : '0')
+      } catch {
+        /* ignore */
+      }
+      return next
+    })
+  }
   const [layerVis, setLayerVis] = useState<LayerVisibility>({ ...DEFAULT_LAYERS })
   const canvasRef = useRef<CanvasHandle>(null)
   const toggleLayer = (k: LayerKey) => setLayerVis((prev) => ({ ...prev, [k]: !prev[k] }))
@@ -486,7 +497,15 @@ export default function App() {
   // RoadGee-style: green-wave is a dedicated full page (multi-intersection)
   if (mode === 'band') {
     return (
-      <div className="app app--band" data-pane={mobilePane}>
+      <div className={`app app--band ${navCollapsed ? 'nav-collapsed' : 'nav-expanded'}`} data-pane={mobilePane}>
+        <div className="band-with-nav">
+        <LeftNav
+          mode={mode}
+          collapsed={navCollapsed}
+          onToggleCollapsed={toggleNavCollapsed}
+          onSelect={(m) => setMode(m)}
+        />
+        <div className="band-with-nav-main">
         <BandPage
           project={project}
           band={band}
@@ -505,8 +524,10 @@ export default function App() {
           removeBandCorridor={removeBandCorridor}
           renameBandCorridor={renameBandCorridor}
         />
+        </div>
+        </div>
         <footer className="status">
-          <span>Crossdraw v0.5.72 · 绿波专页</span>
+          <span>Crossdraw v0.5.73 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -517,7 +538,7 @@ export default function App() {
   }
 
   return (
-    <div className="app" data-pane={mobilePane}>
+    <div className={`app ${navCollapsed ? 'nav-collapsed' : 'nav-expanded'}`} data-pane={mobilePane}>
       <nav className="mobile-nav" aria-label="移动端面板">
         <button type="button" className={mobilePane === 'tree' ? 'active' : ''} onClick={() => setMobilePane('tree')}>方案</button>
         <button type="button" className={mobilePane === 'canvas' ? 'active' : ''} onClick={() => setMobilePane('canvas')}>画布</button>
@@ -528,7 +549,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.72</span>
+            <span className="brand-ver">v0.5.73</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -595,6 +616,12 @@ export default function App() {
       </header>
 
       <div className="main">
+        <LeftNav
+          mode={mode}
+          collapsed={navCollapsed}
+          onToggleCollapsed={toggleNavCollapsed}
+          onSelect={(m) => setMode(m)}
+        />
         <aside className="side scheme-tree">
           <div className="side-head">
             <div className="section-title" style={{ margin: 0 }}>方案树</div>
@@ -749,37 +776,8 @@ export default function App() {
         </main>
 
         <aside className="right">
-          <div className="mode-hierarchy" aria-label="当前编辑层次">
-            <span className="mh-step">工程</span>
-            <span className="mh-sep">/</span>
-            <span className="mh-step">方案</span>
-            <span className="mh-sep">/</span>
-            <span className="mh-step active">
-              {{
-                channel: '渠化',
-                flow: '流量',
-                signal: '信号',
-                xsection: '断面',
-                analysis: '分析',
-                compare: '比选',
-                band: '绿波',
-              }[mode] ?? mode}
-            </span>
-            <span className="mh-hint">层次渐进 · 数据向下联动</span>
-          </div>
-          <div className="mode-rail" role="tablist" aria-label="编辑模式">
-            {MODES.map((m) => (
-              <button
-                key={m.id}
-                type="button"
-                role="tab"
-                aria-selected={mode === m.id}
-                className={mode === m.id ? 'active' : ''}
-                onClick={() => setMode(m.id)}
-              >
-                {m.label}
-              </button>
-            ))}
+          <div className="page-title-bar">
+            <h1 className="page-title">{MODES.find((m) => m.id === mode)?.label ?? mode}</h1>
           </div>
 
           {mode === 'channel' && (
@@ -913,7 +911,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.72</span>
+        <span>Crossdraw v0.5.73</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

@@ -41,8 +41,10 @@ html[data-theme='dark'] {
   --radius-lg: 12px;
   --font: "IBM Plex Sans", "Segoe UI", "PingFang SC", "Microsoft YaHei", ui-sans-serif, system-ui, sans-serif;
   --mono: "IBM Plex Mono", "JetBrains Mono", ui-monospace, Menlo, monospace;
-  --shell-left: 268px;
-  --shell-right: 380px;
+  --shell-nav: 148px;
+  --shell-nav-collapsed: 52px;
+  --shell-left: 248px;
+  --shell-right: 360px;
   --shell-top: 50px;
   --shell-bottom: 28px;
 }
@@ -239,9 +241,13 @@ label {
 
 .main {
   display: grid;
-  grid-template-columns: var(--shell-left) minmax(0, 1fr) var(--shell-right);
+  grid-template-columns: var(--shell-nav) var(--shell-left) minmax(0, 1fr) var(--shell-right);
   min-height: 0;
   min-width: 0;
+  transition: grid-template-columns 0.18s ease;
+}
+.app.nav-collapsed .main {
+  grid-template-columns: var(--shell-nav-collapsed) var(--shell-left) minmax(0, 1fr) var(--shell-right);
 }
 
 .side, .right {
@@ -1983,3 +1989,184 @@ tr.row-hot td { background: rgba(56, 189, 248, 0.08); }
 
 /* hide verbose mode hierarchy breadcrumb fluff */
 .mode-hierarchy .mh-hint { display: none; }
+
+
+/* —— v0.5.73 left feature nav (collapsible) —— */
+.left-nav {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  z-index: 5;
+}
+.left-nav-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 8px 8px 6px;
+  border-bottom: 1px solid var(--border);
+  min-height: 40px;
+}
+.left-nav-brand {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-left: 4px;
+}
+.left-nav-toggle {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.left-nav-toggle:hover {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+.left-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 6px;
+  overflow: auto;
+  flex: 1;
+}
+.left-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+.left-nav-item:hover {
+  background: var(--panel-2);
+  color: var(--text);
+}
+.left-nav-item.active {
+  background: var(--accent-soft);
+  color: var(--text);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.left-nav-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 750;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+  color: var(--text);
+}
+.left-nav-item.active .left-nav-icon {
+  background: var(--accent);
+  border-color: transparent;
+  color: #fff;
+}
+.left-nav-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* collapsed: icon-only */
+.left-nav.is-collapsed .left-nav-head {
+  justify-content: center;
+  padding: 8px 4px;
+}
+.left-nav.is-collapsed .left-nav-list {
+  padding: 8px 4px;
+  align-items: center;
+}
+.left-nav.is-collapsed .left-nav-item {
+  justify-content: center;
+  padding: 8px;
+  width: 40px;
+}
+.left-nav.is-collapsed .left-nav-item.active {
+  box-shadow: none;
+}
+
+.page-title-bar {
+  display: flex;
+  align-items: center;
+  padding: 2px 0 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.page-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* band page with left nav */
+.band-with-nav {
+  display: grid;
+  grid-template-columns: var(--shell-nav) minmax(0, 1fr);
+  min-height: 0;
+  flex: 1;
+  height: 100%;
+}
+.app.nav-collapsed .band-with-nav {
+  grid-template-columns: var(--shell-nav-collapsed) minmax(0, 1fr);
+}
+.band-with-nav-main {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.app--band {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) var(--shell-bottom);
+}
+.app--band .band-with-nav {
+  min-height: 0;
+}
+.app--band .band-page {
+  height: 100%;
+}
+
+@media (max-width: 1100px) {
+  .main {
+    grid-template-columns: var(--shell-nav-collapsed) var(--shell-left) minmax(0, 1fr) var(--shell-right);
+  }
+  .app.nav-expanded .main {
+    grid-template-columns: var(--shell-nav-collapsed) var(--shell-left) minmax(0, 1fr) var(--shell-right);
+  }
+  /* force icon rail on medium screens unless user expanded — still allow expand via class */
+}
+@media (max-width: 900px) {
+  .main {
+    grid-template-columns: var(--shell-nav-collapsed) minmax(0, 1fr);
+  }
+  .app.nav-collapsed .main,
+  .app.nav-expanded .main {
+    grid-template-columns: var(--shell-nav-collapsed) minmax(0, 1fr);
+  }
+  .side, .right { /* existing mobile rules still apply via data-pane */ }
+}
