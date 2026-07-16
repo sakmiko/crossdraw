@@ -72,6 +72,8 @@ import { unsignalizedPlanSvg, unsignalizedLegsCsv } from '@/ui/charts/unsignaliz
 import { schemeScorecardSvg, kpisFromCompareRows } from '@/ui/charts/schemeScorecard'
 import { schemeDeltas, schemeDeltaMarkdown } from '@/domain/analysis/schemeDiff'
 import { analyzeUnsignalized, unsignalizedMarkdown } from '@/domain/analysis/unsignalized'
+import { signalControlBoardSvg } from '@/ui/charts/signalControlBoard'
+import { computeSaturationKpi, previewOptimize, saturationKpiMarkdown, optimizeDeltaMarkdown } from '@/domain/signal/saturationKpi'
 import { corridorNetworkPreviewSvg } from '@/ui/charts/corridorNetworkPreview'
 import { maxbandReportDiagramSvg } from '@/ui/charts/maxbandReportDiagram'
 import { buildMaxbandReport, maxbandReportMarkdown, maxbandReportCsv } from '@/domain/analysis/maxbandReport'
@@ -608,7 +610,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.88 · 绿波专页</span>
+          <span>Crossdraw v0.5.89 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -630,7 +632,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.88</span>
+            <span className="brand-ver">v0.5.89</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -922,7 +924,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.88</span>
+        <span>Crossdraw v0.5.89</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1227,6 +1229,25 @@ export default function App() {
       if (!channel || !flow || !signal) return
       const u = analyzeUnsignalized(channel.approaches, flow, signal, channel.intersectionType)
       downloadText(`${project.name}-unsignalized.csv`, unsignalizedLegsCsv(u), 'text/csv')
+    },
+    'signal-control-board': () => {
+      if (!channel || !flow || !signal) return
+      const k = computeSaturationKpi(channel.approaches, flow, signal)
+      exportSvgFile(`${project.name}-管控看板.svg`, signalControlBoardSvg(channel.approaches, signal, k, { width: 900 }))
+    },
+    'saturation-kpi-md': () => {
+      if (!channel || !flow || !signal) return
+      const k = computeSaturationKpi(channel.approaches, flow, signal)
+      downloadText(`${project.name}-饱和度KPI.md`, saturationKpiMarkdown(project.name, k), 'text/markdown')
+    },
+    'optimize-preview-md': () => {
+      if (!channel || !flow || !signal) return
+      const p = previewOptimize(channel.approaches, flow, signal, {
+        method: timingMethod,
+        targetVc: designTargetVc,
+        startLoss: designStartLoss,
+      })
+      downloadText(`${project.name}-优化预览.md`, optimizeDeltaMarkdown(project.name, p), 'text/markdown')
     },
     'corridor-network-svg': () => {
       exportSvgFile(

@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Icon } from '@/ui/icons/Icons'
 /**
  * Signal workspace panel — extracted from App for maintainability.
@@ -24,6 +25,14 @@ import { conflictHitsMarkdown, conflictMatrixExportSvg, conflictDiagramExportSvg
 import { exportSvgFile } from '@/io/exportCharts'
 import { downloadText } from '@/io/download'
 import { PhaseReleaseEditor } from '@/ui/layout/PhaseReleaseEditor'
+import {
+  computeSaturationKpi,
+  previewOptimize,
+  saturationKpiMarkdown,
+  optimizeDeltaMarkdown,
+} from '@/domain/signal/saturationKpi'
+import { signalControlBoardSvg } from '@/ui/charts/signalControlBoard'
+
 
 export type SignalWorkspaceProps = {
   projectName: string
@@ -133,6 +142,24 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
     yReportText,
     onToggleUnsignalized,
   } = props
+
+  const kpi = useMemo(() => {
+    if (!channel || !flow) return null
+    return computeSaturationKpi(channel.approaches, flow, signal)
+  }, [channel, flow, signal])
+  const optPreview = useMemo(() => {
+    if (!channel || !flow || signal.unsignalized) return null
+    return previewOptimize(channel.approaches, flow, signal, {
+      method: timingMethod,
+      targetVc: designTargetVc ?? 0.9,
+      startLoss: designStartLoss ?? signal.startLossSec,
+      fixedCycle: designLockCycle ? designCycleSec : fixedCycleOn ? fixedCycleSec : undefined,
+    })
+  }, [channel, flow, signal, timingMethod, designTargetVc, designStartLoss, designLockCycle, designCycleSec, fixedCycleOn, fixedCycleSec])
+  const controlBoardSvg = useMemo(() => {
+    if (!channel || !kpi) return ''
+    return signalControlBoardSvg(channel.approaches, signal, kpi, { width: 860 })
+  }, [channel, signal, kpi])
 
   const al = buildSignalTimingAlignment(signal)
   const hits = channel ? allPhasesConflictHits(channel.approaches, signal) : []
@@ -406,7 +433,72 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
             </div>
           </div>
         )}
-        <div className="rg-section" style={{ marginTop: 10 }}>
+      {kpi && !signal.unsignalized && (
+        <div className="rg-section" style={{ marginBottom: 10 }}>
+          <div className="rg-section-title">饱和度 / 延误 KPI（实时）</div>
+          <div className="metric-grid">
+            <div className="metric"><div className="label">Y</div><div className="value">{kpi.Y.toFixed(3)}</div></div>
+            <div className="metric"><div className="label">均 v/c</div><div className="value" style={{ color: kpi.avgVc > 0.9 ? 'var(--block)' : undefined }}>{kpi.avgVc.toFixed(3)}</div></div>
+            <div className="metric"><div className="label">最大 v/c</div><div className="value">{kpi.maxVc.toFixed(3)}</div><div className="sub">{kpi.criticalApproach} {kpi.criticalMovement}</div></div>
+            <div className="metric"><div className="label">均延误</div><div className="value">{kpi.avgDelay.toFixed(1)}<small>s</small></div></div>
+            <div className={`metric los-${kpi.los}`}><div className="label">LOS</div><div className="value">{kpi.los}</div></div>
+            <div className="metric"><div className="label">C / 相位</div><div className="value" style={{ fontSize: 16 }}>{kpi.cycleSec}s · {kpi.phaseCount}</div></div>
+          </div>
+          {optPreview && (
+            <p className="hint quiet" style={{ marginTop: 6 }}>
+              一键优化预览（{optPreview.method}）：C→{optPreview.cycleSec}s · 均v/c {optPreview.after.avgVc.toFixed(3)}（Δ{(optPreview.after.avgVc - optPreview.before.avgVc) >= 0 ? '+' : ''}{(optPreview.after.avgVc - optPreview.before.avgVc).toFixed(3)}）· 延误 {optPreview.after.avgDelay.toFixed(1)}s（Δ{(optPreview.after.avgDelay - optPreview.before.avgDelay) >= 0 ? '+' : ''}{(optPreview.after.avgDelay - optPreview.before.avgDelay).toFixed(1)}）
+            </p>
+          )}
+          <div className="toolbar dense" style={{ marginTop: 6 }}>
+            <button type="button" className="primary" onClick={onRunOptimize}>
+              <Icon name="optimize" size={14} /><span>一键优化配时</span>
+            </button>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => {
+                if (!kpi) return
+                downloadText(`${projectName}-饱和度KPI.md`, saturationKpiMarkdown(projectName, kpi), 'text/markdown')
+              }}
+            >
+              KPI MD
+            </button>
+            {optPreview && (
+              <button
+                type="button"
+                className="ghost"
+                onClick={() =>
+                  downloadText(
+                    `${projectName}-优化预览.md`,
+                    optimizeDeltaMarkdown(projectName, optPreview),
+                    'text/markdown',
+                  )
+                }
+              >
+                预览 MD
+              </button>
+            )}
+            {controlBoardSvg && (
+              <button
+                type="button"
+                className="ghost"
+                onClick={() => exportSvgFile(`${projectName}-管控看板.svg`, controlBoardSvg)}
+              >
+                管控看板 SVG
+              </button>
+            )}
+          </div>
+          {controlBoardSvg && (
+            <div
+              className="chart-svg-host chart-svg-host--pro"
+              style={{ marginTop: 8 }}
+              dangerouslySetInnerHTML={{ __html: controlBoardSvg }}
+            />
+          )}
+        </div>
+      )}
+
+      <div className="rg-section">
           <div className="rg-section-title">自动配时设计参数</div>
           <div className="field-row">
             <label>

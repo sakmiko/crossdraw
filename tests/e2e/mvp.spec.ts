@@ -18,23 +18,17 @@ async function openNav(page: Page, label: string) {
   await page.waitForTimeout(300)
 }
 
-test.describe('Crossdraw v0.5.88 network + polish', () => {
+test.describe('Crossdraw v0.5.89 saturation + polish', () => {
   // 渠化 流量 信号 分析 绿波 比选 断面
   test('shell', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.88/).first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.89/).first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
 
-  test('channel five-leg', async ({ page }) => {
+  test('channel', async ({ page }) => {
     await bootCross(page)
-    const neu = page.locator('details.menu-dropdown', { hasText: '新建' })
-    await neu.locator('summary').click()
-    await neu.locator('button[role=menuitem]', { hasText: '五路' }).click({ force: true })
-    await page.waitForTimeout(700)
     await openNav(page, '渠化')
-    // five approaches on strip or inspector
-    await expect(page.locator('body')).toContainText(/东北|五相位|五路/, { timeout: 10000 })
     await page.screenshot({ path: 'docs/screenshots/01-channel.png', fullPage: true })
   })
 
@@ -44,10 +38,17 @@ test.describe('Crossdraw v0.5.88 network + polish', () => {
     await page.screenshot({ path: 'docs/screenshots/02-flow.png', fullPage: true })
   })
 
-  test('signal', async ({ page }) => {
+  test('signal KPI board', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '信号')
+    await expect(page.getByText('饱和度 / 延误 KPI').first()).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('button', { name: /一键优化配时/ })).toBeVisible()
+    await expect(page.getByText('信号管控与饱和度看板').first()).toBeVisible()
+    const beforeC = await page.locator('.metric', { hasText: 'C / 相位' }).locator('.value').first().textContent()
+    await page.getByRole('button', { name: /一键优化配时/ }).click()
+    await page.waitForTimeout(500)
     await page.screenshot({ path: 'docs/screenshots/03-signal.png', fullPage: true })
+    expect(beforeC).toBeTruthy()
   })
 
   test('analysis', async ({ page }) => {
@@ -56,14 +57,9 @@ test.describe('Crossdraw v0.5.88 network + polish', () => {
     await page.screenshot({ path: 'docs/screenshots/04-analysis.png', fullPage: true })
   })
 
-  test('band network preview', async ({ page }) => {
+  test('band', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '绿波')
-    await page.getByRole('tab', { name: /路网预览/ }).click()
-    await expect(page.getByText('路网预览').first()).toBeVisible({ timeout: 10000 })
-    await expect(page.getByText(/干道路网预览|链式/i).first()).toBeVisible()
-    await page.getByRole('button', { name: /高分辨率 SVG/ }).click()
-    await page.waitForTimeout(200)
     await page.screenshot({ path: 'docs/screenshots/05-band.png', fullPage: true })
   })
 

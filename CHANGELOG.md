@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## 0.5.89 — 2026-07-16
+
+### 信号饱和度 KPI + 管控看板 + 一键优化
+- 实时 KPI：Y、均/最大 v/c、延误、LOS、关键转向（`analyzeIntersection` 同源）
+- **一键优化配时**：Webster/当前算法写回相位；优化预览 Δv/c·Δ延误
+- **管控看板 SVG**：KPI 条 + 放行管控矩阵 + 配时条（教材风格）
+- 导出中心：`signal-control-board` / `saturation-kpi-md` / `optimize-preview-md`
+
+### 依据
+- Webster (1958) 最优周期；HCM 延误/v/c 工程近似；管控图与 releases 一一对应
+
+### 诚实边界
+- 非完整 NEMA；非商业黑箱优化器
+
+# CHANGELOG
+
 ## 0.5.88 — 2026-07-16
 
 ### 绿波路网高分辨率预览

@@ -43,6 +43,9 @@ export type ExportItemId =
   | 'maxband-report-md'
   | 'maxband-report-csv'
   | 'corridor-network-svg'
+  | 'signal-control-board'
+  | 'saturation-kpi-md'
+  | 'optimize-preview-md'
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
@@ -61,6 +64,34 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'signal-control-board',
+    category: 'signal',
+    title: '信号管控与饱和度看板',
+    format: 'SVG',
+    description: 'KPI + 放行管控图 + 配时条 · 与相位/releases 同源',
+    modes: ['signal'],
+    requires: ['channel', 'flow', 'signal'],
+  },
+  {
+    id: 'saturation-kpi-md',
+    category: 'signal',
+    title: '饱和度 KPI 简报',
+    format: 'MD',
+    description: 'Y / v/c / 延误 / LOS',
+    modes: ['signal', 'analysis'],
+    requires: ['channel', 'flow', 'signal'],
+  },
+  {
+    id: 'optimize-preview-md',
+    category: 'signal',
+    title: '一键优化预览',
+    format: 'MD',
+    description: 'Webster 等算法前后对比（未写回则仅预览）',
+    modes: ['signal'],
+    requires: ['channel', 'flow', 'signal'],
+  },
+
   {
     id: 'corridor-network-svg',
     category: 'band',

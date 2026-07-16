@@ -46,3 +46,4 @@ export * from './analysis/progressiveOffset'
 export * from './analysis/schemeDiff'
 
 export * from './signal/autoTimingPack'
+export * from './signal/saturationKpi'
