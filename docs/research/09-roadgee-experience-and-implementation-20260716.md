@@ -258,3 +258,7 @@ UI：相位差 **比值/数值** 模式；一键优化后锁定 vC/2、写标准
 ---
 
 *调研人：Hermes Agent · 仅供 Crossdraw 开源工程改进参考。*
+
+## 补充：数值计算与显示正确性
+
+见 **`docs/research/10-roadgee-calc-response-display-20260716.md`**（运行时注入实测：Cap=Sλ、延误 d1+d2 与 Delay 字段 0 误差、技术栈与响应链路）。
