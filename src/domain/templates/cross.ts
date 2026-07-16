@@ -261,7 +261,7 @@ export function createSkewedTemplate(name = '斜交交叉口'): Project {
   return p
 }
 
-export function createRoundaboutTemplate(name = '环形交叉口（示意）'): Project {
+export function createRoundaboutTemplate(name = '环形交叉口'): Project {
   const p = createCrossTemplate(name)
   const ch = p.channelizationSchemes[0]
   ch.intersectionType = 'roundabout'

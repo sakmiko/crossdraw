@@ -12,6 +12,9 @@ import { meshToSvg } from '@/io/exportSvg'
 import { meshToDxf } from '@/io/exportDxf'
 import { analysisToCsv, analysisToExcelHtml, collectCompareRows, compareSchemesCsv } from '@/io/report'
 import { exportVissimCsvBundle } from '@/io/vissimCsv'
+import { buildVissimInpxPack } from '@/io/vissimInpx'
+import { buildMultiPageReportHtml } from '@/io/multiPageReport'
+import { pedestrianRingSvg } from '@/ui/charts/pedestrianRing'
 import { optimizeCorridor, measureCorridor, corridorSegments } from '@/domain/analysis/corridor'
 import { downloadBlob, downloadText } from '@/io/download'
 import { loadDraft, clearDraft } from '@/io/autosave'
@@ -885,7 +888,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.65</span>
+        <span>Crossdraw v0.5.66</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1048,6 +1051,38 @@ export default function App() {
             downloadText(`${project.name}-vissim-routes.csv`, b.routes, 'text/csv')
             downloadText(`${project.name}-vissim-volumes.csv`, b.volumes, 'text/csv')
             downloadText(`${project.name}-vissim-signal.csv`, b.signal, 'text/csv')
+          },
+          'vissim-inpx': () => {
+            if (!channel || !flow || !signal) return
+            const pack = buildVissimInpxPack(project.name, channel.approaches, flow, signal)
+            downloadText(`${project.name}-vissim-README.md`, pack.readme, 'text/markdown')
+            downloadText(`${project.name}.inpx.xml`, pack.xml, 'application/xml')
+            downloadText(`${project.name}-vissim-summary.json`, pack.json, 'application/json')
+            downloadText(`${project.name}-vissim-links.csv`, pack.bundle.links, 'text/csv')
+            downloadText(`${project.name}-vissim-routes.csv`, pack.bundle.routes, 'text/csv')
+            downloadText(`${project.name}-vissim-volumes.csv`, pack.bundle.volumes, 'text/csv')
+            downloadText(`${project.name}-vissim-signal.csv`, pack.bundle.signal, 'text/csv')
+          },
+          'multi-page-report': () => {
+            if (!channel || !flow || !signal || !analysis) return
+            const html = buildMultiPageReportHtml({
+              project,
+              channel,
+              flow,
+              signal,
+              analysis,
+              bandCorridor: project.bandCorridor,
+            })
+            downloadText(`${project.name}-report.html`, html, 'text/html')
+          },
+          'ped-ring-svg': () => {
+            if (!channel || !signal) return
+            exportSvgFile(
+              `${project.name}-ped-ring.svg`,
+              pedestrianRingSvg(channel.approaches, signal, {
+                focusPhaseId: focusPhaseId ?? signal.phases[0]?.id ?? null,
+              }),
+            )
           },
           'compare-csv': () => {
             const rows = collectCompareRows(project, analyzeIntersection)

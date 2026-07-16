@@ -19,6 +19,9 @@ export type ExportItemId =
   | 'analysis-json'
   | 'analysis-md'
   | 'vissim-csv'
+  | 'vissim-inpx'
+  | 'multi-page-report'
+  | 'ped-ring-svg'
   | 'compare-csv'
   | 'compare-json'
   | 'compare-timing-svg'
@@ -208,6 +211,33 @@ export const EXPORT_CATALOG: ExportItem[] = [
     title: '冲突矩阵图',
     format: 'SVG+MD',
     description: '冲突矩阵 + 冲突点示意图 + 全相位审查简报',
+    modes: ['signal'],
+    requires: ['channel', 'signal'],
+  },
+  {
+    id: 'vissim-inpx',
+    category: 'data',
+    title: 'Vissim 开放交换包',
+    format: 'XML+CSV+JSON',
+    description: 'CrossdrawVissimInterchange XML + 四表 CSV + 摘要（非 PTV 私有二进制）',
+    modes: ['analysis'],
+    requires: ['channel', 'flow', 'signal'],
+  },
+  {
+    id: 'multi-page-report',
+    category: 'package',
+    title: '多页工程报告',
+    format: 'HTML/PDF',
+    description: '5 页 A4 工程报告（浏览器打印/另存 PDF）',
+    modes: ['analysis'],
+    requires: ['channel', 'flow', 'signal', 'analysis'],
+  },
+  {
+    id: 'ped-ring-svg',
+    category: 'signal',
+    title: '行人过街环图',
+    format: 'SVG',
+    description: '进口面 Walk/FDW 环图 · 可聚焦当前相位',
     modes: ['signal'],
     requires: ['channel', 'signal'],
   },

@@ -28,6 +28,7 @@ import { buildConflictMatrix } from '@/domain/signal/conflictMatrix'
 import { buildPhaseConflictReport, phaseConflictSummaryText } from '@/domain/signal/phaseConflictView'
 import { buildConflictDiagram, conflictDiagramSvg } from '@/domain/signal/conflictDiagram'
 import { pedestrianPhaseStripSvg } from './pedestrianDiagram'
+import { pedestrianRingSvg } from './pedestrianRing'
 import { countPedIntervals } from '@/domain/signal/pedestrian'
 import { useAppStore } from '@/state/store'
 import {
@@ -219,6 +220,18 @@ export function SignalCharts({
     return themeSvg(pedestrianPhaseStripSvg(signal, approaches, { width: 360 }), colors)
   }, [approaches, signal, colors])
 
+  const pedRing = useMemo(() => {
+    if (!approaches?.length) return ''
+    return themeSvg(
+      pedestrianRingSvg(approaches, signal, {
+        width: 360,
+        height: 300,
+        focusPhaseId: phaseId,
+      }),
+      colors,
+    )
+  }, [approaches, signal, phaseId, colors])
+
   const matrix = useMemo(() => {
     if (!report) return ''
     const levels = report.cells.map((row) => row.map((c) => c.level))
@@ -258,6 +271,15 @@ export function SignalCharts({
             <small>{countPedIntervals(signal)} 处进口面 · Walk/FDW</small>
           </div>
           <div dangerouslySetInnerHTML={{ __html: pedStrip }} />
+          {pedRing && (
+            <>
+              <div className="chart-title" style={{ marginTop: 12 }}>
+                <span>行人过街环图</span>
+                <small>聚焦相位进口面 · 与相位条同源</small>
+              </div>
+              <div className="chart-svg-host chart-svg-host--pro" dangerouslySetInnerHTML={{ __html: pedRing }} />
+            </>
+          )}
         </>
       )}
       {matrix && report && (

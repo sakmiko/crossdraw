@@ -11,6 +11,7 @@ import {
   stopLineStationLabel,
   stopLineStationShort,
 } from './annotations'
+import { computeRoundaboutLayout, roundaboutAnnotation } from './roundabout'
 
 export const THEME = {
   asphalt: '#374151',
@@ -1331,41 +1332,148 @@ function shoelace(pts: [number, number][]): number {
 
 
 function drawRoundabout(mesh: Mesh, approaches: Approach[], core: number) {
-  const outerR = core + 8
-  const innerR = Math.max(6, core * 0.45)
-  const ring = arcPoints([0, 0], outerR, 0, Math.PI * 2, 48)
+  const layout = computeRoundaboutLayout(approaches, core)
+  const { outerR, innerR, laneRadii, laneCount } = layout
+
+  // circulatory asphalt annulus (outer disk then punch with note — single outer poly + island)
   pushPoly(mesh, {
     layer: 'ROAD',
-    points: ring,
+    points: arcPoints([0, 0], outerR, 0, Math.PI * 2, 64),
     fill: THEME.asphalt,
     stroke: THEME.curb,
-    strokeWidth: 0.5,
+    strokeWidth: 0.55,
   })
-  // central island
+  // central landscaped island
   pushPoly(mesh, {
     layer: 'ISLAND',
-    points: arcPoints([0, 0], innerR, 0, Math.PI * 2, 36),
+    points: arcPoints([0, 0], innerR, 0, Math.PI * 2, 48),
     fill: THEME.island,
     stroke: THEME.islandEdge,
-    strokeWidth: 0.4,
+    strokeWidth: 0.45,
   })
-  // circulatory lane marking
+  // truck apron ring (outer 1.2m of island)
+  const apronR = Math.max(innerR - 1.4, innerR * 0.82)
   pushLine(mesh, {
     layer: 'MARKING',
-    points: arcPoints([0, 0], (outerR + innerR) / 2, 0, Math.PI * 2, 48),
-    stroke: THEME.marking,
-    strokeWidth: 0.25,
-    dashed: true,
+    points: arcPoints([0, 0], apronR, 0, Math.PI * 2, 48),
+    stroke: THEME.yellow,
+    strokeWidth: 0.35,
     alpha: 0.85,
   })
-  for (const ap of approaches) {
-    drawApproach(mesh, ap, outerR - 2, 90)
+  // multi-lane circulatory markings
+  for (const rr of laneRadii) {
+    pushLine(mesh, {
+      layer: 'MARKING',
+      points: arcPoints([0, 0], rr, 0, Math.PI * 2, 56),
+      stroke: THEME.marking,
+      strokeWidth: 0.22,
+      dashed: true,
+      alpha: 0.9,
+    })
   }
+  // outer curb highlight
+  pushLine(mesh, {
+    layer: 'MARKING',
+    points: arcPoints([0, 0], outerR - 0.15, 0, Math.PI * 2, 64),
+    stroke: THEME.asphaltEdge,
+    strokeWidth: 0.3,
+    alpha: 0.7,
+  })
+
+  // spiral/circulation direction chevrons (counter-clockwise, China right-hand)
+  for (let k = 0; k < 8; k++) {
+    const ang = (k / 8) * Math.PI * 2 + 0.2
+    const rr = (innerR + outerR) / 2
+    const x = Math.cos(ang) * rr
+    const y = Math.sin(ang) * rr
+    const tx = -Math.sin(ang)
+    const ty = Math.cos(ang)
+    const px = -ty
+    const py = tx
+    pushLine(mesh, {
+      layer: 'MARKING',
+      points: [
+        [x - tx * 2.2 + px * 1.1, y - ty * 2.2 + py * 1.1],
+        [x + tx * 2.8, y + ty * 2.8],
+        [x - tx * 2.2 - px * 1.1, y - ty * 2.2 - py * 1.1],
+      ],
+      stroke: THEME.marking,
+      strokeWidth: 0.35,
+      alpha: 0.75,
+    })
+  }
+
+  for (const ap of approaches) {
+    const ux = dirFromBearing(ap.bearingDeg)
+    const px = perpFromBearing(ap.bearingDeg)
+    // attach approaches outside outer curb
+    drawApproach(mesh, ap, outerR + 1.5, 95)
+
+    // yield triangle at entry throat (schematic)
+    const throat = add(mul(ux, outerR + 3.5), mul(px, -totalWidth(ap) * 0.22))
+    pushPoly(mesh, {
+      layer: 'MARKING',
+      points: [
+        add(throat, mul(ux, 2.2)),
+        add(throat, add(mul(ux, -1.2), mul(px, 1.6))),
+        add(throat, add(mul(ux, -1.2), mul(px, -1.6))),
+      ],
+      fill: THEME.marking,
+      stroke: THEME.asphaltEdge,
+      strokeWidth: 0.15,
+      alpha: 0.9,
+    })
+    pushLabel(mesh, {
+      text: '让',
+      at: add(throat, mul(ux, 0.2)),
+      color: '#0f172a',
+      size: 1.6,
+      align: 'center',
+    })
+
+    // splitter island between entry/exit
+    const splitC = add(mul(ux, outerR + 10), [0, 0])
+    const halfMed = Math.max(1.2, ap.median.widthM * 0.45)
+    pushPoly(mesh, {
+      layer: 'ISLAND',
+      points: [
+        add(splitC, add(mul(ux, 8), mul(px, -halfMed))),
+        add(splitC, add(mul(ux, -2), mul(px, -halfMed * 0.6))),
+        add(splitC, add(mul(ux, -2), mul(px, halfMed * 0.6))),
+        add(splitC, add(mul(ux, 8), mul(px, halfMed))),
+      ],
+      fill: THEME.island,
+      stroke: THEME.islandEdge,
+      strokeWidth: 0.3,
+      alpha: 0.92,
+    })
+
+    // zebra at outer curb face
+    const z0 = add(mul(ux, outerR + 0.8), mul(px, -totalWidth(ap) * 0.42))
+    for (let i = 0; i < 6; i++) {
+      const o = mul(px, i * 1.35)
+      pushLine(mesh, {
+        layer: 'MARKING',
+        points: [add(z0, o), add(add(z0, o), mul(ux, 2.8))],
+        stroke: THEME.crosswalk,
+        strokeWidth: 0.85,
+        alpha: 0.95,
+      })
+    }
+  }
+
   pushLabel(mesh, {
-    text: '环形交叉口（示意）',
-    at: [0, -outerR - 8],
+    text: roundaboutAnnotation(layout),
+    at: [0, -outerR - 10],
     color: THEME.text,
-    size: 3,
+    size: 2.6,
+    align: 'center',
+  })
+  pushLabel(mesh, {
+    text: `环道 ${laneCount} 车道 · 工程示意`,
+    at: [0, -outerR - 14],
+    color: '#475569',
+    size: 2.0,
     align: 'center',
   })
 }

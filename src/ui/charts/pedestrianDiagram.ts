@@ -24,7 +24,7 @@ export function pedestrianPhaseStripSvg(
 
   let t = 0
   let body = ''
-  body += `<text x="10" y="16" fill="${CHART_COLORS.axis}" font-size="11" font-weight="700">行人过街相位条</text>`
+  body += `<text x="12" y="18" fill="${CHART_COLORS.axis}" font-size="12" font-weight="700" font-family="system-ui,sans-serif">行人过街相位条</text>`
   body += `<text x="${width - right}" y="16" text-anchor="end" fill="${CHART_COLORS.muted}" font-size="9">Walk/FDW ∈ G · 与机动车相位并行</text>`
 
   main.forEach((ph, i) => {
@@ -58,7 +58,7 @@ export function pedestrianPhaseStripSvg(
 
   body += `<text x="10" y="${height - 10}" fill="${CHART_COLORS.muted}" font-size="9">蓝=Walk · 琥珀=FDW · 未勾选进口面则无行人条</text>`
 
-  return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" class="chart-svg">
+  return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" class="chart-svg chart-svg--pro">
   <rect width="100%" height="100%" fill="${CHART_COLORS.bg}"/>
   ${body}
 </svg>`

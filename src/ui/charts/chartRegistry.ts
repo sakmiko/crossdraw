@@ -22,6 +22,7 @@ export type ChartKindId =
   | 'band-corridor-compare'
   | 'conflict-matrix'
   | 'conflict-points'
+  | 'pedestrian-ring'
   | 'multimodal-bars'
 
 export type ChartRegistryEntry = {
