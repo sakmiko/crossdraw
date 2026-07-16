@@ -1,7 +1,8 @@
 /**
- * Cross-section workspace — KPI strip, schematic bar, professional chart, export.
- * Extracted from App (v0.5.45). Keeps section fully driven by selected approach.
+ * Cross-section workspace — professional KPI + interactive width editor.
+ * Edits push back to approach params so mesh/charts stay homologous.
  */
+import { useMemo, useState } from 'react'
 import type { Approach, CrossSection } from '@/domain/types'
 import { markStaleIfNeeded } from '@/domain/xsection/build'
 import { sectionAlignsWithApproach } from '@/domain/xsection/align'
@@ -14,23 +15,86 @@ export type XSectionWorkspaceProps = {
   selected: Approach
   xsection: CrossSection
   theme: 'dark' | 'light'
+  /** push width edits to channel approach (同源) */
+  onUpdateApproach?: (id: string, patch: Partial<Approach>) => void
 }
 
-export function XSectionWorkspace({ projectName, selected, xsection, theme }: XSectionWorkspaceProps) {
+export function XSectionWorkspace({
+  projectName,
+  selected,
+  xsection,
+  theme,
+  onUpdateApproach,
+}: XSectionWorkspaceProps) {
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null)
   const totalW = xsection.components.reduce((s, c) => s + c.widthM, 0)
   const stale = markStaleIfNeeded(xsection, selected).stale
   const align = sectionAlignsWithApproach(selected)
   const bikeW = selected.bikeEnabled ? selected.bikeWidthM : 0
   const sideW = selected.sidewalkWidthM
 
+  const editable = useMemo(() => {
+    // map component index → edit target
+    return xsection.components.map((c, i) => {
+      if (c.type === 'sidewalk') return { kind: 'sidewalk' as const, label: c.label }
+      if (c.type === 'bike') return { kind: 'bike' as const, label: c.label }
+      if (c.type === 'median') return { kind: 'median' as const, label: c.label }
+      if (c.type === 'vehicle') {
+        // entry then exit order in buildCrossSection
+        return { kind: 'vehicle' as const, label: c.label, index: i }
+      }
+      return { kind: 'other' as const, label: c.label }
+    })
+  }, [xsection.components])
+
+  function applyWidth(compIndex: number, widthM: number) {
+    if (!onUpdateApproach) return
+    const c = xsection.components[compIndex]
+    if (!c) return
+    const w = Math.max(0.3, Math.min(12, widthM))
+    if (c.type === 'sidewalk') {
+      onUpdateApproach(selected.id, { sidewalkWidthM: w })
+      return
+    }
+    if (c.type === 'bike') {
+      onUpdateApproach(selected.id, { bikeWidthM: w, bikeEnabled: true })
+      return
+    }
+    if (c.type === 'median') {
+      onUpdateApproach(selected.id, { median: { ...selected.median, widthM: w } })
+      return
+    }
+    if (c.type === 'vehicle') {
+      // count entry labels vs exit
+      const entryComps = xsection.components
+        .map((x, idx) => ({ x, idx }))
+        .filter((p) => p.x.type === 'vehicle' && p.x.label.startsWith('进口'))
+      const exitComps = xsection.components
+        .map((x, idx) => ({ x, idx }))
+        .filter((p) => p.x.type === 'vehicle' && p.x.label.startsWith('出口'))
+      const eAt = entryComps.findIndex((p) => p.idx === compIndex)
+      if (eAt >= 0) {
+        const lanes = selected.entryLanes.map((ln, i) => (i === eAt ? { ...ln, widthM: w } : ln))
+        onUpdateApproach(selected.id, { entryLanes: lanes })
+        return
+      }
+      const xAt = exitComps.findIndex((p) => p.idx === compIndex)
+      if (xAt >= 0) {
+        const lanes = selected.exitLanes.map((ln, i) => (i === xAt ? { ...ln, widthM: w } : ln))
+        onUpdateApproach(selected.id, { exitLanes: lanes })
+      }
+    }
+  }
+
   return (
-    <div className="card" style={{ marginTop: 12 }}>
+    <div className="card xsection-workspace" style={{ marginTop: 12 }}>
       <div className="panel-header">
         <h2 style={{ margin: 0 }}>横断面 · {selected.name}</h2>
         <span className={`integrity-badge ${align.ok && !stale ? 'ok' : 'bad'}`}>
           {align.ok && !stale ? '断面同源 ✓' : stale ? '需重绘' : '宽度不一致'}
         </span>
       </div>
+
       <div className="metric-grid band-kpi" style={{ marginTop: 8 }}>
         <div className="metric">
           <div className="label">总宽 B</div>
@@ -69,32 +133,73 @@ export function XSectionWorkspace({ projectName, selected, xsection, theme }: XS
           </div>
         </div>
       </div>
-      <div className="xsection" style={{ marginTop: 8 }} aria-label="横断面色带">
+
+      {/* interactive strip */}
+      <div className="xsection xsection--interactive" style={{ marginTop: 12 }} aria-label="横断面色带">
         {xsection.components.map((c, i) => (
-          <div key={i} style={{ flex: c.widthM, background: c.color }} title={`${c.label} ${c.widthM}m`}>
-            {c.widthM >= 2 ? `${c.label} ${c.widthM}m` : ''}
+          <div
+            key={i}
+            className={hoverIdx === i ? 'xs-seg active' : 'xs-seg'}
+            style={{ flex: Math.max(c.widthM, 0.4), background: c.color }}
+            title={`${c.label} ${c.widthM}m — 拖动下方滑条改宽`}
+            onMouseEnter={() => setHoverIdx(i)}
+            onMouseLeave={() => setHoverIdx(null)}
+          >
+            {c.widthM >= 1.8 ? (
+              <span className="xs-seg-label">
+                {c.label}
+                <em>{c.widthM.toFixed(1)}</em>
+              </span>
+            ) : null}
           </div>
         ))}
       </div>
-      <table className="table" style={{ marginTop: 8 }}>
-        <thead>
-          <tr>
-            <th>构成</th>
-            <th>类型</th>
-            <th>宽度 m</th>
-          </tr>
-        </thead>
-        <tbody>
-          {xsection.components.map((c, i) => (
-            <tr key={i}>
-              <td>{c.label}</td>
-              <td className="hint">{c.type}</td>
-              <td>{c.widthM.toFixed(2)}</td>
+
+      <div className="section-title" style={{ marginTop: 12 }}>
+        构成编辑（回写渠化 · 图网同源）
+      </div>
+      <div className="table-wrap" style={{ maxHeight: 220 }}>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>构成</th>
+              <th>类型</th>
+              <th>宽度 m</th>
+              <th>调节</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {xsection.components.map((c, i) => (
+              <tr key={i} className={hoverIdx === i ? 'row-hot' : undefined}>
+                <td>
+                  <span className="swatch" style={{ background: c.color }} />
+                  {c.label}
+                </td>
+                <td className="hint">{c.type}</td>
+                <td>{c.widthM.toFixed(2)}</td>
+                <td style={{ minWidth: 140 }}>
+                  {onUpdateApproach && c.type !== 'shoulder' && c.type !== 'green' ? (
+                    <input
+                      type="range"
+                      min={c.type === 'median' ? 0.3 : 0.5}
+                      max={c.type === 'sidewalk' ? 8 : 6}
+                      step={0.05}
+                      value={c.widthM}
+                      onChange={(e) => applyWidth(i, Number(e.target.value))}
+                      onMouseEnter={() => setHoverIdx(i)}
+                    />
+                  ) : (
+                    <span className="hint">—</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
       <CrossSectionCharts section={xsection} approach={selected} />
+
       <div className="toolbar" style={{ marginTop: 8 }}>
         <button
           type="button"
@@ -109,7 +214,10 @@ export function XSectionWorkspace({ projectName, selected, xsection, theme }: XS
           导出标准断面图
         </button>
       </div>
-      <p className="hint">修改渠化车道宽/中分带/人行道/非机动车后，本图与 KPI 立即联动刷新（同源 approach）。</p>
+      <p className="hint">
+        拖动宽度滑条即时改写进口/出口车道、中分带、人行道、非机动车道；画布与专业断面图同步。
+        {editable.length === 0 ? '' : ''}
+      </p>
     </div>
   )
 }

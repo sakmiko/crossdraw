@@ -518,9 +518,78 @@ export function ChannelWorkspace({
                     step={0.1}
                     value={selected.bikeWidthM}
                     onChange={(e) => updateApproach(selected.id, { bikeWidthM: Number(e.target.value) })}
-                />
+                  />
                 </label>
               )}
+              <details className="details-block">
+                <summary>辅路 / 侧辅道</summary>
+                <div className="details-body">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={!!selected.auxRoad?.enabled}
+                      onChange={(e) =>
+                        updateApproach(selected.id, {
+                          auxRoad: {
+                            enabled: e.target.checked,
+                            widthM: selected.auxRoad?.widthM ?? 5.5,
+                            offsetM: selected.auxRoad?.offsetM ?? 1,
+                            openNearM: selected.auxRoad?.openNearM ?? 18,
+                          },
+                        })
+                      }
+                    />{' '}
+                    启用辅路
+                  </label>
+                  {selected.auxRoad?.enabled && (
+                    <div className="field-row">
+                      <label>
+                        辅路宽
+                        <input
+                          type="number"
+                          min={3}
+                          step={0.1}
+                          value={selected.auxRoad.widthM}
+                          onChange={(e) =>
+                            updateApproach(selected.id, {
+                              auxRoad: { ...selected.auxRoad!, widthM: Number(e.target.value) },
+                            })
+                          }
+                        />
+                      </label>
+                      <label>
+                        外偏距
+                        <input
+                          type="number"
+                          min={0}
+                          step={0.1}
+                          value={selected.auxRoad.offsetM ?? 1}
+                          onChange={(e) =>
+                            updateApproach(selected.id, {
+                              auxRoad: { ...selected.auxRoad!, offsetM: Number(e.target.value) },
+                            })
+                          }
+                        />
+                      </label>
+                      <label>
+                        开口退距
+                        <input
+                          type="number"
+                          min={5}
+                          step={1}
+                          value={selected.auxRoad.openNearM ?? 18}
+                          onChange={(e) =>
+                            updateApproach(selected.id, {
+                              auxRoad: { ...selected.auxRoad!, openNearM: Number(e.target.value) },
+                            })
+                          }
+                        />
+                      </label>
+                    </div>
+                  )}
+                  <p className="hint">辅路自停车线外一定退距起画，与主路平行；工程示意非完整辅路交叉口。</p>
+                </div>
+              </details>
               <details className="details-block" open>
                 <summary>渠化选项 / 待转借道</summary>
                 <div className="details-body">

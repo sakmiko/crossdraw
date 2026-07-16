@@ -7,6 +7,7 @@ import {
   optimizeBandTwoWayEqual,
   scoreOffsets,
 } from './band'
+import { optimizeBandMaxbandDiscrete } from './maxband'
 
 export function corridorToIntersections(c: BandCorridor): BandIntersection[] {
   return c.nodes.map((n) => ({
@@ -30,6 +31,8 @@ export function optimizeCorridor(c: BandCorridor): BandResult {
       return optimizeBandTwoWayEqual(nodes, cycle, c.speedKmh)
     case 'graphical':
       return optimizeBandGraphical(nodes, cycle, c.speedKmh)
+    case 'maxband-discrete':
+      return optimizeBandMaxbandDiscrete(c)
     case 'classic':
     default:
       return optimizeBandClassic(nodes, cycle, c.speedKmh)

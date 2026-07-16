@@ -82,6 +82,7 @@ export default function App() {
   const updatePhaseTiming = useAppStore((s) => s.updatePhaseTiming)
   const addPhase = useAppStore((s) => s.addPhase)
   const addOverlapPhase = useAppStore((s) => s.addOverlapPhase)
+  const addPedestrianPhase = useAppStore((s) => s.addPedestrianPhase)
   const resetTemplate = useAppStore((s) => s.resetTemplate)
   const loadProject = useAppStore((s) => s.loadProject)
   const markClean = useAppStore((s) => s.markClean)
@@ -790,6 +791,7 @@ export default function App() {
               onSetPedExclusive={setPhasePedExclusive}
               onAddPhase={addPhase}
               onAddOverlap={addOverlapPhase}
+              onAddPedPhase={addPedestrianPhase}
               onRunOptimize={runWebster}
               onRunCompare={runTimingCompare}
               onApplyCompareRow={applyTimingCompareRow}
@@ -802,6 +804,7 @@ export default function App() {
               selected={selected}
               xsection={xsection}
               theme={theme}
+              onUpdateApproach={updateApproach}
             />
           )}
 
@@ -882,7 +885,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.64</span>
+        <span>Crossdraw v0.5.65</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

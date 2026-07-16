@@ -665,6 +665,46 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
     })
   }
 
+  // frontage / auxiliary road ribbon (outward of bike or main curb)
+  if (ap.auxRoad?.enabled) {
+    const aw = Math.max(3, ap.auxRoad.widthM)
+    const off = ap.auxRoad.offsetM ?? 1.0
+    const openNear = Math.max(8, ap.auxRoad.openNearM ?? 18)
+    const outer0 = half + (ap.bikeEnabled ? ap.bikeWidthM : 0) + off
+    // leave gap near stop line for main-road merge
+    const aStart = start + openNear
+    if (aStart < end - 5) {
+      pushPoly(mesh, {
+        layer: 'ROAD',
+        points: [
+          add(mul(ux, aStart), mul(px, outer0)),
+          add(mul(ux, end), mul(px, outer0)),
+          add(mul(ux, end), mul(px, outer0 + aw)),
+          add(mul(ux, aStart), mul(px, outer0 + aw)),
+        ],
+        fill: '#57534e',
+        stroke: THEME.asphaltEdge,
+        strokeWidth: 0.25,
+        alpha: 0.88,
+      })
+      pushLine(mesh, {
+        layer: 'MARKING',
+        points: [add(mul(ux, aStart), mul(px, outer0 + aw * 0.5)), add(mul(ux, end), mul(px, outer0 + aw * 0.5))],
+        stroke: THEME.marking,
+        strokeWidth: 0.15,
+        dashed: true,
+        alpha: 0.7,
+      })
+      pushLabel(mesh, {
+        text: `辅路 ${aw.toFixed(1)}m`,
+        at: add(mul(ux, (aStart + end) / 2), mul(px, outer0 + aw * 0.55)),
+        color: '#e7e5e4',
+        size: 1.8,
+        align: 'center',
+      })
+    }
+  }
+
   // wait areas — distinct left / through bay
   if (ap.leftWait) {
     const bay = Math.min(half * 0.35, Math.max(2.5, (ap.entryLanes.find((l) => l.movements.includes('L'))?.widthM ?? 3.5)))

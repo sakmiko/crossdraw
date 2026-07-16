@@ -20,7 +20,7 @@ describe('wave 0.5.56-0.5.64', () => {
     const p = createCrossTemplate()
     const ch = p.channelizationSchemes[0]
     const svg = multimodalBarSvg(ch.approaches, ch.flowSchemes[0])
-    expect(svg).toContain('行人/非机流量')
+    expect(svg).toContain('行人 / 非机动车流量')
   })
 
   it('compare workspace has sort control', () => {

@@ -95,6 +95,18 @@ export interface Approach {
   sidewalkWidthM: number
   bikeEnabled: boolean
   bikeWidthM: number
+  /**
+   * Optional frontage / auxiliary road strip along the approach (CAD-ish).
+   * When enabled, rebuild draws a parallel service road ribbon.
+   */
+  auxRoad?: {
+    enabled: boolean
+    widthM: number
+    /** offset outward from main curb (m) */
+    offsetM?: number
+    /** openings near intersection (m from stop line) */
+    openNearM?: number
+  }
   leftWait: boolean
   throughWait: boolean
   borrowLeft: boolean
@@ -173,6 +185,11 @@ export interface Phase {
   greenSec: number
   yellowSec: number
   allRedSec: number
+  /**
+   * Phase role for UI / reports:
+   * vehicle | pedestrian | mixed (default mixed when both vehicle releases and ped present)
+   */
+  kind?: 'vehicle' | 'pedestrian' | 'mixed'
   /** approachId -> movements released */
   releases: Record<string, Movement[]>
   isOverlap?: boolean
@@ -233,6 +250,9 @@ export interface BandNodeEditable {
   cycleSec: number
   lockedOffset?: boolean
   offsetSec: number
+  /** optional WGS84 pick for corridor map skeleton */
+  lat?: number
+  lon?: number
 }
 
 export interface BandCorridor {
@@ -240,7 +260,7 @@ export interface BandCorridor {
   name: string
   speedKmh: number
   /** classic=数解双向, optimized-scan=MAXBAND启发, one-way=单向, two-way-equal=双向等带, graphical=图解半周期 */
-  method: 'classic' | 'optimized-scan' | 'one-way' | 'two-way-equal' | 'graphical'
+  method: 'classic' | 'optimized-scan' | 'one-way' | 'two-way-equal' | 'graphical' | 'maxband-discrete'
   nodes: BandNodeEditable[]
 }
 

@@ -55,6 +55,7 @@ function makeApproach(name: string, bearingDeg: number): Approach {
     sidewalkWidthM: 3,
     bikeEnabled: true,
     bikeWidthM: 2.5,
+    auxRoad: { enabled: false, widthM: 5.5, offsetM: 1.0, openNearM: 18 },
     leftWait: false,
     throughWait: false,
     borrowLeft: false,
@@ -149,9 +150,9 @@ export function createCrossTemplate(name = '标准十字交叉口'): Project {
     speedKmh: 40,
     method: 'classic' as const,
     nodes: [
-      { id: newId(), name: '路口A', distanceM: 0, greenRatio: 0.45, cycleSec: 90, offsetSec: 0 },
-      { id: newId(), name: '路口B', distanceM: 480, greenRatio: 0.5, cycleSec: 90, offsetSec: 0 },
-      { id: newId(), name: '路口C', distanceM: 980, greenRatio: 0.42, cycleSec: 90, offsetSec: 0 },
+      { id: newId(), name: '路口A', distanceM: 0, greenRatio: 0.45, cycleSec: 90, offsetSec: 0, lat: 36.0611, lon: 103.8343 },
+      { id: newId(), name: '路口B', distanceM: 480, greenRatio: 0.5, cycleSec: 90, offsetSec: 0, lat: 36.0650, lon: 103.8380 },
+      { id: newId(), name: '路口C', distanceM: 980, greenRatio: 0.42, cycleSec: 90, offsetSec: 0, lat: 36.0690, lon: 103.8420 },
       { id: newId(), name: '路口D', distanceM: 1500, greenRatio: 0.48, cycleSec: 90, offsetSec: 0 },
     ],
   }

@@ -17,6 +17,8 @@ import { AnalysisLaneTable } from '@/ui/layout/AnalysisLaneTable'
 import { collectCompareRows, compareSchemesCsv } from '@/io/report'
 import { exportVissimCsvBundle } from '@/io/vissimCsv'
 import { buildVissimImportPack } from '@/io/vissimInpxSkeleton'
+import { buildVissimInpxPack } from '@/io/vissimInpx'
+import { buildMultiPageReportHtml } from '@/io/multiPageReport'
 import { analysisMarkdown, exportSvgFile } from '@/io/exportCharts'
 import { buildAnalysisReportSvg } from '@/io/analysisReportSvg'
 import { downloadText } from '@/io/download'
@@ -116,15 +118,35 @@ export function AnalysisWorkspace({
           type="button"
           onClick={() => {
             if (!channel || !flow || !signal) return
-            const pack = buildVissimImportPack(project.name, channel.approaches, flow, signal)
+            const pack = buildVissimInpxPack(project.name, channel.approaches, flow, signal)
             downloadText(`${project.name}-vissim-README.md`, pack.readme, 'text/markdown')
+            downloadText(`${project.name}.inpx.xml`, pack.xml, 'application/xml')
+            downloadText(`${project.name}-vissim-summary.json`, pack.json, 'application/json')
             downloadText(`${project.name}-vissim-links.csv`, pack.bundle.links, 'text/csv')
             downloadText(`${project.name}-vissim-routes.csv`, pack.bundle.routes, 'text/csv')
             downloadText(`${project.name}-vissim-volumes.csv`, pack.bundle.volumes, 'text/csv')
             downloadText(`${project.name}-vissim-signal.csv`, pack.bundle.signal, 'text/csv')
           }}
         >
-          Vissim 导入骨架
+          Vissim 交换包
+        </button>
+        <button
+          type="button"
+          className="primary"
+          onClick={() => {
+            if (!channel || !flow || !signal) return
+            const html = buildMultiPageReportHtml({
+              project,
+              channel,
+              flow,
+              signal,
+              analysis,
+              bandCorridor: project.bandCorridor,
+            })
+            downloadText(`${project.name}-report.html`, html, 'text/html')
+          }}
+        >
+          多页工程报告 PDF
         </button>
         <button type="button" className="primary" onClick={onExportProPack}>
           导出专业图件包

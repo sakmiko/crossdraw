@@ -51,3 +51,34 @@ export function pedWalkFdw(phase: Phase): { walk: number; fdw: number } {
   }
   return { walk: g * 0.6, fdw: g * 0.4 }
 }
+
+/** Infer phase kind from releases + pedestrian list. */
+export function inferPhaseKind(phase: Phase): 'vehicle' | 'pedestrian' | 'mixed' {
+  if (phase.kind) return phase.kind
+  const hasVeh = Object.values(phase.releases || {}).some((m) => (m as string[]).length > 0)
+  const hasPed = (phase.pedestrian ?? []).length > 0
+  if (hasPed && !hasVeh) return 'pedestrian'
+  if (hasPed && hasVeh) return 'mixed'
+  return 'vehicle'
+}
+
+/** Create a dedicated exclusive pedestrian phase skeleton (no vehicle releases). */
+export function makePedestrianOnlyPhase(
+  id: string,
+  name: string,
+  approachIds: string[],
+  greenSec = 18,
+): Phase {
+  return {
+    id,
+    name,
+    kind: 'pedestrian',
+    greenSec,
+    yellowSec: 0,
+    allRedSec: 3,
+    releases: {},
+    pedestrian: approachIds.map((approachId) => ({ approachId, exclusive: true })),
+    pedWalkSec: Math.round(greenSec * 0.65),
+    pedFdwSec: Math.round(greenSec * 0.35),
+  }
+}

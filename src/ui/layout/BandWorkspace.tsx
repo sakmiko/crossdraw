@@ -10,6 +10,7 @@ import { BandCharts, CorridorCompareCharts } from '@/ui/charts/ChartPanels'
 import { TimeSpacePanel } from '@/ui/charts/ProfessionalPanels'
 import { InteractiveTimeSpace, buildTimeSpaceExportSvg } from '@/ui/charts/InteractiveTimeSpace'
 import { collectCorridorKpis, corridorKpiCompareSvg, multiBandMarkdown } from '@/ui/charts/bandCorridorCompare'
+import { corridorMapSvg } from '@/ui/charts/corridorMap'
 import { bandMarkdown, exportJsonFile, exportSvgFile } from '@/io/exportCharts'
 import { downloadText } from '@/io/download'
 
@@ -109,6 +110,7 @@ export function BandWorkspace({
                     <option value="optimized-scan">优化扫描 (MAXBAND启发)</option>
                     <option value="graphical">图解法（半周期）</option>
                     <option value="one-way">单向绿波</option>
+                    <option value="maxband-discrete">MAXBAND 离散搜索</option>
                   </select>
                 </label>
               </div>
@@ -135,6 +137,16 @@ export function BandWorkspace({
                 </div>
               </div>
               <p className="hint">指标与下方时距图色带联动；优化相位差后自动刷新。</p>
+              <div
+                className="chart-svg-host chart-svg-host--pro"
+                style={{ marginTop: 10 }}
+                dangerouslySetInnerHTML={{
+                  __html: corridorMapSvg(project.bandCorridor, {
+                    bandwidthRatio: band.bandwidthRatio,
+                  }),
+                }}
+              />
+
               <table className="table">
                 <thead>
                   <tr>
@@ -144,6 +156,8 @@ export function BandWorkspace({
                     <th>C</th>
                     <th>相位差 o(s)</th>
                     <th>锁定</th>
+                    <th>纬度</th>
+                    <th>经度</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -201,6 +215,32 @@ export function BandWorkspace({
                           />
                           <span>{n.lockedOffset ? '锁' : '—'}</span>
                         </label>
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          step={0.0001}
+                          placeholder="lat"
+                          value={n.lat ?? ''}
+                          onChange={(e) =>
+                            updateBandNode(n.id, {
+                              lat: e.target.value === '' ? undefined : Number(e.target.value),
+                            })
+                          }
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          step={0.0001}
+                          placeholder="lon"
+                          value={n.lon ?? ''}
+                          onChange={(e) =>
+                            updateBandNode(n.id, {
+                              lon: e.target.value === '' ? undefined : Number(e.target.value),
+                            })
+                          }
+                        />
                       </td>
                       <td>
                         <button type="button" className="ghost" onClick={() => removeBandNode(n.id)}>

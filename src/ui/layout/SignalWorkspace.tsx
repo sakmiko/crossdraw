@@ -43,6 +43,7 @@ export type SignalWorkspaceProps = {
   onSetPedExclusive?: (phaseId: string, approachId: string, exclusive: boolean) => void
   onAddPhase: () => void
   onAddOverlap: () => void
+  onAddPedPhase?: () => void
   onRunOptimize: () => void
   onRunCompare: () => void
   onApplyCompareRow: (row: TimingCompareRow) => void
@@ -71,6 +72,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
     onSetPedExclusive,
     onAddPhase,
     onAddOverlap,
+    onAddPedPhase,
     onRunOptimize,
     onRunCompare,
     onApplyCompareRow,
@@ -217,6 +219,11 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         <button type="button" onClick={onAddOverlap}>
           添加搭接
         </button>
+        {onAddPedPhase && (
+          <button type="button" className="primary" onClick={onAddPedPhase}>
+            专用行人相位
+          </button>
+        )}
         <label className="timing-method">
           配时方法
           <select value={timingMethod} onChange={(e) => onTimingMethod(e.target.value as TimingMethod)}>

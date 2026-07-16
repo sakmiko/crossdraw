@@ -14,6 +14,7 @@ import type {
 } from '@/domain/types'
 import { createCrossTemplate, createTemplateByType } from '@/domain/templates/cross'
 import { applyOffsetsToCorridor, optimizeAllCorridors, optimizeCorridor, setSegmentLength } from '@/domain/analysis/corridor'
+import { makePedestrianOnlyPhase } from '@/domain/signal/pedestrian'
 import { cloneBandCorridor, defaultBandCorridor, normalizeBandCorridors } from '@/domain/band/corridors'
 import {
   rebuildLaneGroupsFromLanes,
@@ -60,6 +61,7 @@ export type AppState = {
   setPhasePedExclusive: (phaseId: string, approachId: string, exclusive: boolean) => void
   addPhase: () => void
   addOverlapPhase: () => void
+  addPedestrianPhase: () => void
   setProjectName: (name: string) => void
   markClean: () => void
   touch: () => void
@@ -318,6 +320,20 @@ export const useAppStore = create<AppState>()(
             isOverlap: false,
             pedestrian: [],
           })
+          s.dirty = true
+        }),
+      addPedestrianPhase: () =>
+        set((s) => {
+          const sg = activeSignal(s.project)
+          const ch = activeChannel(s.project)
+          if (!sg || !ch) return
+          const ids = ch.approaches.map((a) => a.id)
+          const ph = makePedestrianOnlyPhase(newId(), `行人相位${sg.phases.length + 1}`, ids, 18)
+          sg.phases.push(ph)
+          const mainSum = sg.phases
+            .filter((p) => !p.isOverlap)
+            .reduce((sum, p) => sum + p.greenSec + p.yellowSec + p.allRedSec, 0)
+          sg.cycleSec = Math.max(sg.cycleSec, mainSum)
           s.dirty = true
         }),
       addOverlapPhase: () =>

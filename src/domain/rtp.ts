@@ -66,6 +66,14 @@ const approachSchema = z.object({
   sidewalkWidthM: z.number(),
   bikeEnabled: z.boolean(),
   bikeWidthM: z.number(),
+  auxRoad: z
+    .object({
+      enabled: z.boolean(),
+      widthM: z.number(),
+      offsetM: z.number().optional(),
+      openNearM: z.number().optional(),
+    })
+    .optional(),
   leftWait: z.boolean(),
   throughWait: z.boolean(),
   borrowLeft: z.boolean(),
@@ -81,6 +89,7 @@ const phaseSchema = z.object({
   greenSec: z.number(),
   yellowSec: z.number(),
   allRedSec: z.number(),
+  kind: z.enum(['vehicle', 'pedestrian', 'mixed']).optional(),
   releases: z.record(z.array(z.enum(['U', 'L', 'T', 'R']))),
   isOverlap: z.boolean().optional(),
   pedestrian: z
@@ -191,7 +200,7 @@ const projectSchema = z.object({
       id: z.string(),
       name: z.string(),
       speedKmh: z.number(),
-      method: z.enum(['classic', 'optimized-scan', 'one-way', 'two-way-equal', 'graphical']),
+      method: z.enum(['classic', 'optimized-scan', 'one-way', 'two-way-equal', 'graphical', 'maxband-discrete']),
       nodes: z.array(
         z.object({
           id: z.string(),
@@ -201,6 +210,8 @@ const projectSchema = z.object({
           cycleSec: z.number(),
           lockedOffset: z.boolean().optional(),
           offsetSec: z.number(),
+          lat: z.number().optional(),
+          lon: z.number().optional(),
         }),
       ),
     })
@@ -211,7 +222,7 @@ const projectSchema = z.object({
         id: z.string(),
         name: z.string(),
         speedKmh: z.number(),
-        method: z.enum(['classic', 'optimized-scan', 'one-way', 'two-way-equal', 'graphical']),
+        method: z.enum(['classic', 'optimized-scan', 'one-way', 'two-way-equal', 'graphical', 'maxband-discrete']),
         nodes: z.array(
           z.object({
             id: z.string(),
@@ -221,6 +232,8 @@ const projectSchema = z.object({
             cycleSec: z.number(),
             lockedOffset: z.boolean().optional(),
             offsetSec: z.number(),
+            lat: z.number().optional(),
+            lon: z.number().optional(),
           }),
         ),
       }),
