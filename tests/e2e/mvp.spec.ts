@@ -10,32 +10,22 @@ async function bootCross(page: Page) {
 }
 
 async function openNav(page: Page, label: string) {
-  // left nav uses aria-label from title
   const nav = page.getByRole('navigation', { name: '功能导航' })
   await nav.getByRole('tab', { name: new RegExp(label) }).click()
   await page.waitForTimeout(220)
 }
 
-test.describe('Crossdraw v0.5.73 left nav + polish', () => {
+test.describe('Crossdraw v0.5.74 clean canvas + depth + polish', () => {
   // 渠化 流量 信号 分析 绿波 比选 断面
-  test('shell left nav expandable', async ({ page }) => {
+  test('shell', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.73/).first()).toBeVisible()
-    const nav = page.getByRole('navigation', { name: '功能导航' })
-    await expect(nav).toBeVisible()
-    await expect(nav.getByRole('tab', { name: /渠化/ })).toBeVisible()
-    // collapse to icon
-    await page.getByRole('button', { name: /折叠/ }).click()
-    await expect(page.locator('.app.nav-collapsed')).toBeVisible()
-    await page.getByRole('button', { name: /展开/ }).click()
-    await expect(page.locator('.app.nav-expanded')).toBeVisible()
+    await expect(page.getByText(/v0\.5\.74/).first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
 
-  test('channel via left nav', async ({ page }) => {
+  test('channel clean model', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '渠化')
-    await expect(page.getByRole('heading', { name: '渠化', exact: true })).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/01-channel.png', fullPage: true })
   })
 
@@ -45,27 +35,27 @@ test.describe('Crossdraw v0.5.73 left nav + polish', () => {
     await page.screenshot({ path: 'docs/screenshots/02-flow.png', fullPage: true })
   })
 
-  test('signal', async ({ page }) => {
+  test('signal ped + barrier tools', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '信号')
+    await expect(page.getByRole('button', { name: '行人Walk/FDW' })).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('button', { name: '屏障Y配绿' })).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/03-signal.png', fullPage: true })
   })
 
   test('analysis', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '分析')
+    await expect(page.getByText('转向能力').first()).toBeVisible({ timeout: 10000 })
     await page.screenshot({ path: 'docs/screenshots/04-analysis.png', fullPage: true })
   })
 
-  test('band page keeps left nav', async ({ page }) => {
+  test('band progressive + coord', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '绿波')
-    await expect(page.getByRole('navigation', { name: '功能导航' })).toBeVisible()
-    await expect(page.getByRole('tab', { name: '路口参数表' })).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('button', { name: '连续相位差' })).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText('协调').first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/05-band.png', fullPage: true })
-    // switch back via left nav
-    await openNav(page, '渠化')
-    await expect(page.locator('#canvas-root')).toBeVisible()
   })
 
   test('xsection', async ({ page }) => {

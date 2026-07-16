@@ -13,6 +13,9 @@ import { allPhasesConflictHits } from '@/domain/signal/phaseConflictView'
 import { detectPedVehicleConflicts, pedVehicleSummary } from '@/domain/signal/pedVehicleConflict'
 import { SignalCharts, TimingCompareCharts } from '@/ui/charts/ChartPanels'
 import { buildDualRingAlignment, dualRingSummaryText } from '@/domain/signal/dualRing'
+import { applyPedTimingToSignal } from '@/domain/signal/pedTiming'
+import { allocateGreensByBarrierCriticalY } from '@/domain/signal/barrierGreenAlloc'
+import { dualRingPhaseNumberSvg } from '@/ui/charts/phaseNumberDiagram'
 import { computeDualRingCriticalFlow, dualRingCriticalSummary } from '@/domain/signal/barrierCritical'
 import { SignalTimingPanel, ControlMatrixPanel, PhaseFacePanel } from '@/ui/charts/ProfessionalPanels'
 import { vcHeatColor } from '@/ui/charts/svgCharts'
@@ -52,6 +55,8 @@ export type SignalWorkspaceProps = {
   onSetPhaseBarrier?: (phaseId: string, barrierIndex: number) => void
   onBalanceDualRing?: () => void
   onCloseDualRingCycle?: () => void
+  onApplyPedTiming?: () => void
+  onAllocateBarrierGreens?: () => void
   onRunOptimize: () => void
   onRunCompare: () => void
   onApplyCompareRow: (row: TimingCompareRow) => void
@@ -87,6 +92,8 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
     onSetPhaseBarrier,
     onBalanceDualRing,
     onCloseDualRingCycle,
+  onApplyPedTiming,
+  onAllocateBarrierGreens,
     onRunOptimize,
     onRunCompare,
     onApplyCompareRow,
@@ -294,7 +301,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         )}
       </details>
 
-      <details className="subpanel">
+      <details className="subpanel" open>
         <summary className="subpanel-summary">
           相位操作 / 配时优化
         </summary>
@@ -302,6 +309,16 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         <button type="button" onClick={onAddPhase}>
           添加相位
         </button>
+        {onApplyPedTiming && (
+          <button type="button" onClick={() => onApplyPedTiming()}>
+            行人Walk/FDW
+          </button>
+        )}
+        {onAllocateBarrierGreens && (
+          <button type="button" onClick={() => onAllocateBarrierGreens()}>
+            屏障Y配绿
+          </button>
+        )}
         <button type="button" onClick={onAddOverlap}>
           添加搭接
         </button>
@@ -416,7 +433,12 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         </div>
       )}
 
-      <SignalCharts
+      {signal.dualRing?.enabled && (
+          <div className="chart-svg-host chart-svg-host--pro" style={{ marginTop: 8 }}
+            dangerouslySetInnerHTML={{ __html: dualRingPhaseNumberSvg(signal, 360) }}
+          />
+        )}
+        <SignalCharts
         signal={signal}
         approaches={channel?.approaches}
         focusPhaseId={focusPhaseId ?? signal.phases[0]?.id ?? null}

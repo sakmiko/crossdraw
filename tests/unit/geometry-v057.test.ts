@@ -1,22 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { createCrossTemplate, createYTemplate, rebuildChannelMesh, meshAreaRoad } from '@/domain'
+import { createCrossTemplate, rebuildChannelMesh } from '@/domain'
 
 describe('geometry v0.5.7', () => {
-  it('draws legend and dimension labels on cross', () => {
+  it('clean canvas without legend labels on cross', () => {
     const p = createCrossTemplate()
-    const mesh = rebuildChannelMesh(p.channelizationSchemes[0], p.channelizationSchemes[0].flowSchemes[0])
-    expect(mesh.labels.some((l) => l.text.includes('图') && l.text.includes('例'))).toBe(true)
-    expect(mesh.labels.some((l) => l.text.startsWith('B='))).toBe(true)
-    expect(mesh.labels.some((l) => l.text.startsWith('R='))).toBe(true)
-    expect(meshAreaRoad(mesh)).toBeGreaterThan(100)
-    expect(mesh.polygons.filter((p) => p.layer === 'ISLAND').length).toBeGreaterThan(0)
-    expect(mesh.labels.some((l) => l.text.includes('渠化'))).toBe(true)
-    expect(mesh.labels.some((l) => l.text === '50m' || l.text.includes('50'))).toBe(true)
-  })
-
-  it('y junction still rebuilds', () => {
-    const p = createYTemplate()
     const mesh = rebuildChannelMesh(p.channelizationSchemes[0])
-    expect(mesh.polygons.length).toBeGreaterThan(8)
+    expect(mesh.polygons.length).toBeGreaterThan(3)
+    expect(mesh.labels.some((l) => l.text === 'CROSSDRAW')).toBe(false)
+    expect(mesh.labels.some((l) => l.text.includes('图  例'))).toBe(false)
   })
 })

@@ -26,6 +26,9 @@ import {
 } from '@/domain/geometry/laneGroups'
 import { wrapProject, serializeRtp } from '@/domain/rtp'
 import { saveDraft } from '@/io/autosave'
+import { applyPedTimingToSignal } from '@/domain/signal/pedTiming'
+import { allocateGreensByBarrierCriticalY } from '@/domain/signal/barrierGreenAlloc'
+import { applyProgressiveOffsets } from '@/domain/analysis/progressiveOffset'
 
 export type UiTheme = 'dark' | 'light'
 
@@ -92,7 +95,10 @@ export type AppState = {
   updateBandNode: (nodeId: string, patch: Partial<BandCorridor['nodes'][0]>) => void
   addBandNode: () => void
   removeBandNode: (nodeId: string) => void
-  optimizeBand: () => void
+    optimizeBand: () => void
+  applyProgressiveOffsets: (reverse?: boolean) => void
+  applyPedTiming: () => void
+  allocateBarrierGreens: () => void
   optimizeAllBands: () => { count: number; improved: number }
   setBandSegmentLength: (toNodeId: string, lengthM: number) => void
   updateBasemap: (patch: Partial<NonNullable<Project["settings"]["basemap"]>>) => void
@@ -580,6 +586,36 @@ export const useAppStore = create<AppState>()(
           s.project.bandCorridor.nodes = s.project.bandCorridor.nodes.filter((n) => n.id !== nodeId)
           s.dirty = true
         }),
+      
+      applyProgressiveOffsets: (reverse = false) =>
+        set((s) => {
+          normalizeBandCorridors(s.project)
+          s.project.bandCorridor = applyProgressiveOffsets(s.project.bandCorridor, reverse)
+          const i = s.project.bandCorridors.findIndex((c) => c.id === s.project.activeBandId)
+          if (i >= 0) s.project.bandCorridors[i] = s.project.bandCorridor
+          s.dirty = true
+        }),
+      applyPedTiming: () =>
+        set((s) => {
+          const ch = s.project.channelizationSchemes.find((c) => c.id === s.project.active.channelId)
+          const fl = ch?.flowSchemes.find((f) => f.id === s.project.active.flowId)
+          const sg = fl?.signalSchemes.find((x) => x.id === s.project.active.signalId)
+          if (!ch || !sg) return
+          const next = applyPedTimingToSignal(sg, ch.approaches)
+          Object.assign(sg, next)
+          s.dirty = true
+        }),
+      allocateBarrierGreens: () =>
+        set((s) => {
+          const ch = s.project.channelizationSchemes.find((c) => c.id === s.project.active.channelId)
+          const fl = ch?.flowSchemes.find((f) => f.id === s.project.active.flowId)
+          const sg = fl?.signalSchemes.find((x) => x.id === s.project.active.signalId)
+          if (!ch || !fl || !sg) return
+          const { signal: next } = allocateGreensByBarrierCriticalY(ch.approaches, fl, sg)
+          Object.assign(sg, next)
+          s.dirty = true
+        }),
+
       optimizeBand: () =>
         set((s) => {
           normalizeBandCorridors(s.project)

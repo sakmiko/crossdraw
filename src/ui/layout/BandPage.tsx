@@ -13,6 +13,8 @@ import { corridorMapSvg } from '@/ui/charts/corridorMap'
 import { exportSvgFile } from '@/io/exportCharts'
 import { downloadText } from '@/io/download'
 import { corridorSegments } from '@/domain/analysis/corridor'
+import { computeCoordinationIndex } from '@/domain/analysis/coordinationIndex'
+import { buildMaxbandReport } from '@/domain/analysis/maxbandReport'
 
 export type BandPageProps = {
   project: Project
@@ -25,6 +27,7 @@ export type BandPageProps = {
   removeBandNode: (id: string) => void
   optimizeBand: () => void
   optimizeAllBands: () => { count: number; improved: number }
+  onProgressiveOffsets?: (reverse?: boolean) => void
   setBandSegmentLength: (toNodeId: string, lengthM: number) => void
   setActiveBand: (id: string) => void
   addBandCorridor: () => void
@@ -47,6 +50,7 @@ export function BandPage(props: BandPageProps) {
     removeBandNode,
     optimizeBand,
     optimizeAllBands,
+    onProgressiveOffsets,
     setBandSegmentLength,
     setActiveBand,
     addBandCorridor,
@@ -76,6 +80,7 @@ export function BandPage(props: BandPageProps) {
 
   const C = sortedNodes[0]?.cycleSec ?? 90
   const lockedN = corridor.nodes.filter((n) => n.lockedOffset).length
+  const coord = useMemo(() => computeCoordinationIndex(corridor, band), [corridor, band])
 
   return (
     <div className="band-page" data-theme={theme}>
@@ -121,6 +126,11 @@ export function BandPage(props: BandPageProps) {
           >
             优化
           </button>
+          {onProgressiveOffsets && (
+            <button type="button" className="ghost" onClick={() => onProgressiveOffsets(false)} title="按行程时间推连续相位差">
+              连续相位差
+            </button>
+          )}
           <button
             type="button"
             className="ghost"
@@ -173,6 +183,10 @@ export function BandPage(props: BandPageProps) {
         <div className="bkpi">
           <span className="bkpi-l">路口</span>
           <span className="bkpi-v">{corridor.nodes.length}</span>
+        </div>
+        <div className="bkpi">
+          <span className="bkpi-l">协调</span>
+          <span className="bkpi-v">{coord.grade}<small>{coord.score.toFixed(0)}</small></span>
         </div>
         {batchNote && (
           <div className="bkpi bkpi-note">

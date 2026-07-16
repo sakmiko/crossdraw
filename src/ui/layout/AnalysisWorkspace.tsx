@@ -2,6 +2,9 @@
  * Analysis evaluation workspace — metrics, charts, lane table, exports.
  * Extracted from App (v0.5.42).
  */
+import { computeMovementCapacities } from '@/domain/analysis/movementSat'
+import { websterLostTime } from '@/domain/analysis/lostTime'
+import { applyPhfToHourly } from '@/domain/analysis/phf'
 import type {
   AnalysisResult,
   Approach,
@@ -138,7 +141,41 @@ export function AnalysisWorkspace({
           los: r.los,
         }))}
       />
-      <details className="subpanel">
+      
+      <details className="subpanel" open>
+        <summary className="subpanel-summary">转向能力 · 排队 · 损失时间</summary>
+        <div className="subpanel-body">
+          {flow && channel && (
+            <table className="table table-dense">
+              <thead><tr><th>进口</th><th>向</th><th>v/c</th></tr></thead>
+              <tbody>
+                {computeMovementCapacities(channel.approaches, flow).slice(0, 12).map((r) => (
+                  <tr key={r.approachId + r.movement}>
+                    <td>{r.approachName.replace('进口','')}</td>
+                    <td>{r.movement}</td>
+                    <td className="num" style={{ fontWeight: 700, color: r.vc > 0.9 ? 'var(--block)' : 'var(--accent)' }}>{r.vc.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {signal && (
+            <div className="metric-grid" style={{ marginTop: 8 }}>
+              <div className="metric">
+                <div className="label">损失 L</div>
+                <div className="value">{websterLostTime({ mainPhaseCount: signal.phases.filter((p) => !p.isOverlap).length }).L}<small>s</small></div>
+              </div>
+              {flow && (
+                <div className="metric">
+                  <div className="label">PHF设计小时</div>
+                  <div className="value">{applyPhfToHourly(1000, flow.phf ?? 0.92).designHourly.toFixed(0)}</div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </details>
+<details className="subpanel">
         <summary className="subpanel-summary">导出与报告</summary>
         <div className="subpanel-body toolbar dense">
         <button

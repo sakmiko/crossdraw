@@ -105,6 +105,9 @@ export default function App() {
   const addBandNode = useAppStore((s) => s.addBandNode)
   const removeBandNode = useAppStore((s) => s.removeBandNode)
   const optimizeBand = useAppStore((s) => s.optimizeBand)
+  const applyProgressiveOffsets = useAppStore((s) => s.applyProgressiveOffsets)
+  const applyPedTiming = useAppStore((s) => s.applyPedTiming)
+  const allocateBarrierGreens = useAppStore((s) => s.allocateBarrierGreens)
   const optimizeAllBands = useAppStore((s) => s.optimizeAllBands)
   const setBandSegmentLength = useAppStore((s) => s.setBandSegmentLength)
   const setActiveBand = useAppStore((s) => s.setActiveBand)
@@ -517,6 +520,7 @@ export default function App() {
           removeBandNode={removeBandNode}
           optimizeBand={optimizeBand}
           optimizeAllBands={optimizeAllBands}
+          onProgressiveOffsets={applyProgressiveOffsets}
           setBandSegmentLength={setBandSegmentLength}
           setActiveBand={setActiveBand}
           addBandCorridor={addBandCorridor}
@@ -527,7 +531,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.73 · 绿波专页</span>
+          <span>Crossdraw v0.5.74 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -549,7 +553,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.73</span>
+            <span className="brand-ver">v0.5.74</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -719,10 +723,6 @@ export default function App() {
               <button type="button" className="ghost" onClick={() => { clearDraft(); setRestoreMsg(null) }}>丢弃</button>
             </div>
           )}
-          <div className="card">
-            <h3>提示</h3>
-            <p className="hint">本地无限保存 · 方案上限 {project.settings.maxSchemes} · Ctrl+K 命令 · 1–6 切换模式</p>
-          </div>
         </aside>
 
         <main className="center">
@@ -733,7 +733,6 @@ export default function App() {
             <span>{MODES.find((m) => m.id === mode)?.label}</span>
           </div>
           <div className="stage-bar">
-            <span className="hint">平移 · 缩放 · 1–7 · Ctrl+K</span>
             <button type="button" className="ghost" onClick={() => canvasRef.current?.fitView()}>适应窗口</button>
             <span className="legend layer-toggles" style={{ margin: 0 }}>
               {([
@@ -741,8 +740,6 @@ export default function App() {
                 ['MARKING', '标线', '#f8fafc'],
                 ['ISLAND', '岛', '#4ade80'],
                 ['FLOW', '流量', '#38bdf8'],
-                ['ANNO', '标注', '#94a3b8'],
-                ['FRAME', '图框', '#64748b'],
               ] as [LayerKey, string, string][]).map(([k, lab, col]) => (
                 <button
                   key={k}
@@ -836,6 +833,8 @@ export default function App() {
               onSetPhaseBarrier={setPhaseBarrier}
               onBalanceDualRing={balanceDualRingBarriers}
               onCloseDualRingCycle={closeDualRingCycle}
+              onApplyPedTiming={applyPedTiming}
+              onAllocateBarrierGreens={allocateBarrierGreens}
               onRunOptimize={runWebster}
               onRunCompare={runTimingCompare}
               onApplyCompareRow={applyTimingCompareRow}
@@ -911,7 +910,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.73</span>
+        <span>Crossdraw v0.5.74</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

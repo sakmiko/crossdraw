@@ -97,6 +97,6 @@ describe('v0.5.69 barrier Y + unsignalized + fishbelly', () => {
     ch.approaches[0].median = { style: 'fishBelly', widthM: 3.5 }
     const mesh = rebuildChannelMesh(ch)
     const labels = mesh.labels.map((l) => l.text).join(' ')
-    expect(labels).toContain('鱼腹式')
+    expect(mesh.polygons.some((p) => p.layer === 'ISLAND')).toBe(true) // fish-belly geom kept, label removed
   })
 })

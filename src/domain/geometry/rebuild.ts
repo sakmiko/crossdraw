@@ -126,8 +126,8 @@ export function rebuildChannelMesh(scheme: ChannelizationScheme, flow?: FlowSche
   const core = stopLineDistance(approaches)
   const approachLen = 95
 
-  // modern rectangular paper (not circular vignette)
-  const halfPaper = 170
+  // Quiet model backdrop (no drafting sheet / grid / title frame)
+  const halfPaper = 160
   pushPoly(mesh, {
     layer: 'FRAME',
     points: [
@@ -137,46 +137,8 @@ export function rebuildChannelMesh(scheme: ChannelizationScheme, flow?: FlowSche
       [-halfPaper, halfPaper],
     ],
     fill: scheme.display.background || THEME.paper,
-    alpha: 1,
-  })
-  // outer soft margin
-  pushPoly(mesh, {
-    layer: 'FRAME',
-    points: [
-      [-halfPaper - 8, -halfPaper - 8],
-      [halfPaper + 8, -halfPaper - 8],
-      [halfPaper + 8, halfPaper + 8],
-      [-halfPaper - 8, halfPaper + 8],
-    ],
-    fill: '#0a1020',
     alpha: 0.35,
-    stroke: '#1e293b',
-    strokeWidth: 0.4,
   })
-
-  // subtle grid
-  for (let g = -150; g <= 150; g += 10) {
-    pushLine(mesh, {
-      layer: 'FRAME',
-      points: [
-        [g, -150],
-        [g, 150],
-      ],
-      stroke: THEME.grid,
-      strokeWidth: 0.08,
-      alpha: 0.22,
-    })
-    pushLine(mesh, {
-      layer: 'FRAME',
-      points: [
-        [-150, g],
-        [150, g],
-      ],
-      stroke: THEME.grid,
-      strokeWidth: 0.08,
-      alpha: 0.22,
-    })
-  }
 
   if (scheme.intersectionType === 'roundabout') {
     drawRoundabout(mesh, approaches, core)
@@ -216,8 +178,8 @@ export function rebuildChannelMesh(scheme: ChannelizationScheme, flow?: FlowSche
     alpha: 0.5,
   })
 
-  drawAnnotations(mesh, scheme)
-  drawLegend(mesh, scheme)
+  // Canvas shows pure intersection geometry only (no legend / title block / scale).
+  // Export packs may re-add drafting chrome later if needed.
   return recomputeBBox(mesh)
 }
 
@@ -319,14 +281,7 @@ function drawCornerFillets(mesh: Mesh, approaches: Approach[], core: number) {
     })
     // corner angle callout when not ~90° (skewed / Y)
     if (Math.abs(angle - 90) > 12) {
-      pushLabel(mesh, {
-        text: `∠${angle.toFixed(0)}°`,
-        at: add(filletCenter, mul(midDir, rCurb * 0.35)),
-        color: THEME.accent,
-        size: 1.8,
-        align: 'center',
-      })
-      // extra soft curb offset line for acute pockets
+            // extra soft curb offset line for acute pockets
       if (angle < 80) {
         pushLine(mesh, {
           layer: 'MARKING',
@@ -454,29 +409,10 @@ function drawCornerFillets(mesh: Mesh, approaches: Approach[], core: number) {
             alpha: 0.9,
           })
         }
-        pushLabel(mesh, {
-          text: si.label || '安全岛',
-          at: add(siCenter, [0, siR + 1.8]),
-          color: THEME.islandEdge,
-          size: 1.9,
-          align: 'center',
-        })
-        pushLabel(mesh, {
-          text: `r=${siR.toFixed(1)}m`,
-          at: add(siCenter, [0, -siR - 1.2]),
-          color: '#475569',
-          size: 1.7,
-          align: 'center',
-        })
+        // no island parameter labels on canvas
       }
 
-      pushLabel(mesh, {
-        text: `R=${r.toFixed(0)}m · 道宽${chW.toFixed(1)}`,
-        at: add(center, mul(midDir, r * 0.12)),
-        color: THEME.islandEdge,
-        size: 2.0,
-        align: 'center',
-      })
+      // no free-right dimension label on canvas
     }
   }
 }
@@ -663,13 +599,7 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
       strokeWidth: 0.2,
       alpha: 0.95,
     })
-    pushLabel(mesh, {
-      text: '鱼腹式',
-      at: add(mul(ux, s0 + 6), mul(px, mid)),
-      color: THEME.islandEdge,
-      size: 1.5,
-      align: 'center',
-    })
+    // no on-road parameter labels
   }
 
   // exit lane dividers
@@ -698,33 +628,7 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
     stroke: THEME.marking,
     strokeWidth: 0.35,
   })
-  // stop-line chainage + tick outside entry curb
-  {
-    const tick0 = add(mul(ux, start), mul(px, -half - 0.8))
-    const tick1 = add(mul(ux, start), mul(px, -half - 2.4))
-    pushLine(mesh, {
-      layer: 'ANNO',
-      points: [tick0, tick1],
-      stroke: THEME.accent,
-      strokeWidth: 0.28,
-    })
-    pushLabel(mesh, {
-      text: stopLineStationLabel(start),
-      at: add(mul(ux, start + 0.2), mul(px, -half - 4.2)),
-      color: THEME.accent,
-      size: 2.0,
-      align: 'center',
-      meta: { kind: 'stop-station', approachId: ap.id, stationM: start },
-    })
-    pushLabel(mesh, {
-      text: `${approachCode(ap)} ${stopLineStationShort(start)}`,
-      at: add(mul(ux, start + 0.2), mul(px, half + 3.6)),
-      color: '#0f172a',
-      size: 1.9,
-      align: 'center',
-      meta: { kind: 'stop-code', approachId: ap.id },
-    })
-  }
+  // stop-line chainage labels omitted on canvas (params live in inspector)
 
   /**
    * Crosswalk: across carriageway only (entry curb → exit curb along px).
@@ -861,13 +765,7 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
         dashed: true,
         alpha: 0.7,
       })
-      pushLabel(mesh, {
-        text: `辅路 ${aw.toFixed(1)}m`,
-        at: add(mul(ux, (aStart + end) / 2), mul(px, outer0 + aw * 0.55)),
-        color: '#e7e5e4',
-        size: 1.8,
-        align: 'center',
-      })
+      // no aux width label on canvas
     }
   }
 
@@ -885,13 +783,6 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
       fill: '#fbbf24',
       alpha: 0.4,
     })
-    pushLabel(mesh, {
-      text: '左转待转',
-      at: add(mul(ux, start + 5.5), mul(px, -half + bay * 0.55)),
-      color: '#78350f',
-      size: 2,
-      align: 'center',
-    })
   }
   if (ap.throughWait) {
     pushPoly(mesh, {
@@ -904,13 +795,6 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
       ],
       fill: '#fde68a',
       alpha: 0.35,
-    })
-    pushLabel(mesh, {
-      text: '直行待行',
-      at: add(mul(ux, start + 5), [0, 0]),
-      color: '#713f12',
-      size: 2,
-      align: 'center',
     })
   }
 
@@ -937,49 +821,15 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
       strokeWidth: 0.25,
       dashed: true,
     })
-    pushLabel(mesh, {
-      text: '借道左转',
-      at: add(mul(ux, start + 8), mul(px, medL + 1)),
-      color: '#9a3412',
-      size: 2,
-      align: 'center',
-    })
   }
 
-  // red-light right-turn annotation
-  if (ap.redRightTurn) {
-    pushLabel(mesh, {
-      text: `红灯右转 ${(ap.redRightTurnRatio * 100).toFixed(0)}%`,
-      at: add(mul(ux, start + 18), mul(px, half * 0.55)),
-      color: '#b91c1c',
-      size: 2.2,
-      align: 'center',
-    })
-  }
 
-  // movement arrows + lane numbers (E1.. from median outward) per entry lane
+  // movement arrows only (no E1 / width / B= / approach name callouts on canvas)
   off = -half
-  ap.entryLanes.forEach((ln, li) => {
+  ap.entryLanes.forEach((ln) => {
     const mid = off + ln.widthM / 2
     const base = add(mul(ux, start + 12), mul(px, mid))
     drawMovementArrow(mesh, base, ux, px, ln.movements, !!ln.variable)
-    // lane number stamp near stop line (median→curb = E1..)
-    pushLabel(mesh, {
-      text: entryLaneStamp(li, ln.movements, !!ln.variable),
-      at: add(mul(ux, start + 4.2), mul(px, mid)),
-      color: ln.variable ? THEME.yellow : '#f8fafc',
-      size: 2.0,
-      align: 'center',
-      meta: { kind: 'lane-no', approachId: ap.id, laneId: ln.id, index: li + 1 },
-    })
-    // width under number
-    pushLabel(mesh, {
-      text: `${ln.widthM.toFixed(2)}m`,
-      at: add(mul(ux, start + 2.2), mul(px, mid)),
-      color: '#cbd5e1',
-      size: 1.55,
-      align: 'center',
-    })
     if (ln.variable) {
       pushLine(mesh, {
         layer: 'MARKING',
@@ -993,101 +843,6 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
       })
     }
     off += ln.widthM
-  })
-  // exit lane numbers X1.. from median
-  {
-    let xoff = medR
-    ap.exitLanes.forEach((ln, xi) => {
-      const mid = xoff + ln.widthM / 2
-      pushLabel(mesh, {
-        text: exitLaneStamp(xi),
-        at: add(mul(ux, start + 5.5), mul(px, mid)),
-        color: '#94a3b8',
-        size: 1.75,
-        align: 'center',
-        meta: { kind: 'exit-lane-no', approachId: ap.id, index: xi + 1 },
-      })
-      xoff += ln.widthM
-    })
-  }
-
-  // widen dimension annotation (同源 WidenParams)
-  const wAnno = widenAnnotation(ap)
-  if (wAnno) {
-    const sLab = Math.min(len * 0.35, Math.max(8, profile.stations.entryFullEnd * 0.5 + 4))
-    pushLabel(mesh, {
-      text: wAnno,
-      at: add(mul(ux, start + sLab), mul(px, -half - profile.entryExtraM - 3.5)),
-      color: '#0f172a',
-      size: 2.2,
-      align: 'center',
-    })
-    // station ticks: bay end / taper end
-    for (const [s, lab] of [
-      [profile.stations.entryFullEnd, '段尽'],
-      [profile.stations.entryTaperEnd, '渐尽'],
-    ] as const) {
-      if (s <= 0 || s >= len) continue
-      const p0 = add(mul(ux, start + s), mul(px, -half - profile.entryExtraM - 1))
-      const p1 = add(mul(ux, start + s), mul(px, -half + 1))
-      pushLine(mesh, {
-        layer: 'ANNO',
-        points: [p0, p1],
-        stroke: THEME.accent,
-        strokeWidth: 0.25,
-      })
-      pushLabel(mesh, {
-        text: lab,
-        at: add(p0, mul(px, -2)),
-        color: THEME.accent,
-        size: 1.7,
-        align: 'center',
-      })
-    }
-  }
-
-  // total width dimension
-  const dimY = half + ap.sidewalkWidthM + 2.5
-  pushLine(mesh, {
-    layer: 'ANNO',
-    points: [add(mul(ux, start + 22), mul(px, -half)), add(mul(ux, start + 22), mul(px, half))],
-    stroke: THEME.accent,
-    strokeWidth: 0.25,
-  })
-  pushLine(mesh, {
-    layer: 'ANNO',
-    points: [add(mul(ux, start + 20.5), mul(px, -half)), add(mul(ux, start + 23.5), mul(px, -half))],
-    stroke: THEME.accent,
-    strokeWidth: 0.25,
-  })
-  pushLine(mesh, {
-    layer: 'ANNO',
-    points: [add(mul(ux, start + 20.5), mul(px, half)), add(mul(ux, start + 23.5), mul(px, half))],
-    stroke: THEME.accent,
-    strokeWidth: 0.25,
-  })
-  pushLabel(mesh, {
-    text: `B=${totalWidth(ap).toFixed(1)}m`,
-    at: add(mul(ux, start + 22), mul(px, 0)),
-    color: THEME.accent,
-    size: 2.2,
-    align: 'center',
-  })
-
-  pushLabel(mesh, {
-    text: `${approachCode(ap)} ${ap.name}`,
-    at: add(mul(ux, end - 6), [0, 0]),
-    color: THEME.text,
-    size: 4.0,
-    align: 'center',
-    meta: { approachId: ap.id, code: approachCode(ap) },
-  })
-  pushLabel(mesh, {
-    text: `${ap.bearingDeg.toFixed(0)}° · ${ap.entryLanes.length}进/${ap.exitLanes.length}出 · ${stopLineStationShort(start)}`,
-    at: add(mul(ux, end - 2), [0, 0]),
-    color: '#475569',
-    size: 2.2,
-    align: 'center',
   })
 }
 
@@ -1169,14 +924,7 @@ function drawFlowArrows(mesh: Mesh, approaches: Approach[], flow: FlowScheme, co
       points: [tip, add(add(tip, mul(ux, 2)), mul(px, 1.4)), add(add(tip, mul(ux, 2)), mul(px, -1.4))],
       fill: color,
     })
-    pushLabel(mesh, {
-      text: String(Math.round(ar.volume)),
-      at: lerp(base, tip, 0.5),
-      color: '#0c4a6e',
-      size: 2.3,
-      align: 'center',
-    })
-  }
+      }
 }
 
 
@@ -1627,20 +1375,7 @@ function drawRoundabout(mesh: Mesh, approaches: Approach[], core: number) {
     }
   }
 
-  pushLabel(mesh, {
-    text: roundaboutAnnotation(layout),
-    at: [0, -outerR - 10],
-    color: THEME.text,
-    size: 2.6,
-    align: 'center',
-  })
-  pushLabel(mesh, {
-    text: `环道 ${laneCount} 车道`,
-    at: [0, -outerR - 14],
-    color: '#475569',
-    size: 2.0,
-    align: 'center',
-  })
+  // no roundabout dimension callouts on canvas
 }
 
 /** T-junction template helper: drop one approach */

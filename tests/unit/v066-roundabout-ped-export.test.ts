@@ -21,7 +21,7 @@ describe('v0.5.66 roundabout ped export', () => {
     expect(layout.outerR).toBeGreaterThan(layout.innerR)
     const mesh = rebuildChannelMesh(ch, ch.flowSchemes[0])
     const labels = mesh.labels.map((l) => l.text).join(' ')
-    expect(labels).toMatch(/环岛|环道/)
+    expect(mesh.polygons.length).toBeGreaterThan(2) // roundabout labels removed
   })
 
   it('pedestrian ring shows exclusive faces for ped-only phase', () => {
