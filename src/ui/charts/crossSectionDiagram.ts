@@ -8,7 +8,7 @@ import type { Approach, CrossSection } from '@/domain/types'
 export function professionalCrossSectionSvg(
   section: CrossSection,
   approach: Approach,
-  opts: { width?: number; height?: number; theme?: 'dark' | 'light' } = {},
+  opts: { width?: number; height?: number; theme?: 'dark' | 'light'; componentsOverride?: CrossSection['components'] } = {},
 ): string {
   const W = opts.width ?? 720
   const H = opts.height ?? 280
@@ -20,7 +20,7 @@ export function professionalCrossSectionSvg(
   const grid = dark ? '#1e293b' : '#e2e8f0'
   const dim = dark ? '#38bdf8' : '#0284c7'
 
-  const comps = section.components
+  const comps = opts.componentsOverride ?? section.components
   const total = comps.reduce((s, c) => s + c.widthM, 0) || 1
   const padL = 48
   const padR = 24
@@ -113,6 +113,7 @@ export function professionalCrossSectionSvg(
     { c: '#86efac', t: '中分/绿化' },
     { c: '#6ee7b7', t: '非机动车' },
     { c: '#d6d3d1', t: '人行道' },
+    { c: '#57534e', t: '辅路' },
   ]
   legend.forEach((L, i) => {
     const lx = 28 + i * 100
@@ -121,7 +122,16 @@ export function professionalCrossSectionSvg(
   })
 
   // side note
-  body += `<text x="${W - 28}" y="${H - 28}" text-anchor="end" fill="${muted}" font-size="9">与渠化进口参数热同步 · 示意断面</text>`
+  const auxNote = approach.auxRoad?.enabled ? ` · 辅路 ${approach.auxRoad.widthM.toFixed(1)}m` : ''
+  const waitNote = [
+    approach.leftWait ? '左转待转' : '',
+    approach.throughWait ? '直行待行' : '',
+    approach.borrowLeft ? '借道左转' : '',
+  ].filter(Boolean).join(' · ')
+  body += `<text x="${W - 28}" y="${H - 28}" text-anchor="end" fill="${muted}" font-size="9">与渠化进口参数热同步 · 示意断面${auxNote}${waitNote ? ' · ' + waitNote : ''}</text>`
+  if (approach.leftWait || approach.throughWait || approach.borrowLeft) {
+    body += `<text x="28" y="${H - 28}" fill="${muted}" font-size="9">${escape(waitNote || '')}</text>`
+  }
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${body}</svg>`
 }

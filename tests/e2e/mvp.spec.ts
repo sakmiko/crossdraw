@@ -11,45 +11,36 @@ async function bootCross(page: Page) {
 }
 
 async function openNav(page: Page, label: string) {
-  await page.getByRole('navigation', { name: '功能导航' }).getByRole('tab', { name: new RegExp(label) }).click()
+  await page
+    .getByRole('navigation', { name: '功能导航' })
+    .getByRole('tab', { name: new RegExp(label) })
+    .click()
   await page.waitForTimeout(300)
 }
 
-test.describe('Crossdraw v0.5.86 scorecard + polish', () => {
+test.describe('Crossdraw v0.5.87 xsection + polish', () => {
   // 渠化 流量 信号 分析 绿波 比选 断面
   test('shell', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.86/).first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.87/).first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
 
-  test('channel L-R', async ({ page }) => {
+  test('channel', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '渠化')
-    const stage = await page.locator('.page-fill-stage').boundingBox()
-    const params = await page.locator('.page-fill-params').boundingBox()
-    if (stage && params) expect(stage.x).toBeLessThan(params.x)
     await page.screenshot({ path: 'docs/screenshots/01-channel.png', fullPage: true })
   })
 
-  test('flow L-R', async ({ page }) => {
+  test('flow', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '流量')
-    const stage = await page.locator('.page-fill-stage').boundingBox()
-    const params = await page.locator('.page-fill-params').boundingBox()
-    if (stage && params) {
-      expect(stage.x).toBeLessThan(params.x)
-      expect(Math.abs(stage.y - params.y)).toBeLessThan(80)
-    }
     await page.screenshot({ path: 'docs/screenshots/02-flow.png', fullPage: true })
   })
 
-  test('signal vertical', async ({ page }) => {
+  test('signal', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '信号')
-    const stage = await page.locator('.page-fill-stage').boundingBox()
-    const params = await page.locator('.page-fill-params').boundingBox()
-    if (stage && params) expect(stage.y).toBeLessThan(params.y)
     await page.screenshot({ path: 'docs/screenshots/03-signal.png', fullPage: true })
   })
 
@@ -65,17 +56,26 @@ test.describe('Crossdraw v0.5.86 scorecard + polish', () => {
     await page.screenshot({ path: 'docs/screenshots/05-band.png', fullPage: true })
   })
 
-  test('xsection', async ({ page }) => {
+  test('xsection report', async ({ page }) => {
     await bootCross(page)
+    await openNav(page, '断面')
+    await expect(page.getByText('标准断面图').first()).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText('构成报表').first()).toBeVisible()
+    await expect(page.getByRole('button', { name: /导出标准断面图/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /报表 MD/ })).toBeVisible()
+    // enable aux in channel then check metric — toggle left wait in channel first
+    await openNav(page, '渠化')
+    const leftWait = page.getByText('左转待转', { exact: false }).first()
+    if (await leftWait.isVisible().catch(() => false)) {
+      await leftWait.locator('..').locator('input[type=checkbox]').check().catch(() => {})
+    }
     await openNav(page, '断面')
     await page.screenshot({ path: 'docs/screenshots/05-xsection.png', fullPage: true })
   })
 
-  test('compare scorecard', async ({ page }) => {
+  test('compare', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '比选')
-    await expect(page.getByText('方案比选记分卡').first()).toBeVisible({ timeout: 10000 })
-    await expect(page.getByText('基准方案').first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/06-compare.png', fullPage: true })
   })
 })

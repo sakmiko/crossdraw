@@ -59,6 +59,7 @@ import { analysisMarkdown, bandMarkdown, exportJsonFile, exportSvgFile } from '@
 import { buildAnalysisReportSvg } from '@/io/analysisReportSvg'
 import { collectSchemeSnapshots, schemeTimingStripSvg, schemeMetricsCompareSvg } from '@/ui/charts/schemeCompareDiagrams'
 import { professionalCrossSectionSvg } from '@/ui/charts/crossSectionDiagram'
+import { buildSectionReport, componentsForDiagram, sectionReportCsv, sectionReportMarkdown } from '@/domain/xsection/report'
 import {
   controlMatrixSvg,
   flowMovementDiagramSvg,
@@ -606,7 +607,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.86 · 绿波专页</span>
+          <span>Crossdraw v0.5.87 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -628,7 +629,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.86</span>
+            <span className="brand-ver">v0.5.87</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -919,7 +920,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.86</span>
+        <span>Crossdraw v0.5.87</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -967,11 +968,24 @@ export default function App() {
           'mesh-png': () => exportPng(),
           'mesh-svg': () => exportSvg(),
           'mesh-dxf': () => exportDxf(),
+          'xsection-report-md': () => {
+            if (!selected) return
+            const rep = buildSectionReport(selected)
+            downloadText(`${project.name}-${selected.name}-xsection.md`, sectionReportMarkdown(project.name, rep), 'text/markdown')
+          },
+          'xsection-report-csv': () => {
+            if (!selected) return
+            const rep = buildSectionReport(selected)
+            downloadText(`${project.name}-${selected.name}-xsection.csv`, sectionReportCsv(rep), 'text/csv')
+          },
           'xsection-svg': () => {
             if (!xsection || !selected) return
             exportSvgFile(
               `${project.name}-${selected.name}-xsection.svg`,
-              professionalCrossSectionSvg(xsection, selected, { theme }),
+              professionalCrossSectionSvg(xsection, selected, {
+                theme,
+                componentsOverride: componentsForDiagram(selected, xsection),
+              }),
             )
           },
           'roadgee-signal-board': () => {

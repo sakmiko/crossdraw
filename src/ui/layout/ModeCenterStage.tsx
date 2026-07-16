@@ -21,6 +21,7 @@ import { roadgeeAnalysisPlanSvg, type AnalysisPlanMetric } from '@/ui/charts/roa
 import { unsignalizedPlanSvg } from '@/ui/charts/unsignalizedPlan'
 import { analyzeUnsignalized } from '@/domain/analysis/unsignalized'
 import { professionalCrossSectionSvg } from '@/ui/charts/crossSectionDiagram'
+import { componentsForDiagram } from '@/domain/xsection/report'
 import { schemeMetricsCompareSvg, collectSchemeSnapshots } from '@/ui/charts/schemeCompareDiagrams'
 import { schemeScorecardSvg, kpisFromCompareRows } from '@/ui/charts/schemeScorecard'
 import { collectCompareRows } from '@/io/report'
@@ -139,7 +140,10 @@ export function ModeCenterStage(props: ModeCenterProps) {
 
   const xsecSvg = useMemo(() => {
     if (!xsection || !selected) return ''
-    return professionalCrossSectionSvg(xsection, selected, { theme })
+    return professionalCrossSectionSvg(xsection, selected, {
+      theme,
+      componentsOverride: componentsForDiagram(selected, xsection),
+    })
   }, [xsection, selected, theme])
 
   const compareSvg = useMemo(() => {

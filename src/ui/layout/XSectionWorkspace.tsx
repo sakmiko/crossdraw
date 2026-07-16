@@ -9,6 +9,13 @@ import { sectionAlignsWithApproach } from '@/domain/xsection/align'
 import { CrossSectionCharts } from '@/ui/charts/ChartPanels'
 import { professionalCrossSectionSvg } from '@/ui/charts/crossSectionDiagram'
 import { exportSvgFile } from '@/io/exportCharts'
+import { downloadText } from '@/io/download'
+import {
+  buildSectionReport,
+  componentsForDiagram,
+  sectionReportCsv,
+  sectionReportMarkdown,
+} from '@/domain/xsection/report' 
 
 export type XSectionWorkspaceProps = {
   projectName: string
@@ -32,6 +39,16 @@ export function XSectionWorkspace({
   const align = sectionAlignsWithApproach(selected)
   const bikeW = selected.bikeEnabled ? selected.bikeWidthM : 0
   const sideW = selected.sidewalkWidthM
+  const report = useMemo(() => buildSectionReport(selected, xsection), [selected, xsection])
+  const diagramComps = useMemo(() => componentsForDiagram(selected, xsection), [selected, xsection])
+  const proSvg = useMemo(
+    () =>
+      professionalCrossSectionSvg(xsection, selected, {
+        theme,
+        componentsOverride: diagramComps,
+      }),
+    [xsection, selected, theme, diagramComps],
+  )
 
   const editable = useMemo(() => {
     // map component index → edit target
@@ -132,6 +149,21 @@ export function XSectionWorkspace({
             {bikeW > 0 && <small> m</small>}
           </div>
         </div>
+        <div className="metric">
+          <div className="label">辅路</div>
+          <div className="value">
+            {report.auxEnabled ? report.auxWidthM.toFixed(1) : '—'}
+            {report.auxEnabled && <small> m</small>}
+          </div>
+        </div>
+        <div className="metric">
+          <div className="label">特殊标线</div>
+          <div className="value" style={{ fontSize: 13 }}>
+            {[report.leftWait && '左待', report.throughWait && '直待', report.borrowLeft && '借道']
+              .filter(Boolean)
+              .join(' · ') || '—'}
+          </div>
+        </div>
       </div>
 
       {/* interactive strip */}
@@ -198,6 +230,42 @@ export function XSectionWorkspace({
         </table>
       </div>
 
+      <div className="section-title" style={{ marginTop: 12 }}>标准断面图（预览）</div>
+      <div
+        className="chart-svg-host chart-svg-host--pro"
+        dangerouslySetInnerHTML={{ __html: proSvg }}
+      />
+
+      <div className="section-title" style={{ marginTop: 12 }}>构成报表</div>
+      <div className="table-wrap" style={{ maxHeight: 180 }}>
+        <table className="table table-dense">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>构成</th>
+              <th>类型</th>
+              <th>宽度 m</th>
+              <th>占比</th>
+            </tr>
+          </thead>
+          <tbody>
+            {report.components.map((c) => (
+              <tr key={c.index}>
+                <td className="num">{c.index + 1}</td>
+                <td>
+                  <span className="swatch" style={{ background: c.color }} />
+                  {c.label}
+                </td>
+                <td className="hint">{c.type}</td>
+                <td className="num">{c.widthM.toFixed(2)}</td>
+                <td className="num">{c.sharePct.toFixed(1)}%</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="hint quiet">{report.honesty}</p>
+
       <CrossSectionCharts section={xsection} approach={selected} />
 
       <div className="toolbar" style={{ marginTop: 8 }}>
@@ -205,19 +273,38 @@ export function XSectionWorkspace({
           type="button"
           className="primary"
           onClick={() => {
-            exportSvgFile(
-              `${projectName}-${selected.name}-xsection.svg`,
-              professionalCrossSectionSvg(xsection, selected, { theme }),
-            )
+            exportSvgFile(`${projectName}-${selected.name}-xsection.svg`, proSvg)
           }}
         >
           导出标准断面图
         </button>
+        <button
+          type="button"
+          className="ghost"
+          onClick={() =>
+            downloadText(
+              `${projectName}-${selected.name}-xsection.md`,
+              sectionReportMarkdown(projectName, report),
+              'text/markdown',
+            )
+          }
+        >
+          报表 MD
+        </button>
+        <button
+          type="button"
+          className="ghost"
+          onClick={() =>
+            downloadText(
+              `${projectName}-${selected.name}-xsection.csv`,
+              sectionReportCsv(report),
+              'text/csv',
+            )
+          }
+        >
+          报表 CSV
+        </button>
       </div>
-      <p className="hint">
-        拖动宽度滑条即时改写进口/出口车道、中分带、人行道、非机动车道；画布与专业断面图同步。
-        {editable.length === 0 ? '' : ''}
-      </p>
     </div>
   )
 }

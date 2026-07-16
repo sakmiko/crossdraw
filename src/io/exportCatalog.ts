@@ -26,6 +26,8 @@ export type ExportItemId =
   | 'compare-json'
   | 'compare-timing-svg'
   | 'xsection-svg'
+  | 'xsection-report-md'
+  | 'xsection-report-csv'
   | 'band-pack'
   | 'band-multi-compare'
   | 'pro-pack'
@@ -223,6 +225,24 @@ export const EXPORT_CATALOG: ExportItem[] = [
     description: 'CAD 中间交换',
     modes: ['channel'],
     requires: ['channel'],
+  },
+  {
+    id: 'xsection-report-md',
+    category: 'drawing',
+    title: '横断面构成报表',
+    format: 'MD',
+    description: '总宽/分项/占比 · 与渠化进口同源',
+    modes: ['xsection'],
+    requires: ['channel', 'selected'],
+  },
+  {
+    id: 'xsection-report-csv',
+    category: 'drawing',
+    title: '横断面构成 CSV',
+    format: 'CSV',
+    description: '分项宽度与占比',
+    modes: ['xsection'],
+    requires: ['channel', 'selected'],
   },
   {
     id: 'xsection-svg',
