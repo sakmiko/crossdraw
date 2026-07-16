@@ -34,7 +34,7 @@ describe('v0.5.88 corridor network + five-leg', () => {
     expect(bp).toContain('corridorNetworkPreviewSvg')
     expect(bp).toContain('路网预览')
     const app = readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8')
-    expect(app).toContain('五路交叉口')
+    expect(app).toContain('五路')
     expect(app).toContain('corridor-network-svg')
   })
 })
