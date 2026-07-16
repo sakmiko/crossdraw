@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## 0.5.93 — 2026-07-16
+
+### 相位冲突审查看板 + 一键 VISSIM
+- `professionalConflictBoardSvg`：矩阵 + 冲突点图 + 全方案命中表（与 releases 同源）
+- 信号页：冲突审查看板实时预览 · 矩阵/点图/CSV 导出
+- `downloadVissimPack`：七文件一键下载；分析页「一键 VISSIM 包」置顶
+- 导出中心：`conflict-board-svg` · `conflict-board-csv` · `vissim-pack-oneclick`
+
+### 依据 / 诚实边界
+- 冲突规则见 domain conflictMatrix / detectPhaseConflicts（教材相位冲突检查表）
+- VISSIM：**开放交换 XML+CSV，非 PTV 专有 .inpx 二进制**
+
+# CHANGELOG
+
 ## 0.5.92 — 2026-07-16
 
 ### 评价四指标平面合图

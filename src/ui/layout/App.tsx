@@ -37,6 +37,8 @@ import { PrintPreviewModal } from '@/ui/common/PrintPreview'
 import { buildA4PrintSheet, printSheetHtml, type PrintPanel } from '@/io/printSheet'
 import { collectCorridorKpis, corridorKpiCompareSvg, multiBandMarkdown } from '@/ui/charts/bandCorridorCompare'
 import { conflictHitsMarkdown, conflictMatrixExportSvg, conflictDiagramExportSvg } from '@/ui/charts/conflictExport'
+import { professionalConflictBoardSvg, conflictBoardCsv } from '@/ui/charts/professionalConflictBoard'
+import { downloadVissimPack, vissimPackSummaryMarkdown } from '@/io/vissimPackDownload' 
 import { checkAnalysisIntegrity } from '@/domain/analysis/integrity'
 import { buildFlowAlignment, flowChartsAlignWithTable, type FlowDisplayMode } from '@/domain/flow/flowAlign'
 import { buildSignalTimingAlignment } from '@/domain/signal/timingAlign'
@@ -625,7 +627,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.92 · 绿波专页</span>
+          <span>Crossdraw v0.5.93 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -647,7 +649,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.92</span>
+            <span className="brand-ver">v0.5.93</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -939,7 +941,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.92</span>
+        <span>Crossdraw v0.5.93</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1207,6 +1209,29 @@ export default function App() {
           'analysis-json': () => {
             if (!analysis) return
             exportJsonFile(`${project.name}-analysis.json`, analysis)
+          },
+          'conflict-board-svg': () => {
+            if (!channel || !signal) return
+            exportSvgFile(
+              `${project.name}-冲突审查看板.svg`,
+              professionalConflictBoardSvg(channel.approaches, signal, {
+                phaseId: focusPhaseId ?? signal.phases[0]?.id,
+                projectName: project.name,
+                width: 1000,
+              }),
+            )
+          },
+          'conflict-board-csv': () => {
+            if (!channel || !signal) return
+            downloadText(
+              `${project.name}-conflict.csv`,
+              conflictBoardCsv(channel.approaches, signal),
+              'text/csv',
+            )
+          },
+          'vissim-pack-oneclick': () => {
+            if (!channel || !flow || !signal) return
+            downloadVissimPack(project.name, channel.approaches, flow, signal)
           },
           'vissim-csv': () => {
             if (!channel || !flow || !signal) return

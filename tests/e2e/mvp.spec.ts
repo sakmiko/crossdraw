@@ -18,11 +18,11 @@ async function openNav(page: Page, label: string) {
   await page.waitForTimeout(300)
 }
 
-test.describe('Crossdraw v0.5.92 analysis-pack + polish', () => {
+test.describe('Crossdraw v0.5.93 conflict-vissim + polish', () => {
   // 渠化 流量 信号 分析 绿波 比选 断面
   test('shell', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.92/).first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.93/).first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
 
@@ -38,20 +38,20 @@ test.describe('Crossdraw v0.5.92 analysis-pack + polish', () => {
     await page.screenshot({ path: 'docs/screenshots/02-flow.png', fullPage: true })
   })
 
-  test('signal', async ({ page }) => {
+  test('signal conflict board', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '信号')
+    await expect(page.getByRole('button', { name: /冲突审查看板/ })).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText('相位冲突审查看板').first()).toBeVisible()
+    await page.getByRole('button', { name: /冲突审查看板/ }).click()
+    await page.waitForTimeout(200)
     await page.screenshot({ path: 'docs/screenshots/03-signal.png', fullPage: true })
   })
 
-  test('analysis pack', async ({ page }) => {
+  test('analysis vissim', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '分析')
-    await expect(page.getByRole('button', { name: /四指标平面合图/ })).toBeVisible({ timeout: 10000 })
-    await expect(page.getByRole('button', { name: /合集 MD/ })).toBeVisible()
-    await expect(page.getByRole('button', { name: /多页工程报告/ }).first()).toBeVisible()
-    await page.getByRole('button', { name: /四指标平面合图/ }).click()
-    await page.waitForTimeout(200)
+    await expect(page.getByRole('button', { name: /一键 VISSIM/ })).toBeVisible({ timeout: 10000 })
     await page.screenshot({ path: 'docs/screenshots/04-analysis.png', fullPage: true })
   })
 

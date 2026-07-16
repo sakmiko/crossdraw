@@ -25,6 +25,7 @@ import { collectCompareRows, compareSchemesCsv } from '@/io/report'
 import { exportVissimCsvBundle } from '@/io/vissimCsv'
 import { buildVissimImportPack } from '@/io/vissimInpxSkeleton'
 import { buildVissimInpxPack } from '@/io/vissimInpx'
+import { downloadVissimPack, vissimPackSummaryMarkdown } from '@/io/vissimPackDownload' 
 import { buildMultiPageReportHtml } from '@/io/multiPageReport'
 import { analysisMarkdown, exportSvgFile } from '@/io/exportCharts'
 import { buildAnalysisReportSvg } from '@/io/analysisReportSvg'
@@ -177,6 +178,33 @@ export function AnalysisWorkspace({
         >
           多页工程报告
         </button>
+        <button
+          type="button"
+          className="primary"
+          disabled={!channel || !flow || !signal}
+          title="开放交换 XML+CSV，非 PTV 专有二进制"
+          onClick={() => {
+            if (!channel || !flow || !signal) return
+            downloadVissimPack(project.name, channel.approaches, flow, signal)
+          }}
+        >
+          一键 VISSIM 包
+        </button>
+        <button
+          type="button"
+          className="ghost"
+          disabled={!channel || !flow || !signal}
+          onClick={() => {
+            if (!channel || !flow || !signal) return
+            downloadText(
+              `${project.name}-vissim-说明.md`,
+              vissimPackSummaryMarkdown(project.name, channel.approaches, flow, signal),
+              'text/markdown',
+            )
+          }}
+        >
+          VISSIM 说明
+        </button>
       </div>
 
       <AnalysisCharts analysis={analysis} />
@@ -328,14 +356,7 @@ export function AnalysisWorkspace({
           type="button"
           onClick={() => {
             if (!channel || !flow || !signal) return
-            const pack = buildVissimInpxPack(project.name, channel.approaches, flow, signal)
-            downloadText(`${project.name}-vissim-README.md`, pack.readme, 'text/markdown')
-            downloadText(`${project.name}.inpx.xml`, pack.xml, 'application/xml')
-            downloadText(`${project.name}-vissim-summary.json`, pack.json, 'application/json')
-            downloadText(`${project.name}-vissim-links.csv`, pack.bundle.links, 'text/csv')
-            downloadText(`${project.name}-vissim-routes.csv`, pack.bundle.routes, 'text/csv')
-            downloadText(`${project.name}-vissim-volumes.csv`, pack.bundle.volumes, 'text/csv')
-            downloadText(`${project.name}-vissim-signal.csv`, pack.bundle.signal, 'text/csv')
+            downloadVissimPack(project.name, channel.approaches, flow, signal)
           }}
         >
           Vissim 交换包

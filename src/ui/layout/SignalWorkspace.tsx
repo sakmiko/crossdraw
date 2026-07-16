@@ -22,6 +22,7 @@ import { computeDualRingCriticalFlow, dualRingCriticalSummary } from '@/domain/s
 import { SignalTimingPanel, ControlMatrixPanel, PhaseFacePanel } from '@/ui/charts/ProfessionalPanels'
 import { vcHeatColor } from '@/ui/charts/svgCharts'
 import { conflictHitsMarkdown, conflictMatrixExportSvg, conflictDiagramExportSvg } from '@/ui/charts/conflictExport'
+import { professionalConflictBoardSvg, conflictBoardCsv } from '@/ui/charts/professionalConflictBoard' 
 import { exportSvgFile } from '@/io/exportCharts'
 import { downloadText } from '@/io/download'
 import { PhaseReleaseEditor } from '@/ui/layout/PhaseReleaseEditor'
@@ -674,38 +675,83 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       )}
 
       {channel && (
-        <div className="toolbar" style={{ marginTop: 8 }}>
-          <button
-            type="button"
-            onClick={() => {
-              exportSvgFile(
-                `${projectName}-conflict.svg`,
-                conflictMatrixExportSvg(channel.approaches, signal, focusPhaseId ?? signal.phases[0]?.id),
-              )
-              downloadText(
-                `${projectName}-conflict.md`,
-                conflictHitsMarkdown(projectName, channel.approaches, signal),
-                'text/markdown',
-              )
+        <div className="rg-section" style={{ marginTop: 10 }}>
+          <div className="rg-section-title">相位冲突审查</div>
+          <div className="toolbar dense">
+            <button
+              type="button"
+              className="primary"
+              onClick={() =>
+                exportSvgFile(
+                  `${projectName}-冲突审查看板.svg`,
+                  professionalConflictBoardSvg(channel.approaches, signal, {
+                    phaseId: focusPhaseId ?? signal.phases[0]?.id,
+                    projectName,
+                    width: 1000,
+                  }),
+                )
+              }
+            >
+              冲突审查看板
+            </button>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => {
+                exportSvgFile(
+                  `${projectName}-conflict.svg`,
+                  conflictMatrixExportSvg(channel.approaches, signal, focusPhaseId ?? signal.phases[0]?.id),
+                )
+                downloadText(
+                  `${projectName}-conflict.md`,
+                  conflictHitsMarkdown(projectName, channel.approaches, signal),
+                  'text/markdown',
+                )
+              }}
+            >
+              导出冲突矩阵
+            </button>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => {
+                exportSvgFile(
+                  `${projectName}-conflict-points.svg`,
+                  conflictDiagramExportSvg(
+                    channel.approaches,
+                    signal,
+                    focusPhaseId ?? signal.phases[0]?.id,
+                  ),
+                )
+              }}
+            >
+              导出冲突点图
+            </button>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() =>
+                downloadText(
+                  `${projectName}-conflict.csv`,
+                  conflictBoardCsv(channel.approaches, signal),
+                  'text/csv',
+                )
+              }
+            >
+              冲突 CSV
+            </button>
+          </div>
+          <div
+            className="chart-svg-host chart-svg-host--pro"
+            style={{ marginTop: 8, overflow: 'auto', maxHeight: 420 }}
+            dangerouslySetInnerHTML={{
+              __html: professionalConflictBoardSvg(channel.approaches, signal, {
+                phaseId: focusPhaseId ?? signal.phases[0]?.id,
+                projectName,
+                width: 900,
+              }),
             }}
-          >
-            导出冲突矩阵
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              exportSvgFile(
-                `${projectName}-conflict-points.svg`,
-                conflictDiagramExportSvg(
-                  channel.approaches,
-                  signal,
-                  focusPhaseId ?? signal.phases[0]?.id,
-                ),
-              )
-            }}
-          >
-            导出冲突点图
-          </button>
+          />
         </div>
       )}
 

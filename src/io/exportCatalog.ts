@@ -55,6 +55,9 @@ export type ExportItemId =
   | 'analysis-plan-pack-svg'
   | 'analysis-plan-pack-md'
   | 'analysis-plan-pack-csv'
+  | 'conflict-board-svg'
+  | 'conflict-board-csv'
+  | 'vissim-pack-oneclick'
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
@@ -73,6 +76,34 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'conflict-board-svg',
+    category: 'signal',
+    title: '相位冲突审查看板',
+    format: 'SVG',
+    description: '矩阵 + 冲突点 + 全方案命中表 · 与 releases 同源',
+    modes: ['signal'],
+    requires: ['channel', 'signal'],
+  },
+  {
+    id: 'conflict-board-csv',
+    category: 'signal',
+    title: '冲突命中 CSV',
+    format: 'CSV',
+    description: '全相位同时放行冲突列表',
+    modes: ['signal'],
+    requires: ['channel', 'signal'],
+  },
+  {
+    id: 'vissim-pack-oneclick',
+    category: 'package',
+    title: '一键 VISSIM 交换包',
+    format: 'ZIP/多文件',
+    description: '开放 XML+CSV 七文件；非 PTV 专有二进制',
+    modes: ['analysis', 'signal'],
+    requires: ['channel', 'flow', 'signal'],
+  },
+
   {
     id: 'analysis-plan-pack-svg',
     category: 'analysis',
