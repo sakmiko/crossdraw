@@ -44,7 +44,7 @@ import { professionalCrossSectionSvg, crossSectionShareSvg } from './crossSectio
 import { collectCorridorKpis, corridorKpiCompareSvg } from './bandCorridorCompare'
 import { chartColorsForTheme, themeSvg } from './chartTheme'
 import { EChart } from '@/ui/charts/EChart'
-import { vcDelayOption, flowLtrOption, phaseTimingOption } from '@/ui/charts/interactiveBoards'
+import { vcDelayOption, flowLtrOption, phaseTimingOption, compareSchemesOption } from '@/ui/charts/interactiveBoards'
 
 function useChartColors() {
   const theme = useAppStore((s) => s.theme)
@@ -517,12 +517,18 @@ export function CompareCharts({
     () => themeSvg(compareSchemesBarSvg(rows, { metric: 'vc', height: 150 }), colors),
     [rows, colors],
   )
+  const liveOpt = useMemo(() => compareSchemesOption(rows), [rows])
   if (!rows.length) return <p className="hint">暂无多方案</p>
   return (
     <div className="chart-card">
       <div className="chart-title">
+        <span>多方案交互对比</span>
+        <small>ECharts · 延误+v/c</small>
+      </div>
+      <EChart option={liveOpt} style={{ height: 280 }} className="echart-host" />
+      <div className="chart-title" style={{ marginTop: 12 }}>
         <span>多方案延误对比</span>
-        <small>色=LOS</small>
+        <small>色=LOS · 静态</small>
       </div>
       <div dangerouslySetInnerHTML={{ __html: delaySvg }} />
       <div className="chart-title" style={{ marginTop: 12 }}>

@@ -6,6 +6,8 @@ import { useMemo, useState } from 'react'
 import type { Project } from '@/domain/types'
 import { analyzeIntersection } from '@/domain/analysis'
 import { CompareCharts, SchemeCompareBoard } from '@/ui/charts/ChartPanels'
+import { EChart } from '@/ui/charts/EChart'
+import { compareSchemesOption } from '@/ui/charts/interactiveBoards'
 import { collectCompareRows, compareSchemesCsv } from '@/io/report'
 import { collectSchemeSnapshots, schemeTimingStripSvg, schemeMetricsCompareSvg } from '@/ui/charts/schemeCompareDiagrams'
 import {
@@ -175,6 +177,20 @@ export function CompareWorkspace({ project, theme, onActivateScheme }: CompareWo
           </table>
         </div>
       )}
+      <div className="rg-section" id="compare-echarts">
+        <div className="rg-section-title">交互比选 · 延误 / v/c</div>
+        <EChart
+          option={compareSchemesOption(
+            rows.map((r) => ({
+              label: `${r.channel}/${r.signal}`,
+              avgVc: r.avgVc,
+              avgDelay: r.avgDelay,
+              los: r.los,
+            })),
+          )}
+          style={{ height: 280 }}
+        />
+      </div>
       <CompareCharts
         rows={rows.map((r) => ({
           label: `${r.channel}/${r.signal}`,

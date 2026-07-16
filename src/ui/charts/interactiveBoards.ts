@@ -302,3 +302,80 @@ export function bandBandwidthOption(
     ],
   }
 }
+
+
+export type CompareSchemeRow = {
+  label: string
+  avgVc: number
+  avgDelay: number
+  los: string
+}
+
+/** Multi-scheme delay + v/c dual axis (homology collectCompareRows / analyzeIntersection). */
+export function compareSchemesOption(rows: CompareSchemeRow[]): EChartsCoreOption {
+  const labels = rows.map((r) => {
+    const parts = r.label.split('/')
+    return (parts[parts.length - 1] || r.label).slice(0, 10)
+  })
+  const delays = rows.map((r) => r.avgDelay)
+  const vcs = rows.map((r) => r.avgVc)
+  const losColor: Record<string, string> = {
+    A: '#22c55e',
+    B: '#84cc16',
+    C: '#eab308',
+    D: '#f97316',
+    E: '#ef4444',
+    F: '#b91c1c',
+  }
+  return {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'cross' },
+      formatter: (params: unknown) => {
+        const items = Array.isArray(params) ? params : [params as { dataIndex?: number }]
+        const idx = (items[0] as { dataIndex?: number })?.dataIndex ?? 0
+        const r = rows[idx]
+        if (!r) return ''
+        return `${r.label}<br/>延误 ${r.avgDelay.toFixed(1)}s · v/c ${r.avgVc.toFixed(3)} · LOS ${r.los}`
+      },
+    },
+    legend: { data: ['延误', 'v/c'], top: 0, textStyle: { fontSize: 11 } },
+    grid: { left: 52, right: 52, top: 28, bottom: labels.length > 4 ? 56 : 36 },
+    dataZoom: labels.length > 6 ? [{ type: 'inside' }, { type: 'slider', height: 14, bottom: 4 }] : undefined,
+    xAxis: {
+      type: 'category',
+      data: labels,
+      axisLabel: { fontSize: 10, rotate: labels.length > 4 ? 28 : 0 },
+    },
+    yAxis: [
+      { type: 'value', name: '延误(s)', min: 0 },
+      { type: 'value', name: 'v/c', min: 0, position: 'right' },
+    ],
+    series: [
+      {
+        name: '延误',
+        type: 'bar',
+        data: delays.map((v, i) => ({
+          value: v,
+          itemStyle: { color: losColor[rows[i]?.los] ?? '#3b82f6' },
+        })),
+        barMaxWidth: 28,
+      },
+      {
+        name: 'v/c',
+        type: 'line',
+        yAxisIndex: 1,
+        data: vcs,
+        smooth: true,
+        itemStyle: { color: '#a855f7' },
+        lineStyle: { width: 2 },
+        markLine: {
+          silent: true,
+          symbol: 'none',
+          data: [{ yAxis: 1, lineStyle: { color: '#ef4444', type: 'dashed' }, label: { formatter: '1.0' } }],
+        },
+      },
+    ],
+  }
+}

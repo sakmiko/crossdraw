@@ -1,3 +1,9 @@
+## 0.5.122 — Compare schemes ECharts
+
+- `compareSchemesOption`: multi-scheme delay bars (LOS color) + v/c line (homology analyzeIntersection rows).
+- Compare workspace `#compare-echarts` + CompareCharts live board.
+- Dense compare table + 1100px column polish. Not multi-objective commercial optimizer.
+
 ## 0.5.121 — Band bandwidth ECharts
 
 - `bandBandwidthOption`: node offsets + green length + forward/backward band (homology BandResult).
