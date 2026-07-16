@@ -23,6 +23,7 @@ import { vcHeatColor } from '@/ui/charts/svgCharts'
 import { conflictHitsMarkdown, conflictMatrixExportSvg, conflictDiagramExportSvg } from '@/ui/charts/conflictExport'
 import { exportSvgFile } from '@/io/exportCharts'
 import { downloadText } from '@/io/download'
+import { PhaseReleaseEditor } from '@/ui/layout/PhaseReleaseEditor'
 
 export type SignalWorkspaceProps = {
   projectName: string
@@ -212,52 +213,16 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
                 </label>
               </div>
             )}
-            <div className="hint quiet" style={{ marginTop: 6 }}>
-              放行
-            </div>
-            {channel?.approaches.map((ap: Approach) => {
-              const pedOn = (ph.pedestrian ?? []).some((p) => p.approachId === ap.id)
-              return (
-              <div key={ap.id} style={{ marginTop: 4 }}>
-                <span className="hint">{ap.name}</span>
-                <div className="toolbar" style={{ gap: 4, marginTop: 2 }}>
-                  {(['L', 'T', 'R'] as Movement[]).map((m) => {
-                    const on = (ph.releases[ap.id] ?? []).includes(m)
-                    return (
-                      <button
-                        key={m}
-                        type="button"
-                        className={on ? 'primary' : 'ghost'}
-                        style={{ padding: '2px 6px', fontSize: 11 }}
-                        onClick={() => onToggleRelease(ph.id, ap.id, m)}
-                      >
-                        {m}
-                      </button>
-                    )
-                  })}
-                  <button
-                    type="button"
-                    className={pedOn ? 'primary' : 'ghost'}
-                    style={{ padding: '2px 6px', fontSize: 11 }}
-                    title="该进口斑马线行人过街"
-                    onClick={() => onTogglePedestrian(ph.id, ap.id)}
-                  >
-                    行人
-                  </button>
-                  {pedOn && onSetPedExclusive && (
-                    <label className="check-inline" style={{ fontSize: 11 }} title="独占行人：人车冲突升为禁止">
-                      <input
-                        type="checkbox"
-                        checked={!!(ph.pedestrian ?? []).find((p) => p.approachId === ap.id)?.exclusive}
-                        onChange={(e) => onSetPedExclusive(ph.id, ap.id, e.target.checked)}
-                      />{' '}
-                      独占
-                    </label>
-                  )}
-                </div>
-              </div>
-              )
-            })}
+            {channel && (
+              <PhaseReleaseEditor
+                phase={ph}
+                approaches={channel.approaches}
+                onToggleRelease={onToggleRelease}
+                onTogglePedestrian={onTogglePedestrian}
+                onSetPedExclusive={onSetPedExclusive}
+                includeU
+              />
+            )}
           </div>
         ))}
       </div>

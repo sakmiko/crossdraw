@@ -2419,3 +2419,188 @@ button.primary .cd-icon {
 .right .page-title-bar {
   margin-bottom: 4px;
 }
+
+
+/* —— v0.5.80 RoadGee release chips —— */
+.release-editor {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+.release-editor-head {
+  font-size: 11px;
+  font-weight: 700;
+  color: #dc2626;
+  margin-bottom: 6px;
+}
+.release-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.release-ap-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+.release-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.release-group-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin: 0 2px 0 4px;
+}
+.release-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 7px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--panel-2, var(--panel));
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+  min-height: 26px;
+}
+.release-chip:hover {
+  border-color: var(--accent, #3b82f6);
+}
+.release-chip.on {
+  background: color-mix(in srgb, #16a34a 22%, var(--panel));
+  border-color: #16a34a;
+  color: #166534;
+  font-weight: 700;
+}
+[data-theme='dark'] .release-chip.on {
+  color: #86efac;
+  background: color-mix(in srgb, #16a34a 28%, #0f172a);
+}
+.release-chip.ped.on {
+  background: color-mix(in srgb, #2563eb 20%, var(--panel));
+  border-color: #2563eb;
+  color: #1d4ed8;
+}
+[data-theme='dark'] .release-chip.ped.on {
+  color: #93c5fd;
+}
+.release-chip-txt {
+  font-size: 10px;
+}
+.release-ex {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  margin-left: 4px;
+  color: var(--text-secondary);
+}
+.mov-glyph {
+  flex-shrink: 0;
+}
+
+
+/* —— v0.5.80 top scheme switcher + mode rail + signal stack —— */
+.scheme-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 10px;
+  margin: 0 8px;
+  flex: 1;
+  min-width: 0;
+  justify-content: center;
+}
+.scheme-switch-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--text-muted);
+  min-width: 0;
+}
+.scheme-switch-lab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.scheme-switch-field select {
+  min-width: 110px;
+  max-width: 160px;
+  height: 28px;
+  font-size: 12px;
+}
+.scheme-switch-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding-bottom: 1px;
+}
+.scheme-add {
+  font-size: 11px !important;
+  padding: 4px 8px !important;
+  white-space: nowrap;
+}
+.mode-rail .rail-hint-card {
+  padding: 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+.mode-rail .rail-tip {
+  margin: 0 0 8px;
+}
+.mode-rail .rail-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.mode-rail .rail-layers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 0 8px 8px;
+}
+.center--signal-stack {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+}
+.center--signal-stack .mode-stage {
+  flex: 0 0 auto;
+  max-height: 48vh;
+  margin-bottom: 0;
+}
+.center--signal-stack .signal-stack-params {
+  flex: 1 1 auto;
+  min-height: 220px;
+  overflow: auto;
+  border-top: 1px solid var(--border);
+  background: var(--panel);
+  margin: 0 8px 8px;
+  border-radius: 0 0 10px 10px;
+  padding: 4px 8px 12px;
+}
+.right--hidden {
+  display: none !important;
+}
+.shell--signal {
+  grid-template-columns: var(--shell-nav) var(--shell-left) minmax(0, 1fr) !important;
+}
+.shell.nav-collapsed.shell--signal {
+  grid-template-columns: var(--shell-nav-collapsed) var(--shell-left) minmax(0, 1fr) !important;
+}
+@media (max-width: 1100px) {
+  .scheme-switcher {
+    display: none; /* use file menu on narrow; still have schemes via open */
+  }
+}

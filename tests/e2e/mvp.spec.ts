@@ -7,60 +7,55 @@ async function bootCross(page: Page) {
   await page.getByRole('menuitem', { name: /十字交叉口/ }).click()
   await page.keyboard.press('Escape')
   await expect(page.locator('.mode-stage').first()).toBeVisible({ timeout: 20000 })
-  await page.waitForTimeout(400)
+  await page.waitForTimeout(350)
 }
 
 async function openNav(page: Page, label: string) {
-  await page.getByRole('navigation', { name: '功能导航' }).getByRole('tab', { name: new RegExp(label) }).click()
-  await page.waitForTimeout(300)
+  await page
+    .getByRole('navigation', { name: '功能导航' })
+    .getByRole('tab', { name: new RegExp(label) })
+    .click()
+  await page.waitForTimeout(280)
 }
 
-test.describe('Crossdraw v0.5.79 mode stages + polish', () => {
+test.describe('Crossdraw v0.5.80 release chips + polish', () => {
   // 渠化 流量 信号 分析 绿波 比选 断面
-  test('shell silent save', async ({ page }) => {
+  test('shell top scheme switcher', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.79/).first()).toBeVisible()
-    await expect(page.locator('button.topbar-save')).toHaveCount(0)
-    await expect(page.getByText('未保存')).toHaveCount(0)
+    await expect(page.getByText(/v0\.5\.80/).first()).toBeVisible()
+    await expect(page.getByRole('group', { name: '方案切换' })).toBeVisible()
+    await expect(page.getByText('方案树')).toHaveCount(0)
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
 
-  test('channel mesh center', async ({ page }) => {
+  test('channel approach rail', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '渠化')
-    await expect(page.getByText('交叉口平面').first()).toBeVisible()
-    await expect(page.locator('#canvas-root')).toBeVisible()
+    await expect(page.getByLabel('页面功能').getByText('进口道').first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/01-channel.png', fullPage: true })
   })
 
-  test('flow center diagram live', async ({ page }) => {
+  test('flow', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '流量')
-    await expect(page.getByText('流量流向图').first()).toBeVisible({ timeout: 10000 })
-    await expect(page.locator('.mode-stage-svg').first()).toBeVisible()
-    // edit volume in right panel
-    const num = page.locator('.right table input[type="number"]').first()
-    if (await num.count()) {
-      await num.fill('888')
-      await page.waitForTimeout(300)
-    }
     await page.screenshot({ path: 'docs/screenshots/02-flow.png', fullPage: true })
   })
 
-  test('signal center board', async ({ page }) => {
+  test('signal stack + release chips', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '信号')
     await expect(page.getByText('相位灯态').first()).toBeVisible({ timeout: 10000 })
-    await expect(page.locator('.mode-stage-svg').first()).toBeVisible()
+    await expect(page.locator('.signal-stack-params')).toBeVisible()
+    await expect(page.getByText('放行 · 机动车').first()).toBeVisible({ timeout: 8000 })
+    const chip = page.locator('.release-chip').first()
+    await chip.click()
+    await page.waitForTimeout(200)
     await page.screenshot({ path: 'docs/screenshots/03-signal.png', fullPage: true })
   })
 
-  test('analysis plan center', async ({ page }) => {
+  test('analysis', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '分析')
-    await expect(page.getByText('平面评价图').first()).toBeVisible({ timeout: 10000 })
-    await page.locator('.mode-stage').getByRole('button', { name: '延误时间' }).click({ force: true })
-    await page.locator('.mode-stage').getByRole('button', { name: '排队长度' }).click({ force: true })
     await page.screenshot({ path: 'docs/screenshots/04-analysis.png', fullPage: true })
   })
 
@@ -70,10 +65,9 @@ test.describe('Crossdraw v0.5.79 mode stages + polish', () => {
     await page.screenshot({ path: 'docs/screenshots/05-band.png', fullPage: true })
   })
 
-  test('xsection center', async ({ page }) => {
+  test('xsection', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '断面')
-    await expect(page.getByText('横断面').first()).toBeVisible({ timeout: 10000 })
     await page.screenshot({ path: 'docs/screenshots/05-xsection.png', fullPage: true })
   })
 

@@ -28,6 +28,8 @@ import { BandWorkspace } from '@/ui/layout/BandWorkspace'
 import { BandPage } from '@/ui/layout/BandPage'
 import { LeftNav, NAV_ITEMS } from '@/ui/layout/LeftNav'
 import { ModeCenterStage } from '@/ui/layout/ModeCenterStage'
+import { SchemeSwitcher } from '@/ui/layout/SchemeSwitcher'
+import { ModeSideRail } from '@/ui/layout/ModeSideRail'
 import { Icon, IconLabel, MODE_ICONS } from '@/ui/icons/Icons'
 import { AnalysisWorkspace } from '@/ui/layout/AnalysisWorkspace'
 import { CompareWorkspace } from '@/ui/layout/CompareWorkspace'
@@ -536,7 +538,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.79 · 绿波专页</span>
+          <span>Crossdraw v0.5.80 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -558,7 +560,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.79</span>
+            <span className="brand-ver">v0.5.80</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -608,6 +610,18 @@ export default function App() {
               </div>
             </details>
           </div>
+          <SchemeSwitcher
+            project={project}
+            channel={channel}
+            flow={flow}
+            signal={signal}
+            onChannel={setActiveChannel}
+            onFlow={setActiveFlow}
+            onSignal={setActiveSignal}
+            onAddChannel={() => duplicateChannel()}
+            onAddFlow={() => addFlowScheme()}
+            onAddSignal={() => addSignalScheme()}
+          />
           <div className="topbar-actions">
             <button type="button" className="ghost" onClick={() => undo()} title="撤销"><Icon name="undo" size={16} /><span>撤销</span></button>
             <button type="button" className="ghost" onClick={() => redo()} title="重做"><Icon name="redo" size={16} /><span>重做</span></button>
@@ -629,99 +643,17 @@ export default function App() {
           onToggleCollapsed={toggleNavCollapsed}
           onSelect={(m) => setMode(m)}
         />
-        <aside className="side scheme-tree">
-          <div className="side-head">
-            <div className="section-title" style={{ margin: 0 }}>方案树</div>
-            <span className="side-count">{project.channelizationSchemes.length} 渠化</span>
-          </div>
-          <div className="tree-actions">
-            <button type="button" onClick={() => duplicateChannel()}>+渠化</button>
-            <button type="button" onClick={() => addFlowScheme()}>+流量</button>
-            <button type="button" onClick={() => addSignalScheme()}>+信号</button>
-          </div>
-          <div className="tree-scroll">
-          {project.channelizationSchemes.map((ch) => (
-            <div
-              key={ch.id}
-              className={`tree-item tree-channel ${ch.id === channel?.id ? 'active' : ''}`}
-              onClick={() => setActiveChannel(ch.id)}
-            >
-              <div className="tree-row">
-                <strong className="tree-name">{ch.name}</strong>
-                <span className="tree-badge">{ch.intersectionType}</span>
-              </div>
-              <div className="hint">{ch.approaches.length} 进口 · {ch.flowSchemes.length} 流量方案</div>
-              {ch.id === channel?.id && project.channelizationSchemes.length > 1 && (
-                <button
-                  type="button"
-                  className="ghost tree-del"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    deleteChannel(ch.id)
-                  }}
-                >
-                  删除
-                </button>
-              )}
-              {ch.flowSchemes.map((fl) => (
-                <div
-                  key={fl.id}
-                  className={`tree-child tree-flow ${fl.id === flow?.id && ch.id === channel?.id ? 'active' : ''}`}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setActiveChannel(ch.id)
-                    setActiveFlow(fl.id)
-                  }}
-                >
-                  <span className="tree-dot" />
-                  <span className="tree-child-label">
-                    流量 · {fl.name}
-                    {fl.id === flow?.id && ch.id === channel?.id ? <em>当前</em> : null}
-                  </span>
-                  {fl.signalSchemes.map((sg) => (
-                    <div
-                      key={sg.id}
-                      className={`tree-child tree-signal ${sg.id === signal?.id && fl.id === flow?.id ? 'active' : ''}`}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setActiveChannel(ch.id)
-                        setActiveFlow(fl.id)
-                        setActiveSignal(sg.id)
-                      }}
-                    >
-                      <span className="tree-dot signal" />
-                      <span className="tree-child-label">
-                        信号 · {sg.name}
-                        <span className="tree-meta">C={sg.cycleSec}s</span>
-                        {sg.id === signal?.id && fl.id === flow?.id ? <em>当前</em> : null}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          ))}
-          </div>
-          {(mode === 'channel' || mode === 'xsection') && (<><div className="section-title">进口道</div>
-          <div className="tree-scroll tree-scroll-sm">
-          {channel?.approaches.map((ap) => (
-            <div
-              key={ap.id}
-              className={`tree-item tree-approach ${selected?.id === ap.id ? 'active' : ''}`}
-              onClick={() => selectApproach(ap.id)}
-            >
-              <div className="tree-row">
-                <span className="tree-name">{ap.name}</span>
-                <span className="tree-meta">{ap.bearingDeg}°</span>
-              </div>
-              <div className="hint">{ap.entryLanes.length} 车道</div>
-            </div>
-          ))}
-          </div>
-          </>)}
-        </aside>
+        <ModeSideRail
+          mode={mode}
+          approaches={channel?.approaches ?? []}
+          selectedId={selected?.id}
+          onSelectApproach={selectApproach}
+          onFit={() => canvasRef.current?.fitView()}
+          layerVis={layerVis as unknown as Record<string, boolean>}
+          onToggleLayer={(k) => toggleLayer(k as LayerKey)}
+        />
 
-        <main className="center center--mode">
+        <main className={`center center--mode ${mode === 'signal' ? 'center--signal-stack' : ''}`}>
           <div className="breadcrumb">
             <b>项目</b><span className="sep">/</span>
             <span>{project.name}</span><span className="sep">/</span>
@@ -770,11 +702,56 @@ export default function App() {
             xsection={xsection}
             flowDisplayMode={flowDisplayMode}
             theme={theme}
-            canvasHeight={typeof window !== 'undefined' && window.innerWidth < 720 ? Math.max(320, window.innerHeight - 160) : window.innerHeight - 180}
+            canvasHeight={
+              mode === 'signal'
+                ? Math.min(420, typeof window !== 'undefined' ? window.innerHeight * 0.42 : 400)
+                : typeof window !== 'undefined' && window.innerWidth < 720
+                  ? Math.max(320, window.innerHeight - 160)
+                  : window.innerHeight - 180
+            }
           />
+          {mode === 'signal' && signal && (
+            <div className="signal-stack-params">
+              <SignalWorkspace
+                projectName={project.name}
+                signal={signal}
+                channel={channel}
+                flow={flow}
+                focusPhaseId={focusPhaseId}
+                onFocusPhase={setFocusPhaseId}
+                timingMethod={timingMethod}
+                onTimingMethod={setTimingMethod}
+                fixedCycleOn={fixedCycleOn}
+                onFixedCycleOn={setFixedCycleOn}
+                fixedCycleSec={fixedCycleSec}
+                onFixedCycleSec={setFixedCycleSec}
+                timingCompare={timingCompare}
+                timingNotes={timingNotes}
+                onCycle={setCycle}
+                onUpdatePhaseTiming={updatePhaseTiming}
+                onToggleRelease={togglePhaseRelease}
+                onTogglePedestrian={togglePhasePedestrian}
+                onSetPedExclusive={setPhasePedExclusive}
+                onAddPhase={addPhase}
+                onAddOverlap={addOverlapPhase}
+                onAddPedPhase={addPedestrianPhase}
+                onSetDualRing={setDualRingEnabled}
+                onAutoAssignDualRings={autoAssignDualRings}
+                onSetPhaseRing={setPhaseRing}
+                onSetPhaseBarrier={setPhaseBarrier}
+                onBalanceDualRing={balanceDualRingBarriers}
+                onCloseDualRingCycle={closeDualRingCycle}
+                onApplyPedTiming={applyPedTiming}
+                onAllocateBarrierGreens={allocateBarrierGreens}
+                onRunOptimize={runWebster}
+                onRunCompare={runTimingCompare}
+                onApplyCompareRow={applyTimingCompareRow}
+              />
+            </div>
+          )}
         </main>
 
-        <aside className="right">
+        <aside className={`right ${mode === 'signal' ? 'right--hidden' : ''}`}>
           <div className="page-title-bar">
             <h1 className="page-title"><Icon name={MODE_ICONS[mode] ?? 'channel'} size={18} /><span>{MODES.find((m) => m.id === mode)?.label ?? mode}</span></h1>
           </div>
@@ -806,43 +783,7 @@ export default function App() {
             />
           )}
 
-          {mode === 'signal' && signal && (
-            <SignalWorkspace
-              projectName={project.name}
-              signal={signal}
-              channel={channel}
-              flow={flow}
-              focusPhaseId={focusPhaseId}
-              onFocusPhase={setFocusPhaseId}
-              timingMethod={timingMethod}
-              onTimingMethod={setTimingMethod}
-              fixedCycleOn={fixedCycleOn}
-              onFixedCycleOn={setFixedCycleOn}
-              fixedCycleSec={fixedCycleSec}
-              onFixedCycleSec={setFixedCycleSec}
-              timingCompare={timingCompare}
-              timingNotes={timingNotes}
-              onCycle={setCycle}
-              onUpdatePhaseTiming={updatePhaseTiming}
-              onToggleRelease={togglePhaseRelease}
-              onTogglePedestrian={togglePhasePedestrian}
-              onSetPedExclusive={setPhasePedExclusive}
-              onAddPhase={addPhase}
-              onAddOverlap={addOverlapPhase}
-              onAddPedPhase={addPedestrianPhase}
-              onSetDualRing={setDualRingEnabled}
-              onAutoAssignDualRings={autoAssignDualRings}
-              onSetPhaseRing={setPhaseRing}
-              onSetPhaseBarrier={setPhaseBarrier}
-              onBalanceDualRing={balanceDualRingBarriers}
-              onCloseDualRingCycle={closeDualRingCycle}
-              onApplyPedTiming={applyPedTiming}
-              onAllocateBarrierGreens={allocateBarrierGreens}
-              onRunOptimize={runWebster}
-              onRunCompare={runTimingCompare}
-              onApplyCompareRow={applyTimingCompareRow}
-            />
-          )}
+          {/* signal params: see signal stack in main */}
 
           {mode === 'xsection' && xsection && selected && (
             <XSectionWorkspace
@@ -913,7 +854,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.79</span>
+        <span>Crossdraw v0.5.80</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
