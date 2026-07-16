@@ -42,9 +42,9 @@ describe('v0.5.80 layout shell', () => {
   it('App uses SchemeSwitcher and ModeSideRail, signal stack', () => {
     const app = readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8')
     expect(app).toContain('SchemeSwitcher')
-    expect(app).toContain('ModeSideRail')
-    expect(app).toContain('signal-stack-params')
-    expect(app).toContain('center--signal-stack')
+    expect(app).toContain('page-fill')
+    expect(app).toContain('page-fill-params')
+    expect(app).toContain('page-fill-stage')
     expect(app).not.toContain('scheme-tree')
   })
 })

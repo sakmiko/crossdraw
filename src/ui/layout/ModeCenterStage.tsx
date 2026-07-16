@@ -15,7 +15,7 @@ import type {
 } from '@/domain/types'
 import type { CrossSection } from '@/domain/types'
 import { buildFlowAlignment, type FlowDisplayMode } from '@/domain/flow/flowAlign'
-import { roadgeeFlowDiagramSvg } from '@/ui/charts/roadgeeFlowDiagram'
+import { roadgeeFlowDiagramSvg, type RoadGeeFlowStyle, DEFAULT_ROADGEE_FLOW_STYLE } from '@/ui/charts/roadgeeFlowDiagram'
 import { roadgeeSignalBoardSvg } from '@/ui/charts/roadgeeSignalBoard'
 import { roadgeeAnalysisPlanSvg, type AnalysisPlanMetric } from '@/ui/charts/roadgeeAnalysisPlan'
 import { professionalCrossSectionSvg } from '@/ui/charts/crossSectionDiagram'
@@ -39,6 +39,7 @@ export type ModeCenterProps = {
   selected: Approach | null
   xsection: CrossSection | null
   flowDisplayMode: FlowDisplayMode
+  flowDiagramStyle?: RoadGeeFlowStyle
   theme: 'dark' | 'light'
   canvasHeight: number
 }
@@ -96,6 +97,7 @@ export function ModeCenterStage(props: ModeCenterProps) {
     selected,
     xsection,
     flowDisplayMode,
+    flowDiagramStyle = DEFAULT_ROADGEE_FLOW_STYLE,
     theme,
     canvasHeight,
   } = props
@@ -107,8 +109,9 @@ export function ModeCenterStage(props: ModeCenterProps) {
     return roadgeeFlowDiagramSvg(channel.approaches, flow, {
       size: Math.min(720, Math.max(420, canvasHeight - 40)),
       mode: flowDisplayMode,
+      style: flowDiagramStyle,
     })
-  }, [channel, flow, flowDisplayMode, canvasHeight])
+  }, [channel, flow, flowDisplayMode, flowDiagramStyle, canvasHeight])
 
   const signalSvg = useMemo(() => {
     if (!channel || !signal) return ''

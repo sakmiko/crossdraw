@@ -43,7 +43,7 @@ html[data-theme='dark'] {
   --mono: "IBM Plex Mono", "JetBrains Mono", ui-monospace, Menlo, monospace;
   --shell-nav: 148px;
   --shell-nav-collapsed: 52px;
-  --shell-left: 248px;
+  --shell-left: 0px; /* retired scheme tree column */
   --shell-right: 360px;
   --shell-top: 50px;
   --shell-bottom: 28px;
@@ -241,13 +241,13 @@ label {
 
 .main {
   display: grid;
-  grid-template-columns: var(--shell-nav) var(--shell-left) minmax(0, 1fr) var(--shell-right);
+  grid-template-columns: var(--shell-nav) minmax(0, 1fr);
   min-height: 0;
   min-width: 0;
   transition: grid-template-columns 0.18s ease;
 }
 .app.nav-collapsed .main {
-  grid-template-columns: var(--shell-nav-collapsed) var(--shell-left) minmax(0, 1fr) var(--shell-right);
+  grid-template-columns: var(--shell-nav-collapsed) minmax(0, 1fr);
 }
 
 .side, .right {
@@ -584,7 +584,7 @@ label {
 /* ========== Responsive ========== */
 @media (max-width: 1280px) {
   :root, html[data-theme='dark'], html[data-theme='light'] {
-    --shell-left: 240px;
+    --shell-left: 0px;
     --shell-right: 340px;
   }
   .topbar .toolbar-secondary { display: none; }
@@ -593,7 +593,7 @@ label {
 
 @media (max-width: 1100px) {
   :root, html[data-theme='dark'], html[data-theme='light'] {
-    --shell-left: 220px;
+    --shell-left: 0px;
     --shell-right: 320px;
   }
   .brand small { display: none; }
@@ -655,17 +655,24 @@ label {
     border: none;
     max-height: none;
   }
-  .app[data-pane='tree'] .side { display: block; z-index: 2; }
-  .app[data-pane='tree'] .center,
-  .app[data-pane='tree'] .right { display: none; }
+  /* mobile: tree→params, canvas→stage, inspector→params (no scheme tree column) */
+  .app[data-pane='tree'] .page-fill-params { display: block; z-index: 2; }
+  .app[data-pane='tree'] .page-fill-stage { display: none; }
 
-  .app[data-pane='canvas'] .center { display: grid; z-index: 2; }
-  .app[data-pane='canvas'] .side,
-  .app[data-pane='canvas'] .right { display: none; }
+  .app[data-pane='canvas'] .page-fill-stage { display: flex; z-index: 2; }
+  .app[data-pane='canvas'] .page-fill-params { display: none; }
 
-  .app[data-pane='inspector'] .right { display: block; z-index: 2; }
-  .app[data-pane='inspector'] .side,
-  .app[data-pane='inspector'] .center { display: none; }
+  .app[data-pane='inspector'] .page-fill-params { display: block; z-index: 2; }
+  .app[data-pane='inspector'] .page-fill-stage { display: none; }
+
+  .app[data-pane='tree'] .page-fill-body,
+  .app[data-pane='canvas'] .page-fill-body,
+  .app[data-pane='inspector'] .page-fill-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .center.page-fill { display: flex !important; }
+
 
   .topbar .brand small { display: none; }
   .topbar .topbar-divider { display: none; }
@@ -2158,12 +2165,12 @@ tr.row-hot td { background: rgba(56, 189, 248, 0.08); }
 
 @media (max-width: 1100px) {
   .main {
-    grid-template-columns: var(--shell-nav-collapsed) var(--shell-left) minmax(0, 1fr) var(--shell-right);
+    grid-template-columns: var(--shell-nav-collapsed) minmax(0, 1fr);
   }
-  .app.nav-expanded .main {
-    grid-template-columns: var(--shell-nav-collapsed) var(--shell-left) minmax(0, 1fr) var(--shell-right);
+  .app.nav-expanded .main,
+  .app.nav-collapsed .main {
+    grid-template-columns: var(--shell-nav-collapsed) minmax(0, 1fr);
   }
-  /* force icon rail on medium screens unless user expanded — still allow expand via class */
 }
 @media (max-width: 900px) {
   .main {
@@ -2593,14 +2600,193 @@ button.primary .cd-icon {
 .right--hidden {
   display: none !important;
 }
-.shell--signal {
-  grid-template-columns: var(--shell-nav) var(--shell-left) minmax(0, 1fr) !important;
-}
-.shell.nav-collapsed.shell--signal {
-  grid-template-columns: var(--shell-nav-collapsed) var(--shell-left) minmax(0, 1fr) !important;
-}
+/* retired shell--signal 3-col */
+
 @media (max-width: 1100px) {
   .scheme-switcher {
     display: none; /* use file menu on narrow; still have schemes via open */
+  }
+}
+
+
+/* —— v0.5.81 full-page responsive layout (no scheme tree column) —— */
+.center.page-fill {
+  display: flex !important;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+.page-fill-head {
+  flex: 0 0 auto;
+  padding: 6px 10px 4px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+.page-fill-head .breadcrumb {
+  margin: 0 0 4px;
+  font-size: 12px;
+}
+.approach-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 2px 0 4px;
+}
+.approach-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+}
+.approach-chip small {
+  opacity: 0.7;
+  font-size: 10px;
+}
+.approach-chip.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--text);
+  font-weight: 650;
+}
+.approach-chip-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.page-fill-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 38%);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
+}
+/* stack on narrow / always for signal-like density preference: use rows when height-priority */
+@media (max-width: 1100px) {
+  .page-fill-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(220px, 42vh) minmax(0, 1fr);
+  }
+}
+@media (min-width: 1101px) and (max-height: 700px) {
+  .page-fill-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(200px, 40vh) minmax(0, 1fr);
+  }
+}
+.page-fill-stage {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+.page-fill-stage .mode-stage {
+  flex: 1;
+  margin: 8px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.page-fill-stage .mode-stage-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.page-fill-stage .mode-canvas,
+.page-fill-stage .canvas-shell {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+.page-fill-params {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  border-left: 1px solid var(--border);
+  background: var(--panel);
+  padding: 8px 10px 16px;
+}
+@media (max-width: 1100px) {
+  .page-fill-params {
+    border-left: none;
+    border-top: 1px solid var(--border);
+  }
+}
+/* channel: give more room to canvas */
+.shell--channel .page-fill-body {
+  grid-template-columns: minmax(0, 1.2fr) minmax(260px, 34%);
+}
+.shell--signal .page-fill-body,
+.shell--flow .page-fill-body {
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 40%);
+}
+@media (max-width: 1100px) {
+  .shell--channel .page-fill-body,
+  .shell--signal .page-fill-body,
+  .shell--flow .page-fill-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(220px, 42vh) minmax(0, 1fr);
+  }
+}
+.page-fill-params .card {
+  margin-top: 0 !important;
+  box-shadow: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+/* hide legacy side columns if any leftover */
+.side.scheme-tree,
+.mode-rail,
+.right--hidden {
+  display: none !important;
+}
+
+
+/* v0.5.81 layout override hard — always nav + full page fill */
+.main {
+  grid-template-columns: var(--shell-nav) minmax(0, 1fr) !important;
+}
+.app.nav-collapsed .main,
+.app.nav-expanded .main {
+  grid-template-columns: var(--shell-nav-collapsed) minmax(0, 1fr) !important;
+}
+.app.nav-expanded .main {
+  grid-template-columns: var(--shell-nav) minmax(0, 1fr) !important;
+}
+.center.page-fill {
+  width: 100%;
+  max-width: none;
+}
+.page-fill-body {
+  width: 100%;
+  height: 100%;
+}
+/* signal/flow: prefer vertical stack when wide but short content */
+@media (min-width: 1101px) {
+  .app.shell--signal .page-fill-body,
+  .app.shell--flow .page-fill-body {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 38%);
+  }
+  .app.shell--channel .page-fill-body {
+    grid-template-columns: minmax(0, 1.25fr) minmax(280px, 32%);
+  }
+  .app.shell--analysis .page-fill-body,
+  .app.shell--compare .page-fill-body,
+  .app.shell--xsection .page-fill-body {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 36%);
   }
 }

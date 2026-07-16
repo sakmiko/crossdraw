@@ -14,7 +14,7 @@ describe('v0.5.73 left nav', () => {
     const app = readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8')
     expect(app).toContain('LeftNav')
     expect(app).toContain('navCollapsed')
-    expect(app).toContain('page-title')
+    expect(app).toContain('page-fill')
     expect(app).not.toContain('mode-rail')
     expect(app).toContain('band-with-nav')
   })

@@ -29,7 +29,6 @@ import { BandPage } from '@/ui/layout/BandPage'
 import { LeftNav, NAV_ITEMS } from '@/ui/layout/LeftNav'
 import { ModeCenterStage } from '@/ui/layout/ModeCenterStage'
 import { SchemeSwitcher } from '@/ui/layout/SchemeSwitcher'
-import { ModeSideRail } from '@/ui/layout/ModeSideRail'
 import { Icon, IconLabel, MODE_ICONS } from '@/ui/icons/Icons'
 import { AnalysisWorkspace } from '@/ui/layout/AnalysisWorkspace'
 import { CompareWorkspace } from '@/ui/layout/CompareWorkspace'
@@ -58,7 +57,7 @@ import {
   signalTimingDiagramSvg,
   timeSpaceDiagramSvg,
 } from '@/ui/charts/professionalDiagrams'
-import { roadgeeFlowDiagramSvg } from '@/ui/charts/roadgeeFlowDiagram'
+import { roadgeeFlowDiagramSvg, DEFAULT_ROADGEE_FLOW_STYLE } from '@/ui/charts/roadgeeFlowDiagram'
 import { roadgeeAnalysisPlanSvg } from '@/ui/charts/roadgeeAnalysisPlan'
 import { roadgeeSignalBoardSvg } from '@/ui/charts/roadgeeSignalBoard'
 import type { EditorMode, Movement, TurnVolumes } from '@/domain/types'
@@ -81,6 +80,7 @@ export default function App() {
   const setVolume = useAppStore((s) => s.setVolume)
   const setMultimodalVolume = useAppStore((s) => s.setMultimodalVolume)
   const setFlowParams = useAppStore((s) => s.setFlowParams)
+  const setLaneSatFlow = useAppStore((s) => s.setLaneSatFlow)
   const setCycle = useAppStore((s) => s.setCycle)
   const updatePhaseGreen = useAppStore((s) => s.updatePhaseGreen)
   const updatePhaseTiming = useAppStore((s) => s.updatePhaseTiming)
@@ -167,6 +167,7 @@ export default function App() {
   const [printOpen, setPrintOpen] = useState(false)
   const [printPaper, setPrintPaper] = useState<'A4' | 'A4-landscape'>('A4')
   const [flowDisplayMode, setFlowDisplayMode] = useState<FlowDisplayMode>('natural')
+  const [flowDiagramStyle, setFlowDiagramStyle] = useState(() => ({ ...DEFAULT_ROADGEE_FLOW_STYLE }))
   const [focusPhaseId, setFocusPhaseId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -538,7 +539,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.80 · 绿波专页</span>
+          <span>Crossdraw v0.5.81 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -549,18 +550,18 @@ export default function App() {
   }
 
   return (
-    <div className={`app ${navCollapsed ? 'nav-collapsed' : 'nav-expanded'}`} data-pane={mobilePane}>
+    <div className={`app shell shell--${mode} ${navCollapsed ? 'nav-collapsed' : 'nav-expanded'}`} data-pane={mobilePane}>
       <nav className="mobile-nav" aria-label="移动端面板">
-        <button type="button" className={mobilePane === 'tree' ? 'active' : ''} onClick={() => setMobilePane('tree')}><Icon name="scheme" size={14} /><span>方案</span></button>
-        <button type="button" className={mobilePane === 'canvas' ? 'active' : ''} onClick={() => setMobilePane('canvas')}><Icon name="canvas" size={14} /><span>画布</span></button>
-        <button type="button" className={mobilePane === 'inspector' ? 'active' : ''} onClick={() => setMobilePane('inspector')}><Icon name="params" size={14} /><span>参数</span></button>
+        <button type="button" className={mobilePane === 'tree' ? 'active' : ''} onClick={() => setMobilePane('inspector')}><Icon name="params" size={14} /><span>参数</span></button>
+        <button type="button" className={mobilePane === 'canvas' ? 'active' : ''} onClick={() => setMobilePane('canvas')}><Icon name="canvas" size={14} /><span>图示</span></button>
+        <button type="button" className={mobilePane === 'inspector' ? 'active' : ''} onClick={() => setMobilePane('inspector')}><Icon name="params" size={14} /><span>详情</span></button>
       </nav>
       <header className="topbar">
         <div className="brand">
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.80</span>
+            <span className="brand-ver">v0.5.81</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -643,218 +644,189 @@ export default function App() {
           onToggleCollapsed={toggleNavCollapsed}
           onSelect={(m) => setMode(m)}
         />
-        <ModeSideRail
-          mode={mode}
-          approaches={channel?.approaches ?? []}
-          selectedId={selected?.id}
-          onSelectApproach={selectApproach}
-          onFit={() => canvasRef.current?.fitView()}
-          layerVis={layerVis as unknown as Record<string, boolean>}
-          onToggleLayer={(k) => toggleLayer(k as LayerKey)}
-        />
-
-        <main className={`center center--mode ${mode === 'signal' ? 'center--signal-stack' : ''}`}>
-          <div className="breadcrumb">
-            <b>项目</b><span className="sep">/</span>
-            <span>{project.name}</span><span className="sep">/</span>
-            <span>{channel?.name ?? '—'}</span><span className="sep">/</span>
-            <span>{MODES.find((m) => m.id === mode)?.label}</span>
-          </div>
-          {(mode === 'channel') && (
-            <div className="stage-bar">
-              <button type="button" className="ghost" onClick={() => canvasRef.current?.fitView()}><Icon name="fit" size={15} /><span>适应</span></button>
-              <span className="legend layer-toggles" style={{ margin: 0 }}>
-                {([
-                  ['ROAD', '路面', '#4b5563'],
-                  ['MARKING', '标线', '#f8fafc'],
-                  ['ISLAND', '岛', '#4ade80'],
-                  ['FLOW', '流量', '#38bdf8'],
-                ] as [LayerKey, string, string][]).map(([k, lab, col]) => (
+        <main className="center center--mode page-fill">
+          <div className="page-fill-head">
+            <div className="breadcrumb">
+              <b>项目</b><span className="sep">/</span>
+              <span>{project.name}</span><span className="sep">/</span>
+              <span>{channel?.name ?? '—'}</span><span className="sep">/</span>
+              <span>{MODES.find((m) => m.id === mode)?.label}</span>
+            </div>
+            {(mode === 'channel' || mode === 'xsection') && channel && (
+              <div className="approach-strip" role="tablist" aria-label="进口道">
+                {channel.approaches.map((ap) => (
                   <button
-                    key={k}
+                    key={ap.id}
                     type="button"
-                    className={`layer-chip ${layerVis[k] ? 'on' : 'off'}`}
-                    onClick={() => toggleLayer(k)}
-                    title={`图层 ${lab}`}
+                    role="tab"
+                    aria-selected={selected?.id === ap.id}
+                    className={`approach-chip ${selected?.id === ap.id ? 'active' : ''}`}
+                    onClick={() => selectApproach(ap.id)}
                   >
-                    <span className="legend-swatch" style={{ background: col }} />
-                    {lab}
+                    {ap.name.replace('进口', '') || ap.name}
+                    <small>{ap.entryLanes.length}车道</small>
                   </button>
                 ))}
-              </span>
-              <span className={`pill ${summary.block ? 'block' : summary.warn ? 'warn' : 'ok'}`}>
-                {summary.block ? `BLOCK ${summary.block}` : summary.warn ? `WARN ${summary.warn}` : 'OK'}
-              </span>
-            </div>
-          )}
-          <ModeCenterStage
-            mode={mode}
-            mesh={mesh}
-            canvasRef={canvasRef}
-            layerVis={layerVis}
-            selectedApproachId={selected?.id}
-            channel={channel}
-            flow={flow}
-            signal={signal}
-            analysis={analysis}
-            project={project}
-            selected={selected}
-            xsection={xsection}
-            flowDisplayMode={flowDisplayMode}
-            theme={theme}
-            canvasHeight={
-              mode === 'signal'
-                ? Math.min(420, typeof window !== 'undefined' ? window.innerHeight * 0.42 : 400)
-                : typeof window !== 'undefined' && window.innerWidth < 720
-                  ? Math.max(320, window.innerHeight - 160)
-                  : window.innerHeight - 180
-            }
-          />
-          {mode === 'signal' && signal && (
-            <div className="signal-stack-params">
-              <SignalWorkspace
-                projectName={project.name}
-                signal={signal}
+                {mode === 'channel' && (
+                  <>
+                    <button type="button" className="ghost approach-chip-tool" onClick={() => canvasRef.current?.fitView()}>
+                      <Icon name="fit" size={14} /><span>适应</span>
+                    </button>
+                    {(['ROAD', 'MARKING', 'ISLAND', 'FLOW'] as LayerKey[]).map((k) => (
+                      <button
+                        key={k}
+                        type="button"
+                        className={`layer-chip ${layerVis[k] ? 'on' : 'off'}`}
+                        onClick={() => toggleLayer(k)}
+                      >
+                        {k === 'ROAD' ? '路面' : k === 'MARKING' ? '标线' : k === 'ISLAND' ? '岛' : '流量'}
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="page-fill-body">
+            <div className="page-fill-stage">
+              <ModeCenterStage
+                mode={mode}
+                mesh={mesh}
+                canvasRef={canvasRef}
+                layerVis={layerVis}
+                selectedApproachId={selected?.id}
                 channel={channel}
                 flow={flow}
-                focusPhaseId={focusPhaseId}
-                onFocusPhase={setFocusPhaseId}
-                timingMethod={timingMethod}
-                onTimingMethod={setTimingMethod}
-                fixedCycleOn={fixedCycleOn}
-                onFixedCycleOn={setFixedCycleOn}
-                fixedCycleSec={fixedCycleSec}
-                onFixedCycleSec={setFixedCycleSec}
-                timingCompare={timingCompare}
-                timingNotes={timingNotes}
-                onCycle={setCycle}
-                onUpdatePhaseTiming={updatePhaseTiming}
-                onToggleRelease={togglePhaseRelease}
-                onTogglePedestrian={togglePhasePedestrian}
-                onSetPedExclusive={setPhasePedExclusive}
-                onAddPhase={addPhase}
-                onAddOverlap={addOverlapPhase}
-                onAddPedPhase={addPedestrianPhase}
-                onSetDualRing={setDualRingEnabled}
-                onAutoAssignDualRings={autoAssignDualRings}
-                onSetPhaseRing={setPhaseRing}
-                onSetPhaseBarrier={setPhaseBarrier}
-                onBalanceDualRing={balanceDualRingBarriers}
-                onCloseDualRingCycle={closeDualRingCycle}
-                onApplyPedTiming={applyPedTiming}
-                onAllocateBarrierGreens={allocateBarrierGreens}
-                onRunOptimize={runWebster}
-                onRunCompare={runTimingCompare}
-                onApplyCompareRow={applyTimingCompareRow}
+                signal={signal}
+                analysis={analysis}
+                project={project}
+                selected={selected}
+                xsection={xsection}
+                flowDisplayMode={flowDisplayMode}
+                flowDiagramStyle={flowDiagramStyle}
+                theme={theme}
+                canvasHeight={
+                  typeof window !== 'undefined'
+                    ? Math.max(280, Math.floor(window.innerHeight * (mode === 'channel' ? 0.55 : 0.4)))
+                    : 400
+                }
               />
             </div>
-          )}
+            <div className="page-fill-params">
+              {mode === 'channel' && (
+                <ChannelWorkspace
+                  project={project}
+                  selected={selected}
+                  updateApproach={updateApproach}
+                  setLaneCount={setLaneCount}
+                  setExitLaneCount={setExitLaneCount}
+                  setLaneWidth={setLaneWidth}
+                  setLaneMovements={setLaneMovements}
+                  setLaneVariable={setLaneVariable}
+                  mergeLaneGroup={mergeLaneGroup}
+                  splitLaneGroupAt={splitLaneGroupAt}
+                />
+              )}
+              {mode === 'flow' && flow && channel && (
+                <FlowWorkspace
+                  channel={channel}
+                  flow={flow}
+                  displayMode={flowDisplayMode}
+                  onDisplayMode={setFlowDisplayMode}
+                  onFlowParams={setFlowParams}
+                  onVolume={setVolume}
+                  onMultimodal={setMultimodalVolume}
+                  onLaneSatFlow={setLaneSatFlow}
+                  diagramStyle={flowDiagramStyle}
+                  onDiagramStyle={(p) => setFlowDiagramStyle((s) => ({ ...s, ...p }))}
+                />
+              )}
+              {mode === 'signal' && signal && (
+                <SignalWorkspace
+                  projectName={project.name}
+                  signal={signal}
+                  channel={channel}
+                  flow={flow}
+                  focusPhaseId={focusPhaseId}
+                  onFocusPhase={setFocusPhaseId}
+                  timingMethod={timingMethod}
+                  onTimingMethod={setTimingMethod}
+                  fixedCycleOn={fixedCycleOn}
+                  onFixedCycleOn={setFixedCycleOn}
+                  fixedCycleSec={fixedCycleSec}
+                  onFixedCycleSec={setFixedCycleSec}
+                  timingCompare={timingCompare}
+                  timingNotes={timingNotes}
+                  onCycle={setCycle}
+                  onUpdatePhaseTiming={updatePhaseTiming}
+                  onToggleRelease={togglePhaseRelease}
+                  onTogglePedestrian={togglePhasePedestrian}
+                  onSetPedExclusive={setPhasePedExclusive}
+                  onAddPhase={addPhase}
+                  onAddOverlap={addOverlapPhase}
+                  onAddPedPhase={addPedestrianPhase}
+                  onSetDualRing={setDualRingEnabled}
+                  onAutoAssignDualRings={autoAssignDualRings}
+                  onSetPhaseRing={setPhaseRing}
+                  onSetPhaseBarrier={setPhaseBarrier}
+                  onBalanceDualRing={balanceDualRingBarriers}
+                  onCloseDualRingCycle={closeDualRingCycle}
+                  onApplyPedTiming={applyPedTiming}
+                  onAllocateBarrierGreens={allocateBarrierGreens}
+                  onRunOptimize={runWebster}
+                  onRunCompare={runTimingCompare}
+                  onApplyCompareRow={applyTimingCompareRow}
+                />
+              )}
+              {mode === 'xsection' && xsection && selected && (
+                <XSectionWorkspace
+                  projectName={project.name}
+                  selected={selected}
+                  xsection={xsection}
+                  theme={theme}
+                  onUpdateApproach={updateApproach}
+                />
+              )}
+              {mode === 'analysis' && analysis && analysisIntegrity && (
+                <AnalysisWorkspace
+                  project={project}
+                  analysis={analysis}
+                  analysisIntegrity={analysisIntegrity}
+                  channel={channel}
+                  flow={flow}
+                  signal={signal}
+                  theme={theme}
+                  onOpenCompare={() => setMode('compare')}
+                  onExportProPack={exportProfessionalDiagrams}
+                />
+              )}
+              {mode === 'compare' && (
+                <CompareWorkspace
+                  project={project}
+                  theme={theme}
+                  onActivateScheme={(channelName, flowName, signalName) => {
+                    const ch = project.channelizationSchemes.find((c) => c.name === channelName)
+                    if (!ch) return
+                    setActiveChannel(ch.id)
+                    const fl = ch.flowSchemes.find((f) => f.name === flowName)
+                    if (fl) {
+                      setActiveFlow(fl.id)
+                      const sg = fl.signalSchemes.find((s) => s.name === signalName)
+                      if (sg) setActiveSignal(sg.id)
+                    }
+                    setMode('analysis')
+                  }}
+                />
+              )}
+            </div>
+          </div>
         </main>
 
-        <aside className={`right ${mode === 'signal' ? 'right--hidden' : ''}`}>
-          <div className="page-title-bar">
-            <h1 className="page-title"><Icon name={MODE_ICONS[mode] ?? 'channel'} size={18} /><span>{MODES.find((m) => m.id === mode)?.label ?? mode}</span></h1>
-          </div>
-
-          {mode === 'channel' && (
-            <ChannelWorkspace
-              project={project}
-              selected={selected}
-              updateApproach={updateApproach}
-              setLaneCount={setLaneCount}
-              setExitLaneCount={setExitLaneCount}
-              setLaneWidth={setLaneWidth}
-              setLaneMovements={setLaneMovements}
-              setLaneVariable={setLaneVariable}
-              mergeLaneGroup={mergeLaneGroup}
-              splitLaneGroupAt={splitLaneGroupAt}
-            />
-          )}
-
-          {mode === 'flow' && flow && channel && (
-            <FlowWorkspace
-              channel={channel}
-              flow={flow}
-              displayMode={flowDisplayMode}
-              onDisplayMode={setFlowDisplayMode}
-              onFlowParams={setFlowParams}
-              onVolume={setVolume}
-              onMultimodal={setMultimodalVolume}
-            />
-          )}
-
-          {/* signal params: see signal stack in main */}
-
-          {mode === 'xsection' && xsection && selected && (
-            <XSectionWorkspace
-              projectName={project.name}
-              selected={selected}
-              xsection={xsection}
-              theme={theme}
-              onUpdateApproach={updateApproach}
-            />
-          )}
-
-          {mode === 'analysis' && analysis && analysisIntegrity && (
-            <AnalysisWorkspace
-              project={project}
-              analysis={analysis}
-              analysisIntegrity={analysisIntegrity}
-              channel={channel}
-              flow={flow}
-              signal={signal}
-              theme={theme}
-              onOpenCompare={() => setMode('compare')}
-              onExportProPack={exportProfessionalDiagrams}
-            />
-          )}
-
-          
-          {mode === 'compare' && (
-            <CompareWorkspace
-              project={project}
-              theme={theme}
-              onActivateScheme={(channelName, flowName, signalName) => {
-                const ch = project.channelizationSchemes.find((c) => c.name === channelName)
-                if (!ch) return
-                setActiveChannel(ch.id)
-                const fl = ch.flowSchemes.find((f) => f.name === flowName)
-                if (fl) {
-                  setActiveFlow(fl.id)
-                  const sg = fl.signalSchemes.find((s) => s.name === signalName)
-                  if (sg) setActiveSignal(sg.id)
-                }
-                setMode('analysis')
-              }}
-            />
-          )}
-
-          {/* band → full BandPage (see early return) */}
-
-
-          <div className="card">
-            <div className="panel-header">
-              <h3 style={{ margin: 0 }}>校验</h3>
-              <span className="hint issues-summary">
-                {issues.length === 0
-                  ? '通过'
-                  : `共 ${issues.length} · 禁 ${issues.filter((x) => x.level === 'block').length} · 警 ${issues.filter((x) => x.level === 'warn').length}`}
-              </span>
-            </div>
-            {issues.length === 0 && <p className="hint">无问题</p>}
-            {issues.slice(0, 12).map((i) => (
-              <div key={i.id} className={`pill ${i.level}`} style={{ display: 'flex', marginBottom: 6, flexWrap: 'wrap', gap: 4 }}>
-                <strong style={{ fontSize: 10 }}>{i.code}</strong>
-                <span>{i.level.toUpperCase()} · {i.message}</span>
-              </div>
-            ))}
-            {issues.length > 12 && <p className="hint">…另有 {issues.length - 12} 条</p>}
-          </div>
-        </aside>
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.80</span>
+        <span>Crossdraw v0.5.81</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

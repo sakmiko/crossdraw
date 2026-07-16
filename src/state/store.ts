@@ -54,7 +54,8 @@ export type AppState = {
   splitLaneGroupAt: (approachId: string, groupId: string) => void
   setVolume: (approachId: string, volumes: Partial<TurnVolumes>) => void
   setMultimodalVolume: (approachId: string, patch: Partial<{ ped: number; bike: number; other: number }>) => void
-  setFlowParams: (patch: { heavyRatio?: number; phf?: number; defaultSatFlow?: number }) => void
+  setFlowParams: (patch: { heavyRatio?: number; phf?: number; pce?: number; defaultSatFlow?: number }) => void
+  setLaneSatFlow: (approachId: string, laneIndex: number, satFlowPcu: number) => void
   setCycle: (cycleSec: number) => void
   updatePhaseGreen: (phaseId: string, greenSec: number) => void
   updatePhaseTiming: (
@@ -270,7 +271,18 @@ export const useAppStore = create<AppState>()(
           if (patch.heavyRatio !== undefined) fl.heavyRatio = patch.heavyRatio
           if (patch.phf !== undefined) fl.phf = patch.phf
           if (patch.defaultSatFlow !== undefined) fl.defaultSatFlow = patch.defaultSatFlow
+          if (patch.pce !== undefined) fl.pce = patch.pce
           s.dirty = true
+        }),
+      setLaneSatFlow: (approachId, laneIndex, satFlowPcu) =>
+        set((s) => {
+          const ch = activeChannel(s.project)
+          const ap = ch?.approaches.find((a) => a.id === approachId)
+          const ln = ap?.entryLanes[laneIndex]
+          if (!ln) return
+          ln.satFlowPcu = Math.max(800, Math.min(2200, satFlowPcu))
+          s.dirty = true
+          s.project.meta.updatedAt = new Date().toISOString()
         }),
       setCycle: (cycleSec) =>
         set((s) => {
