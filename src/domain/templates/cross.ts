@@ -1,4 +1,6 @@
 import { newId } from '@/shared/id'
+import { createFiveLegTemplate } from './fiveLeg'
+export { createFiveLegTemplate }
 import type { Approach, ChannelizationScheme, FlowScheme, IntersectionType, Lane, Project, SignalScheme, TurnVolumes } from '../types'
 
 function lane(widthM: number, movements: Lane['movements']): Lane {
@@ -296,7 +298,7 @@ export function createRoundaboutTemplate(name = '环形交叉口'): Project {
   return p
 }
 
-export function createTemplateByType(kind: IntersectionType | 'cross' | 't', name?: string): Project {
+export function createTemplateByType(kind: IntersectionType | 'cross' | 't' | 'five', name?: string): Project {
   switch (kind) {
     case 't':
       return createTTemplate(name)
@@ -306,6 +308,8 @@ export function createTemplateByType(kind: IntersectionType | 'cross' | 't', nam
       return createSkewedTemplate(name)
     case 'roundabout':
       return createRoundaboutTemplate(name)
+    case 'five':
+      return createFiveLegTemplate(name)
     default:
       return createCrossTemplate(name)
   }

@@ -10,6 +10,7 @@ import { TimeSpacePanel } from '@/ui/charts/ProfessionalPanels'
 import { InteractiveTimeSpace, buildTimeSpaceExportSvg } from '@/ui/charts/InteractiveTimeSpace'
 import { collectCorridorKpis, corridorKpiCompareSvg, multiBandMarkdown } from '@/ui/charts/bandCorridorCompare'
 import { corridorMapSvg } from '@/ui/charts/corridorMap'
+import { corridorNetworkPreviewSvg } from '@/ui/charts/corridorNetworkPreview'
 import { exportSvgFile } from '@/io/exportCharts'
 import { downloadText } from '@/io/download'
 import { corridorSegments } from '@/domain/analysis/corridor'
@@ -79,6 +80,14 @@ export function BandPage(props: BandPageProps) {
       }),
     [corridor, band.bandwidthRatio],
   )
+  const networkSvg = useMemo(
+    () =>
+      corridorNetworkPreviewSvg(corridor, band, {
+        width: 1200,
+        height: 440,
+      }),
+    [corridor, band],
+  )
   const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
   const maxbandSvg = useMemo(
     () =>
@@ -111,7 +120,7 @@ export function BandPage(props: BandPageProps) {
             [
               ['table', '路口参数表', 'table'],
               ['timespace', '时距图', 'chart'],
-              ['map', '走廊图', 'map'],
+              ['map', '路网预览', 'map'],
               ['maxband', 'MAXBAND', 'optimize'],
               ['compare', '多走廊', 'compare'],
             ] as const
@@ -444,12 +453,29 @@ export function BandPage(props: BandPageProps) {
           {tab === 'map' && (
             <div className="card band-pane compact-card">
               <div className="panel-header">
-                <h2 style={{ margin: 0 }}>走廊图</h2>
+                <h2 style={{ margin: 0 }}>路网预览</h2>
+                <div className="panel-header-meta">
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() => exportSvgFile(`${project.name}-corridor-network.svg`, networkSvg)}
+                  >
+                    高分辨率 SVG
+                  </button>
+                </div>
               </div>
               <div
-                className="chart-svg-host chart-svg-host--pro"
-                dangerouslySetInnerHTML={{ __html: mapSvg }}
+                className="chart-svg-host chart-svg-host--pro band-network-host"
+                style={{ overflow: 'auto' }}
+                dangerouslySetInnerHTML={{ __html: networkSvg }}
               />
+              <details className="subpanel" style={{ marginTop: 8 }}>
+                <summary className="subpanel-summary">链式简图</summary>
+                <div
+                  className="chart-svg-host chart-svg-host--pro"
+                  dangerouslySetInnerHTML={{ __html: mapSvg }}
+                />
+              </details>
             </div>
           )}
 

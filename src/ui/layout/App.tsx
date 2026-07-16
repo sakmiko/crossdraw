@@ -72,6 +72,7 @@ import { unsignalizedPlanSvg, unsignalizedLegsCsv } from '@/ui/charts/unsignaliz
 import { schemeScorecardSvg, kpisFromCompareRows } from '@/ui/charts/schemeScorecard'
 import { schemeDeltas, schemeDeltaMarkdown } from '@/domain/analysis/schemeDiff'
 import { analyzeUnsignalized, unsignalizedMarkdown } from '@/domain/analysis/unsignalized'
+import { corridorNetworkPreviewSvg } from '@/ui/charts/corridorNetworkPreview'
 import { maxbandReportDiagramSvg } from '@/ui/charts/maxbandReportDiagram'
 import { buildMaxbandReport, maxbandReportMarkdown, maxbandReportCsv } from '@/domain/analysis/maxbandReport'
 import { roadgeeSignalBoardSvg } from '@/ui/charts/roadgeeSignalBoard'
@@ -607,7 +608,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.87 · 绿波专页</span>
+          <span>Crossdraw v0.5.88 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -629,7 +630,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.87</span>
+            <span className="brand-ver">v0.5.88</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -648,6 +649,7 @@ export default function App() {
                 <button type="button" role="menuitem" onClick={() => loadTemplate('t')}><Icon name="templateT" size={15} /><span>T 型</span></button>
                 <button type="button" role="menuitem" onClick={() => loadTemplate('y')}><Icon name="templateY" size={15} /><span>Y 型</span></button>
                 <button type="button" role="menuitem" onClick={() => loadTemplate('skewed')}><Icon name="templateSkew" size={15} /><span>斜交</span></button>
+                <button type="button" role="menuitem" onClick={() => loadTemplate('five' as any)}><Icon name="templateCross" size={15} /><span>五路</span></button>
                 <button type="button" role="menuitem" onClick={() => loadTemplate('roundabout')}><Icon name="templateRa" size={15} /><span>环形</span></button>
               </div>
             </details>
@@ -920,7 +922,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.87</span>
+        <span>Crossdraw v0.5.88</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1225,6 +1227,12 @@ export default function App() {
       if (!channel || !flow || !signal) return
       const u = analyzeUnsignalized(channel.approaches, flow, signal, channel.intersectionType)
       downloadText(`${project.name}-unsignalized.csv`, unsignalizedLegsCsv(u), 'text/csv')
+    },
+    'corridor-network-svg': () => {
+      exportSvgFile(
+        `${project.name}-corridor-network.svg`,
+        corridorNetworkPreviewSvg(project.bandCorridor, band, { width: 1200, height: 440 }),
+      )
     },
     'maxband-report-svg': () => {
       const rep = buildMaxbandReport(project.bandCorridor)

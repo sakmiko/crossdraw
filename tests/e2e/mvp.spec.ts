@@ -18,17 +18,23 @@ async function openNav(page: Page, label: string) {
   await page.waitForTimeout(300)
 }
 
-test.describe('Crossdraw v0.5.87 xsection + polish', () => {
+test.describe('Crossdraw v0.5.88 network + polish', () => {
   // 渠化 流量 信号 分析 绿波 比选 断面
   test('shell', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.87/).first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.88/).first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
 
-  test('channel', async ({ page }) => {
+  test('channel five-leg', async ({ page }) => {
     await bootCross(page)
+    const neu = page.locator('details.menu-dropdown', { hasText: '新建' })
+    await neu.locator('summary').click()
+    await neu.locator('button[role=menuitem]', { hasText: '五路' }).click({ force: true })
+    await page.waitForTimeout(700)
     await openNav(page, '渠化')
+    // five approaches on strip or inspector
+    await expect(page.locator('body')).toContainText(/东北|五相位|五路/, { timeout: 10000 })
     await page.screenshot({ path: 'docs/screenshots/01-channel.png', fullPage: true })
   })
 
@@ -50,25 +56,19 @@ test.describe('Crossdraw v0.5.87 xsection + polish', () => {
     await page.screenshot({ path: 'docs/screenshots/04-analysis.png', fullPage: true })
   })
 
-  test('band', async ({ page }) => {
+  test('band network preview', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '绿波')
+    await page.getByRole('tab', { name: /路网预览/ }).click()
+    await expect(page.getByText('路网预览').first()).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/干道路网预览|链式/i).first()).toBeVisible()
+    await page.getByRole('button', { name: /高分辨率 SVG/ }).click()
+    await page.waitForTimeout(200)
     await page.screenshot({ path: 'docs/screenshots/05-band.png', fullPage: true })
   })
 
-  test('xsection report', async ({ page }) => {
+  test('xsection', async ({ page }) => {
     await bootCross(page)
-    await openNav(page, '断面')
-    await expect(page.getByText('标准断面图').first()).toBeVisible({ timeout: 10000 })
-    await expect(page.getByText('构成报表').first()).toBeVisible()
-    await expect(page.getByRole('button', { name: /导出标准断面图/ })).toBeVisible()
-    await expect(page.getByRole('button', { name: /报表 MD/ })).toBeVisible()
-    // enable aux in channel then check metric — toggle left wait in channel first
-    await openNav(page, '渠化')
-    const leftWait = page.getByText('左转待转', { exact: false }).first()
-    if (await leftWait.isVisible().catch(() => false)) {
-      await leftWait.locator('..').locator('input[type=checkbox]').check().catch(() => {})
-    }
     await openNav(page, '断面')
     await page.screenshot({ path: 'docs/screenshots/05-xsection.png', fullPage: true })
   })

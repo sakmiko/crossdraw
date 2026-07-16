@@ -42,6 +42,7 @@ export type ExportItemId =
   | 'maxband-report-svg'
   | 'maxband-report-md'
   | 'maxband-report-csv'
+  | 'corridor-network-svg'
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
@@ -60,6 +61,16 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'corridor-network-svg',
+    category: 'band',
+    title: '干道路网预览（高分辨率）',
+    format: 'SVG',
+    description: '链式双幅路+路口参数·上下行协调示意 · 非 GIS',
+    modes: ['band'],
+    requires: ['band'],
+  },
+
   {
     id: 'compare-scorecard-svg',
     category: 'analysis',

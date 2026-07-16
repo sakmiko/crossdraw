@@ -19,6 +19,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       { id: 'new-y', label: '新建 Y 型交叉口', run: () => loadTemplate('y') },
       { id: 'new-skew', label: '新建斜交交叉口', run: () => loadTemplate('skewed') },
       { id: 'new-ra', label: '新建环形交叉口', run: () => loadTemplate('roundabout') },
+      { id: 'new-five', label: '新建五路交叉口', run: () => loadTemplate('five' as any) },
       { id: 'mode-channel', label: '切换到渠化', run: () => setMode('channel') },
       { id: 'mode-flow', label: '切换到流量', run: () => setMode('flow') },
       { id: 'mode-signal', label: '切换到信号', run: () => setMode('signal') },
