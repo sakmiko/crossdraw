@@ -26,6 +26,7 @@ import { AnalysisLaneTable } from '@/ui/layout/AnalysisLaneTable'
 import { FlowWorkspace } from '@/ui/layout/FlowWorkspace'
 import { ChannelWorkspace } from '@/ui/layout/ChannelWorkspace'
 import { BandWorkspace } from '@/ui/layout/BandWorkspace'
+import { BandPage } from '@/ui/layout/BandPage'
 import { AnalysisWorkspace } from '@/ui/layout/AnalysisWorkspace'
 import { CompareWorkspace } from '@/ui/layout/CompareWorkspace'
 import { XSectionWorkspace } from '@/ui/layout/XSectionWorkspace'
@@ -484,6 +485,39 @@ export default function App() {
 
   const xsection = selected ? buildCrossSection(selected) : null
 
+  // RoadGee-style: green-wave is a dedicated full page (multi-intersection)
+  if (mode === 'band') {
+    return (
+      <div className="app app--band" data-pane={mobilePane}>
+        <BandPage
+          project={project}
+          band={band}
+          theme={theme}
+          onBackToIntersection={() => setMode('channel')}
+          updateBand={updateBand}
+          updateBandNode={updateBandNode}
+          addBandNode={addBandNode}
+          removeBandNode={removeBandNode}
+          optimizeBand={optimizeBand}
+          optimizeAllBands={optimizeAllBands}
+          setBandSegmentLength={setBandSegmentLength}
+          setActiveBand={setActiveBand}
+          addBandCorridor={addBandCorridor}
+          duplicateBandCorridor={duplicateBandCorridor}
+          removeBandCorridor={removeBandCorridor}
+          renameBandCorridor={renameBandCorridor}
+        />
+        <footer className="status">
+          <span>Crossdraw v0.5.71 · 绿波专页</span>
+          <span>{project.bandCorridor.name}</span>
+          <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
+          <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
+        </footer>
+        <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+      </div>
+    )
+  }
+
   return (
     <div className="app" data-pane={mobilePane}>
       <nav className="mobile-nav" aria-label="移动端面板">
@@ -496,7 +530,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.70</span>
+            <span className="brand-ver">v0.5.71</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -864,25 +898,7 @@ export default function App() {
             />
           )}
 
-          {mode === 'band' && (
-            <BandWorkspace
-              project={project}
-              band={band}
-              theme={theme}
-              updateBand={updateBand}
-              updateBandNode={updateBandNode}
-              addBandNode={addBandNode}
-              removeBandNode={removeBandNode}
-              optimizeBand={optimizeBand}
-              optimizeAllBands={optimizeAllBands}
-              setBandSegmentLength={setBandSegmentLength}
-              setActiveBand={setActiveBand}
-              addBandCorridor={addBandCorridor}
-              duplicateBandCorridor={duplicateBandCorridor}
-              removeBandCorridor={removeBandCorridor}
-              renameBandCorridor={renameBandCorridor}
-            />
-          )}
+          {/* band → full BandPage (see early return) */}
 
 
           <div className="card">
@@ -907,7 +923,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.70</span>
+        <span>Crossdraw v0.5.71</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

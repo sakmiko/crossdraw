@@ -14,28 +14,31 @@ import {
 import { computeRoundaboutLayout, roundaboutAnnotation } from './roundabout'
 
 export const THEME = {
-  asphalt: '#374151',
-  asphaltEdge: '#0f172a',
-  laneFill: '#4b5563',
-  laneAlt: '#526072',
-  marking: '#f8fafc',
-  yellow: '#f59e0b',
-  doubleYellow: '#eab308',
-  island: '#4ade80',
-  islandEdge: '#15803d',
-  sidewalk: '#e7e5e4',
-  bike: '#34d399',
+  /** carriageway fill — unified so core/approach don't flash different greys */
+  asphalt: '#3f4a5a',
+  asphaltEdge: '#0b1220',
+  laneFill: '#3f4a5a',
+  laneAlt: '#465366',
+  /** lane line white */
+  marking: '#f1f5f9',
+  /** edge/curb — dark, continuous */
+  curb: '#0f172a',
+  yellow: '#fbbf24',
+  doubleYellow: '#facc15',
+  island: '#86efac',
+  islandEdge: '#166534',
+  sidewalk: '#d6d3d1',
+  bike: '#5eead4',
   crosswalk: '#ffffff',
   flow: '#38bdf8',
   flowL: '#22d3ee',
   flowT: '#60a5fa',
   flowR: '#a78bfa',
-  paper: '#dbeafe',
+  paper: '#e2e8f0',
   grid: '#94a3b8',
   text: '#0f172a',
   accent: '#0ea5e9',
-  curb: '#1e293b',
-  stop: '#f8fafc',
+  stop: '#ffffff',
 }
 
 type Vec = [number, number]
@@ -82,8 +85,19 @@ function totalWidth(ap: Approach): number {
 
 function stopLineDistance(approaches: Approach[]): number {
   // core radius from widest half-width + curb clearance
+  // skewed / acute angles need slightly more room so fillets don't crash
   const half = Math.max(...approaches.map((a) => totalWidth(a) / 2), 8)
-  return half + 6
+  const sorted = [...approaches].sort((a, b) => a.bearingDeg - b.bearingDeg)
+  let minAngle = 90
+  for (let i = 0; i < sorted.length; i++) {
+    const a = sorted[i].bearingDeg
+    const b = sorted[(i + 1) % sorted.length].bearingDeg
+    let d = Math.abs(b - a) % 360
+    if (d > 180) d = 360 - d
+    minAngle = Math.min(minAngle, d || 90)
+  }
+  const acuteBoost = minAngle < 75 ? 4 : minAngle < 90 ? 2 : 0
+  return half + 6 + acuteBoost
 }
 
 function arcPoints(center: Vec, r: number, a0: number, a1: number, steps = 16): Vec[] {
@@ -175,7 +189,7 @@ export function rebuildChannelMesh(scheme: ChannelizationScheme, flow?: FlowSche
         points: curb,
         fill: THEME.asphalt,
         stroke: THEME.curb,
-        strokeWidth: 0.45,
+        strokeWidth: 0.55,
       })
     }
     for (const ap of approaches) {
@@ -208,7 +222,11 @@ export function rebuildChannelMesh(scheme: ChannelizationScheme, flow?: FlowSche
 }
 
 function buildIntersectionCurb(approaches: Approach[], core: number): Vec[] {
-  // sample outer corners of each approach stop line in bearing order
+  /**
+   * Closed curb path: for each approach stop-line, connect right curb corner
+   * to next approach left corner with an angle-aware fillet.
+   * Fixes Y/skewed gaps where old mid-dir arc jumped outside the pocket.
+   */
   const sorted = [...approaches].sort((a, b) => a.bearingDeg - b.bearingDeg)
   const pts: Vec[] = []
   for (let i = 0; i < sorted.length; i++) {
@@ -216,28 +234,44 @@ function buildIntersectionCurb(approaches: Approach[], core: number): Vec[] {
     const next = sorted[(i + 1) % sorted.length]
     const ux = dirFromBearing(ap.bearingDeg)
     const px = perpFromBearing(ap.bearingDeg)
-    const half = totalWidth(ap) / 2
-    const left: Vec = add(mul(ux, core), mul(px, -half))
-    const right: Vec = add(mul(ux, core), mul(px, half))
-    pts.push(left, right)
-
-    // curb arc to next approach left corner
     const nux = dirFromBearing(next.bearingDeg)
     const npx = perpFromBearing(next.bearingDeg)
+    const half = totalWidth(ap) / 2
     const nhalf = totalWidth(next) / 2
+    const left: Vec = add(mul(ux, core), mul(px, -half))
+    const right: Vec = add(mul(ux, core), mul(px, half))
     const nextLeft: Vec = add(mul(nux, core), mul(npx, -nhalf))
-    const r = Math.max(6, Math.min(18, (half + nhalf) * 0.22))
-    // approximate arc through corner region
-    const midDir = norm(add(ux, nux))
-    const mid = mul(midDir, core - r * 0.35)
+
+    // stop-line edge (left → right) only once per approach
+    if (i === 0) pts.push(left)
+    pts.push(right)
+
+    const angle = cornerAngleDeg(ap.bearingDeg, next.bearingDeg)
+    // acute: smaller fillet pulled outward; obtuse: larger smoother
+    const r = Math.max(
+      3.5,
+      Math.min(20, (half + nhalf) * (angle < 70 ? 0.12 : angle < 100 ? 0.2 : 0.28)),
+    )
+    // Fillet center along bisector of outward normals (approach outbound dirs)
+    // For corners between right of A and left of next, bisector of ux and nux points into sector.
+    const bis = norm(add(ux, nux))
+    // pull center slightly inside core so arc stays continuous with both curbs
+    const pull = angle < 75 ? 0.55 : 0.4
+    const mid = mul(bis, Math.max(2, core - r * pull))
     const a0 = Math.atan2(right[1] - mid[1], right[0] - mid[0])
     const a1 = Math.atan2(nextLeft[1] - mid[1], nextLeft[0] - mid[0])
-    // unwrap angle to go the short exterior way
     let d = a1 - a0
     while (d <= -Math.PI) d += Math.PI * 2
     while (d > Math.PI) d -= Math.PI * 2
-    const arc = arcPoints(mid, r * 0.9, a0, a0 + d, 20)
-    pts.push(...arc)
+    // prefer the exterior short turn; if sector is acute, d may need flip for smooth outer curb
+    if (angle < 80 && Math.abs(d) < Math.PI * 0.35) {
+      // keep as-is
+    }
+    const steps = angle < 70 ? 28 : 20
+    const arc = arcPoints(mid, r, a0, a0 + d, steps)
+    // drop first arc point if coincides with right
+    pts.push(...arc.slice(1))
+    pts.push(nextLeft)
   }
   return pts.map(([x, y]) => [round(x), round(y)] as Vec)
 }
@@ -487,9 +521,9 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
   pushPoly(mesh, {
     layer: 'ROAD',
     points: body,
-    fill: THEME.laneFill,
-    stroke: THEME.asphaltEdge,
-    strokeWidth: 0.3,
+    fill: THEME.asphalt,
+    stroke: THEME.curb,
+    strokeWidth: 0.35,
     meta: { approachId: ap.id },
   })
   // edge highlight for widen bay
@@ -531,19 +565,39 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
     off = b
   })
 
-  // lane dividers (entry)
+  // carriageway edge lines (solid white) along widen profile
+  if (leftPts.length >= 2) {
+    pushLine(mesh, {
+      layer: 'MARKING',
+      points: leftPts,
+      stroke: THEME.marking,
+      strokeWidth: 0.22,
+      alpha: 0.95,
+    })
+  }
+  if (rightPts.length >= 2) {
+    pushLine(mesh, {
+      layer: 'MARKING',
+      points: rightPts,
+      stroke: THEME.marking,
+      strokeWidth: 0.22,
+      alpha: 0.95,
+    })
+  }
+  // lane dividers (entry) — dashed white at exact width boundaries
   off = -half
   for (let i = 0; i < ap.entryLanes.length - 1; i++) {
     off += ap.entryLanes[i].widthM
     pushLine(mesh, {
       layer: 'MARKING',
       points: [
-        add(mul(ux, start + 2), mul(px, off)),
-        add(mul(ux, end - 6), mul(px, off)),
+        add(mul(ux, start + 1.2), mul(px, off)),
+        add(mul(ux, end - 5), mul(px, off)),
       ],
       stroke: THEME.marking,
-      strokeWidth: 0.16,
+      strokeWidth: 0.12,
       dashed: true,
+      alpha: 0.9,
     })
   }
 
