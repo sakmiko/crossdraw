@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 0.5.96 — 2026-07-16
+
+### 双环栏审查看板
+- `professionalDualRingBoardSvg`：KPI + R1/R2 时序条 + 屏障明细表 + 相位序
+- 信号页扁平区：勾选双环后即时看板；SVG/MD/CSV 导出
+- 导出中心：`dual-ring-board-svg|md|csv`
+- 同源：`buildDualRingAlignment`（阶段=max(R1,R2)，Σ≈C 闭合）
+
+### 诚实边界
+- NEMA 风格工程示意，非完整 dual-entry 控制器 / 屏障转移引擎
+
+# CHANGELOG
+
 ## 0.5.95 — 2026-07-16
 
 ### 功能页去套层（两大区）

@@ -1,3 +1,4 @@
+import { professionalDualRingBoardSvg, dualRingBoardMarkdown, dualRingBoardCsv } from '@/ui/charts/professionalDualRingBoard'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CanvasView, meshToPngBlob, DEFAULT_LAYERS, type CanvasHandle, type LayerVisibility, type LayerKey } from '@/canvas/CanvasView'
 import { rebuildChannelMesh, THEME } from '@/domain/geometry/rebuild'
@@ -636,7 +637,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.95 · 绿波专页</span>
+          <span>Crossdraw v0.5.96 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -658,7 +659,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.95</span>
+            <span className="brand-ver">v0.5.96</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -950,7 +951,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.95</span>
+        <span>Crossdraw v0.5.96</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1237,6 +1238,25 @@ export default function App() {
               conflictBoardCsv(channel.approaches, signal),
               'text/csv',
             )
+          },
+          'dual-ring-board-svg': () => {
+            if (!signal) return
+            exportSvgFile(
+              `${project.name}-双环审查看板.svg`,
+              professionalDualRingBoardSvg(signal, { width: 960, projectName: project.name }),
+            )
+          },
+          'dual-ring-board-md': () => {
+            if (!signal) return
+            downloadText(
+              `${project.name}-双环.md`,
+              dualRingBoardMarkdown(project.name, signal),
+              'text/markdown',
+            )
+          },
+          'dual-ring-board-csv': () => {
+            if (!signal) return
+            downloadText(`${project.name}-双环.csv`, dualRingBoardCsv(signal), 'text/csv')
           },
           'ped-board-svg': () => {
             if (!channel || !signal) return

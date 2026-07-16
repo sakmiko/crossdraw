@@ -18,6 +18,11 @@ import { buildDualRingAlignment, dualRingSummaryText } from '@/domain/signal/dua
 import { applyPedTimingToSignal } from '@/domain/signal/pedTiming'
 import { allocateGreensByBarrierCriticalY } from '@/domain/signal/barrierGreenAlloc'
 import { dualRingPhaseNumberSvg } from '@/ui/charts/phaseNumberDiagram'
+import {
+  professionalDualRingBoardSvg,
+  dualRingBoardMarkdown,
+  dualRingBoardCsv,
+} from '@/ui/charts/professionalDualRingBoard' 
 import { computeDualRingCriticalFlow, dualRingCriticalSummary } from '@/domain/signal/barrierCritical'
 import { SignalTimingPanel, ControlMatrixPanel, PhaseFacePanel } from '@/ui/charts/ProfessionalPanels'
 import { vcHeatColor } from '@/ui/charts/svgCharts'
@@ -328,20 +333,67 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
           )}
         </div>
         {signal.dualRing?.enabled && (
-          <div className="toolbar dense">
-            <button type="button" className="ghost" onClick={() => onAutoAssignDualRings?.(1)}>
-              单屏障
-            </button>
-            <button type="button" className="ghost" onClick={() => onAutoAssignDualRings?.(2)}>
-              双屏障
-            </button>
-            <button type="button" className="ghost" onClick={() => onBalanceDualRing?.()}>
-              平衡
-            </button>
-            <button type="button" className="primary" onClick={() => onCloseDualRingCycle?.()}>
-              闭合 C
-            </button>
-          </div>
+          <>
+            <div className="toolbar dense">
+              <button type="button" className="ghost" onClick={() => onAutoAssignDualRings?.(1)}>
+                单屏障
+              </button>
+              <button type="button" className="ghost" onClick={() => onAutoAssignDualRings?.(2)}>
+                双屏障
+              </button>
+              <button type="button" className="ghost" onClick={() => onBalanceDualRing?.()}>
+                平衡
+              </button>
+              <button type="button" className="primary" onClick={() => onCloseDualRingCycle?.()}>
+                闭合 C
+              </button>
+              <button
+                type="button"
+                className="ghost"
+                onClick={() =>
+                  exportSvgFile(
+                    `${projectName}-双环审查看板.svg`,
+                    professionalDualRingBoardSvg(signal, { width: 960, projectName }),
+                  )
+                }
+              >
+                双环看板 SVG
+              </button>
+              <button
+                type="button"
+                className="ghost"
+                onClick={() =>
+                  downloadText(
+                    `${projectName}-双环.md`,
+                    dualRingBoardMarkdown(projectName, signal),
+                    'text/markdown',
+                  )
+                }
+              >
+                双环 MD
+              </button>
+              <button
+                type="button"
+                className="ghost"
+                onClick={() =>
+                  downloadText(
+                    `${projectName}-双环.csv`,
+                    dualRingBoardCsv(signal),
+                    'text/csv',
+                  )
+                }
+              >
+                双环 CSV
+              </button>
+            </div>
+            <div
+              className="chart-svg-host chart-svg-host--pro"
+              style={{ marginTop: 8, overflow: 'auto', maxHeight: 380 }}
+              dangerouslySetInnerHTML={{
+                __html: professionalDualRingBoardSvg(signal, { width: 900, projectName }),
+              }}
+            />
+          </>
         )}
       </div>
 

@@ -63,6 +63,9 @@ export type ExportItemId =
   | 'ped-timing-csv'
   | 'roundabout-plan-svg'
   | 'roundabout-plan-md'
+  | 'dual-ring-board-svg'
+  | 'dual-ring-board-md'
+  | 'dual-ring-board-csv'
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
@@ -81,6 +84,34 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'dual-ring-board-svg',
+    category: 'signal',
+    title: '双环栏审查看板',
+    format: 'SVG',
+    description: 'R1/R2 阶段条 + 屏障表 · 与 dualRing 同源',
+    modes: ['signal'],
+    requires: ['signal'],
+  },
+  {
+    id: 'dual-ring-board-md',
+    category: 'signal',
+    title: '双环栏简报',
+    format: 'MD',
+    description: '屏障阶段与闭合状态',
+    modes: ['signal'],
+    requires: ['signal'],
+  },
+  {
+    id: 'dual-ring-board-csv',
+    category: 'signal',
+    title: '双环栏阶段 CSV',
+    format: 'CSV',
+    description: 'B0… 阶段 Σ',
+    modes: ['signal'],
+    requires: ['signal'],
+  },
+
   {
     id: 'ped-board-svg',
     category: 'signal',
