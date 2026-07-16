@@ -24,7 +24,7 @@ describe('v0.5.131 canvas zoom + interactive export category', () => {
     const css = readFileSync(resolve('src/ui/styles.css'), 'utf8')
     expect(css).toContain('v0.5.131 stage-zoom')
     const pkg = readFileSync(resolve('package.json'), 'utf8')
-    expect(pkg).toContain('"version": "0.5.131"')
+    expect(pkg).toMatch(/"version": "0\.5\.\d+"/)
     const ec = readFileSync(resolve('src/ui/common/ExportCenter.tsx'), 'utf8')
     expect(ec).toContain('交互图 PNG')
   })

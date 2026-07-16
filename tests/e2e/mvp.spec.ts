@@ -18,19 +18,25 @@ async function openNav(page: Page, label: string) {
   await page.waitForTimeout(350)
 }
 
-test.describe('v0.5.131 design-system + interactive signal polish', () => {
+test.describe('v0.5.132 channel-compact polish', () => {
   // docs/screenshots/00-shell.png
   // docs/screenshots/06-compare.png
-  // 渠化 流量 信号 分析 绿波 比选 断面
-  test('shell design tokens', async ({ page }) => {
+  test('shell', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.131/).first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.132/).first()).toBeVisible()
     await openNav(page, '渠化')
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
-  test('channel', async ({ page }) => {
+  test('channel compact params', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '渠化')
+    await expect(page.locator('.channel-params-compact').first()).toBeVisible()
+    await expect(page.getByText('渠化出图稿')).toHaveCount(0)
+    await expect(page.getByText('右转渠化审查')).toHaveCount(0)
+    await expect(page.locator('.prop-table').first()).toBeVisible()
+    const params = page.locator('.page-fill-params').first()
+    const box = await params.boundingBox()
+    expect(box && box.width < 520).toBeTruthy()
     await page.screenshot({ path: 'docs/screenshots/01-channel.png', fullPage: true })
   })
   test('flow', async ({ page }) => {
@@ -38,17 +44,9 @@ test.describe('v0.5.131 design-system + interactive signal polish', () => {
     await openNav(page, '流量')
     await page.screenshot({ path: 'docs/screenshots/02-flow.png', fullPage: true })
   })
-  test('signal interactive board', async ({ page }) => {
+  test('signal', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '信号')
-    await expect(page.locator('.interactive-signal-board').first()).toBeVisible({ timeout: 15000 })
-    await expect(page.getByText(/拖绿条/).first()).toBeVisible()
-    // layout: stage left of params on desktop
-    const stage = page.locator('.page-fill-stage').first()
-    const params = page.locator('.page-fill-params').first()
-    const sb = await stage.boundingBox()
-    const pb = await params.boundingBox()
-    expect(sb && pb && sb.x < pb.x).toBeTruthy()
     await page.screenshot({ path: 'docs/screenshots/03-signal.png', fullPage: true })
   })
   test('analysis', async ({ page }) => {

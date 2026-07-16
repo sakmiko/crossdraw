@@ -32,8 +32,8 @@ describe('v0.5.97 channel draft sheet', () => {
   it('export + channel UI wired flat', () => {
     expect(EXPORT_CATALOG.map((x) => x.id)).toContain('channel-draft-svg')
     const cw = readFileSync(resolve(__dirname, '../../src/ui/layout/ChannelWorkspace.tsx'), 'utf8')
-    expect(cw).toContain('导出图框 SVG')
-    expect(cw).toContain('buildChannelDraftSheet')
+    expect(cw).not.toContain('渠化出图稿') // draft removed from params v0.5.132
+    expect(cw).not.toContain('buildChannelDraftSheet')
     expect(cw).not.toMatch(/<details\b/)
     const app = readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8')
     expect(app).toContain('channel-draft-svg')

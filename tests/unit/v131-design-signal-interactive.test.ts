@@ -20,7 +20,7 @@ describe('v0.5.131 DESIGN + interactive signal + export hygiene', () => {
     expect(mcs).toContain('InteractiveSignalBoard')
     const app = readFileSync(resolve('src/ui/layout/App.tsx'), 'utf8')
     expect(app).toContain('onUpdatePhaseTiming={updatePhaseTiming}')
-    expect(app).toMatch(/v0\.5\.131/)
+    expect(app).toMatch(/v0\.5\.\d+/)
   })
 
   it('export center half-wires fixed', () => {

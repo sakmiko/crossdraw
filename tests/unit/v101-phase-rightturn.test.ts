@@ -52,7 +52,7 @@ describe('v0.5.101 phase number + right-turn review', () => {
     expect(sw).toContain('导出相位序号')
     expect(sw).not.toMatch(/<details\b/)
     const cw = readFileSync(resolve(__dirname, '../../src/ui/layout/ChannelWorkspace.tsx'), 'utf8')
-    expect(cw).toContain('右转审查图')
+    expect(cw).not.toContain('右转审查图') // review board removed params v0.5.132
     expect(cw).not.toMatch(/<details\b/)
   })
 })

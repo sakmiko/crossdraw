@@ -1,3 +1,9 @@
+## 0.5.132 — Channel params compact (cut draft/review boards)
+
+- Remove 渠化出图稿 / 右转渠化审查 boards from right params (export center still has draft/right-turn if cataloged).
+- Dense prop tables: 道路 / 进·出口 / 右转 / 辅路 / 分车道; 22px inputs; channel column ~28% width.
+- Honesty: params-only density — geometry homology unchanged.
+
 ## 0.5.131 — Canvas zoom bar + stage chrome + interactive export group
 
 - CanvasHandle zoomIn/zoomOut/zoomBy; channel strip zoom toolbar.

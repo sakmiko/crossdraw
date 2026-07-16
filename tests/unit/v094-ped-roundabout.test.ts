@@ -52,7 +52,7 @@ describe('v0.5.94 ped board + roundabout plan', () => {
     const sw = readFileSync(resolve(__dirname, '../../src/ui/layout/SignalWorkspace.tsx'), 'utf8')
     expect(sw).toContain('行人审查看板')
     const cw = readFileSync(resolve(__dirname, '../../src/ui/layout/ChannelWorkspace.tsx'), 'utf8')
-    expect(cw).toContain('环岛布局图')
+    expect(cw).toContain('环岛布局')
     const app = readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8')
     expect(app).toContain('ped-board-svg')
     expect(app).toContain('roundabout-plan-svg')

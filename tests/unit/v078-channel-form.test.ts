@@ -6,7 +6,7 @@ import { createCrossTemplate } from '@/domain'
 describe('v0.5.78 RoadGee channel form', () => {
   it('ChannelWorkspace has RoadGee section titles', () => {
     const t = readFileSync(resolve(__dirname, '../../src/ui/layout/ChannelWorkspace.tsx'), 'utf8')
-    for (const s of ['道路属性', '右转渠化', '进口属性', '出口属性', '中央隔离', '非机动车道', '辅路属性']) {
+    for (const s of ['道路', '右转渠化', '进 / 出口', '中分', '非机动车', '辅路']) {
       expect(t).toContain(s)
     }
     expect(t).toContain('setExitLaneCount')

@@ -51,7 +51,7 @@ describe('v0.5.125 sidewalk ribbon glyphs + channel KPI', () => {
     expect(reb).toContain('placeRibbonBetween')
     expect(reb).toContain('placeCurbStroke')
     const cw = readFileSync(resolve('src/ui/layout/ChannelWorkspace.tsx'), 'utf8')
-    expect(cw).toContain('channel-kpi-strip')
+    expect(cw).toContain('channel-kpi-inline')
     expect(cw).toContain('channelKpi')
     const css = readFileSync(resolve('src/ui/styles.css'), 'utf8')
     expect(css).toContain('v0.5.125 channel kpi')

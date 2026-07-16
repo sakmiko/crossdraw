@@ -1,7 +1,7 @@
 /**
- * Channel workspace — RoadGee-style grouped approach editor.
- * Sections: 道路属性 / 右转渠化 / 进口 / 出口 / 中央隔离 / 非机动车 / 辅路 / 更多 / 车道明细
- * Params write domain Approach; canvas rebuilds live. No long instructional hints.
+ * Channel workspace — compact approach editor (v0.5.132).
+ * Dense property tables; no draft-sheet / right-turn review boards in params.
+ * Params write domain Approach; canvas rebuilds live.
  */
 import type { Approach, Movement, Project } from '@/domain/types'
 import {
@@ -10,21 +10,6 @@ import {
 } from '@/ui/charts/professionalRoundaboutPlan'
 import { exportSvgFile } from '@/io/exportCharts'
 import { downloadText } from '@/io/download'
-import {
-  buildChannelDraftSheet,
-  channelDraftPreviewSvg,
-  channelDraftMarkdown,
-} from '@/io/channelDraftSheet'
-import {
-  professionalRightTurnBoardSvg,
-  rightTurnBoardMarkdown,
-  rightTurnBoardCsv,
-} from '@/domain/channel/rightTurnReview' 
-import { buildA4PrintSheet, printSheetHtml } from '@/io/printSheet'
-import {
-  collectEngineeringPrintPanels,
-  engineeringPrintManifest,
-} from '@/io/engineeringPrintPack'   
 
 export type ChannelWorkspaceProps = {
   project: Project
@@ -39,38 +24,29 @@ export type ChannelWorkspaceProps = {
   splitLaneGroupAt: (approachId: string, groupId: string) => void
 }
 
-function Num({
-  label,
+function CellNum({
   value,
   onChange,
   min,
   max,
   step = 1,
-  unit,
 }: {
-  label: string
   value: number
   onChange: (n: number) => void
   min?: number
   max?: number
   step?: number
-  unit?: string
 }) {
   return (
-    <label>
-      {label}
-      <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-        <input
-          type="number"
-          min={min}
-          max={max}
-          step={step}
-          value={Number.isFinite(value) ? value : 0}
-          onChange={(e) => onChange(Number(e.target.value))}
-        />
-        {unit ? <span className="rg-unit">{unit}</span> : null}
-      </span>
-    </label>
+    <input
+      type="number"
+      className="cell-num"
+      min={min}
+      max={max}
+      step={step}
+      value={Number.isFinite(value) ? value : 0}
+      onChange={(e) => onChange(Number(e.target.value))}
+    />
   )
 }
 
@@ -93,25 +69,19 @@ export function ChannelWorkspace({
   const channelKpi = (() => {
     if (!channel) return null
     const aps = channel.approaches
-    const entryLanes = aps.reduce((s, a) => s + a.entryLanes.length, 0)
-    const exitLanes = aps.reduce((s, a) => s + a.exitLanes.length, 0)
-    const rtOn = aps.filter((a) => a.rightTurn?.enabled && a.rightTurn.style !== 'none').length
-    const sw = selected?.sidewalkWidthM ?? 0
-    const med = selected?.median?.widthM ?? 0
     return {
       legs: aps.length,
-      entryLanes,
-      exitLanes,
-      rtOn,
-      sw,
-      med,
-      type: channel.intersectionType ?? 'signalized',
+      entryLanes: aps.reduce((s, a) => s + a.entryLanes.length, 0),
+      exitLanes: aps.reduce((s, a) => s + a.exitLanes.length, 0),
+      rtOn: aps.filter((a) => a.rightTurn?.enabled && a.rightTurn.style !== 'none').length,
+      sw: selected?.sidewalkWidthM ?? 0,
+      med: selected?.median?.widthM ?? 0,
     }
   })()
 
   if (!selected) {
     return (
-      <div className="flat-params" style={{ marginTop: 12 }}>
+      <div className="flat-params channel-params-compact">
         {isRoundabout && channel ? (
           <div className="rg-section">
             <div className="rg-section-title">环岛布局</div>
@@ -129,7 +99,7 @@ export function ChannelWorkspace({
                   )
                 }
               >
-                环岛布局图
+                布局图
               </button>
               <button
                 type="button"
@@ -142,109 +112,14 @@ export function ChannelWorkspace({
                   )
                 }
               >
-                布局 MD
+                MD
               </button>
             </div>
-            <div
-              className="chart-svg-host chart-svg-host--pro"
-              style={{ marginTop: 8, overflow: 'auto', maxHeight: 360 }}
-              dangerouslySetInnerHTML={{
-                __html: professionalRoundaboutPlanSvg(channel.approaches, {
-                  size: 560,
-                  projectName: project.name,
-                }),
-              }}
-            />
           </div>
         ) : (
-          <>
-            <div className="rg-section" style={{ marginBottom: 10 }}>
-              <div className="rg-section-title">渠化出图稿</div>
-              <div className="toolbar dense">
-                <button
-                  type="button"
-                  className="primary"
-                  disabled={!channel}
-                  onClick={() => {
-                    if (!channel) return
-                    downloadText(
-                      `${project.name}-渠化出图.svg`,
-                      buildChannelDraftSheet(project, channel, undefined, {
-                        projectName: project.name,
-                        paper: channel.display.paperSize === 'A4' ? 'A4-landscape' : 'A3-landscape',
-                      }),
-                      'image/svg+xml',
-                    )
-                  }}
-                >
-                  导出图框 SVG
-                </button>
-                <button
-                  type="button"
-                  className="ghost"
-                  disabled={!channel}
-                  onClick={() => {
-                    if (!channel) return
-                    downloadText(
-                      `${project.name}-渠化出图.md`,
-                      channelDraftMarkdown(project, channel),
-                      'text/markdown',
-                    )
-                  }}
-                >
-                  出图说明 MD
-                </button>
-                  <button
-                    type="button"
-                    className="ghost"
-                    disabled={!channel}
-                    onClick={() => {
-                      if (!channel) return
-                      const fl = channel.flowSchemes.find((f) => f.id === project.active?.flowId) ?? channel.flowSchemes[0]
-                      const sg = fl?.signalSchemes.find((s) => s.id === project.active?.signalId) ?? fl?.signalSchemes[0]
-                      const panels = collectEngineeringPrintPanels({
-                        project,
-                        channel,
-                        flow: fl ?? null,
-                        signal: sg ?? null,
-                        analysis: null,
-                        mesh: null,
-                        preferChannelDraft: true,
-                        preset: 'engineering',
-                      })
-                      const sheet = buildA4PrintSheet(panels, {
-                        projectName: project.name,
-                        schemeName: channel.name,
-                        paper: 'A4-landscape',
-                      })
-                      downloadText(`${project.name}-工程拼版.svg`, sheet, 'image/svg+xml')
-                      downloadText(
-                        `${project.name}-工程拼版.html`,
-                        printSheetHtml(sheet, `${project.name}-工程拼版`),
-                        'text/html',
-                      )
-                      downloadText(
-                        `${project.name}-工程拼版.md`,
-                        engineeringPrintManifest(project.name, panels),
-                        'text/markdown',
-                      )
-                    }}
-                  >
-                    A4 工程拼版
-                  </button>
-              </div>
-              {channel && (
-                <div
-                  className="chart-svg-host chart-svg-host--pro"
-                  style={{ marginTop: 8, overflow: 'auto', maxHeight: 280 }}
-                  dangerouslySetInnerHTML={{
-                    __html: channelDraftPreviewSvg(project, channel, undefined, 820),
-                  }}
-                />
-              )}
-            </div>
-            <p className="hint">选择进口道编辑参数</p>
-          </>
+          <p className="muted" style={{ fontSize: 12, margin: '8px 0' }}>
+            在上方选择进口道编辑参数
+          </p>
         )}
       </div>
     )
@@ -258,224 +133,109 @@ export function ChannelWorkspace({
   const si = rt.safetyIsland
 
   return (
-    <div className="flat-params rg-form" style={{ marginTop: 12 }}>
-      <div className="rg-section" style={{ marginBottom: 10 }}>
-        <div className="rg-section-title">渠化出图稿</div>
-        <div className="toolbar dense">
-          <button
-            type="button"
-            className="primary"
-            disabled={!channel}
-            onClick={() => {
-              if (!channel) return
-              downloadText(
-                `${project.name}-渠化出图.svg`,
-                buildChannelDraftSheet(project, channel, undefined, {
-                  projectName: project.name,
-                  paper: channel.display.paperSize === 'A4' ? 'A4-landscape' : 'A3-landscape',
-                }),
-                'image/svg+xml',
-              )
-            }}
-          >
-            导出图框 SVG
-          </button>
-          <button
-            type="button"
-            className="ghost"
-            disabled={!channel}
-            onClick={() => {
-              if (!channel) return
-              downloadText(
-                `${project.name}-渠化出图.md`,
-                channelDraftMarkdown(project, channel),
-                'text/markdown',
-              )
-            }}
-          >
-            出图说明 MD
-          </button>
-          <button
-            type="button"
-            className="ghost"
-            disabled={!channel}
-            onClick={() => {
-              if (!channel) return
-              const fl =
-                channel.flowSchemes.find((f) => f.id === project.active?.flowId) ??
-                channel.flowSchemes[0]
-              const sg =
-                fl?.signalSchemes.find((s) => s.id === project.active?.signalId) ??
-                fl?.signalSchemes[0]
-              const panels = collectEngineeringPrintPanels({
-                project,
-                channel,
-                flow: fl ?? null,
-                signal: sg ?? null,
-                analysis: null,
-                mesh: null,
-                preferChannelDraft: true,
-                preset: 'engineering',
-              })
-              const sheet = buildA4PrintSheet(panels, {
-                projectName: project.name,
-                schemeName: channel.name,
-                paper: 'A4-landscape',
-              })
-              downloadText(`${project.name}-工程拼版.svg`, sheet, 'image/svg+xml')
-              downloadText(
-                `${project.name}-工程拼版.html`,
-                printSheetHtml(sheet, `${project.name}-工程拼版`),
-                'text/html',
-              )
-              downloadText(
-                `${project.name}-工程拼版.md`,
-                engineeringPrintManifest(project.name, panels),
-                'text/markdown',
-              )
-            }}
-          >
-            A4 工程拼版
-          </button>
-        </div>
-        {channel && (
-          <div
-            className="chart-svg-host chart-svg-host--pro"
-            style={{ marginTop: 8, overflow: 'auto', maxHeight: 280 }}
-            dangerouslySetInnerHTML={{
-              __html: channelDraftPreviewSvg(project, channel, undefined, 820),
-            }}
-          />
-        )}
+    <div className="flat-params rg-form channel-params-compact">
+      <div className="channel-params-head">
+        <b>{ap.name}</b>
+        {channelKpi ? (
+          <span className="channel-kpi-inline muted">
+            {channelKpi.legs}向 · 进{channelKpi.entryLanes}/出{channelKpi.exitLanes} · 右渠
+            {channelKpi.rtOn}
+          </span>
+        ) : null}
       </div>
 
-      
+      {/* 道路 + 开关 */}
       <div className="rg-section">
-        <div className="rg-section-title">右转渠化审查</div>
-        <div className="toolbar dense">
-          <button
-            type="button"
-            className="ghost"
-            disabled={!channel}
-            onClick={() => {
-              if (!channel) return
-              exportSvgFile(
-                `${project.name}-右转审查.svg`,
-                professionalRightTurnBoardSvg(channel, {
-                  width: 900,
-                  projectName: project.name,
-                }),
-              )
-            }}
-          >
-            右转审查图
-          </button>
-          <button
-            type="button"
-            className="ghost"
-            disabled={!channel}
-            onClick={() => {
-              if (!channel) return
-              downloadText(
-                `${project.name}-右转审查.md`,
-                rightTurnBoardMarkdown(project.name, channel),
-                'text/markdown',
-              )
-            }}
-          >
-            审查 MD
-          </button>
-          <button
-            type="button"
-            className="ghost"
-            disabled={!channel}
-            onClick={() => {
-              if (!channel) return
-              downloadText(
-                `${project.name}-右转审查.csv`,
-                rightTurnBoardCsv(channel),
-                'text/csv',
-              )
-            }}
-          >
-            审查 CSV
-          </button>
-        </div>
-        {channel && (
-          <div
-            className="chart-svg-host chart-svg-host--pro"
-            style={{ marginTop: 8, overflow: 'auto', maxHeight: 260 }}
-            dangerouslySetInnerHTML={{
-              __html: professionalRightTurnBoardSvg(channel, {
-                width: 860,
-                projectName: project.name,
-              }),
-            }}
-          />
-        )}
-      </div>
-
-      <h2 className="rg-page-title">渠化 · {ap.name}</h2>
-
-      {/* 道路属性 */}
-            {channelKpi && (
-        <div className="channel-kpi-strip" id="channel-kpi-strip" aria-label="渠化实时指标">
-          <div className="bkpi"><span className="bkpi-l">进口</span><span className="bkpi-v">{channelKpi.legs}</span></div>
-          <div className="bkpi"><span className="bkpi-l">进车道</span><span className="bkpi-v">{channelKpi.entryLanes}</span></div>
-          <div className="bkpi"><span className="bkpi-l">出车道</span><span className="bkpi-v">{channelKpi.exitLanes}</span></div>
-          <div className="bkpi"><span className="bkpi-l">右转渠化</span><span className="bkpi-v">{channelKpi.rtOn}</span></div>
-          <div className="bkpi"><span className="bkpi-l">人行</span><span className="bkpi-v">{channelKpi.sw.toFixed(1)}<small>m</small></span></div>
-          <div className="bkpi"><span className="bkpi-l">中分</span><span className="bkpi-v">{channelKpi.med.toFixed(1)}<small>m</small></span></div>
-        </div>
-      )}
-<div className="rg-section">
-        <div className="rg-section-title">道路属性</div>
-        <div className="field-row">
-          <label>
-            路名
-            <input
-              type="text"
-              value={ap.name}
-              onChange={(e) => updateApproach(id, { name: e.target.value })}
-            />
-          </label>
-          <Num
-            label="方位角"
-            value={ap.bearingDeg}
-            unit="°"
-            step={1}
-            onChange={(n) => updateApproach(id, { bearingDeg: n })}
-          />
-        </div>
-        <div className="field-row">
-          <Num
-            label="人行道宽度"
-            value={ap.sidewalkWidthM}
-            unit="m"
-            min={0}
-            step={0.1}
-            onChange={(n) => updateApproach(id, { sidewalkWidthM: Math.max(0, n) })}
-          />
-          <Num
-            label="路段速度"
-            value={ap.designSpeedKmh}
-            unit="km/h"
-            min={20}
-            max={80}
-            onChange={(n) => updateApproach(id, { designSpeedKmh: n })}
-          />
-        </div>
-        <div className="rg-checks">
-          <label className="rg-check">
-            <input
-              type="checkbox"
-              checked={ap.sidewalkWidthM > 0}
-              onChange={(e) =>
-                updateApproach(id, { sidewalkWidthM: e.target.checked ? Math.max(ap.sidewalkWidthM, 2) : 0 })
-              }
-            />
-            人行横道/道
-          </label>
+        <div className="rg-section-title">道路</div>
+        <table className="table table-dense prop-table">
+          <tbody>
+            <tr>
+              <th>路名</th>
+              <td colSpan={3}>
+                <input
+                  type="text"
+                  className="cell-text"
+                  value={ap.name}
+                  onChange={(e) => updateApproach(id, { name: e.target.value })}
+                />
+              </td>
+            </tr>
+            <tr>
+              <th>方位角 °</th>
+              <td>
+                <CellNum value={ap.bearingDeg} step={1} onChange={(n) => updateApproach(id, { bearingDeg: n })} />
+              </td>
+              <th>路段速度</th>
+              <td>
+                <CellNum
+                  value={ap.designSpeedKmh}
+                  min={20}
+                  max={80}
+                  onChange={(n) => updateApproach(id, { designSpeedKmh: n })}
+                />
+                <span className="rg-unit">km/h</span>
+              </td>
+            </tr>
+            <tr>
+              <th>人行宽 m</th>
+              <td>
+                <CellNum
+                  value={ap.sidewalkWidthM}
+                  min={0}
+                  step={0.1}
+                  onChange={(n) => updateApproach(id, { sidewalkWidthM: Math.max(0, n) })}
+                />
+              </td>
+              <th>非机宽 m</th>
+              <td>
+                <CellNum
+                  value={ap.bikeWidthM}
+                  min={0}
+                  step={0.1}
+                  onChange={(n) => updateApproach(id, { bikeWidthM: n, bikeEnabled: n > 0 })}
+                />
+              </td>
+            </tr>
+            <tr>
+              <th>中分</th>
+              <td>
+                <select
+                  value={med.style}
+                  onChange={(e) =>
+                    updateApproach(id, { median: { ...med, style: e.target.value as typeof med.style } })
+                  }
+                >
+                  <option value="doubleYellow">双黄线</option>
+                  <option value="singleYellow">单黄线</option>
+                  <option value="barrier">护栏</option>
+                  <option value="yellowHatch">黄斜线</option>
+                  <option value="greenBelt">绿化带</option>
+                  <option value="fishBelly">鱼腹式</option>
+                </select>
+              </td>
+              <th>中分宽 m</th>
+              <td>
+                <CellNum
+                  value={med.widthM}
+                  min={0}
+                  step={0.1}
+                  onChange={(n) => updateApproach(id, { median: { ...med, widthM: n } })}
+                />
+              </td>
+            </tr>
+            <tr>
+              <th>进口倾斜°</th>
+              <td>
+                <CellNum value={ap.tiltEntryDeg} step={1} onChange={(n) => updateApproach(id, { tiltEntryDeg: n })} />
+              </td>
+              <th>出口倾斜°</th>
+              <td>
+                <CellNum value={ap.tiltExitDeg} step={1} onChange={(n) => updateApproach(id, { tiltExitDeg: n })} />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div className="rg-checks dense-checks">
           <label className="rg-check">
             <input
               type="checkbox"
@@ -506,457 +266,424 @@ export function ChannelWorkspace({
               checked={ap.redRightTurn}
               onChange={(e) => updateApproach(id, { redRightTurn: e.target.checked })}
             />
-            红灯时右转
+            红灯右转
           </label>
-        </div>
-        {ap.redRightTurn && (
-          <div className="field-row">
-            <Num
-              label="红灯右转比例"
-              value={ap.redRightTurnRatio}
-              min={0}
-              max={1}
-              step={0.05}
-              onChange={(n) => updateApproach(id, { redRightTurnRatio: n })}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* 右转渠化 */}
-      <div className="rg-section">
-        <div className="rg-section-title">右转渠化</div>
-        <div className="field-row">
-          <label>
-            右转渠化
-            <select
-              value={rt.enabled ? 'yes' : 'no'}
-              onChange={(e) =>
-                updateApproach(id, { rightTurn: { ...rt, enabled: e.target.value === 'yes' } })
-              }
-            >
-              <option value="no">否</option>
-              <option value="yes">是</option>
-            </select>
-          </label>
-          <label>
-            渠化样式
-            <select
-              value={rt.style}
-              onChange={(e) =>
-                updateApproach(id, {
-                  rightTurn: { ...rt, style: e.target.value as typeof rt.style },
-                })
-              }
-            >
-              <option value="solid">实体导流岛</option>
-              <option value="painted">标线岛</option>
-              <option value="none">无</option>
-            </select>
-          </label>
-        </div>
-        <div className="field-row">
-          <Num
-            label="右转半径"
-            value={rt.radiusM}
-            unit="m"
-            min={6}
-            step={0.5}
-            onChange={(n) => updateApproach(id, { rightTurn: { ...rt, radiusM: n } })}
-          />
-          <Num
-            label="出入口宽度"
-            value={rt.widthM}
-            unit="m"
-            min={1}
-            step={0.1}
-            onChange={(n) => updateApproach(id, { rightTurn: { ...rt, widthM: n } })}
-          />
-        </div>
-        <div className="field-row">
-          <Num
-            label="右转道宽"
-            value={rt.channelWidthM ?? rt.widthM}
-            unit="m"
-            min={3}
-            step={0.1}
-            onChange={(n) => updateApproach(id, { rightTurn: { ...rt, channelWidthM: n } })}
-          />
-          <Num
-            label="岛偏移"
-            value={rt.islandOffsetM ?? 0}
-            unit="m"
-            step={0.2}
-            onChange={(n) => updateApproach(id, { rightTurn: { ...rt, islandOffsetM: n } })}
-          />
-        </div>
-        <label className="rg-check">
-          <input
-            type="checkbox"
-            checked={si?.enabled ?? false}
-            onChange={(e) =>
-              updateApproach(id, {
-                rightTurn: {
-                  ...rt,
-                  safetyIsland: {
-                    enabled: e.target.checked,
-                    surface: si?.surface ?? 'raised',
-                    radiusM: si?.radiusM ?? 3.5,
-                    setbackM: si?.setbackM ?? 1.5,
-                    showYield: si?.showYield ?? true,
-                    label: si?.label ?? '安全岛',
-                  },
-                },
-              })
-            }
-          />
-          安全岛
-        </label>
-        {(si?.enabled ?? false) && (
-          <div className="field-row">
-            <Num
-              label="安全岛半径"
-              value={si?.radiusM ?? 3.5}
-              unit="m"
-              min={1}
-              step={0.1}
-              onChange={(n) =>
-                updateApproach(id, {
-                  rightTurn: {
-                    ...rt,
-                    safetyIsland: {
-                      enabled: true,
-                      surface: si?.surface ?? 'raised',
-                      radiusM: n,
-                      setbackM: si?.setbackM ?? 1.5,
-                      showYield: si?.showYield ?? true,
-                      label: si?.label ?? '安全岛',
-                    },
-                  },
-                })
-              }
-            />
-            <Num
-              label="退距"
-              value={si?.setbackM ?? 1.5}
-              unit="m"
-              min={0}
-              step={0.1}
-              onChange={(n) =>
-                updateApproach(id, {
-                  rightTurn: {
-                    ...rt,
-                    safetyIsland: {
-                      enabled: true,
-                      surface: si?.surface ?? 'raised',
-                      radiusM: si?.radiusM ?? 3.5,
-                      setbackM: n,
-                      showYield: si?.showYield ?? true,
-                      label: si?.label ?? '安全岛',
-                    },
-                  },
-                })
-              }
-            />
-          </div>
-        )}
-      </div>
-
-      {/* 进口属性 */}
-      <div className="rg-section">
-        <div className="rg-section-title">进口属性</div>
-        <div className="field-row">
-          <Num
-            label="进口车道"
-            value={ap.entryLanes.length}
-            unit="个"
-            min={1}
-            max={8}
-            onChange={(n) => setLaneCount(id, n)}
-          />
-          <Num
-            label="车道宽度"
-            value={ap.entryLanes[0]?.widthM ?? 3.5}
-            unit="m"
-            min={2.5}
-            max={4.5}
-            step={0.05}
-            onChange={(n) => {
-              // apply width to all entry lanes for RoadGee-like single control
-              ap.entryLanes.forEach((_, i) => setLaneWidth(id, i, n))
-            }}
-          />
-        </div>
-        <div className="field-row">
-          <Num
-            label="进口展宽"
-            value={w.entryWidenCount}
-            unit="个"
-            min={0}
-            max={4}
-            onChange={(n) => updateApproach(id, { widen: { ...w, entryWidenCount: n } })}
-          />
-          <Num
-            label="展宽车道宽度"
-            value={w.entryWidenWidthM}
-            unit="m"
-            min={0}
-            step={0.1}
-            onChange={(n) => updateApproach(id, { widen: { ...w, entryWidenWidthM: n } })}
-          />
-        </div>
-        <div className="field-row">
-          <Num
-            label="展宽段长"
-            value={w.entryWidenLengthM}
-            unit="m"
-            min={0}
-            onChange={(n) => updateApproach(id, { widen: { ...w, entryWidenLengthM: n } })}
-          />
-          <Num
-            label="外侧渐变段长"
-            value={w.entryTaperM}
-            unit="m"
-            min={0}
-            onChange={(n) => updateApproach(id, { widen: { ...w, entryTaperM: n } })}
-          />
-        </div>
-        <div className="field-row">
-          <Num
-            label="内侧偏移"
-            value={w.innerOffsetM}
-            unit="m"
-            step={0.1}
-            onChange={(n) => updateApproach(id, { widen: { ...w, innerOffsetM: n } })}
-          />
-          <Num
-            label="内侧渐变段长"
-            value={w.entryTaperM}
-            unit="m"
-            min={0}
-            onChange={(n) => updateApproach(id, { widen: { ...w, entryTaperM: n } })}
-          />
-        </div>
-      </div>
-
-      {/* 出口属性 */}
-      <div className="rg-section">
-        <div className="rg-section-title">出口属性</div>
-        <div className="field-row">
-          <Num
-            label="出口车道"
-            value={ap.exitLanes.length}
-            unit="个"
-            min={1}
-            max={8}
-            onChange={(n) => setExitLaneCount?.(id, n)}
-          />
-          <Num
-            label="车道宽度"
-            value={ap.exitLanes[0]?.widthM ?? 3.5}
-            unit="m"
-            min={2.5}
-            max={4.5}
-            step={0.05}
-            onChange={(n) => {
-              const lanes = ap.exitLanes.map((ln) => ({ ...ln, widthM: Math.max(2.5, Math.min(4.5, n)) }))
-              updateApproach(id, { exitLanes: lanes })
-            }}
-          />
-        </div>
-        <div className="field-row">
-          <Num
-            label="出口展宽"
-            value={w.exitWidenCount}
-            unit="个"
-            min={0}
-            max={4}
-            onChange={(n) => updateApproach(id, { widen: { ...w, exitWidenCount: n } })}
-          />
-          <Num
-            label="展宽车道宽度"
-            value={w.exitWidenWidthM}
-            unit="m"
-            min={0}
-            step={0.1}
-            onChange={(n) => updateApproach(id, { widen: { ...w, exitWidenWidthM: n } })}
-          />
-        </div>
-        <div className="field-row">
-          <Num
-            label="展宽段长"
-            value={w.exitWidenLengthM}
-            unit="m"
-            min={0}
-            onChange={(n) => updateApproach(id, { widen: { ...w, exitWidenLengthM: n } })}
-          />
-          <Num
-            label="渐变段长"
-            value={w.exitTaperM}
-            unit="m"
-            min={0}
-            onChange={(n) => updateApproach(id, { widen: { ...w, exitTaperM: n } })}
-          />
-        </div>
-      </div>
-
-      {/* 中央隔离 */}
-      <div className="rg-section">
-        <div className="rg-section-title">中央隔离</div>
-        <div className="field-row">
-          <label>
-            分割形式
-            <select
-              value={med.style}
-              onChange={(e) =>
-                updateApproach(id, {
-                  median: { ...med, style: e.target.value as typeof med.style },
-                })
-              }
-            >
-              <option value="doubleYellow">双黄线</option>
-              <option value="singleYellow">单黄线</option>
-              <option value="barrier">护栏</option>
-              <option value="yellowHatch">黄斜线</option>
-              <option value="greenBelt">绿化带</option>
-              <option value="fishBelly">鱼腹式</option>
-            </select>
-          </label>
-          <Num
-            label="分割带宽"
-            value={med.widthM}
-            unit="m"
-            min={0}
-            step={0.1}
-            onChange={(n) => updateApproach(id, { median: { ...med, widthM: n } })}
-          />
-        </div>
-      </div>
-
-      {/* 非机动车道 */}
-      <div className="rg-section">
-        <div className="rg-section-title">非机动车道</div>
-        <div className="field-row">
-          <label>
-            进口
-            <select
-              value={ap.bikeEnabled ? 'yes' : 'no'}
-              onChange={(e) => updateApproach(id, { bikeEnabled: e.target.value === 'yes' })}
-            >
-              <option value="no">否</option>
-              <option value="yes">是</option>
-            </select>
-          </label>
-          <Num
-            label="车道宽度"
-            value={ap.bikeWidthM}
-            unit="m"
-            min={1}
-            step={0.1}
-            onChange={(n) => updateApproach(id, { bikeWidthM: n, bikeEnabled: n > 0 })}
-          />
-        </div>
-      </div>
-
-      {/* 辅路 */}
-      <div className="flat-section rg-section">
-        <div className="rg-section-title">
-          辅路属性
-        </div>
-        <div className="flat-body">
           <label className="rg-check">
             <input
               type="checkbox"
-              checked={!!ap.auxRoad?.enabled}
-              onChange={(e) =>
-                updateApproach(id, {
-                  auxRoad: {
-                    enabled: e.target.checked,
-                    widthM: ap.auxRoad?.widthM ?? 5.5,
-                    offsetM: ap.auxRoad?.offsetM ?? 1,
-                    openNearM: ap.auxRoad?.openNearM ?? 18,
-                  },
-                })
-              }
+              checked={ap.bikeEnabled}
+              onChange={(e) => updateApproach(id, { bikeEnabled: e.target.checked })}
             />
-            启用辅路
+            非机动车
           </label>
-          {ap.auxRoad?.enabled && (
-            <div className="field-row">
-              <Num
-                label="辅路宽"
-                value={ap.auxRoad.widthM}
-                unit="m"
-                min={3}
-                step={0.1}
-                onChange={(n) => updateApproach(id, { auxRoad: { ...ap.auxRoad!, widthM: n } })}
-              />
-              <Num
-                label="外偏距"
-                value={ap.auxRoad.offsetM ?? 1}
-                unit="m"
-                min={0}
-                step={0.1}
-                onChange={(n) => updateApproach(id, { auxRoad: { ...ap.auxRoad!, offsetM: n } })}
-              />
-              <Num
-                label="开口退距"
-                value={ap.auxRoad.openNearM ?? 18}
-                unit="m"
-                min={5}
-                onChange={(n) => updateApproach(id, { auxRoad: { ...ap.auxRoad!, openNearM: n } })}
-              />
-            </div>
-          )}
         </div>
-      </div>
-
-      {/* 更多 */}
-      <div className="flat-section rg-section">
-        <div className="rg-section-title">
-          更多属性
-        </div>
-        <div className="flat-body">
-          <div className="field-row">
-            <Num
-              label="进口倾斜"
-              value={ap.tiltEntryDeg}
-              unit="°"
-              step={1}
-              onChange={(n) => updateApproach(id, { tiltEntryDeg: n })}
-            />
-            <Num
-              label="出口倾斜"
-              value={ap.tiltExitDeg}
-              unit="°"
-              step={1}
-              onChange={(n) => updateApproach(id, { tiltExitDeg: n })}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* 分车道明细 */}
-      <div className="flat-section rg-section">
-        <div className="rg-section-title">
-          分车道宽 / 转向 / 可变
-        </div>
-        <div className="flat-body">
-          {ap.entryLanes.map((ln, i) => (
-            <div key={ln.id} className="lane-edit-row">
-              <div className="field-row" style={{ alignItems: 'end' }}>
-                <label>
-                  车道{i + 1}宽
-                  <input
-                    type="number"
+        {ap.redRightTurn ? (
+          <table className="table table-dense prop-table">
+            <tbody>
+              <tr>
+                <th>红灯右转比</th>
+                <td>
+                  <CellNum
+                    value={ap.redRightTurnRatio}
+                    min={0}
+                    max={1}
                     step={0.05}
-                    value={ln.widthM}
-                    onChange={(e) => setLaneWidth(id, i, Number(e.target.value))}
+                    onChange={(n) => updateApproach(id, { redRightTurnRatio: n })}
                   />
-                </label>
-                <label>
-                  转向 (ULTR)
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        ) : null}
+      </div>
+
+      {/* 进口 / 出口 一体表 */}
+      <div className="rg-section">
+        <div className="rg-section-title">进 / 出口</div>
+        <table className="table table-dense prop-table">
+          <thead>
+            <tr>
+              <th />
+              <th>进口</th>
+              <th>出口</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th>车道数</th>
+              <td>
+                <CellNum value={ap.entryLanes.length} min={1} max={8} onChange={(n) => setLaneCount(id, n)} />
+              </td>
+              <td>
+                <CellNum
+                  value={ap.exitLanes.length}
+                  min={1}
+                  max={8}
+                  onChange={(n) => setExitLaneCount?.(id, n)}
+                />
+              </td>
+            </tr>
+            <tr>
+              <th>车道宽 m</th>
+              <td>
+                <CellNum
+                  value={ap.entryLanes[0]?.widthM ?? 3.5}
+                  min={2.5}
+                  max={4.5}
+                  step={0.05}
+                  onChange={(n) => ap.entryLanes.forEach((_, i) => setLaneWidth(id, i, n))}
+                />
+              </td>
+              <td>
+                <CellNum
+                  value={ap.exitLanes[0]?.widthM ?? 3.5}
+                  min={2.5}
+                  max={4.5}
+                  step={0.05}
+                  onChange={(n) => {
+                    const lanes = ap.exitLanes.map((ln) => ({
+                      ...ln,
+                      widthM: Math.max(2.5, Math.min(4.5, n)),
+                    }))
+                    updateApproach(id, { exitLanes: lanes })
+                  }}
+                />
+              </td>
+            </tr>
+            <tr>
+              <th>展宽条数</th>
+              <td>
+                <CellNum
+                  value={w.entryWidenCount}
+                  min={0}
+                  max={4}
+                  onChange={(n) => updateApproach(id, { widen: { ...w, entryWidenCount: n } })}
+                />
+              </td>
+              <td>
+                <CellNum
+                  value={w.exitWidenCount}
+                  min={0}
+                  max={4}
+                  onChange={(n) => updateApproach(id, { widen: { ...w, exitWidenCount: n } })}
+                />
+              </td>
+            </tr>
+            <tr>
+              <th>展宽宽 m</th>
+              <td>
+                <CellNum
+                  value={w.entryWidenWidthM}
+                  min={0}
+                  step={0.1}
+                  onChange={(n) => updateApproach(id, { widen: { ...w, entryWidenWidthM: n } })}
+                />
+              </td>
+              <td>
+                <CellNum
+                  value={w.exitWidenWidthM}
+                  min={0}
+                  step={0.1}
+                  onChange={(n) => updateApproach(id, { widen: { ...w, exitWidenWidthM: n } })}
+                />
+              </td>
+            </tr>
+            <tr>
+              <th>展宽长 m</th>
+              <td>
+                <CellNum
+                  value={w.entryWidenLengthM}
+                  min={0}
+                  onChange={(n) => updateApproach(id, { widen: { ...w, entryWidenLengthM: n } })}
+                />
+              </td>
+              <td>
+                <CellNum
+                  value={w.exitWidenLengthM}
+                  min={0}
+                  onChange={(n) => updateApproach(id, { widen: { ...w, exitWidenLengthM: n } })}
+                />
+              </td>
+            </tr>
+            <tr>
+              <th>渐变长 m</th>
+              <td>
+                <CellNum
+                  value={w.entryTaperM}
+                  min={0}
+                  onChange={(n) => updateApproach(id, { widen: { ...w, entryTaperM: n } })}
+                />
+              </td>
+              <td>
+                <CellNum
+                  value={w.exitTaperM}
+                  min={0}
+                  onChange={(n) => updateApproach(id, { widen: { ...w, exitTaperM: n } })}
+                />
+              </td>
+            </tr>
+            <tr>
+              <th>内侧偏移 m</th>
+              <td colSpan={2}>
+                <CellNum
+                  value={w.innerOffsetM}
+                  step={0.1}
+                  onChange={(n) => updateApproach(id, { widen: { ...w, innerOffsetM: n } })}
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* 右转渠化参数（保留编辑，去掉审查大图） */}
+      <div className="rg-section">
+        <div className="rg-section-title">右转渠化</div>
+        <table className="table table-dense prop-table">
+          <tbody>
+            <tr>
+              <th>启用</th>
+              <td>
+                <select
+                  value={rt.enabled ? 'yes' : 'no'}
+                  onChange={(e) =>
+                    updateApproach(id, { rightTurn: { ...rt, enabled: e.target.value === 'yes' } })
+                  }
+                >
+                  <option value="no">否</option>
+                  <option value="yes">是</option>
+                </select>
+              </td>
+              <th>样式</th>
+              <td>
+                <select
+                  value={rt.style}
+                  onChange={(e) =>
+                    updateApproach(id, {
+                      rightTurn: { ...rt, style: e.target.value as typeof rt.style },
+                    })
+                  }
+                >
+                  <option value="solid">实体岛</option>
+                  <option value="painted">标线岛</option>
+                  <option value="none">无</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <th>半径 m</th>
+              <td>
+                <CellNum
+                  value={rt.radiusM}
+                  min={6}
+                  step={0.5}
+                  onChange={(n) => updateApproach(id, { rightTurn: { ...rt, radiusM: n } })}
+                />
+              </td>
+              <th>道宽 m</th>
+              <td>
+                <CellNum
+                  value={rt.channelWidthM ?? rt.widthM}
+                  min={3}
+                  step={0.1}
+                  onChange={(n) => updateApproach(id, { rightTurn: { ...rt, channelWidthM: n } })}
+                />
+              </td>
+            </tr>
+            <tr>
+              <th>口宽 m</th>
+              <td>
+                <CellNum
+                  value={rt.widthM}
+                  min={1}
+                  step={0.1}
+                  onChange={(n) => updateApproach(id, { rightTurn: { ...rt, widthM: n } })}
+                />
+              </td>
+              <th>岛偏 m</th>
+              <td>
+                <CellNum
+                  value={rt.islandOffsetM ?? 0}
+                  step={0.2}
+                  onChange={(n) => updateApproach(id, { rightTurn: { ...rt, islandOffsetM: n } })}
+                />
+              </td>
+            </tr>
+            <tr>
+              <th>安全岛</th>
+              <td>
+                <input
+                  type="checkbox"
+                  checked={si?.enabled ?? false}
+                  onChange={(e) =>
+                    updateApproach(id, {
+                      rightTurn: {
+                        ...rt,
+                        safetyIsland: {
+                          enabled: e.target.checked,
+                          surface: si?.surface ?? 'raised',
+                          radiusM: si?.radiusM ?? 3.5,
+                          setbackM: si?.setbackM ?? 1.5,
+                          showYield: si?.showYield ?? true,
+                          label: si?.label ?? '安全岛',
+                        },
+                      },
+                    })
+                  }
+                />
+              </td>
+              <th>岛半径/退距</th>
+              <td className="cell-pair">
+                <CellNum
+                  value={si?.radiusM ?? 3.5}
+                  min={1}
+                  step={0.1}
+                  onChange={(n) =>
+                    updateApproach(id, {
+                      rightTurn: {
+                        ...rt,
+                        safetyIsland: {
+                          enabled: si?.enabled ?? true,
+                          surface: si?.surface ?? 'raised',
+                          radiusM: n,
+                          setbackM: si?.setbackM ?? 1.5,
+                          showYield: si?.showYield ?? true,
+                          label: si?.label ?? '安全岛',
+                        },
+                      },
+                    })
+                  }
+                />
+                <CellNum
+                  value={si?.setbackM ?? 1.5}
+                  min={0}
+                  step={0.1}
+                  onChange={(n) =>
+                    updateApproach(id, {
+                      rightTurn: {
+                        ...rt,
+                        safetyIsland: {
+                          enabled: si?.enabled ?? true,
+                          surface: si?.surface ?? 'raised',
+                          radiusM: si?.radiusM ?? 3.5,
+                          setbackM: n,
+                          showYield: si?.showYield ?? true,
+                          label: si?.label ?? '安全岛',
+                        },
+                      },
+                    })
+                  }
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* 辅路 */}
+      <div className="rg-section">
+        <div className="rg-section-title">辅路</div>
+        <table className="table table-dense prop-table">
+          <tbody>
+            <tr>
+              <th>启用</th>
+              <td>
+                <input
+                  type="checkbox"
+                  checked={!!ap.auxRoad?.enabled}
+                  onChange={(e) =>
+                    updateApproach(id, {
+                      auxRoad: {
+                        enabled: e.target.checked,
+                        widthM: ap.auxRoad?.widthM ?? 5.5,
+                        offsetM: ap.auxRoad?.offsetM ?? 1,
+                        openNearM: ap.auxRoad?.openNearM ?? 18,
+                      },
+                    })
+                  }
+                />
+              </td>
+              <th>宽/偏/开口 m</th>
+              <td className="cell-pair">
+                <CellNum
+                  value={ap.auxRoad?.widthM ?? 5.5}
+                  min={3}
+                  step={0.1}
+                  onChange={(n) =>
+                    updateApproach(id, {
+                      auxRoad: {
+                        enabled: ap.auxRoad?.enabled ?? true,
+                        widthM: n,
+                        offsetM: ap.auxRoad?.offsetM ?? 1,
+                        openNearM: ap.auxRoad?.openNearM ?? 18,
+                      },
+                    })
+                  }
+                />
+                <CellNum
+                  value={ap.auxRoad?.offsetM ?? 1}
+                  min={0}
+                  step={0.1}
+                  onChange={(n) =>
+                    updateApproach(id, {
+                      auxRoad: {
+                        enabled: ap.auxRoad?.enabled ?? true,
+                        widthM: ap.auxRoad?.widthM ?? 5.5,
+                        offsetM: n,
+                        openNearM: ap.auxRoad?.openNearM ?? 18,
+                      },
+                    })
+                  }
+                />
+                <CellNum
+                  value={ap.auxRoad?.openNearM ?? 18}
+                  min={5}
+                  onChange={(n) =>
+                    updateApproach(id, {
+                      auxRoad: {
+                        enabled: ap.auxRoad?.enabled ?? true,
+                        widthM: ap.auxRoad?.widthM ?? 5.5,
+                        offsetM: ap.auxRoad?.offsetM ?? 1,
+                        openNearM: n,
+                      },
+                    })
+                  }
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* 分车道 */}
+      <div className="rg-section">
+        <div className="rg-section-title">分车道</div>
+        <table className="table table-dense prop-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>宽 m</th>
+              <th>ULTR</th>
+              <th>可变</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {ap.entryLanes.map((ln, i) => (
+              <tr key={ln.id}>
+                <td>{i + 1}</td>
+                <td>
+                  <CellNum
+                    value={ln.widthM}
+                    step={0.05}
+                    min={2.5}
+                    max={4.5}
+                    onChange={(n) => setLaneWidth(id, i, n)}
+                  />
+                </td>
+                <td>
                   <input
+                    className="cell-text cell-text--narrow"
                     value={ln.movements.join('')}
                     onChange={(e) => {
                       const raw = e.target.value.toUpperCase().replace(/[^ULTR]/g, '')
@@ -964,57 +691,58 @@ export function ChannelWorkspace({
                       setLaneMovements(id, i, movs)
                     }}
                   />
-                </label>
-                <label className="rg-check">
+                </td>
+                <td>
                   <input
                     type="checkbox"
                     checked={!!ln.variable}
                     onChange={(e) => setLaneVariable(id, i, e.target.checked)}
                   />
-                  可变
-                </label>
-              </div>
-              {i < ap.entryLanes.length - 1 && (
-                <button type="button" className="ghost" onClick={() => mergeLaneGroup(id, i, i + 1)}>
-                  与下道合并组
-                </button>
-              )}
-            </div>
-          ))}
-          {ap.laneGroups.length > 0 && (
-            <table className="table table-dense" style={{ marginTop: 8 }}>
-              <thead>
-                <tr>
-                  <th>组</th>
-                  <th>车道</th>
-                  <th>转向</th>
-                  <th />
+                </td>
+                <td>
+                  {i < ap.entryLanes.length - 1 ? (
+                    <button type="button" className="ghost" onClick={() => mergeLaneGroup(id, i, i + 1)}>
+                      并
+                    </button>
+                  ) : null}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {ap.laneGroups.length > 0 ? (
+          <table className="table table-dense prop-table" style={{ marginTop: 4 }}>
+            <thead>
+              <tr>
+                <th>组</th>
+                <th>车道</th>
+                <th>转向</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {ap.laneGroups.map((g, gi) => (
+                <tr key={g.id}>
+                  <td>G{gi + 1}</td>
+                  <td>
+                    {g.laneIds
+                      .map((lid) => ap.entryLanes.findIndex((l) => l.id === lid) + 1)
+                      .filter((n) => n > 0)
+                      .join(',')}
+                  </td>
+                  <td>{g.movements.join('') || '—'}</td>
+                  <td>
+                    {g.laneIds.length > 1 ? (
+                      <button type="button" className="ghost" onClick={() => splitLaneGroupAt(id, g.id)}>
+                        拆
+                      </button>
+                    ) : null}
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {ap.laneGroups.map((g, gi) => (
-                  <tr key={g.id}>
-                    <td>G{gi + 1}</td>
-                    <td>
-                      {g.laneIds
-                        .map((lid) => ap.entryLanes.findIndex((l) => l.id === lid) + 1)
-                        .filter((n) => n > 0)
-                        .join(',')}
-                    </td>
-                    <td>{g.movements.join('') || '—'}</td>
-                    <td>
-                      {g.laneIds.length > 1 && (
-                        <button type="button" className="ghost" onClick={() => splitLaneGroupAt(id, g.id)}>
-                          拆组
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+              ))}
+            </tbody>
+          </table>
+        ) : null}
       </div>
     </div>
   )
