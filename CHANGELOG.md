@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 0.5.95 — 2026-07-16
+
+### 功能页去套层（两大区）
+- 各模式参数区取消 `details/subpanel` 折叠套层与多层 `card`
+- 结构只保留 **图示区 page-fill-stage | 参数区 page-fill-params**
+- 分区改为扁平 `rg-section-title` 标题，不再层层嵌套
+- 同步：行人审查看板、环岛布局图（v0.5.94 能力）
+
+### 边界
+- 顶栏菜单仍用 dropdown（不属于页面功能区套层）
+
+# CHANGELOG
+
 ## 0.5.93 — 2026-07-16
 
 ### 相位冲突审查看板 + 一键 VISSIM

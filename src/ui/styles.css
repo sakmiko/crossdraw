@@ -2903,3 +2903,79 @@ button.primary .cd-icon {
     grid-template-rows: minmax(210px, 46vh) minmax(0, 1fr) !important;
   }
 }
+
+
+.page-fill-stage .mode-stage {
+  margin: 0 !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+/* —— v0.5.95 flat workspaces: only two levels (stage | params), no nested cards —— */
+.page-fill-params {
+  padding: 10px 12px 20px !important;
+}
+.page-fill-params .flat-params,
+.page-fill-params .flat-block,
+.page-fill-params .card {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+.page-fill-params .rg-section {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.page-fill-params .rg-section:first-child,
+.page-fill-params .panel-header + .rg-section {
+  margin-top: 8px;
+}
+.page-fill-params .rg-section-title {
+  margin-bottom: 8px;
+}
+/* collapse subpanel chrome if any remain */
+.page-fill-params .subpanel {
+  border: none !important;
+  background: transparent !important;
+  margin-top: 12px !important;
+  border-radius: 0 !important;
+}
+.page-fill-params .subpanel > summary.subpanel-summary {
+  padding: 0 0 6px !important;
+  border: none !important;
+  background: transparent !important;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 700;
+}
+.page-fill-params .subpanel > summary.subpanel-summary::before {
+  content: none !important;
+}
+.page-fill-params .subpanel-body {
+  padding: 0 !important;
+}
+/* Band page: two panes only — chart area + params/table */
+.band-page .card,
+.band-page .compact-card,
+.band-page .band-pane {
+  box-shadow: none !important;
+  border: 1px solid var(--border) !important;
+  background: var(--panel) !important;
+}
+.band-page details.subpanel {
+  border: none !important;
+  background: transparent !important;
+  margin-top: 10px !important;
+}
+.band-page details.subpanel > summary {
+  color: #dc2626;
+  font-weight: 700;
+  padding: 0 0 6px !important;
+}
+.band-page details.subpanel > summary::before {
+  content: none !important;
+}

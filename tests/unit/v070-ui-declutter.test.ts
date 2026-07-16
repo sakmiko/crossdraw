@@ -9,7 +9,7 @@ describe('v0.5.70 UI declutter', () => {
   it('e2e suite title and modes present', () => {
     const p = resolve(__dirname, '../e2e/mvp.spec.ts')
     const t = readFileSync(p, 'utf8')
-    expect(t).toContain('conflict-vissim + polish')
+    expect(t).toContain('flat + polish')
     for (const mode of ['流量', '信号', '绿波', '比选', '断面']) {
       expect(t).toContain(mode)
     }
@@ -27,10 +27,10 @@ describe('v0.5.70 UI declutter', () => {
     expect(t).not.toMatch(/loadTemplate\('cross'\)\}>十字<\//)
   })
 
-  it('signal workspace uses subpanels', () => {
+  it('signal workspace is flat', () => {
     const p = resolve(__dirname, '../../src/ui/layout/SignalWorkspace.tsx')
     const t = readFileSync(p, 'utf8')
-    expect(t).toContain('subpanel')
+    expect(t).not.toMatch(/<details\\b/)
     expect(t).toContain('相位表')
     expect(t).toContain('相位操作 / 配时优化')
   })

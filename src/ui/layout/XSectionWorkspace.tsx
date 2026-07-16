@@ -104,7 +104,7 @@ export function XSectionWorkspace({
   }
 
   return (
-    <div className="card xsection-workspace" style={{ marginTop: 12 }}>
+    <div className="flat-params xsection-workspace" style={{ marginTop: 12 }}>
       <div className="panel-header">
         <h2 style={{ margin: 0 }}>横断面 · {selected.name}</h2>
         <span className={`integrity-badge ${align.ok && !stale ? 'ok' : 'bad'}`}>

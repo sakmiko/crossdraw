@@ -56,7 +56,7 @@ export function CompareWorkspace({ project, theme, onActivateScheme }: CompareWo
   )
 
   return (
-    <div className="card" style={{ marginTop: 12 }}>
+    <div className="flat-params" style={{ marginTop: 12 }}>
       <div className="panel-header">
         <h2 style={{ margin: 0 }}>方案比选</h2>
         <span className="hint">渠化 × 流量 × 信号 组合评价</span>

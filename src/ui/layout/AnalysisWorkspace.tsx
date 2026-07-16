@@ -69,7 +69,7 @@ export function AnalysisWorkspace({
   }, [channel, flow, signal])
 
   return (
-    <div className="card" style={{ marginTop: 12 }}>
+    <div className="flat-params" style={{ marginTop: 12 }}>
       <div className="panel-header">
         <h2 style={{ margin: 0 }}>评价分析</h2>
         <span className={`integrity-badge ${analysisIntegrity.ok ? 'ok' : 'bad'}`}>
@@ -308,9 +308,9 @@ export function AnalysisWorkspace({
         }))}
       />
       
-      <details className="subpanel" open>
-        <summary className="subpanel-summary">转向能力 · 排队 · 损失时间</summary>
-        <div className="subpanel-body">
+      <div className="flat-section ">
+        <div className="rg-section-title">转向能力 · 排队 · 损失时间</div>
+        <div className="flat-body">
           {flow && channel && (
             <table className="table table-dense">
               <thead><tr><th>进口</th><th>向</th><th>v/c</th></tr></thead>
@@ -340,10 +340,10 @@ export function AnalysisWorkspace({
             </div>
           )}
         </div>
-      </details>
-<details className="subpanel">
-        <summary className="subpanel-summary">导出与报告</summary>
-        <div className="subpanel-body toolbar dense">
+      </div>
+<div className="flat-section ">
+        <div className="rg-section-title">导出与报告</div>
+        <div className="toolbar dense">
         <button
           type="button"
           onClick={() => {
@@ -414,15 +414,15 @@ export function AnalysisWorkspace({
           导出分析拼图
         </button>
         </div>
-      </details>
+      </div>
       <div className="toolbar dense" style={{ marginTop: 8 }}>
         <button type="button" className="primary" onClick={onOpenCompare}>
           方案比选
         </button>
       </div>
-      <details className="subpanel">
-        <summary className="subpanel-summary">方案对比摘要 <span className="subpanel-tag">{compareRows.length}</span></summary>
-        <div className="subpanel-body">
+      <div className="flat-section ">
+        <div className="rg-section-title">方案对比摘要 <span className="subpanel-tag">{compareRows.length}</span></div>
+        <div className="flat-body">
       <div className="section-title" style={{ display: 'none' }}>方案对比摘要</div>
       <table className="table">
         <thead>
@@ -449,7 +449,7 @@ export function AnalysisWorkspace({
         </tbody>
       </table>
         </div>
-      </details>
+      </div>
     </div>
   )
 }

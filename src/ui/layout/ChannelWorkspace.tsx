@@ -4,6 +4,12 @@
  * Params write domain Approach; canvas rebuilds live. No long instructional hints.
  */
 import type { Approach, Movement, Project } from '@/domain/types'
+import {
+  professionalRoundaboutPlanSvg,
+  roundaboutLayoutMarkdown,
+} from '@/ui/charts/professionalRoundaboutPlan'
+import { exportSvgFile } from '@/io/exportCharts'
+import { downloadText } from '@/io/download' 
 
 export type ChannelWorkspaceProps = {
   project: Project
@@ -54,7 +60,7 @@ function Num({
 }
 
 export function ChannelWorkspace({
-  project: _project,
+  project,
   selected,
   updateApproach,
   setLaneCount,
@@ -65,10 +71,60 @@ export function ChannelWorkspace({
   mergeLaneGroup,
   splitLaneGroupAt,
 }: ChannelWorkspaceProps) {
+  const channel =
+    project.channelizationSchemes.find((c) => c.id === project.active?.channelId) ??
+    project.channelizationSchemes[0]
+  const isRoundabout = channel?.intersectionType === 'roundabout'
   if (!selected) {
     return (
-      <div className="card" style={{ marginTop: 12 }}>
-        <p className="hint">在方案树选择进口道</p>
+      <div className="flat-params" style={{ marginTop: 12 }}>
+        {isRoundabout && channel ? (
+          <div className="rg-section">
+            <div className="rg-section-title">环岛布局</div>
+            <div className="toolbar dense">
+              <button
+                type="button"
+                className="primary"
+                onClick={() =>
+                  exportSvgFile(
+                    `${project.name}-环岛布局.svg`,
+                    professionalRoundaboutPlanSvg(channel.approaches, {
+                      size: 720,
+                      projectName: project.name,
+                    }),
+                  )
+                }
+              >
+                环岛布局图
+              </button>
+              <button
+                type="button"
+                className="ghost"
+                onClick={() =>
+                  downloadText(
+                    `${project.name}-环岛布局.md`,
+                    roundaboutLayoutMarkdown(project.name, channel.approaches),
+                    'text/markdown',
+                  )
+                }
+              >
+                布局 MD
+              </button>
+            </div>
+            <div
+              className="chart-svg-host chart-svg-host--pro"
+              style={{ marginTop: 8, overflow: 'auto', maxHeight: 360 }}
+              dangerouslySetInnerHTML={{
+                __html: professionalRoundaboutPlanSvg(channel.approaches, {
+                  size: 560,
+                  projectName: project.name,
+                }),
+              }}
+            />
+          </div>
+        ) : (
+          <p className="hint">选择进口道编辑参数</p>
+        )}
       </div>
     )
   }
@@ -81,7 +137,7 @@ export function ChannelWorkspace({
   const si = rt.safetyIsland
 
   return (
-    <div className="card rg-form" style={{ marginTop: 12 }}>
+    <div className="flat-params rg-form" style={{ marginTop: 12 }}>
       <h2 className="rg-page-title">渠化 · {ap.name}</h2>
 
       {/* 道路属性 */}
@@ -516,11 +572,11 @@ export function ChannelWorkspace({
       </div>
 
       {/* 辅路 */}
-      <details className="rg-section subpanel" open={!!ap.auxRoad?.enabled}>
-        <summary className="rg-section-title" style={{ cursor: 'pointer' }}>
+      <div className="flat-section rg-section">
+        <div className="rg-section-title">
           辅路属性
-        </summary>
-        <div className="subpanel-body">
+        </div>
+        <div className="flat-body">
           <label className="rg-check">
             <input
               type="checkbox"
@@ -566,14 +622,14 @@ export function ChannelWorkspace({
             </div>
           )}
         </div>
-      </details>
+      </div>
 
       {/* 更多 */}
-      <details className="rg-section subpanel">
-        <summary className="rg-section-title" style={{ cursor: 'pointer' }}>
+      <div className="flat-section rg-section">
+        <div className="rg-section-title">
           更多属性
-        </summary>
-        <div className="subpanel-body">
+        </div>
+        <div className="flat-body">
           <div className="field-row">
             <Num
               label="进口倾斜"
@@ -591,14 +647,14 @@ export function ChannelWorkspace({
             />
           </div>
         </div>
-      </details>
+      </div>
 
       {/* 分车道明细 */}
-      <details className="rg-section subpanel" open>
-        <summary className="rg-section-title" style={{ cursor: 'pointer' }}>
+      <div className="flat-section rg-section">
+        <div className="rg-section-title">
           分车道宽 / 转向 / 可变
-        </summary>
-        <div className="subpanel-body">
+        </div>
+        <div className="flat-body">
           {ap.entryLanes.map((ln, i) => (
             <div key={ln.id} className="lane-edit-row">
               <div className="field-row" style={{ alignItems: 'end' }}>
@@ -672,7 +728,7 @@ export function ChannelWorkspace({
             </table>
           )}
         </div>
-      </details>
+      </div>
     </div>
   )
 }

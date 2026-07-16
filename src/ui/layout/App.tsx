@@ -38,7 +38,16 @@ import { buildA4PrintSheet, printSheetHtml, type PrintPanel } from '@/io/printSh
 import { collectCorridorKpis, corridorKpiCompareSvg, multiBandMarkdown } from '@/ui/charts/bandCorridorCompare'
 import { conflictHitsMarkdown, conflictMatrixExportSvg, conflictDiagramExportSvg } from '@/ui/charts/conflictExport'
 import { professionalConflictBoardSvg, conflictBoardCsv } from '@/ui/charts/professionalConflictBoard'
-import { downloadVissimPack, vissimPackSummaryMarkdown } from '@/io/vissimPackDownload' 
+import { downloadVissimPack, vissimPackSummaryMarkdown } from '@/io/vissimPackDownload'
+import {
+  professionalPedestrianBoardSvg,
+  pedestrianTimingMarkdown,
+  pedestrianTimingCsv,
+} from '@/ui/charts/professionalPedestrianBoard'
+import {
+  professionalRoundaboutPlanSvg,
+  roundaboutLayoutMarkdown,
+} from '@/ui/charts/professionalRoundaboutPlan'  
 import { checkAnalysisIntegrity } from '@/domain/analysis/integrity'
 import { buildFlowAlignment, flowChartsAlignWithTable, type FlowDisplayMode } from '@/domain/flow/flowAlign'
 import { buildSignalTimingAlignment } from '@/domain/signal/timingAlign'
@@ -627,7 +636,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.93 · 绿波专页</span>
+          <span>Crossdraw v0.5.95 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -649,7 +658,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.93</span>
+            <span className="brand-ver">v0.5.95</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -941,7 +950,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.93</span>
+        <span>Crossdraw v0.5.95</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1227,6 +1236,51 @@ export default function App() {
               `${project.name}-conflict.csv`,
               conflictBoardCsv(channel.approaches, signal),
               'text/csv',
+            )
+          },
+          'ped-board-svg': () => {
+            if (!channel || !signal) return
+            exportSvgFile(
+              `${project.name}-行人审查看板.svg`,
+              professionalPedestrianBoardSvg(channel.approaches, signal, {
+                focusPhaseId: focusPhaseId,
+                projectName: project.name,
+                width: 960,
+              }),
+            )
+          },
+          'ped-timing-md': () => {
+            if (!channel || !signal) return
+            downloadText(
+              `${project.name}-行人配时.md`,
+              pedestrianTimingMarkdown(project.name, channel.approaches, signal),
+              'text/markdown',
+            )
+          },
+          'ped-timing-csv': () => {
+            if (!channel || !signal) return
+            downloadText(
+              `${project.name}-行人配时.csv`,
+              pedestrianTimingCsv(channel.approaches, signal),
+              'text/csv',
+            )
+          },
+          'roundabout-plan-svg': () => {
+            if (!channel) return
+            exportSvgFile(
+              `${project.name}-环岛布局.svg`,
+              professionalRoundaboutPlanSvg(channel.approaches, {
+                size: 720,
+                projectName: project.name,
+              }),
+            )
+          },
+          'roundabout-plan-md': () => {
+            if (!channel) return
+            downloadText(
+              `${project.name}-环岛布局.md`,
+              roundaboutLayoutMarkdown(project.name, channel.approaches),
+              'text/markdown',
             )
           },
           'vissim-pack-oneclick': () => {

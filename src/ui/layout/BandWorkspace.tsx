@@ -52,7 +52,7 @@ export function BandWorkspace({
   const [bandBatchNote, setBandBatchNote] = useState<string | null>(null)
 
   return (
-<div className="card" style={{ marginTop: 12 }}>
+<div className="flat-params" style={{ marginTop: 12 }}>
               <div className="panel-header">
                 <h2 style={{ margin: 0 }}>干道绿波 · {project.bandCorridor.name}</h2>
                 <span className="hint">{(project.bandCorridors ?? [project.bandCorridor]).length} 条走廊</span>

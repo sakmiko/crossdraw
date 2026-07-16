@@ -58,6 +58,11 @@ export type ExportItemId =
   | 'conflict-board-svg'
   | 'conflict-board-csv'
   | 'vissim-pack-oneclick'
+  | 'ped-board-svg'
+  | 'ped-timing-md'
+  | 'ped-timing-csv'
+  | 'roundabout-plan-svg'
+  | 'roundabout-plan-md'
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
@@ -76,6 +81,52 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'ped-board-svg',
+    category: 'signal',
+    title: '行人过街审查看板',
+    format: 'SVG',
+    description: '环图 + Walk/FDW 推算表 · 横道长度同源',
+    modes: ['signal'],
+    requires: ['channel', 'signal'],
+  },
+  {
+    id: 'ped-timing-md',
+    category: 'signal',
+    title: '行人配时简报',
+    format: 'MD',
+    description: '各相位 Walk/FDW 推算',
+    modes: ['signal'],
+    requires: ['channel', 'signal'],
+  },
+  {
+    id: 'ped-timing-csv',
+    category: 'signal',
+    title: '行人配时 CSV',
+    format: 'CSV',
+    description: 'Walk/FDW 数据表',
+    modes: ['signal'],
+    requires: ['channel', 'signal'],
+  },
+  {
+    id: 'roundabout-plan-svg',
+    category: 'drawing',
+    title: '环岛布局图',
+    format: 'SVG',
+    description: '内外半径与进口臂 · 随进口宽度',
+    modes: ['channel'],
+    requires: ['channel'],
+  },
+  {
+    id: 'roundabout-plan-md',
+    category: 'drawing',
+    title: '环岛布局参数',
+    format: 'MD',
+    description: '半径与车道数',
+    modes: ['channel'],
+    requires: ['channel'],
+  },
+
   {
     id: 'conflict-board-svg',
     category: 'signal',

@@ -33,6 +33,11 @@ import {
   optimizeDeltaMarkdown,
 } from '@/domain/signal/saturationKpi'
 import { signalControlBoardSvg } from '@/ui/charts/signalControlBoard'
+import {
+  professionalPedestrianBoardSvg,
+  pedestrianTimingMarkdown,
+  pedestrianTimingCsv,
+} from '@/ui/charts/professionalPedestrianBoard' 
 
 
 export type SignalWorkspaceProps = {
@@ -176,7 +181,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
     : { ok: true, mismatches: [] as string[] }
 
   return (
-    <div className="card" style={{ marginTop: 12 }}>
+    <div className="flat-params" style={{ marginTop: 12 }}>
       <div className="panel-header">
         <h2 style={{ margin: 0 }}>信号 · {signal.name}</h2>
         <label className="check-inline" style={{ marginLeft: 'auto', fontSize: 12 }}>
@@ -201,9 +206,9 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
 
       
 
-      <details className="subpanel" open>
-        <summary className="subpanel-summary">相位表 <span className="subpanel-tag">{signal.phases.length} 相 · C={signal.cycleSec}s</span></summary>
-        <div className="subpanel-body">
+      <div className="flat-section ">
+        <div className="rg-section-title">相位表 <span className="subpanel-tag">{signal.phases.length} 相 · C={signal.cycleSec}s</span></div>
+        <div className="flat-body">
       <label className="field-inline">
         周期 C (s)
         <input type="number" value={signal.cycleSec} onChange={(e) => onCycle(Number(e.target.value))} />
@@ -296,7 +301,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         ))}
       </div>
         </div>
-      </details>
+      </div>
 
       {channel && (
         <p className="hint quiet" style={{ marginTop: 8 }}>
@@ -306,8 +311,8 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         </p>
       )}
 
-      <details className="subpanel" open={!!signal.dualRing?.enabled}>
-        <summary className="subpanel-summary">
+      <div className="flat-section ">
+        <div className="rg-section-title">
           <label className="check-inline" onClick={(e) => e.stopPropagation()}>
             <input
               type="checkbox"
@@ -321,9 +326,9 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
               {dualRingCriticalSummary(computeDualRingCriticalFlow(channel.approaches, flow, signal))}
             </span>
           )}
-        </summary>
+        </div>
         {signal.dualRing?.enabled && (
-          <div className="subpanel-body toolbar dense">
+          <div className="toolbar dense">
             <button type="button" className="ghost" onClick={() => onAutoAssignDualRings?.(1)}>
               单屏障
             </button>
@@ -338,13 +343,13 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
             </button>
           </div>
         )}
-      </details>
+      </div>
 
-      <details className="subpanel" open>
-        <summary className="subpanel-summary">
+      <div className="flat-section ">
+        <div className="rg-section-title">
           相位操作 / 配时优化
-        </summary>
-        <div className="subpanel-body toolbar dense" style={{ marginTop: 0 }}>
+        </div>
+        <div className="toolbar dense" style={{ marginTop: 0 }}>
         <button type="button" onClick={onAddPhase}>
           添加相位
         </button>
@@ -562,10 +567,10 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
             </pre>
           )}
         </div>
-      </details>
+      </div>
 
       {timingCompare.length > 0 && (
-        <div className="card panel-stack" style={{ marginTop: 10 }}>
+        <div className="flat-params panel-stack" style={{ marginTop: 10 }}>
           <div className="panel-header">
             <h2 style={{ margin: 0, fontSize: 15 }}>配时方法比选</h2>
             <span className="hint">同渠化·同流量 · 点击应用</span>
@@ -641,7 +646,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       />
 
       {channel && pedVeh.hits.length > 0 && (
-        <div className="card" style={{ marginTop: 10 }}>
+        <div className="flat-block" style={{ marginTop: 10 }}>
           <div className="section-title">人车冲突明细</div>
           <div className="table-wrap" style={{ maxHeight: 160 }}>
             <table className="table">
@@ -755,12 +760,77 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         </div>
       )}
 
+      {channel && (
+        <div className="rg-section" style={{ marginTop: 10 }}>
+          <div className="rg-section-title">行人过街 · Walk/FDW</div>
+          <div className="toolbar dense">
+            <button
+              type="button"
+              className="primary"
+              onClick={() =>
+                exportSvgFile(
+                  `${projectName}-行人审查看板.svg`,
+                  professionalPedestrianBoardSvg(channel.approaches, signal, {
+                    focusPhaseId: focusPhaseId,
+                    projectName,
+                    width: 960,
+                  }),
+                )
+              }
+            >
+              行人审查看板
+            </button>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() =>
+                downloadText(
+                  `${projectName}-行人配时.md`,
+                  pedestrianTimingMarkdown(projectName, channel.approaches, signal),
+                  'text/markdown',
+                )
+              }
+            >
+              行人配时 MD
+            </button>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() =>
+                downloadText(
+                  `${projectName}-行人配时.csv`,
+                  pedestrianTimingCsv(channel.approaches, signal),
+                  'text/csv',
+                )
+              }
+            >
+              行人 CSV
+            </button>
+            {onApplyPedTiming && (
+              <button type="button" className="ghost" onClick={() => onApplyPedTiming()}>
+                应用 Walk/FDW 推算
+              </button>
+            )}
+          </div>
+          <div
+            className="chart-svg-host chart-svg-host--pro"
+            style={{ marginTop: 8, overflow: 'auto', maxHeight: 400 }}
+            dangerouslySetInnerHTML={{
+              __html: professionalPedestrianBoardSvg(channel.approaches, signal, {
+                focusPhaseId: focusPhaseId,
+                projectName,
+                width: 900,
+              }),
+            }}
+          />
+        </div>
+      )}
       <SignalTimingPanel signal={signal} />
       {channel && <ControlMatrixPanel signal={signal} approaches={channel.approaches} />}
       {channel && <PhaseFacePanel signal={signal} approaches={channel.approaches} />}
 
       {timingNotes.length > 0 && (
-        <div className="card" style={{ marginTop: 8 }}>
+        <div className="flat-block" style={{ marginTop: 8 }}>
           <div className="section-title">配时优化说明 · {TIMING_METHOD_LABELS[timingMethod]}</div>
           <ul className="hint" style={{ margin: '6px 0 0', paddingLeft: 18 }}>
             {timingNotes.map((n) => (
@@ -771,7 +841,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       )}
 
       {channel && flow && (
-        <div className="card" style={{ marginTop: 8 }}>
+        <div className="flat-block" style={{ marginTop: 8 }}>
           <div className="section-title">关键流量比 y（Webster）</div>
           <table className="table">
             <thead>

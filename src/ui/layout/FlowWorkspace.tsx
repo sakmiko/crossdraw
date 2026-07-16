@@ -53,7 +53,7 @@ export function FlowWorkspace({
   const style = diagramStyle
 
   return (
-    <div className="card rg-form flow-form" style={{ marginTop: 8 }}>
+    <div className="flat-params rg-form flow-form" style={{ marginTop: 8 }}>
       <div className="panel-header">
         <h2 className="rg-page-title" style={{ margin: 0 }}>
           流量 · {flow.name}
@@ -353,11 +353,11 @@ export function FlowWorkspace({
       </div>
 
       {/* 行人/非机 */}
-      <details className="rg-section subpanel">
-        <summary className="rg-section-title" style={{ cursor: 'pointer' }}>
+      <div className="flat-section rg-section">
+        <div className="rg-section-title">
           行人 / 非机动车
-        </summary>
-        <div className="subpanel-body">
+        </div>
+        <div className="flat-body">
           <div className="table-wrap" style={{ maxHeight: 140 }}>
             <table className="table table-dense">
               <thead>
@@ -401,7 +401,7 @@ export function FlowWorkspace({
             行人 {mmSum.ped} · 非机 {mmSum.bike}（不并入机动车 v/c）
           </p>
         </div>
-      </details>
+      </div>
     </div>
   )
 }

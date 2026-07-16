@@ -256,7 +256,7 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
             }}
             batchNote={null}
           />
-          <div className="band-page-params card compact-card">
+          <div className="band-page-params card flat-block">
             <div className="field-row-2">
               <label>
                 名称
@@ -293,7 +293,7 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
 
         <main className="band-page-main">
           {tab === 'table' && (
-            <div className="card band-pane compact-card">
+            <div className="flat-params band-pane flat-block">
               <div className="panel-header">
                 <h2 style={{ margin: 0 }}>路口参数表</h2>
                 <div className="panel-header-meta">
@@ -444,7 +444,7 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
           )}
 
           {tab === 'timespace' && (
-            <div className="card band-pane compact-card">
+            <div className="flat-block band-pane flat-block">
               <div className="panel-header">
                 <h2 style={{ margin: 0 }}>时距图</h2>
                 <div className="panel-header-meta" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -502,17 +502,17 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
                 style={{ overflow: 'auto', marginBottom: 10 }}
                 dangerouslySetInnerHTML={{ __html: hiResTimeSpace }}
               />
-              <details className="subpanel">
-                <summary className="subpanel-summary">交互时距图（悬停）</summary>
+              <div className="flat-section ">
+                <div className="rg-section-title">交互时距图（悬停）</div>
                 <InteractiveTimeSpace corridor={corridor} result={band} />
-              </details>
+              </div>
               <TimeSpacePanel corridor={corridor} />
               <BandCharts corridor={corridor} />
             </div>
           )}
 
           {tab === 'map' && (
-            <div className="card band-pane compact-card">
+            <div className="flat-block band-pane flat-block">
               <div className="panel-header">
                 <h2 style={{ margin: 0 }}>路网预览</h2>
                 <div className="panel-header-meta">
@@ -530,18 +530,18 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
                 style={{ overflow: 'auto' }}
                 dangerouslySetInnerHTML={{ __html: networkSvg }}
               />
-              <details className="subpanel" style={{ marginTop: 8 }}>
-                <summary className="subpanel-summary">链式简图</summary>
+              <div className="flat-section " style={{ marginTop: 8 }}>
+                <div className="rg-section-title">链式简图</div>
                 <div
                   className="chart-svg-host chart-svg-host--pro"
                   dangerouslySetInnerHTML={{ __html: mapSvg }}
                 />
-              </details>
+              </div>
             </div>
           )}
 
           {tab === 'maxband' && (
-            <div className="card band-pane compact-card">
+            <div className="flat-block band-pane flat-block">
               <div className="panel-header">
                 <h2 style={{ margin: 0 }}>MAXBAND 报告</h2>
                 <div className="panel-header-meta">
@@ -625,7 +625,7 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
           )}
 
           {tab === 'compare' && (
-            <div className="card band-pane compact-card">
+            <div className="flat-block band-pane flat-block">
               <div className="panel-header">
                 <h2 style={{ margin: 0 }}>多走廊对比</h2>
                 <button
