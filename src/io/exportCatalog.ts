@@ -52,6 +52,9 @@ export type ExportItemId =
   | 'flow-report-hires-svg'
   | 'flow-od-md'
   | 'flow-od-csv'
+  | 'analysis-plan-pack-svg'
+  | 'analysis-plan-pack-md'
+  | 'analysis-plan-pack-csv'
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
@@ -70,6 +73,34 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'analysis-plan-pack-svg',
+    category: 'analysis',
+    title: '评价四指标平面合图',
+    format: 'SVG',
+    description: 'LOS/延误/排队/饱和度 2×2 + 车道表 · 与评价模型同源',
+    modes: ['analysis'],
+    requires: ['channel', 'flow', 'signal', 'analysis'],
+  },
+  {
+    id: 'analysis-plan-pack-md',
+    category: 'analysis',
+    title: '评价合集简报',
+    format: 'MD',
+    description: 'KPI + 车道明细',
+    modes: ['analysis'],
+    requires: ['analysis'],
+  },
+  {
+    id: 'analysis-plan-pack-csv',
+    category: 'analysis',
+    title: '评价车道 CSV',
+    format: 'CSV',
+    description: '车道组 v/c·延误·排队',
+    modes: ['analysis'],
+    requires: ['analysis'],
+  },
+
   {
     id: 'flow-report-hires-svg',
     category: 'drawing',

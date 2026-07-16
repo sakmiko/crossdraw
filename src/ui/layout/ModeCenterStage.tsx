@@ -19,6 +19,7 @@ import { roadgeeFlowDiagramSvg, type RoadGeeFlowStyle, DEFAULT_ROADGEE_FLOW_STYL
 import { professionalFlowReportSvg } from '@/ui/charts/professionalFlowReport' 
 import { roadgeeSignalBoardSvg } from '@/ui/charts/roadgeeSignalBoard'
 import { roadgeeAnalysisPlanSvg, type AnalysisPlanMetric } from '@/ui/charts/roadgeeAnalysisPlan'
+import { professionalAnalysisPlanPackSvg } from '@/ui/charts/professionalAnalysisPlanPack' 
 import { unsignalizedPlanSvg } from '@/ui/charts/unsignalizedPlan'
 import { analyzeUnsignalized } from '@/domain/analysis/unsignalized'
 import { professionalCrossSectionSvg } from '@/ui/charts/crossSectionDiagram'

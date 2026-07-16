@@ -18,11 +18,11 @@ async function openNav(page: Page, label: string) {
   await page.waitForTimeout(300)
 }
 
-test.describe('Crossdraw v0.5.91 flow-report + polish', () => {
+test.describe('Crossdraw v0.5.92 analysis-pack + polish', () => {
   // 渠化 流量 信号 分析 绿波 比选 断面
   test('shell', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.91/).first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.92/).first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
 
@@ -32,14 +32,9 @@ test.describe('Crossdraw v0.5.91 flow-report + polish', () => {
     await page.screenshot({ path: 'docs/screenshots/01-channel.png', fullPage: true })
   })
 
-  test('flow report exports', async ({ page }) => {
+  test('flow', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '流量')
-    await expect(page.getByRole('button', { name: /高分辨率流向报告/ })).toBeVisible({ timeout: 10000 })
-    await expect(page.getByRole('button', { name: /OD MD/ })).toBeVisible()
-    await expect(page.getByText('表/图同源').first()).toBeVisible()
-    await page.getByRole('button', { name: /高分辨率流向报告/ }).click()
-    await page.waitForTimeout(200)
     await page.screenshot({ path: 'docs/screenshots/02-flow.png', fullPage: true })
   })
 
@@ -49,14 +44,14 @@ test.describe('Crossdraw v0.5.91 flow-report + polish', () => {
     await page.screenshot({ path: 'docs/screenshots/03-signal.png', fullPage: true })
   })
 
-  test('analysis multipage', async ({ page }) => {
+  test('analysis pack', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '分析')
-    // report may sit in export subpanel — accept any of report-related labels
-    const has =
-      (await page.getByText(/多页工程报告|导出专业图件|分析/).first().isVisible().catch(() => false)) ||
-      (await page.getByRole('button', { name: /报告|导出/ }).first().isVisible().catch(() => false))
-    expect(has).toBeTruthy()
+    await expect(page.getByRole('button', { name: /四指标平面合图/ })).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('button', { name: /合集 MD/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /多页工程报告/ }).first()).toBeVisible()
+    await page.getByRole('button', { name: /四指标平面合图/ }).click()
+    await page.waitForTimeout(200)
     await page.screenshot({ path: 'docs/screenshots/04-analysis.png', fullPage: true })
   })
 

@@ -78,6 +78,11 @@ import {
   flowOdReportCsv,
 } from '@/ui/charts/professionalFlowReport' 
 import { roadgeeAnalysisPlanSvg } from '@/ui/charts/roadgeeAnalysisPlan'
+import {
+  professionalAnalysisPlanPackSvg,
+  analysisPlanPackMarkdown,
+  analysisPlanPackCsv,
+} from '@/ui/charts/professionalAnalysisPlanPack' 
 import { unsignalizedPlanSvg, unsignalizedLegsCsv } from '@/ui/charts/unsignalizedPlan'
 import { schemeScorecardSvg, kpisFromCompareRows } from '@/ui/charts/schemeScorecard'
 import { schemeDeltas, schemeDeltaMarkdown } from '@/domain/analysis/schemeDiff'
@@ -620,7 +625,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.91 · 绿波专页</span>
+          <span>Crossdraw v0.5.92 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -642,7 +647,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.91</span>
+            <span className="brand-ver">v0.5.92</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -934,7 +939,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.91</span>
+        <span>Crossdraw v0.5.92</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1090,32 +1095,59 @@ export default function App() {
               'text/csv',
             )
           },
+          'analysis-plan-pack-svg': () => {
+            if (!channel || !analysis) return
+            exportSvgFile(
+              `${project.name}-评价平面图合集.svg`,
+              professionalAnalysisPlanPackSvg(channel.approaches, analysis, {
+                cellSize: 440,
+                projectName: project.name,
+                channelName: channel.name,
+                signalName: signal?.name,
+              }),
+            )
+          },
+          'analysis-plan-pack-md': () => {
+            if (!analysis) return
+            downloadText(
+              `${project.name}-评价合集.md`,
+              analysisPlanPackMarkdown(project.name, analysis, {
+                channel: channel?.name,
+                signal: signal?.name,
+              }),
+              'text/markdown',
+            )
+          },
+          'analysis-plan-pack-csv': () => {
+            if (!analysis) return
+            downloadText(`${project.name}-评价车道.csv`, analysisPlanPackCsv(analysis), 'text/csv')
+          },
           'roadgee-plan-los': () => {
             if (!channel || !analysis) return
             exportSvgFile(
               `${project.name}-服务水平.svg`,
-              roadgeeAnalysisPlanSvg(channel.approaches, analysis, { size: 640, metric: 'los' }),
+              roadgeeAnalysisPlanSvg(channel.approaches, analysis, { size: 720, metric: 'los' }),
             )
           },
           'roadgee-plan-delay': () => {
             if (!channel || !analysis) return
             exportSvgFile(
               `${project.name}-延误时间.svg`,
-              roadgeeAnalysisPlanSvg(channel.approaches, analysis, { size: 640, metric: 'delay' }),
+              roadgeeAnalysisPlanSvg(channel.approaches, analysis, { size: 720, metric: 'delay' }),
             )
           },
           'roadgee-plan-queue': () => {
             if (!channel || !analysis) return
             exportSvgFile(
               `${project.name}-排队长度.svg`,
-              roadgeeAnalysisPlanSvg(channel.approaches, analysis, { size: 640, metric: 'queue' }),
+              roadgeeAnalysisPlanSvg(channel.approaches, analysis, { size: 720, metric: 'queue' }),
             )
           },
           'roadgee-plan-vc': () => {
             if (!channel || !analysis) return
             exportSvgFile(
               `${project.name}-饱和度.svg`,
-              roadgeeAnalysisPlanSvg(channel.approaches, analysis, { size: 640, metric: 'vc' }),
+              roadgeeAnalysisPlanSvg(channel.approaches, analysis, { size: 720, metric: 'vc' }),
             )
           },
           'flow-dir-svg': () => {

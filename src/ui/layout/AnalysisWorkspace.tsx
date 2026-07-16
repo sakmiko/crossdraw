@@ -29,6 +29,11 @@ import { buildMultiPageReportHtml } from '@/io/multiPageReport'
 import { analysisMarkdown, exportSvgFile } from '@/io/exportCharts'
 import { buildAnalysisReportSvg } from '@/io/analysisReportSvg'
 import { downloadText } from '@/io/download'
+import {
+  professionalAnalysisPlanPackSvg,
+  analysisPlanPackMarkdown,
+  analysisPlanPackCsv,
+} from '@/ui/charts/professionalAnalysisPlanPack' 
 
 export type AnalysisWorkspaceProps = {
   project: Project
@@ -106,6 +111,73 @@ export function AnalysisWorkspace({
         </div>
       </div>
 
+      <div className="toolbar dense" style={{ marginTop: 10, marginBottom: 8 }}>
+        <button
+          type="button"
+          className="primary"
+          disabled={!channel}
+          onClick={() => {
+            if (!channel) return
+            exportSvgFile(
+              `${project.name}-评价平面图合集.svg`,
+              professionalAnalysisPlanPackSvg(channel.approaches, analysis, {
+                cellSize: 440,
+                projectName: project.name,
+                channelName: channel.name,
+                signalName: signal?.name,
+              }),
+            )
+          }}
+        >
+          四指标平面合图
+        </button>
+        <button
+          type="button"
+          className="ghost"
+          onClick={() =>
+            downloadText(
+              `${project.name}-评价合集.md`,
+              analysisPlanPackMarkdown(project.name, analysis, {
+                channel: channel?.name,
+                signal: signal?.name,
+              }),
+              'text/markdown',
+            )
+          }
+        >
+          合集 MD
+        </button>
+        <button
+          type="button"
+          className="ghost"
+          onClick={() =>
+            downloadText(`${project.name}-评价车道.csv`, analysisPlanPackCsv(analysis), 'text/csv')
+          }
+        >
+          车道 CSV
+        </button>
+        <button
+          type="button"
+          className="ghost"
+          onClick={() => {
+            if (!channel || !flow || !signal) return
+            downloadText(
+              `${project.name}-report.html`,
+              buildMultiPageReportHtml({
+                project,
+                channel,
+                flow,
+                signal,
+                analysis,
+                bandCorridor: project.bandCorridor,
+              }),
+              'text/html',
+            )
+          }}
+        >
+          多页工程报告
+        </button>
+      </div>
 
       <AnalysisCharts analysis={analysis} />
       <div className="rg-section" style={{ marginTop: 12 }}>

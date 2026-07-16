@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## 0.5.92 — 2026-07-16
+
+### 评价四指标平面合图
+- `professionalAnalysisPlanPackSvg`：LOS / 延误 / 排队 / 饱和度 2×2 + KPI + 车道表
+- 分析页工具栏：四指标平面合图 · 合集 MD · 车道 CSV · 多页工程报告（置顶）
+- 导出中心：`analysis-plan-pack-svg|md|csv`
+- 单指标平面导出分辨率 720；与 `analyzeIntersection` 同源
+
+### 依据
+- HCM/Webster 延误与 v/c；LOS 延误分级；RoadGee 评价平面图风格
+
+### 诚实边界
+- 工程近似评价，非微观仿真
+
+# CHANGELOG
+
 ## 0.5.91 — 2026-07-16
 
 ### 流量流向高分辨率报告
