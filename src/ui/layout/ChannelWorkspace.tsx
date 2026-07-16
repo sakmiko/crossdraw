@@ -9,7 +9,12 @@ import {
   roundaboutLayoutMarkdown,
 } from '@/ui/charts/professionalRoundaboutPlan'
 import { exportSvgFile } from '@/io/exportCharts'
-import { downloadText } from '@/io/download' 
+import { downloadText } from '@/io/download'
+import {
+  buildChannelDraftSheet,
+  channelDraftPreviewSvg,
+  channelDraftMarkdown,
+} from '@/io/channelDraftSheet'  
 
 export type ChannelWorkspaceProps = {
   project: Project
@@ -123,7 +128,56 @@ export function ChannelWorkspace({
             />
           </div>
         ) : (
-          <p className="hint">选择进口道编辑参数</p>
+          <>
+            <div className="rg-section" style={{ marginBottom: 10 }}>
+              <div className="rg-section-title">渠化出图稿</div>
+              <div className="toolbar dense">
+                <button
+                  type="button"
+                  className="primary"
+                  disabled={!channel}
+                  onClick={() => {
+                    if (!channel) return
+                    downloadText(
+                      `${project.name}-渠化出图.svg`,
+                      buildChannelDraftSheet(project, channel, undefined, {
+                        projectName: project.name,
+                        paper: channel.display.paperSize === 'A4' ? 'A4-landscape' : 'A3-landscape',
+                      }),
+                      'image/svg+xml',
+                    )
+                  }}
+                >
+                  导出图框 SVG
+                </button>
+                <button
+                  type="button"
+                  className="ghost"
+                  disabled={!channel}
+                  onClick={() => {
+                    if (!channel) return
+                    downloadText(
+                      `${project.name}-渠化出图.md`,
+                      channelDraftMarkdown(project, channel),
+                      'text/markdown',
+                    )
+                  }}
+                >
+                  出图说明 MD
+                </button>
+              </div>
+              {channel && (
+                <div
+                  className="chart-svg-host chart-svg-host--pro"
+                  style={{ marginTop: 8, overflow: 'auto', maxHeight: 280 }}
+                  dangerouslySetInnerHTML={{
+                    __html: channelDraftPreviewSvg(project, channel, undefined, 820),
+                  }}
+                />
+              )}
+            </div>
+            <p className="hint">选择进口道编辑参数</p>
+          </>
         )}
       </div>
     )
@@ -138,6 +192,54 @@ export function ChannelWorkspace({
 
   return (
     <div className="flat-params rg-form" style={{ marginTop: 12 }}>
+      <div className="rg-section" style={{ marginBottom: 10 }}>
+        <div className="rg-section-title">渠化出图稿</div>
+        <div className="toolbar dense">
+          <button
+            type="button"
+            className="primary"
+            disabled={!channel}
+            onClick={() => {
+              if (!channel) return
+              downloadText(
+                `${project.name}-渠化出图.svg`,
+                buildChannelDraftSheet(project, channel, undefined, {
+                  projectName: project.name,
+                  paper: channel.display.paperSize === 'A4' ? 'A4-landscape' : 'A3-landscape',
+                }),
+                'image/svg+xml',
+              )
+            }}
+          >
+            导出图框 SVG
+          </button>
+          <button
+            type="button"
+            className="ghost"
+            disabled={!channel}
+            onClick={() => {
+              if (!channel) return
+              downloadText(
+                `${project.name}-渠化出图.md`,
+                channelDraftMarkdown(project, channel),
+                'text/markdown',
+              )
+            }}
+          >
+            出图说明 MD
+          </button>
+        </div>
+        {channel && (
+          <div
+            className="chart-svg-host chart-svg-host--pro"
+            style={{ marginTop: 8, overflow: 'auto', maxHeight: 280 }}
+            dangerouslySetInnerHTML={{
+              __html: channelDraftPreviewSvg(project, channel, undefined, 820),
+            }}
+          />
+        )}
+      </div>
+
       <h2 className="rg-page-title">渠化 · {ap.name}</h2>
 
       {/* 道路属性 */}

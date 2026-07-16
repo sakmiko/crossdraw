@@ -66,6 +66,8 @@ export type ExportItemId =
   | 'dual-ring-board-svg'
   | 'dual-ring-board-md'
   | 'dual-ring-board-csv'
+  | 'channel-draft-svg'
+  | 'channel-draft-md'
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
@@ -84,6 +86,25 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'channel-draft-svg',
+    category: 'drawing',
+    title: '渠化出图图框',
+    format: 'SVG',
+    description: '图框·比例尺·指北·标题栏 · 与 mesh 同源；交互画布仍净几何',
+    modes: ['channel'],
+    requires: ['channel'],
+  },
+  {
+    id: 'channel-draft-md',
+    category: 'drawing',
+    title: '渠化出图说明',
+    format: 'MD',
+    description: '进口参数表 + 出图说明',
+    modes: ['channel'],
+    requires: ['channel'],
+  },
+
   {
     id: 'dual-ring-board-svg',
     category: 'signal',

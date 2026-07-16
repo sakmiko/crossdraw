@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 0.5.97 — 2026-07-16
+
+### 渠化出图图框（导出稿）
+- `buildChannelDraftSheet`：双线边框 · 标题栏 · 比例尺 · 指北 · mesh 平面
+- 渠化参数区扁平「渠化出图稿」预览 + 导出 SVG/MD（不破坏画布净几何）
+- 导出中心：`channel-draft-svg` · `channel-draft-md`
+- 图幅 A3/A4 横纵可选（随 display.paperSize）
+
+### 诚实边界
+- 示意比例，非测绘出图；交互画布仍无图框/指北/比例尺
+
+# CHANGELOG
+
 ## 0.5.96 — 2026-07-16
 
 ### 双环栏审查看板
