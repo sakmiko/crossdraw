@@ -642,47 +642,15 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
   // stop-line chainage labels omitted on canvas (params live in inspector)
 
   /**
-   * Crosswalk: across carriageway only (entry curb → exit curb along px).
-   * Zebra bars elongated along traffic (ux), arrayed along walk (px).
-   * Skip if no room inside stop-line (avoids "dead" / flipped strips).
+   * Crosswalk via reusable glyph (bars along ux, pitch on px).
    */
   {
     const cwDepth = 3.0
     const cwCenter = start - 2.2 - cwDepth / 2
-    const cwHalf = Math.max(1.5, half - 0.25) // stay on pavement, not sidewalk
+    const cwHalf = Math.max(1.5, half - 0.25)
     if (cwCenter - cwDepth / 2 > 1.0) {
-      const y0 = cwCenter - cwDepth / 2
-      const y1 = cwCenter + cwDepth / 2
-      // outline (two lines across roadway)
-      pushLine(mesh, {
-        layer: 'MARKING',
-        points: [add(mul(ux, y0), mul(px, -cwHalf)), add(mul(ux, y0), mul(px, cwHalf))],
-        stroke: THEME.crosswalk,
-        strokeWidth: 0.18,
-        alpha: 0.75,
-      })
-      pushLine(mesh, {
-        layer: 'MARKING',
-        points: [add(mul(ux, y1), mul(px, -cwHalf)), add(mul(ux, y1), mul(px, cwHalf))],
-        stroke: THEME.crosswalk,
-        strokeWidth: 0.18,
-        alpha: 0.75,
-      })
-      // zebra: ~0.5m bar + 0.5m gap across width
-      const barPitch = 1.0
-      const nBars = Math.max(3, Math.floor((cwHalf * 2) / barPitch))
-      for (let i = 0; i < nBars; i++) {
-        const o = -cwHalf + (i + 0.5) * ((cwHalf * 2) / nBars)
-        // only draw every other as white bar
-        if (i % 2 !== 0) continue
-        pushLine(mesh, {
-          layer: 'MARKING',
-          points: [add(mul(ux, y0 + 0.15), mul(px, o)), add(mul(ux, y1 - 0.15), mul(px, o))],
-          stroke: THEME.crosswalk,
-          strokeWidth: Math.min(0.75, ((cwHalf * 2) / nBars) * 0.7),
-          alpha: 0.95,
-        })
-      }
+      const frame = { origin: [0, 0] as [number, number], ux, px }
+      placeZebra(mesh, frame, cwCenter, cwHalf, THEME, { depth: cwDepth, pitch: 1.0 })
     }
   }
 

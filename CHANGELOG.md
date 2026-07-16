@@ -1,3 +1,11 @@
+## 0.5.116 — Zebra glyphs + full left-right layout density
+
+- Approach crosswalks via reusable `placeZebra` (bars along ux).
+- **All modes** desktop left diagram | right params (including signal; supersedes vertical stack).
+- Control density tokens `--ctrl-h` / `--ctrl-gap` / `--input-num`; hide params hints.
+- Narrow ≤960: stage/params stack with min stage height.
+- Honesty: layout/geometry schematic; not survey CAD / not RoadGee clone.
+
 ## 0.5.115 — RoadGee-aligned glyphs + interactive analysis
 
 - **Reusable glyphs**: fixed-size movement arrows (place by frame); roundabout **circular island** + continuous ring.

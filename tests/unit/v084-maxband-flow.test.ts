@@ -31,7 +31,7 @@ describe('v0.5.84 MAXBAND report + flow stack', () => {
     expect(bp).toContain('maxbandReportDiagramSvg')
     expect(bp).toContain('优化并应用')
     const css = readFileSync(resolve(__dirname, '../../src/ui/styles.css'), 'utf8')
-    expect(css).toContain('SIGNAL ONLY: always vertical stack')
+    expect(css).toMatch(/shell--signal/)
     const app = readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8')
     expect(app).toContain('maxband-report-svg')
   })

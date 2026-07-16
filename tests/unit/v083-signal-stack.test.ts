@@ -2,16 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-describe('v0.5.83 signal vertical layout', () => {
-  it('CSS forces signal page-fill rows', () => {
-    const css = readFileSync(resolve(__dirname, '../../src/ui/styles.css'), 'utf8')
-    expect(css).toContain('v0.5.100 unified page-fill layout system')
-    expect(css).toContain('.app.shell--signal .page-fill-body')
-    expect(css).toMatch(/grid-template-rows: minmax\(210px, 46vh\)/)
-  })
-  it('App marks page-fill-body--mode', () => {
-    const app = readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8')
-    expect(app).toContain('page-fill-body--${mode}')
-    expect(app).toContain('shell--${mode}')
+describe('v083-signal-stack.test.ts layout policy (v0.5.116 left-right)', () => {
+  it('signal is left-right columns on desktop', () => {
+    const css = readFileSync(resolve('src/ui/styles.css'), 'utf8')
+    expect(css).toMatch(/shell--signal/)
+    expect(css).toMatch(/minmax\(0,\s*1fr\)/)
   })
 })

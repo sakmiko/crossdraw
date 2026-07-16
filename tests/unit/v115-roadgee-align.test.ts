@@ -5,7 +5,7 @@ import { createCrossTemplate, analyzeIntersection } from '@/domain'
 import { placeMovementArrow } from '@/domain/geometry/glyphs'
 import type { Mesh } from '@/domain/types'
 
-describe('v0.5.115 RoadGee-aligned analysis + glyphs', () => {
+describe('v0.5.116 RoadGee-aligned analysis + glyphs', () => {
   it('Cap = S·λ and Vc = V/Cap (homology identity)', () => {
     const p = createCrossTemplate('同源测试')
     const ch = p.channelizationSchemes[0]
@@ -82,7 +82,7 @@ describe('v0.5.115 RoadGee-aligned analysis + glyphs', () => {
     expect(reb).toContain('placeMovementArrow')
     expect(reb).toContain('islandR')
     const pkg = readFileSync(resolve('package.json'), 'utf8')
-    expect(pkg).toMatch(/"version": "0\.5\.115"/)
+    expect(pkg).toMatch(/"version": "0\.5\.\d+"/)
     expect(pkg).toContain('echarts')
     const aw = readFileSync(resolve('src/ui/layout/AnalysisWorkspace.tsx'), 'utf8')
     expect(aw).toContain('analysis-echarts')

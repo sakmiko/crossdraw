@@ -47,6 +47,11 @@ html[data-theme='dark'] {
   --shell-right: 360px;
   --shell-top: 50px;
   --shell-bottom: 28px;
+  --ctrl-h: 32px;
+  --ctrl-gap: 8px;
+  --input-num: 5.5rem;
+  --type-sm: 12px;
+  --type-base: 13px;
 }
 
 /* ========== Light (daytime CAD / print-friendly chrome) ========== */
@@ -2791,22 +2796,23 @@ button.primary .cd-icon {
   grid-template-columns: minmax(0, 1fr) minmax(300px, 36%);
 }
 
-/* SIGNAL ONLY: always vertical stack (all breakpoints) */
+/* v0.5.116 layout: ALL modes left|right including signal (supersedes vertical) */
 .app.shell--signal .page-fill-body {
   display: grid !important;
-  grid-template-columns: 1fr !important;
-  grid-template-rows: minmax(210px, 46vh) minmax(0, 1fr) !important;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 36%) !important;
+  grid-template-rows: minmax(0, 1fr) !important;
   gap: 0 !important;
 }
 .app.shell--signal .page-fill-stage {
-  min-height: 210px;
-  max-height: 48vh;
-  border-bottom: 1px solid var(--border);
+  min-height: 280px;
+  max-height: none;
+  border-bottom: none;
+  border-right: 1px solid var(--border);
 }
 .app.shell--signal .page-fill-params {
   border-left: none !important;
   border-top: none;
-  padding: 10px 16px 22px !important;
+  padding: 10px 14px 20px !important;
 }
 .app.shell--signal .page-fill-stage .mode-stage {
   margin: 6px 10px 4px !important;
@@ -2822,7 +2828,7 @@ button.primary .cd-icon {
   width: 100%;
 }
 .app.shell--signal .page-fill-stage .mode-stage-svg svg {
-  max-height: min(42vh, 420px);
+  max-height: min(70vh, 640px);
   width: 100%;
   height: auto;
 }
@@ -3102,4 +3108,66 @@ button.primary .cd-icon {
 .mode-stage-echart {
   min-height: 280px;
   border: none;
+}
+
+
+/* v0.5.116 control density + layout hard fix */
+.page-fill-stage {
+  min-height: 280px !important;
+}
+button,
+.toolbar button,
+.ghost,
+.primary {
+  min-height: var(--ctrl-h, 32px);
+  height: var(--ctrl-h, 32px);
+  padding: 0 12px;
+  box-sizing: border-box;
+  font-size: var(--type-sm, 12px);
+  line-height: 1;
+}
+.toolbar,
+.toolbar.dense {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ctrl-gap, 8px);
+  align-items: center;
+}
+.page-fill-params input[type='number'],
+.page-fill-params input[type='text'],
+.page-fill-params select {
+  min-height: var(--ctrl-h, 32px);
+  height: var(--ctrl-h, 32px);
+  box-sizing: border-box;
+  max-width: 100%;
+}
+.page-fill-params input[type='number'] {
+  width: var(--input-num, 5.5rem);
+  max-width: 7rem;
+}
+.page-fill-params .hint,
+.page-fill-params .hint.quiet {
+  display: none !important;
+}
+.page-fill-params .rg-section-title {
+  font-size: var(--type-sm, 12px);
+  margin-bottom: 6px;
+}
+.field-row,
+.row {
+  gap: var(--ctrl-gap, 8px);
+}
+@media (max-width: 960px) {
+  .page-fill-body {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: minmax(240px, 42vh) minmax(0, 1fr) !important;
+  }
+  .app.shell--signal .page-fill-body {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: minmax(240px, 42vh) minmax(0, 1fr) !important;
+  }
+  .page-fill-stage {
+    border-right: none !important;
+    border-bottom: 1px solid var(--border);
+  }
 }
