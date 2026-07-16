@@ -194,6 +194,13 @@ export interface Phase {
   releases: Record<string, Movement[]>
   isOverlap?: boolean
   /**
+   * Dual-ring assignment (NEMA-style engineering).
+   * 1 = Ring 1, 2 = Ring 2; omit = unassigned / single-ring sequential.
+   */
+  ring?: 1 | 2
+  /** Barrier group index; phases with same barrierIndex share a concurrent stage. */
+  barrierIndex?: number
+  /**
    * Pedestrian walk intervals concurrent with this phase.
    * If omitted/empty: no dedicated ped indication (vehicle-only).
    */
@@ -214,6 +221,14 @@ export interface SignalScheme {
   /** total lost time L used by Webster (s); if omitted derived from phases */
   lostTimeSec?: number
   unsignalized: boolean
+  /**
+   * Dual-ring barrier mode (engineering NEMA-style).
+   * When enabled, cycle closure uses concurrent stage sums (max of rings per barrier).
+   */
+  dualRing?: {
+    enabled: boolean
+    label?: string
+  }
 }
 
 export interface CrossSectionComponent {

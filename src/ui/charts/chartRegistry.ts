@@ -23,6 +23,7 @@ export type ChartKindId =
   | 'conflict-matrix'
   | 'conflict-points'
   | 'pedestrian-ring'
+  | 'dual-ring'
   | 'multimodal-bars'
 
 export type ChartRegistryEntry = {

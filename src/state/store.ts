@@ -15,6 +15,7 @@ import type {
 import { createCrossTemplate, createTemplateByType } from '@/domain/templates/cross'
 import { applyOffsetsToCorridor, optimizeAllCorridors, optimizeCorridor, setSegmentLength } from '@/domain/analysis/corridor'
 import { makePedestrianOnlyPhase } from '@/domain/signal/pedestrian'
+import { disableDualRing, enableDualRing } from '@/domain/signal/dualRing'
 import { cloneBandCorridor, defaultBandCorridor, normalizeBandCorridors } from '@/domain/band/corridors'
 import {
   rebuildLaneGroupsFromLanes,
@@ -62,6 +63,9 @@ export type AppState = {
   addPhase: () => void
   addOverlapPhase: () => void
   addPedestrianPhase: () => void
+  setDualRingEnabled: (enabled: boolean) => void
+  setPhaseRing: (phaseId: string, ring: 1 | 2 | undefined, barrierIndex?: number) => void
+  autoAssignDualRings: () => void
   setProjectName: (name: string) => void
   markClean: () => void
   touch: () => void
@@ -334,6 +338,37 @@ export const useAppStore = create<AppState>()(
             .filter((p) => !p.isOverlap)
             .reduce((sum, p) => sum + p.greenSec + p.yellowSec + p.allRedSec, 0)
           sg.cycleSec = Math.max(sg.cycleSec, mainSum)
+          s.dirty = true
+        }),
+      setDualRingEnabled: (enabled) =>
+        set((s) => {
+          const sg = activeSignal(s.project)
+          if (!sg) return
+          const next = enabled ? enableDualRing(sg, true) : disableDualRing(sg)
+          sg.dualRing = next.dualRing
+          sg.phases = next.phases
+          s.dirty = true
+        }),
+      setPhaseRing: (phaseId, ring, barrierIndex = 0) =>
+        set((s) => {
+          const sg = activeSignal(s.project)
+          const ph = sg?.phases.find((p) => p.id === phaseId)
+          if (!ph) return
+          ph.ring = ring
+          ph.barrierIndex = ring == null ? undefined : barrierIndex
+          if (ring != null) {
+            if (!sg!.dualRing) sg!.dualRing = { enabled: true, label: '双环' }
+            else sg!.dualRing.enabled = true
+          }
+          s.dirty = true
+        }),
+      autoAssignDualRings: () =>
+        set((s) => {
+          const sg = activeSignal(s.project)
+          if (!sg) return
+          const next = enableDualRing(sg, true)
+          sg.dualRing = next.dualRing
+          sg.phases = next.phases
           s.dirty = true
         }),
       addOverlapPhase: () =>

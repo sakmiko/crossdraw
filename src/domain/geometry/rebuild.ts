@@ -242,6 +242,12 @@ function buildIntersectionCurb(approaches: Approach[], core: number): Vec[] {
   return pts.map(([x, y]) => [round(x), round(y)] as Vec)
 }
 
+function cornerAngleDeg(bearingA: number, bearingB: number): number {
+  let d = Math.abs(bearingB - bearingA) % 360
+  if (d > 180) d = 360 - d
+  return d
+}
+
 function drawCornerFillets(mesh: Mesh, approaches: Approach[], core: number) {
   if (approaches.length < 2) return
   const sorted = [...approaches].sort((a, b) => a.bearingDeg - b.bearingDeg)
@@ -254,9 +260,12 @@ function drawCornerFillets(mesh: Mesh, approaches: Approach[], core: number) {
     const npx = perpFromBearing(b.bearingDeg)
     const halfA = totalWidth(a) / 2
     const halfB = totalWidth(b) / 2
+    const angle = cornerAngleDeg(a.bearingDeg, b.bearingDeg)
+    // acute corners need tighter radius; obtuse can open up
+    const angleScale = angle < 75 ? 0.72 : angle > 120 ? 1.15 : 1
 
     // corner curb fillet (between a right edge and b left edge)
-    const rCurb = Math.max(4, Math.min(14, (halfA + halfB) * 0.18))
+    const rCurb = Math.max(3.5, Math.min(16, (halfA + halfB) * 0.18 * angleScale))
     const aRight = add(mul(ux, core), mul(px, halfA))
     const bLeft = add(mul(nux, core), mul(npx, -halfB))
     const midDir = norm(add(ux, nux))
@@ -274,6 +283,27 @@ function drawCornerFillets(mesh: Mesh, approaches: Approach[], core: number) {
       strokeWidth: 0.35,
       alpha: 0.7,
     })
+    // corner angle callout when not ~90° (skewed / Y)
+    if (Math.abs(angle - 90) > 12) {
+      pushLabel(mesh, {
+        text: `∠${angle.toFixed(0)}°`,
+        at: add(filletCenter, mul(midDir, rCurb * 0.35)),
+        color: THEME.accent,
+        size: 1.8,
+        align: 'center',
+      })
+      // extra soft curb offset line for acute pockets
+      if (angle < 80) {
+        pushLine(mesh, {
+          layer: 'MARKING',
+          points: arcPoints(filletCenter, rCurb * 1.12, a0, a0 + d, 14),
+          stroke: THEME.accent,
+          strokeWidth: 0.2,
+          dashed: true,
+          alpha: 0.55,
+        })
+      }
+    }
 
     // right-turn channelization + optional safety island (parameter-driven)
     if (a.rightTurn.enabled && a.rightTurn.style !== 'none') {

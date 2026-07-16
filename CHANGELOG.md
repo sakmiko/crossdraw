@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 0.5.67 — 2026-07-16
+
+### NEMA 风格双环 + 斜交角部
+- **双环栏**：Phase.ring / barrierIndex + SignalScheme.dualRing
+- 闭合规则：阶段时长 = max(R1,R2)，Σ阶段 ≈ C（与 timingAlign 同源）
+- 信号页：启用双环、自动分配、逐相位 R1/R2
+- 专业双环栏图（双轨并发 + Barrier 分割）
+- **斜交/锐角角部**：夹角标注、锐角加严缘石半径与辅助线
+
+# CHANGELOG
+
 ## 0.5.66 — 2026-07-16
 
 ### 弱项深化 + 专业呈现

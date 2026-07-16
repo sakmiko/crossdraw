@@ -3,6 +3,7 @@
  * Table G/Y/AR/C and timing/ring charts must use the same numbers.
  */
 import type { Phase, SignalScheme } from '../types'
+import { buildDualRingAlignment, isDualRingEnabled } from './dualRing'
 
 export type PhaseTimingRow = {
   id: string
@@ -22,9 +23,12 @@ export type SignalTimingAlignment = {
   rows: PhaseTimingRow[]
   mainSumSec: number
   overlapCount: number
-  /** mainSum - cycleSec; 0 ≈ closed */
+  /** mainSum - cycleSec; 0 ≈ closed (single-ring) or dual-ring stage sum */
   balanceSec: number
   closed: boolean
+  /** dual-ring stage sum when enabled */
+  dualRingStageSumSec?: number
+  dualRingEnabled?: boolean
   chartPhases: {
     name: string
     greenSec: number
@@ -52,14 +56,20 @@ export function buildSignalTimingAlignment(signal: SignalScheme): SignalTimingAl
   })
   const mainSumSec = rows.filter((r) => r.countsTowardCycle).reduce((s, r) => s + r.durationSec, 0)
   const cycleSec = Math.max(1, num(signal.cycleSec))
-  const balanceSec = Math.round((mainSumSec - cycleSec) * 10) / 10
+  const dual = isDualRingEnabled(signal) ? buildDualRingAlignment(signal) : null
+  const balanceSec = dual
+    ? Math.round((dual.stageSumSec - cycleSec) * 10) / 10
+    : Math.round((mainSumSec - cycleSec) * 10) / 10
+  const closed = dual ? dual.closed : Math.abs(balanceSec) < 0.15
   return {
     cycleSec,
     rows,
     mainSumSec,
     overlapCount: rows.filter((r) => r.isOverlap).length,
     balanceSec,
-    closed: Math.abs(balanceSec) < 0.15,
+    closed,
+    dualRingEnabled: !!dual?.enabled,
+    dualRingStageSumSec: dual?.stageSumSec,
     chartPhases: rows.map((r) => ({
       name: r.name,
       greenSec: r.greenSec,

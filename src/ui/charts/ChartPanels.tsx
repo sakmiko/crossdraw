@@ -29,6 +29,8 @@ import { buildPhaseConflictReport, phaseConflictSummaryText } from '@/domain/sig
 import { buildConflictDiagram, conflictDiagramSvg } from '@/domain/signal/conflictDiagram'
 import { pedestrianPhaseStripSvg } from './pedestrianDiagram'
 import { pedestrianRingSvg } from './pedestrianRing'
+import { dualRingDiagramSvg } from './dualRingDiagram'
+import { isDualRingEnabled } from '@/domain/signal/dualRing'
 import { countPedIntervals } from '@/domain/signal/pedestrian'
 import { useAppStore } from '@/state/store'
 import {
@@ -232,6 +234,11 @@ export function SignalCharts({
     )
   }, [approaches, signal, phaseId, colors])
 
+  const dualRing = useMemo(() => {
+    if (!isDualRingEnabled(signal)) return ''
+    return themeSvg(dualRingDiagramSvg(signal, { width: 360, height: 168 }), colors)
+  }, [signal, colors])
+
   const matrix = useMemo(() => {
     if (!report) return ''
     const levels = report.cells.map((row) => row.map((c) => c.level))
@@ -264,6 +271,15 @@ export function SignalCharts({
         <small>轴=C · 与相位表 G/Y/AR 同源</small>
       </div>
       <div dangerouslySetInnerHTML={{ __html: ring }} />
+      {dualRing && (
+        <>
+          <div className="chart-title" style={{ marginTop: 12 }}>
+            <span>双环栏图</span>
+            <small>R1/R2 并发 · 阶段=max · 非完整 NEMA 机</small>
+          </div>
+          <div className="chart-svg-host chart-svg-host--pro" dangerouslySetInnerHTML={{ __html: dualRing }} />
+        </>
+      )}
       {pedStrip && (
         <>
           <div className="chart-title" style={{ marginTop: 12 }}>

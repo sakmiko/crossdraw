@@ -12,6 +12,7 @@ import { releaseMatrixAlignsWithPhases } from '@/domain/signal/releaseAlign'
 import { allPhasesConflictHits } from '@/domain/signal/phaseConflictView'
 import { detectPedVehicleConflicts, pedVehicleSummary } from '@/domain/signal/pedVehicleConflict'
 import { SignalCharts, TimingCompareCharts } from '@/ui/charts/ChartPanels'
+import { buildDualRingAlignment, dualRingSummaryText } from '@/domain/signal/dualRing'
 import { SignalTimingPanel, ControlMatrixPanel, PhaseFacePanel } from '@/ui/charts/ProfessionalPanels'
 import { vcHeatColor } from '@/ui/charts/svgCharts'
 import { conflictHitsMarkdown, conflictMatrixExportSvg, conflictDiagramExportSvg } from '@/ui/charts/conflictExport'
@@ -44,6 +45,9 @@ export type SignalWorkspaceProps = {
   onAddPhase: () => void
   onAddOverlap: () => void
   onAddPedPhase?: () => void
+  onSetDualRing?: (enabled: boolean) => void
+  onAutoAssignDualRings?: () => void
+  onSetPhaseRing?: (phaseId: string, ring: 1 | 2 | undefined) => void
   onRunOptimize: () => void
   onRunCompare: () => void
   onApplyCompareRow: (row: TimingCompareRow) => void
@@ -73,6 +77,9 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
     onAddPhase,
     onAddOverlap,
     onAddPedPhase,
+    onSetDualRing,
+    onAutoAssignDualRings,
+    onSetPhaseRing,
     onRunOptimize,
     onRunCompare,
     onApplyCompareRow,
@@ -94,9 +101,13 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       <div className="panel-header">
         <h2 style={{ margin: 0 }}>信号 · {signal.name}</h2>
         <span className={`integrity-badge ${al.closed ? 'ok' : 'bad'}`}>
-          {al.closed
-            ? `配时闭合 Σ=${al.mainSumSec.toFixed(1)}=C`
-            : `未闭合 Σ=${al.mainSumSec.toFixed(1)} C=${al.cycleSec} 差${al.balanceSec > 0 ? '+' : ''}${al.balanceSec}`}
+          {al.dualRingEnabled
+            ? al.closed
+              ? `双环闭合 阶段Σ=${(al.dualRingStageSumSec ?? 0).toFixed(1)}=C`
+              : `双环未闭合 阶段Σ=${(al.dualRingStageSumSec ?? 0).toFixed(1)} C=${al.cycleSec}`
+            : al.closed
+              ? `配时闭合 Σ=${al.mainSumSec.toFixed(1)}=C`
+              : `未闭合 Σ=${al.mainSumSec.toFixed(1)} C=${al.cycleSec} 差${al.balanceSec > 0 ? '+' : ''}${al.balanceSec}`}
         </span>
         <span className={`integrity-badge ${blocks ? 'bad' : hits.length ? 'warn' : 'ok'}`}>
           {blocks ? `相位相悖 ${blocks}` : hits.length ? `冲突警告 ${hits.length}` : '无相悖 ✓'}
@@ -211,6 +222,27 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
             : `放行对齐异常：${releaseHint.mismatches.slice(0, 2).join('；')}`}
         </p>
       )}
+
+      <div className="toolbar dual-ring-bar" style={{ marginTop: 8, flexWrap: 'wrap', gap: 8 }}>
+        <label className="check-inline" title="NEMA 风格双环并发阶段 · 闭合用 max(R1,R2) 阶段和">
+          <input
+            type="checkbox"
+            checked={!!signal.dualRing?.enabled}
+            onChange={(e) => onSetDualRing?.(e.target.checked)}
+          />{' '}
+          双环栏
+        </label>
+        {signal.dualRing?.enabled && (
+          <>
+            <button type="button" className="ghost" onClick={() => onAutoAssignDualRings?.()}>
+              自动分配环
+            </button>
+            <span className={`integrity-badge ${buildDualRingAlignment(signal).closed ? 'ok' : 'bad'}`}>
+              {dualRingSummaryText(buildDualRingAlignment(signal))}
+            </span>
+          </>
+        )}
+      </div>
 
       <div className="toolbar" style={{ marginTop: 8 }}>
         <button type="button" onClick={onAddPhase}>

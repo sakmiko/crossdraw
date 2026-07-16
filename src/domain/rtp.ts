@@ -92,6 +92,8 @@ const phaseSchema = z.object({
   kind: z.enum(['vehicle', 'pedestrian', 'mixed']).optional(),
   releases: z.record(z.array(z.enum(['U', 'L', 'T', 'R']))),
   isOverlap: z.boolean().optional(),
+  ring: z.union([z.literal(1), z.literal(2)]).optional(),
+  barrierIndex: z.number().optional(),
   pedestrian: z
     .array(
       z.object({
@@ -113,6 +115,12 @@ const signalSchema = z.object({
   allRedDefault: z.number(),
   startLossSec: z.number(),
   unsignalized: z.boolean(),
+  dualRing: z
+    .object({
+      enabled: z.boolean(),
+      label: z.string().optional(),
+    })
+    .optional(),
 })
 
 const multimodalSchema = z.object({
