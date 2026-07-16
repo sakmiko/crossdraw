@@ -1,7 +1,7 @@
 {
   "name": "crossdraw",
   "private": true,
-  "version": "0.5.114",
+  "version": "0.5.115",
   "type": "module",
   "description": "Local-first free open-source intersection design drawing tool",
   "license": "GPL-3.0-or-later",
@@ -20,6 +20,7 @@
     "postinstall": "echo ready"
   },
   "dependencies": {
+    "echarts": "^6.1.0",
     "immer": "^10.1.1",
     "pixi.js": "^8.9.1",
     "react": "^19.0.0",

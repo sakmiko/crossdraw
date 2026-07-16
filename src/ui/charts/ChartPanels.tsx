@@ -43,6 +43,8 @@ import { buildFlowAlignment, type FlowDisplayMode } from '@/domain/flow/flowAlig
 import { professionalCrossSectionSvg, crossSectionShareSvg } from './crossSectionDiagram'
 import { collectCorridorKpis, corridorKpiCompareSvg } from './bandCorridorCompare'
 import { chartColorsForTheme, themeSvg } from './chartTheme'
+import { EChart } from '@/ui/charts/EChart'
+import { vcDelayOption } from '@/ui/charts/interactiveBoards'
 
 function useChartColors() {
   const theme = useAppStore((s) => s.theme)
@@ -51,6 +53,7 @@ function useChartColors() {
 
 export function AnalysisCharts({ analysis }: { analysis: AnalysisResult }) {
   const colors = useChartColors()
+  const liveOpt = useMemo(() => vcDelayOption(analysis), [analysis])
   const vcSvg = useMemo(() => {
     const byAp = new Map<string, { name: string; sum: number; n: number; max: number }>()
     for (const l of analysis.lanes) {
@@ -114,6 +117,11 @@ export function AnalysisCharts({ analysis }: { analysis: AnalysisResult }) {
   return (
     <div className="chart-card">
       <div className="chart-title">
+        <span>v/c · 延误</span>
+        <small>ECharts · 与评价表同源</small>
+      </div>
+      <EChart option={liveOpt} style={{ height: 300 }} className="echart-host" />
+      <div className="chart-title" style={{ marginTop: 12 }}>
         <span>服务水平</span>
         <small>与 KPI 同源</small>
       </div>

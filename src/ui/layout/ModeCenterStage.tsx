@@ -28,6 +28,8 @@ import { schemeMetricsCompareSvg, collectSchemeSnapshots } from '@/ui/charts/sch
 import { schemeScorecardSvg, kpisFromCompareRows } from '@/ui/charts/schemeScorecard'
 import { collectCompareRows } from '@/io/report'
 import { analyzeIntersection } from '@/domain/analysis'
+import { EChart } from '@/ui/charts/EChart'
+import { vcDelayOption } from '@/ui/charts/interactiveBoards'
 import { CanvasView, type CanvasHandle, type LayerVisibility } from '@/canvas/CanvasView'
 import type { Mesh } from '@/domain/types'
 import type { RefObject } from 'react'
@@ -109,7 +111,8 @@ export function ModeCenterStage(props: ModeCenterProps) {
     canvasHeight,
   } = props
 
-  const [planMetric, setPlanMetric] = useState<AnalysisPlanMetric>('los')
+  const [planMetric, setPlanMetric] = useState<AnalysisPlanMetric | 'live'>('los')
+  const liveOpt = useMemo(() => (analysis ? vcDelayOption(analysis) : null), [analysis])
 
   const flowSvg = useMemo(() => {
     if (!channel || !flow) return ''
@@ -134,9 +137,10 @@ export function ModeCenterStage(props: ModeCenterProps) {
 
   const planSvg = useMemo(() => {
     if (!channel || !analysis) return ''
+    const metric = planMetric === 'live' ? 'los' : planMetric
     return roadgeeAnalysisPlanSvg(channel.approaches, analysis, {
       size: Math.min(640, Math.max(400, canvasHeight - 80)),
-      metric: planMetric,
+      metric,
     })
   }, [channel, analysis, planMetric, canvasHeight])
 
@@ -233,7 +237,8 @@ export function ModeCenterStage(props: ModeCenterProps) {
         </StageChrome>
       )
     }
-    const labels: [AnalysisPlanMetric, string][] = [
+    const labels: [AnalysisPlanMetric | 'live', string][] = [
+      ['live', '交互图'],
       ['los', '服务水平'],
       ['delay', '延误时间'],
       ['queue', '排队长度'],
@@ -272,10 +277,14 @@ export function ModeCenterStage(props: ModeCenterProps) {
             导出数据
           </button>
         </div>
-        <div
-          className="chart-svg-host chart-svg-host--pro mode-stage-svg"
-          dangerouslySetInnerHTML={{ __html: planSvg }}
-        />
+        {planMetric === 'live' && liveOpt ? (
+          <EChart option={liveOpt} style={{ height: Math.max(280, canvasHeight - 72) }} className="echart-host mode-stage-echart" />
+        ) : (
+          <div
+            className="chart-svg-host chart-svg-host--pro mode-stage-svg"
+            dangerouslySetInnerHTML={{ __html: planSvg }}
+          />
+        )}
       </StageChrome>
     )
   }

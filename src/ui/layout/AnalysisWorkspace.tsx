@@ -21,6 +21,8 @@ import { AnalysisCharts, CompareCharts } from '@/ui/charts/ChartPanels'
 import { unsignalizedChartSvg } from '@/ui/charts/unsignalizedChart'
 import { unsignalizedPlanSvg, unsignalizedLegsCsv } from '@/ui/charts/unsignalizedPlan'
 import { useMemo } from 'react'
+import { EChart } from '@/ui/charts/EChart'
+import { vcDelayOption } from '@/ui/charts/interactiveBoards'
 import { AnalysisLaneTable } from '@/ui/layout/AnalysisLaneTable'
 import { collectCompareRows, compareSchemesCsv } from '@/io/report'
 import { exportVissimCsvBundle } from '@/io/vissimCsv'
@@ -449,6 +451,10 @@ export function AnalysisWorkspace({
         )}
       </div>
       <AnalysisLaneTable analysis={analysis} projectName={project.name} />
+      <div className="flat-section" id="analysis-echarts">
+        <div className="rg-section-title">交互分析 · v/c · 延误</div>
+        <EChart option={vcDelayOption(analysis)} style={{ height: 300 }} />
+      </div>
       <CompareCharts
         rows={compareRows.map((r) => ({
           label: `${r.channel}/${r.signal}`,

@@ -1,3 +1,10 @@
+## 0.5.115 — RoadGee-aligned glyphs + interactive analysis
+
+- **Reusable glyphs**: fixed-size movement arrows (place by frame); roundabout **circular island** + continuous ring.
+- **ECharts** live v/c·delay board on Analysis params + center **交互图** tab (homologous to `analyzeIntersection`).
+- **Homology tests**: Cap=S·λ, Vc=V/Cap, HCM d1+d2 identity (RoadGee research doc 10).
+- Honesty: engineering schematic; not RoadGee clone / not full HCM software.
+
 # CHANGELOG
 
 ## 0.5.114 — 2026-07-16

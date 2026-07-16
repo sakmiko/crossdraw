@@ -252,17 +252,16 @@ export function createYTemplate(name = 'Y型交叉口'): Project {
   const fl = ch.flowSchemes[0]
   const vols: Record<string, TurnVolumes> = {}
   for (const a of ch.approaches) {
-    vols[a.id] = fl.volumes[a.id] ?? { U: 10, L: 100, T: 300, R: 80 }
+    a.median.widthM = Math.max(a.median.widthM, 4.5)
+    a.rightTurn.enabled = false
+    a.widen.entryWidenLengthM = 45
+    a.widen.exitWidenLengthM = Math.max(a.widen.exitWidenLengthM ?? 0, 30)
   }
-  fl.volumes = vols
-  // signal: only keep releases for remaining approaches
-  const ids = new Set(ch.approaches.map((a) => a.id))
-  const sg = fl.signalSchemes[0]
-  for (const ph of sg.phases) {
-    for (const id of Object.keys(ph.releases)) {
-      if (!ids.has(id)) delete ph.releases[id]
-    }
-  }
+  const sg = ch.flowSchemes[0].signalSchemes[0]
+  sg.unsignalized = true
+  sg.name = '无信号（环岛让行）'
+  sg.phases = []
+  sg.cycleSec = 0
   return p
 }
 
@@ -284,11 +283,11 @@ export function createRoundaboutTemplate(name = '环形交叉口'): Project {
   const ch = p.channelizationSchemes[0]
   ch.intersectionType = 'roundabout'
   ch.name = '渠化方案 环形'
-  // four legs, median wider, no signal default
   for (const a of ch.approaches) {
-    a.median.widthM = Math.max(a.median.widthM, 4)
+    a.median.widthM = Math.max(a.median.widthM, 4.5)
     a.rightTurn.enabled = false
-    a.widen.entryWidenLengthM = 40
+    a.widen.entryWidenLengthM = 45
+    a.widen.exitWidenLengthM = Math.max(a.widen.exitWidenLengthM ?? 0, 30)
   }
   const sg = ch.flowSchemes[0].signalSchemes[0]
   sg.unsignalized = true

@@ -1,16 +1,25 @@
 /**
- * Roundabout-oriented geometry helpers (engineering schematic).
- * Used by rebuild.drawRoundabout for multi-lane circulatory + yield/zebra.
+ * Roundabout layout — engineering schematic (not full FHWA/CJJ library).
+ * Continuous circular island + annular circulatory + teardrop splitters.
  */
 import type { Approach } from '../types'
 
 export type RoundaboutLayout = {
+  /** Outer edge of circulatory asphalt (ICD/2 approx) */
   outerR: number
+  /** Central island curb radius (excluding truck apron) */
+  islandR: number
+  /** Truck apron outer radius (mountable, around island) */
+  apronOuterR: number
+  /** Alias for island curb — used by legacy callers as innerR */
   innerR: number
   circulatoryWidth: number
   laneCount: number
+  /** Mid-radius of each circulatory lane (for dashed lane lines) */
   laneRadii: number[]
   entryThroatR: number
+  /** Inscribed circle diameter (2 * outerR) */
+  icdM: number
 }
 
 /** Derive circulatory radii from approach widths (data-linked). */
@@ -23,27 +32,36 @@ export function computeRoundaboutLayout(approaches: Approach[], core: number): R
       return (e + x + a.median.widthM) / 2
     }),
   )
-  // circulatory lanes: prefer 2 when any approach has ≥3 entry lanes
+  // 2 circulatory lanes when any approach has ≥3 entry lanes
   const wide = approaches.some((a) => a.entryLanes.length >= 3)
   const laneCount = wide ? 2 : 1
-  const laneW = 4.5
+  const laneW = 4.6
   const circulatoryWidth = laneCount * laneW
-  const innerR = Math.max(8, Math.min(22, maxHalf * 0.55 + (wide ? 4 : 0)))
-  const outerR = innerR + circulatoryWidth + 1.2
+  const apronW = 2.0
+  // Central landscaped island (circular). Scale gently with approach half-width.
+  const islandR = Math.max(10, Math.min(26, maxHalf * 0.62 + (wide ? 5 : 2)))
+  const apronOuterR = islandR + apronW
+  // outer edge of circulating asphalt
+  let outerR = apronOuterR + circulatoryWidth + 0.8
+  outerR = Math.max(outerR, core + 10, islandR + 12)
   const laneRadii: number[] = []
   for (let i = 0; i < laneCount; i++) {
-    laneRadii.push(innerR + 0.6 + laneW * (i + 0.5))
+    laneRadii.push(apronOuterR + 0.4 + laneW * (i + 0.5))
   }
   return {
-    outerR: Math.max(outerR, core + 6),
-    innerR,
+    outerR,
+    islandR,
+    apronOuterR,
+    innerR: islandR,
     circulatoryWidth,
     laneCount,
     laneRadii,
-    entryThroatR: outerR + 2,
+    entryThroatR: outerR + 3,
+    icdM: outerR * 2,
   }
 }
 
 export function roundaboutAnnotation(layout: RoundaboutLayout): string {
-  return `环岛 · 内岛 r=${layout.innerR.toFixed(1)}m · 环道 ${layout.laneCount}×${(layout.circulatoryWidth / layout.laneCount).toFixed(1)}m`
+  const lw = layout.circulatoryWidth / layout.laneCount
+  return `环岛 · 内岛 r=${layout.islandR.toFixed(1)}m · 环道 ${layout.laneCount}×${lw.toFixed(1)}m · ICD≈${layout.icdM.toFixed(0)}m`
 }

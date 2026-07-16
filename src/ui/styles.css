@@ -3089,3 +3089,17 @@ button.primary .cd-icon {
     padding: 4px 6px;
   }
 }
+
+
+/* ECharts host (v0.5.115 RoadGee-style interactive analysis) */
+.echart-host {
+  width: 100%;
+  min-height: 240px;
+  border-radius: 8px;
+  border: 1px solid var(--border, #e2e8f0);
+  background: var(--panel, #fff);
+}
+.mode-stage-echart {
+  min-height: 280px;
+  border: none;
+}

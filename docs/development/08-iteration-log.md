@@ -1,3 +1,6 @@
+## 0.5.115
+- glyphs + ECharts analysis + roundabout circle (RoadGee research 09/10)
+
 # 迭代记录（+0.0.1）
 
 专业依据：`docs/research/05-professional-basis.md`  
