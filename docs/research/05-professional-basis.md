@@ -147,3 +147,5 @@
 | 关键进口看板 | max v/c 车道组 | analyzeIntersection |
 
 | 相位差扫描 | 自由节点 o 离散 + scoreOffsets | 工程扫描非 MIP |
+
+| 速度敏感性扫描 | 固定相位差 · scoreOffsets vs v | 工程扫描非 MIP |

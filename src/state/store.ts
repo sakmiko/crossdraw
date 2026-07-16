@@ -29,7 +29,8 @@ import { saveDraft } from '@/io/autosave'
 import { applyPedTimingToSignal } from '@/domain/signal/pedTiming'
 import { allocateGreensByBarrierCriticalY } from '@/domain/signal/barrierGreenAlloc'
 import { applyProgressiveOffsets } from '@/domain/analysis/progressiveOffset'
-import { scanCorridorOffsets, applyOffsetScanBest } from '@/domain/analysis/offsetScan' 
+import { scanCorridorOffsets, applyOffsetScanBest } from '@/domain/analysis/offsetScan'
+import { scanCorridorSpeeds, applySpeedScanBest } from '@/domain/analysis/speedScan'  
 import {
   runFullSchemeOptimize,
   projectAfterFullOptimize,
@@ -108,6 +109,7 @@ export type AppState = {
     optimizeBand: () => void
   applyProgressiveOffsets: (reverse?: boolean) => void
   applyOffsetScanBest: () => { bestOffset: number; totalSec: number } | null
+  applySpeedScanBest: () => { bestSpeed: number; totalSec: number } | null
   applyPedTiming: () => void
   allocateBarrierGreens: () => void
   optimizeAllBands: () => { count: number; improved: number }
@@ -721,6 +723,26 @@ export const useAppStore = create<AppState>()(
           set({ project: { ...proj, bandCorridors, bandCorridor: next } })
         }
         return { bestOffset: scan.bestDeltaSec, totalSec: scan.best.totalSec }
+      },
+      applySpeedScanBest: () => {
+        const st = get()
+        const c = st.project.bandCorridor
+        if (!c?.nodes?.length) return null
+        const scan = scanCorridorSpeeds(c)
+        const next = applySpeedScanBest(c, scan)
+        const list = st.project.bandCorridors
+        const bandCorridors = list?.length
+          ? list.map((bc) => (bc.id === next.id ? next : bc))
+          : list
+        set({
+          project: {
+            ...st.project,
+            bandCorridor: next,
+            ...(bandCorridors ? { bandCorridors } : {}),
+          },
+          dirty: true,
+        })
+        return { bestSpeed: scan.best.speedKmh, totalSec: scan.best.totalSec }
       },
       applyFullSchemeOptimize: () => {
         const s = get()

@@ -34,7 +34,13 @@ import {
   scanCorridorOffsets,
   offsetScanMarkdown,
   offsetScanCsv,
-} from '@/ui/charts/offsetScanBoard' 
+} from '@/ui/charts/offsetScanBoard'
+import {
+  speedScanBoardSvg,
+  scanCorridorSpeeds,
+  speedScanMarkdown,
+  speedScanCsv,
+} from '@/ui/charts/speedScanBoard'  
 
 export type BandPageProps = {
   project: Project
@@ -47,6 +53,7 @@ export type BandPageProps = {
   removeBandNode: (id: string) => void
   optimizeBand: () => void
   applyOffsetScanBest?: () => { bestOffset: number; totalSec: number } | null
+  applySpeedScanBest?: () => { bestSpeed: number; totalSec: number } | null
   optimizeAllBands: () => { count: number; improved: number }
   onProgressiveOffsets?: (reverse?: boolean) => void
   setBandSegmentLength: (toNodeId: string, lengthM: number) => void
@@ -57,7 +64,7 @@ export type BandPageProps = {
   renameBandCorridor: (id: string, name: string) => void
 }
 
-type BandTab = 'table' | 'timespace' | 'map' | 'maxband' | 'compare' | 'offset-scan'
+type BandTab = 'table' | 'timespace' | 'map' | 'maxband' | 'compare' | 'offset-scan' | 'speed-scan'
 
 export function BandPage(props: BandPageProps) {
   const {
@@ -71,6 +78,7 @@ export function BandPage(props: BandPageProps) {
     removeBandNode,
     optimizeBand,
     applyOffsetScanBest,
+    applySpeedScanBest,
     optimizeAllBands,
     onProgressiveOffsets,
     setBandSegmentLength,
@@ -180,6 +188,20 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
                 <Icon name="optimize" size={15} /><span>扫描并应用</span>
               </button>
             )}
+            {applySpeedScanBest && (
+              <button
+                type="button"
+                className="ghost band-bar-btn"
+                onClick={() => {
+                  const r = applySpeedScanBest()
+                  if (r) setBatchNote(`v=${r.bestSpeed}`)
+                  setTab('speed-scan')
+                }}
+                title="固定相位差扫描设计速度并应用最优"
+              >
+                <Icon name="optimize" size={15} /><span>速度扫描</span>
+              </button>
+            )}
             <button
               type="button"
               className="ghost band-bar-btn"
@@ -215,6 +237,7 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
                 ['map', '路网预览', 'map'],
                 ['maxband', 'MAXBAND', 'optimize'],
                 ['offset-scan', '相位差扫描', 'band'],
+                ['speed-scan', '速度敏感', 'band'],
                 ['compare', '多走廊', 'compare'],
               ] as const
             ).map(([id, label, icon]) => (
@@ -579,6 +602,69 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
             </div>
           )}
 
+          {tab === 'speed-scan' && (
+            <div className="band-panel">
+              <div className="panel-header">
+                <h2 style={{ margin: 0, fontSize: 15 }}>速度敏感性</h2>
+                <span className="subpanel-tag">固定 o</span>
+              </div>
+              <div
+                className="chart-svg-host"
+                style={{ overflow: 'auto' }}
+                dangerouslySetInnerHTML={{
+                  __html: speedScanBoardSvg(corridor, {
+                    width: 900,
+                    height: 300,
+                    minKmh: 30,
+                    maxKmh: 80,
+                    stepKmh: 2,
+                  }),
+                }}
+              />
+              <div className="toolbar dense" style={{ marginTop: 8 }}>
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={() => {
+                    const r = applySpeedScanBest?.()
+                    if (r) setBatchNote(`v=${r.bestSpeed}`)
+                  }}
+                >
+                  应用最优速度
+                </button>
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={() => {
+                    const scan = scanCorridorSpeeds(corridor, {
+                      minKmh: 30,
+                      maxKmh: 80,
+                      stepKmh: 2,
+                    })
+                    exportSvgFile(
+                      `${project.name}-速度敏感性.svg`,
+                      speedScanBoardSvg(corridor, { width: 900, height: 300, scan }),
+                    )
+                    downloadText(
+                      `${project.name}-速度敏感性.md`,
+                      speedScanMarkdown(project.name, corridor.name, scan),
+                      'text/markdown',
+                    )
+                    downloadText(
+                      `${project.name}-速度敏感性.csv`,
+                      speedScanCsv(scan),
+                      'text/csv',
+                    )
+                  }}
+                >
+                  导出 SVG/MD/CSV
+                </button>
+              </div>
+              <p className="hint quiet" style={{ marginTop: 8 }}>
+                相位差固定 · 仅扫设计速度 · 蓝Σ 绿↑ 橙↓ · 红最优 · 紫当前
+              </p>
+            </div>
+          )}
           {tab === 'offset-scan' && (
             <div className="band-panel">
               <div className="panel-header">

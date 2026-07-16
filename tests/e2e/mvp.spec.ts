@@ -18,11 +18,11 @@ async function openNav(page: Page, label: string) {
   await page.waitForTimeout(300)
 }
 
-test.describe('Crossdraw v0.5.110 offset-scan + polish', () => {
+test.describe('Crossdraw v0.5.111 speed-scan + polish', () => {
   // 渠化 流量 信号 分析 绿波 比选 断面
   test('shell', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.110/).first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.111/).first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
   test('channel', async ({ page }) => {
@@ -45,12 +45,11 @@ test.describe('Crossdraw v0.5.110 offset-scan + polish', () => {
     await openNav(page, '分析')
     await page.screenshot({ path: 'docs/screenshots/04-analysis.png', fullPage: true })
   })
-  test('band offset scan', async ({ page }) => {
+  test('band speed scan', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '绿波')
-    await expect(page.getByRole('button', { name: /扫描并应用/ })).toBeVisible({ timeout: 10000 })
-    // open tab if present
-    const tab = page.getByRole('button', { name: /相位差扫描/ }).or(page.getByText('相位差扫描'))
+    await expect(page.getByRole('button', { name: /速度扫描/ })).toBeVisible({ timeout: 10000 })
+    const tab = page.getByRole('button', { name: /速度敏感/ }).or(page.getByText('速度敏感'))
     if (await tab.count()) {
       await tab.first().click()
       await page.waitForTimeout(300)

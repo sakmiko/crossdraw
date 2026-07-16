@@ -44,6 +44,7 @@ export * from './analysis/lostTime'
 export * from './analysis/maxbandReport'
 export * from './analysis/progressiveOffset'
 export * from './analysis/offsetScan'
+export * from './analysis/speedScan'
 export * from './analysis/schemeDiff'
 
 export * from './signal/autoTimingPack'

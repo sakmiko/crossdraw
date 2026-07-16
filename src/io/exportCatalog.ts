@@ -114,6 +114,9 @@ export type ExportItemId =
   | 'offset-scan-svg'
   | 'offset-scan-md'
   | 'offset-scan-csv'
+  | 'speed-scan-svg'
+  | 'speed-scan-md'
+  | 'speed-scan-csv'
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
@@ -132,6 +135,34 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'speed-scan-svg',
+    category: 'band',
+    title: '速度敏感性图',
+    format: 'SVG',
+    description: '固定相位差 · Σb vs 设计速度',
+    modes: ['band'],
+    requires: ['band'],
+  },
+  {
+    id: 'speed-scan-md',
+    category: 'band',
+    title: '速度敏感性 MD',
+    format: 'MD',
+    description: '速度扫描表',
+    modes: ['band'],
+    requires: ['band'],
+  },
+  {
+    id: 'speed-scan-csv',
+    category: 'band',
+    title: '速度敏感性 CSV',
+    format: 'CSV',
+    description: 'v–带宽数据点',
+    modes: ['band'],
+    requires: ['band'],
+  },
+
   {
     id: 'offset-scan-svg',
     category: 'band',
