@@ -174,6 +174,35 @@ export function placeZebra(
   }
 }
 
+
+/** Double-bar stop line across carriageway (lat from -halfSpan..halfSpan). */
+export function placeStopLine(
+  mesh: Mesh,
+  f: Frame,
+  s: number,
+  halfSpan: number,
+  theme: ThemeLike,
+  opts?: { double?: boolean },
+) {
+  const span = Math.max(1.2, halfSpan - 0.25)
+  pushLine(mesh, {
+    layer: 'MARKING',
+    points: [at(f, s, -span), at(f, s, span)],
+    stroke: theme.marking,
+    strokeWidth: 0.65,
+    alpha: 0.98,
+  })
+  if (opts?.double !== false) {
+    pushLine(mesh, {
+      layer: 'MARKING',
+      points: [at(f, s + 0.7, -span), at(f, s + 0.7, span)],
+      stroke: theme.marking,
+      strokeWidth: 0.35,
+      alpha: 0.95,
+    })
+  }
+}
+
 /** Yield / give-way triangle + dashed stop line on entry half. */
 export function placeYield(
   mesh: Mesh,

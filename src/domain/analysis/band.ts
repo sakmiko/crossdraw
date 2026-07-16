@@ -20,12 +20,49 @@ export type BandMethod = 'classic' | 'optimized-scan' | 'one-way' | 'two-way-equ
  * Methods only choose offsets; scoring always uses measureThroughBand.
  */
 
+
+/**
+ * RoadGee-style half-cycle map parameter a (m):
+ * a0 = v·C/2, scan a0 ± rangeM at stepM (docs: classic ±100m / 10m).
+ * Returns best a maximizing forward+backward through-band seconds.
+ */
+export function enumerateHalfCycleA(
+  nodes: BandIntersection[],
+  cycleSec: number,
+  speedKmh: number,
+  opts?: { rangeM?: number; stepM?: number },
+): { bestA: number; a0: number; best: { offsets: number[]; forwardSec: number; backwardSec: number; ratio: number }; candidates: number } {
+  const v = speedMps(speedKmh)
+  const C = cycleSec
+  const a0 = (v * C) / 2
+  const rangeM = opts?.rangeM ?? 100
+  const stepM = opts?.stepM ?? 10
+  let bestA = a0
+  let best = evaluateTwoWayBand(nodes, C, a0, v)
+  let candidates = 1
+  for (let da = -rangeM; da <= rangeM; da += stepM) {
+    const a = a0 + da
+    if (a <= 20) continue
+    candidates++
+    const scored = evaluateTwoWayBand(nodes, C, a, v)
+    if (scored.forwardSec + scored.backwardSec > best.forwardSec + best.backwardSec) {
+      best = scored
+      bestA = a
+    }
+  }
+  return { bestA, a0, best, candidates }
+}
+
 export function optimizeBandClassic(
   nodes: BandIntersection[],
   cycleSec: number,
   speedKmh: number,
 ): BandResult {
-  return scanHalfCycle(nodes, cycleSec, speedKmh, 'classic', 5, 20)
+  // RoadGee classic numerical: a0=v·C/2, a ∈ [a0−100, a0+100] step 10 m
+  if (nodes.length < 2) return emptyResult(nodes, speedKmh, 'classic')
+  const C = cycleSec
+  const { bestA, best } = enumerateHalfCycleA(nodes, cycleSec, speedKmh, { rangeM: 100, stepM: 10 })
+  return toResult('classic', nodes, C, bestA, speedKmh, best)
 }
 
 export function optimizeBandMaxScan(
@@ -33,27 +70,30 @@ export function optimizeBandMaxScan(
   cycleSec: number,
   speedKmh: number,
 ): BandResult {
+  // RoadGee optimized numerical: same a grid ±100/10, then fine-tune node-1 offset
   if (nodes.length < 2) return emptyResult(nodes, speedKmh, 'optimized-scan')
   const v = speedMps(speedKmh)
   const C = cycleSec
-  const a0 = (v * C) / 2
-  let bestA = a0
-  let best = evaluateTwoWayBand(nodes, C, a0, v)
+  const { bestA: aGrid, best: baseBest } = enumerateHalfCycleA(nodes, cycleSec, speedKmh, {
+    rangeM: 100,
+    stepM: 10,
+  })
+  let bestA = aGrid
+  let best = baseBest
 
-  for (let k = -30; k <= 30; k++) {
-    const a = a0 + k * 3
+  // refine a ±20 m at 2 m, with o1 ±15 s
+  for (let da = -20; da <= 20; da += 2) {
+    const a = aGrid + da
     if (a <= 20) continue
     const base = evaluateTwoWayBand(nodes, C, a, v)
     if (base.forwardSec + base.backwardSec > best.forwardSec + best.backwardSec) {
       best = base
       bestA = a
     }
-    // fine-tune second node offset ±15s
     for (let d = -15; d <= 15; d += 1) {
       const offsets = base.offsets.slice()
       if (offsets.length < 2) continue
       offsets[1] = mod(offsets[1] + d, C)
-      // recompute downstream from a with first link fixed offset[1]
       for (let i = 2; i < nodes.length; i++) {
         const dist = nodes[i].distanceM - nodes[0].distanceM
         offsets[i] = mod((dist / a) * (C / 2), C)

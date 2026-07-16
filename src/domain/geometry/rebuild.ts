@@ -15,6 +15,7 @@ import { computeRoundaboutLayout, roundaboutAnnotation } from './roundabout'
 import {
   placeMovementArrow,
   placeZebra,
+  placeStopLine,
   placeYield,
   placeTeardropSplitter,
   placeCirclePoly,
@@ -626,19 +627,11 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
     })
   }
 
-  // stop line (double bar — clearer at export scale)
-  pushLine(mesh, {
-    layer: 'MARKING',
-    points: [add(mul(ux, start), mul(px, -half + 0.3)), add(mul(ux, start), mul(px, half - 0.3))],
-    stroke: THEME.marking,
-    strokeWidth: 0.65,
-  })
-  pushLine(mesh, {
-    layer: 'MARKING',
-    points: [add(mul(ux, start + 0.7), mul(px, -half + 0.3)), add(mul(ux, start + 0.7), mul(px, half - 0.3))],
-    stroke: THEME.marking,
-    strokeWidth: 0.35,
-  })
+  // stop line via reusable glyph (double bar)
+  {
+    const frame: Frame = { origin: [0, 0], ux, px }
+    placeStopLine(mesh, frame, start, half, THEME, { double: true })
+  }
   // stop-line chainage labels omitted on canvas (params live in inspector)
 
   /**

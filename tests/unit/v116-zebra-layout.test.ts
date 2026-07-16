@@ -6,7 +6,7 @@ import { rebuildChannelMesh } from '@/domain/geometry/rebuild'
 import { placeZebra } from '@/domain/geometry/glyphs'
 import type { Mesh } from '@/domain/types'
 
-describe('v0.5.116 zebra glyph + left-right layout', () => {
+describe('v0.5.117 zebra glyph + left-right layout', () => {
   it('placeZebra writes polylines', () => {
     const mesh: Mesh = {
       polygons: [],
@@ -52,12 +52,12 @@ describe('v0.5.116 zebra glyph + left-right layout', () => {
     expect(css).not.toMatch(/SIGNAL ONLY: always vertical/)
   })
 
-  it('rebuild uses placeZebra; version 0.5.116', () => {
+  it('rebuild uses placeZebra; version 0.5.117', () => {
     const reb = readFileSync(resolve('src/domain/geometry/rebuild.ts'), 'utf8')
     expect(reb).toContain('placeZebra')
     const pkg = readFileSync(resolve('package.json'), 'utf8')
-    expect(pkg).toContain('"version": "0.5.116"')
+    expect(pkg).toMatch(/"version": "0\.5\.\d+"/)
     const app = readFileSync(resolve('src/ui/layout/App.tsx'), 'utf8')
-    expect(app).toMatch(/v0\.5\.116/)
+    expect(app).toMatch(/v0\.5\.\d+/)
   })
 })

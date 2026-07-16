@@ -5,7 +5,7 @@ import { createCrossTemplate, analyzeIntersection } from '@/domain'
 import { placeMovementArrow } from '@/domain/geometry/glyphs'
 import type { Mesh } from '@/domain/types'
 
-describe('v0.5.116 RoadGee-aligned analysis + glyphs', () => {
+describe('v0.5.117 RoadGee-aligned analysis + glyphs', () => {
   it('Cap = S·λ and Vc = V/Cap (homology identity)', () => {
     const p = createCrossTemplate('同源测试')
     const ch = p.channelizationSchemes[0]

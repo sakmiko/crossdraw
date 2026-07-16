@@ -1,3 +1,9 @@
+## 0.5.117 — Stop-line glyph + RoadGee-style band a-scan
+
+- `placeStopLine` double-bar glyph wired into approach rebuild (with zebra/arrows).
+- Green-wave **classic / optimized-scan**: `enumerateHalfCycleA` a0=v·C/2, **±100 m @ 10 m** (optimized + fine o1).
+- BandPage optimize button documents a-grid; schematic band only — not MAXBAND-MIP.
+
 ## 0.5.116 — Zebra glyphs + full left-right layout density
 
 - Approach crosswalks via reusable `placeZebra` (bars along ux).

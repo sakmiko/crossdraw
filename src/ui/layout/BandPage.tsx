@@ -797,7 +797,7 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
                   >
                     CSV
                   </button>
-                  <button
+                  <button title="a0=v·C/2；a±100m 步长10m"
                     type="button"
                     className="primary"
                     onClick={() => {
