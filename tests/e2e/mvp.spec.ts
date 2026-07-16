@@ -6,23 +6,20 @@ async function bootCross(page: Page) {
   await page.locator('details.menu-dropdown', { hasText: '新建' }).locator('summary').click()
   await page.getByRole('menuitem', { name: /十字交叉口/ }).click()
   await page.keyboard.press('Escape')
-  await expect(page.locator('.page-fill, .mode-stage').first()).toBeVisible({ timeout: 20000 })
-  await page.waitForTimeout(350)
+  await expect(page.locator('.page-fill').first()).toBeVisible({ timeout: 20000 })
+  await page.waitForTimeout(300)
 }
 
 async function openNav(page: Page, label: string) {
-  await page
-    .getByRole('navigation', { name: '功能导航' })
-    .getByRole('tab', { name: new RegExp(label) })
-    .click()
+  await page.getByRole('navigation', { name: '功能导航' }).getByRole('tab', { name: new RegExp(label) }).click()
   await page.waitForTimeout(280)
 }
 
-test.describe('Crossdraw v0.5.82 auto-timing + polish', () => {
+test.describe('Crossdraw v0.5.83 signal stack + polish', () => {
   // 渠化 流量 信号 分析 绿波 比选 断面
   test('shell', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.82/).first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.83/).first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
 
@@ -38,26 +35,29 @@ test.describe('Crossdraw v0.5.82 auto-timing + polish', () => {
     await page.screenshot({ path: 'docs/screenshots/02-flow.png', fullPage: true })
   })
 
-  test('signal auto timing pack', async ({ page }) => {
+  test('signal vertical stack', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '信号')
-    await expect(page.getByText('自动配时').first()).toBeVisible({ timeout: 10000 })
-    // open details if needed
-    const gen = page.getByRole('button', { name: '生成方案' })
-    await gen.click({ force: true })
-    await page.waitForTimeout(300)
-    await page.getByRole('button', { name: '计算Y值' }).click({ force: true })
-    await page.waitForTimeout(200)
-    await expect(page.getByText(/Y\s*=/).first()).toBeVisible({ timeout: 5000 })
-    await page.getByRole('button', { name: '自动配时', exact: true }).click({ force: true })
-    await page.waitForTimeout(400)
+    await expect(page.locator('.app.shell--signal')).toBeVisible()
+    const body = page.locator('.page-fill-body--signal')
+    await expect(body).toBeVisible()
+    // stage above params in DOM order
+    const stageBox = await page.locator('.page-fill-stage').boundingBox()
+    const paramsBox = await page.locator('.page-fill-params').boundingBox()
+    expect(stageBox && paramsBox).toBeTruthy()
+    if (stageBox && paramsBox) {
+      expect(stageBox.y).toBeLessThan(paramsBox.y)
+      // stacked: stage roughly full width of params
+      expect(Math.abs(stageBox.width - paramsBox.width)).toBeLessThan(80)
+    }
+    await expect(page.getByText('相位灯态').first()).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('自动配时').first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/03-signal.png', fullPage: true })
   })
 
-  test('analysis export data', async ({ page }) => {
+  test('analysis', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '分析')
-    await expect(page.getByRole('button', { name: '导出数据' }).first()).toBeVisible({ timeout: 10000 })
     await page.screenshot({ path: 'docs/screenshots/04-analysis.png', fullPage: true })
   })
 

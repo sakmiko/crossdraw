@@ -2729,9 +2729,14 @@ button.primary .cd-icon {
 .shell--channel .page-fill-body {
   grid-template-columns: minmax(0, 1.2fr) minmax(260px, 34%);
 }
-.shell--signal .page-fill-body,
 .shell--flow .page-fill-body {
   grid-template-columns: minmax(0, 1fr) minmax(300px, 40%);
+}
+/* signal: ALWAYS top diagram / bottom params */
+.app.shell--signal .page-fill-body,
+.shell--signal .page-fill-body {
+  grid-template-columns: 1fr !important;
+  grid-template-rows: minmax(200px, 44vh) minmax(0, 1fr) !important;
 }
 @media (max-width: 1100px) {
   .shell--channel .page-fill-body,
@@ -2777,9 +2782,12 @@ button.primary .cd-icon {
 }
 /* signal/flow: prefer vertical stack when wide but short content */
 @media (min-width: 1101px) {
-  .app.shell--signal .page-fill-body,
   .app.shell--flow .page-fill-body {
     grid-template-columns: minmax(0, 1fr) minmax(320px, 38%);
+  }
+  .app.shell--signal .page-fill-body {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: minmax(220px, 46vh) minmax(0, 1fr) !important;
   }
   .app.shell--channel .page-fill-body {
     grid-template-columns: minmax(0, 1.25fr) minmax(280px, 32%);
@@ -2801,4 +2809,57 @@ button.primary .cd-icon {
   max-height: 160px;
   overflow: auto;
   font-family: var(--mono);
+}
+
+
+/* v0.5.83 signal vertical stack — top diagram, bottom params (all breakpoints) */
+.app.shell--signal .page-fill-body {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  grid-template-rows: minmax(210px, 46vh) minmax(0, 1fr) !important;
+  gap: 0 !important;
+}
+.app.shell--signal .page-fill-stage {
+  min-height: 210px;
+  max-height: 48vh;
+  border-bottom: 1px solid var(--border);
+}
+.app.shell--signal .page-fill-params {
+  border-left: none !important;
+  border-top: none;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 12px 20px;
+}
+.app.shell--signal .page-fill-stage .mode-stage {
+  margin: 6px 10px 4px;
+  max-height: 100%;
+}
+.app.shell--signal .page-fill-stage .mode-stage-body {
+  overflow: auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+.app.shell--signal .page-fill-stage .mode-stage-svg {
+  width: 100%;
+}
+.app.shell--signal .page-fill-stage .mode-stage-svg svg {
+  max-height: min(42vh, 420px);
+  width: 100%;
+  height: auto;
+}
+.app.shell--signal .page-fill-params .card {
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+}
+/* denser phase tools on signal */
+.app.shell--signal .release-editor {
+  max-width: 100%;
+}
+@media (max-width: 900px) {
+  .app.shell--signal .page-fill-body {
+    grid-template-rows: minmax(180px, 38vh) minmax(0, 1fr) !important;
+  }
 }

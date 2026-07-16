@@ -115,11 +115,15 @@ export function ModeCenterStage(props: ModeCenterProps) {
 
   const signalSvg = useMemo(() => {
     if (!channel || !signal) return ''
+    const w =
+      typeof window !== 'undefined'
+        ? Math.min(1100, Math.max(640, window.innerWidth - (window.innerWidth > 900 ? 200 : 48)))
+        : 900
     return roadgeeSignalBoardSvg(channel.approaches, signal, {
-      width: Math.min(900, Math.max(560, typeof window !== 'undefined' ? window.innerWidth * 0.48 : 720)),
-      faceSize: 104,
+      width: w,
+      faceSize: Math.min(120, Math.max(88, Math.floor(w / 8))),
     })
-  }, [channel, signal])
+  }, [channel, signal, canvasHeight])
 
   const planSvg = useMemo(() => {
     if (!channel || !analysis) return ''
