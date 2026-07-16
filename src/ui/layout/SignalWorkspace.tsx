@@ -1,3 +1,4 @@
+import { Icon } from '@/ui/icons/Icons'
 /**
  * Signal workspace panel — extracted from App for maintainability.
  * Props only; no direct store access (App owns store wiring).

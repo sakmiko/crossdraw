@@ -1662,7 +1662,12 @@ tr.row-hot td { background: rgba(56, 189, 248, 0.08); }
   flex-direction: column;
   gap: 2px;
 }
-.menu-panel button,
+.menu-panel button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.menu-panel button_PLACEHOLDER,
 .menu-panel .menu-file {
   display: block;
   width: 100%;
@@ -2169,4 +2174,110 @@ tr.row-hot td { background: rgba(56, 189, 248, 0.08); }
     grid-template-columns: var(--shell-nav-collapsed) minmax(0, 1fr);
   }
   .side, .right { /* existing mobile rules still apply via data-pane */ }
+}
+
+
+/* —— v0.5.75 vector icons (rounded stroke) —— */
+.cd-icon {
+  display: block;
+  flex-shrink: 0;
+  color: currentColor;
+}
+.icon-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.icon-label-text { line-height: 1; }
+
+.left-nav-icon {
+  background: transparent;
+  border: none;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  color: var(--text-secondary);
+}
+.left-nav-item:hover .left-nav-icon { color: var(--text); }
+.left-nav-item.active .left-nav-icon {
+  color: var(--accent);
+  background: transparent;
+  border: none;
+}
+.left-nav-item.active {
+  /* keep soft fill; icon uses accent */
+}
+.left-nav-toggle {
+  display: grid;
+  place-items: center;
+}
+.left-nav-toggle .cd-icon { color: var(--text-secondary); }
+
+.btn-icon,
+button .cd-icon {
+  vertical-align: middle;
+}
+button.ghost .cd-icon,
+button.primary .cd-icon {
+  margin-right: 0;
+}
+.topbar button .cd-icon + span,
+.menu-dropdown summary .cd-icon {
+  /* spacing via icon-label */
+}
+.topbar .icon-label { gap: 5px; }
+.menu-dropdown summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.theme-toggle button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.page-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.page-title .cd-icon { color: var(--accent); }
+.stage-bar button.ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.mobile-nav button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.menu-panel button,
+.menu-panel label.menu-file {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+}
+.topbar-actions button,
+.topbar-end button.primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.band-page-bar-right button,
+.band-page-bar-left button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.subpanel-body.toolbar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }

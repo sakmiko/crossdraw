@@ -13,6 +13,7 @@ import { corridorMapSvg } from '@/ui/charts/corridorMap'
 import { exportSvgFile } from '@/io/exportCharts'
 import { downloadText } from '@/io/download'
 import { corridorSegments } from '@/domain/analysis/corridor'
+import { Icon } from '@/ui/icons/Icons'
 import { computeCoordinationIndex } from '@/domain/analysis/coordinationIndex'
 import { buildMaxbandReport } from '@/domain/analysis/maxbandReport'
 
@@ -87,22 +88,22 @@ export function BandPage(props: BandPageProps) {
       <header className="band-page-bar">
         <div className="band-page-bar-left">
           <button type="button" className="ghost" onClick={onBackToIntersection}>
-            ← 交叉口
+            <Icon name="chevronLeft" size={16} /><span>交叉口</span>
           </button>
           <div className="band-page-title">
-            <strong>干道绿波</strong>
+            <strong className="icon-label"><Icon name="band" size={16} /><span>干道绿波</span></strong>
             <span className="hint">{corridor.name}</span>
           </div>
         </div>
         <div className="band-page-tabs" role="tablist" aria-label="绿波视图">
           {(
             [
-              ['table', '路口参数表'],
-              ['timespace', '时距图'],
-              ['map', '走廊图'],
-              ['compare', '多走廊'],
+              ['table', '路口参数表', 'table'],
+              ['timespace', '时距图', 'chart'],
+              ['map', '走廊图', 'map'],
+              ['compare', '多走廊', 'compare'],
             ] as const
-          ).map(([id, label]) => (
+          ).map(([id, label, icon]) => (
             <button
               key={id}
               type="button"
@@ -111,7 +112,7 @@ export function BandPage(props: BandPageProps) {
               className={tab === id ? 'active' : ''}
               onClick={() => setTab(id)}
             >
-              {label}
+              <Icon name={icon} size={14} /><span>{label}</span>
             </button>
           ))}
         </div>
@@ -123,12 +124,10 @@ export function BandPage(props: BandPageProps) {
               optimizeBand()
               setBatchNote(null)
             }}
-          >
-            优化
+          ><Icon name="optimize" size={15} /><span>优化</span>
           </button>
           {onProgressiveOffsets && (
-            <button type="button" className="ghost" onClick={() => onProgressiveOffsets(false)} title="按行程时间推连续相位差">
-              连续相位差
+            <button type="button" className="ghost" onClick={() => onProgressiveOffsets(false)} title="按行程时间推连续相位差"><Icon name="band" size={15} /><span>连续相位差</span>
             </button>
           )}
           <button

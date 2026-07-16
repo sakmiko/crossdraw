@@ -27,6 +27,7 @@ import { ChannelWorkspace } from '@/ui/layout/ChannelWorkspace'
 import { BandWorkspace } from '@/ui/layout/BandWorkspace'
 import { BandPage } from '@/ui/layout/BandPage'
 import { LeftNav, NAV_ITEMS } from '@/ui/layout/LeftNav'
+import { Icon, IconLabel, MODE_ICONS } from '@/ui/icons/Icons'
 import { AnalysisWorkspace } from '@/ui/layout/AnalysisWorkspace'
 import { CompareWorkspace } from '@/ui/layout/CompareWorkspace'
 import { XSectionWorkspace } from '@/ui/layout/XSectionWorkspace'
@@ -531,7 +532,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.74 · 绿波专页</span>
+          <span>Crossdraw v0.5.75 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -544,16 +545,16 @@ export default function App() {
   return (
     <div className={`app ${navCollapsed ? 'nav-collapsed' : 'nav-expanded'}`} data-pane={mobilePane}>
       <nav className="mobile-nav" aria-label="移动端面板">
-        <button type="button" className={mobilePane === 'tree' ? 'active' : ''} onClick={() => setMobilePane('tree')}>方案</button>
-        <button type="button" className={mobilePane === 'canvas' ? 'active' : ''} onClick={() => setMobilePane('canvas')}>画布</button>
-        <button type="button" className={mobilePane === 'inspector' ? 'active' : ''} onClick={() => setMobilePane('inspector')}>参数</button>
+        <button type="button" className={mobilePane === 'tree' ? 'active' : ''} onClick={() => setMobilePane('tree')}><Icon name="scheme" size={14} /><span>方案</span></button>
+        <button type="button" className={mobilePane === 'canvas' ? 'active' : ''} onClick={() => setMobilePane('canvas')}><Icon name="canvas" size={14} /><span>画布</span></button>
+        <button type="button" className={mobilePane === 'inspector' ? 'active' : ''} onClick={() => setMobilePane('inspector')}><Icon name="params" size={14} /><span>参数</span></button>
       </nav>
       <header className="topbar">
         <div className="brand">
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.74</span>
+            <span className="brand-ver">v0.5.75</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -566,20 +567,20 @@ export default function App() {
         <div className="topbar-main">
           <div className="menu-group">
             <details className="menu-dropdown">
-              <summary>新建</summary>
+              <summary><Icon name="plus" size={15} /><span>新建</span></summary>
               <div className="menu-panel" role="menu">
-                <button type="button" role="menuitem" onClick={() => loadTemplate('cross')}>十字交叉口</button>
-                <button type="button" role="menuitem" onClick={() => loadTemplate('t')}>T 型</button>
-                <button type="button" role="menuitem" onClick={() => loadTemplate('y')}>Y 型</button>
-                <button type="button" role="menuitem" onClick={() => loadTemplate('skewed')}>斜交</button>
-                <button type="button" role="menuitem" onClick={() => loadTemplate('roundabout')}>环形</button>
+                <button type="button" role="menuitem" onClick={() => loadTemplate('cross')}><Icon name="templateCross" size={15} /><span>十字交叉口</span></button>
+                <button type="button" role="menuitem" onClick={() => loadTemplate('t')}><Icon name="templateT" size={15} /><span>T 型</span></button>
+                <button type="button" role="menuitem" onClick={() => loadTemplate('y')}><Icon name="templateY" size={15} /><span>Y 型</span></button>
+                <button type="button" role="menuitem" onClick={() => loadTemplate('skewed')}><Icon name="templateSkew" size={15} /><span>斜交</span></button>
+                <button type="button" role="menuitem" onClick={() => loadTemplate('roundabout')}><Icon name="templateRa" size={15} /><span>环形</span></button>
               </div>
             </details>
             <details className="menu-dropdown">
-              <summary>文件</summary>
+              <summary><Icon name="folder" size={15} /><span>文件</span></summary>
               <div className="menu-panel" role="menu">
                 <label className="menu-file">
-                  打开 .rtp
+                  <Icon name="file" size={15} /><span>打开 .rtp</span>
                   <input
                     type="file"
                     accept=".rtp,application/json"
@@ -587,15 +588,15 @@ export default function App() {
                     onChange={(e) => e.target.files?.[0] && onOpenFile(e.target.files[0])}
                   />
                 </label>
-                <button type="button" role="menuitem" onClick={saveRtp}>保存</button>
-                <button type="button" role="menuitem" onClick={() => duplicateChannel()}>复制渠化方案</button>
+                <button type="button" role="menuitem" onClick={saveRtp}><Icon name="save" size={15} /><span>保存</span></button>
+                <button type="button" role="menuitem" onClick={() => duplicateChannel()}><Icon name="copy" size={15} /><span>复制渠化方案</span></button>
               </div>
             </details>
             <details className="menu-dropdown">
-              <summary>导出</summary>
+              <summary><Icon name="export" size={15} /><span>导出</span></summary>
               <div className="menu-panel" role="menu">
-                <button type="button" role="menuitem" className="primary" onClick={() => setExportOpen(true)}>导出中心…</button>
-                <button type="button" role="menuitem" onClick={() => openPrintPreview()}>打印拼版</button>
+                <button type="button" role="menuitem" className="primary" onClick={() => setExportOpen(true)}><Icon name="export" size={15} /><span>导出中心…</span></button>
+                <button type="button" role="menuitem" onClick={() => openPrintPreview()}><Icon name="print" size={15} /><span>打印拼版</span></button>
                 <hr className="menu-sep" />
                 <button type="button" role="menuitem" onClick={exportPng}>画布 PNG</button>
                 <button type="button" role="menuitem" onClick={exportSvg}>画布 SVG</button>
@@ -604,17 +605,17 @@ export default function App() {
             </details>
           </div>
           <div className="topbar-actions">
-            <button type="button" className="ghost" onClick={() => undo()} title="撤销">撤销</button>
-            <button type="button" className="ghost" onClick={() => redo()} title="重做">重做</button>
-            <button type="button" className="ghost" onClick={() => setPaletteOpen(true)} title="命令面板">⌘K</button>
+            <button type="button" className="ghost" onClick={() => undo()} title="撤销"><Icon name="undo" size={16} /><span>撤销</span></button>
+            <button type="button" className="ghost" onClick={() => redo()} title="重做"><Icon name="redo" size={16} /><span>重做</span></button>
+            <button type="button" className="ghost" onClick={() => setPaletteOpen(true)} title="命令面板"><Icon name="command" size={16} /><span>⌘K</span></button>
           </div>
         </div>
         <div className="topbar-end">
           <span className={`save-pill ${dirty ? 'dirty' : 'clean'}`}>{dirty ? '未保存' : '已保存'}</span>
-          <button type="button" className="primary topbar-save" onClick={saveRtp}>保存</button>
+          <button type="button" className="primary topbar-save" onClick={saveRtp}><Icon name="save" size={15} /><span>保存</span></button>
           <div className="theme-toggle" role="group" aria-label="主题">
-            <button type="button" className={theme === 'dark' ? 'active' : ''} onClick={() => setTheme('dark')}>深</button>
-            <button type="button" className={theme === 'light' ? 'active' : ''} onClick={() => setTheme('light')}>浅</button>
+            <button type="button" className={theme === 'dark' ? 'active' : ''} onClick={() => setTheme('dark')} title="深色"><Icon name="moon" size={15} /></button>
+            <button type="button" className={theme === 'light' ? 'active' : ''} onClick={() => setTheme('light')} title="浅色"><Icon name="sun" size={15} /></button>
           </div>
         </div>
       </header>
@@ -733,7 +734,7 @@ export default function App() {
             <span>{MODES.find((m) => m.id === mode)?.label}</span>
           </div>
           <div className="stage-bar">
-            <button type="button" className="ghost" onClick={() => canvasRef.current?.fitView()}>适应窗口</button>
+            <button type="button" className="ghost" onClick={() => canvasRef.current?.fitView()}><Icon name="fit" size={15} /><span>适应</span></button>
             <span className="legend layer-toggles" style={{ margin: 0 }}>
               {([
                 ['ROAD', '路面', '#4b5563'],
@@ -774,7 +775,7 @@ export default function App() {
 
         <aside className="right">
           <div className="page-title-bar">
-            <h1 className="page-title">{MODES.find((m) => m.id === mode)?.label ?? mode}</h1>
+            <h1 className="page-title"><Icon name={MODE_ICONS[mode] ?? 'channel'} size={18} /><span>{MODES.find((m) => m.id === mode)?.label ?? mode}</span></h1>
           </div>
 
           {mode === 'channel' && (
@@ -910,7 +911,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.74</span>
+        <span>Crossdraw v0.5.75</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
