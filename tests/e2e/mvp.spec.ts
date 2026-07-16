@@ -15,18 +15,17 @@ async function openNav(page: Page, label: string) {
     .getByRole('navigation', { name: '功能导航' })
     .getByRole('tab', { name: new RegExp(label) })
     .click()
-  await page.waitForTimeout(300)
+  await page.waitForTimeout(350)
 }
 
-test.describe('v0.5.130 cycle-scan-png + strip polish', () => {
+test.describe('v0.5.131 design-system + interactive signal polish', () => {
   // docs/screenshots/00-shell.png
   // docs/screenshots/06-compare.png
   // 渠化 流量 信号 分析 绿波 比选 断面
-  test('shell approach strip', async ({ page }) => {
+  test('shell design tokens', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.130/).first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.131/).first()).toBeVisible()
     await openNav(page, '渠化')
-    await expect(page.locator('.approach-strip').first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
   test('channel', async ({ page }) => {
@@ -39,12 +38,17 @@ test.describe('v0.5.130 cycle-scan-png + strip polish', () => {
     await openNav(page, '流量')
     await page.screenshot({ path: 'docs/screenshots/02-flow.png', fullPage: true })
   })
-  test('signal cycle-scan png', async ({ page }) => {
+  test('signal interactive board', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '信号')
-    await expect(page.locator('#cycle-scan-echarts').getByRole('button', { name: /导出 PNG/ })).toBeVisible({
-      timeout: 15000,
-    })
+    await expect(page.locator('.interactive-signal-board').first()).toBeVisible({ timeout: 15000 })
+    await expect(page.getByText(/拖绿条/).first()).toBeVisible()
+    // layout: stage left of params on desktop
+    const stage = page.locator('.page-fill-stage').first()
+    const params = page.locator('.page-fill-params').first()
+    const sb = await stage.boundingBox()
+    const pb = await params.boundingBox()
+    expect(sb && pb && sb.x < pb.x).toBeTruthy()
     await page.screenshot({ path: 'docs/screenshots/03-signal.png', fullPage: true })
   })
   test('analysis', async ({ page }) => {

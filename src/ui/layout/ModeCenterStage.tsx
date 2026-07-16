@@ -18,6 +18,7 @@ import { buildFlowAlignment, type FlowDisplayMode } from '@/domain/flow/flowAlig
 import { roadgeeFlowDiagramSvg, type RoadGeeFlowStyle, DEFAULT_ROADGEE_FLOW_STYLE } from '@/ui/charts/roadgeeFlowDiagram'
 import { professionalFlowReportSvg } from '@/ui/charts/professionalFlowReport' 
 import { roadgeeSignalBoardSvg } from '@/ui/charts/roadgeeSignalBoard'
+import { InteractiveSignalBoard } from '@/ui/charts/InteractiveSignalBoard'
 import { roadgeeAnalysisPlanSvg, type AnalysisPlanMetric } from '@/ui/charts/roadgeeAnalysisPlan'
 import { professionalAnalysisPlanPackSvg } from '@/ui/charts/professionalAnalysisPlanPack' 
 import { unsignalizedPlanSvg } from '@/ui/charts/unsignalizedPlan'
@@ -51,6 +52,12 @@ export type ModeCenterProps = {
   flowDiagramStyle?: RoadGeeFlowStyle
   theme: 'dark' | 'light'
   canvasHeight: number
+  focusPhaseId?: string | null
+  onFocusPhase?: (id: string) => void
+  onUpdatePhaseTiming?: (
+    phaseId: string,
+    patch: Partial<{ greenSec: number; yellowSec: number; allRedSec: number }>,
+  ) => void
 }
 
 function StageChrome({
@@ -109,6 +116,9 @@ export function ModeCenterStage(props: ModeCenterProps) {
     flowDiagramStyle = DEFAULT_ROADGEE_FLOW_STYLE,
     theme,
     canvasHeight,
+    focusPhaseId,
+    onFocusPhase,
+    onUpdatePhaseTiming,
   } = props
 
   const [planMetric, setPlanMetric] = useState<AnalysisPlanMetric | 'live'>('los')
@@ -203,13 +213,24 @@ export function ModeCenterStage(props: ModeCenterProps) {
     return (
       <StageChrome
         title="相位灯态 · 配时条"
-        unit={`C=${signal.cycleSec}s · 改相位即改图`}
+        unit={`C=${signal.cycleSec}s · 拖绿条改G · 与表同源`}
         onDownload={() => downloadSvg('crossdraw-信号相位图.svg', signalSvg)}
       >
-        <div
-          className="chart-svg-host chart-svg-host--pro mode-stage-svg"
-          dangerouslySetInnerHTML={{ __html: signalSvg }}
-        />
+        <div className="chart-svg-host chart-svg-host--pro mode-stage-svg mode-stage-signal-interactive">
+          <InteractiveSignalBoard
+            approaches={channel.approaches}
+            signal={signal}
+            width={
+              typeof window !== 'undefined'
+                ? Math.min(1100, Math.max(640, window.innerWidth - (window.innerWidth > 900 ? 200 : 48)))
+                : 900
+            }
+            faceSize={Math.min(120, Math.max(80, Math.floor((typeof window !== 'undefined' ? window.innerWidth : 900) / 10)))}
+            focusPhaseId={focusPhaseId}
+            onFocusPhase={onFocusPhase}
+            onUpdatePhaseTiming={onUpdatePhaseTiming}
+          />
+        </div>
       </StageChrome>
     )
   }

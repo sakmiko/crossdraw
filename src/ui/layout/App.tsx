@@ -91,6 +91,9 @@ import { optimizeCorridor, measureCorridor, corridorSegments } from '@/domain/an
 import { downloadBlob, downloadText } from '@/io/download'
 import { downloadEchartsPng } from '@/io/exportEchartsPng'
 import { scanCycleSensitivity } from '@/domain/analysis/cycleScan'
+import { intergreenBoardSvg, intergreenMarkdown, intergreenCsv, collectIntergreenRows } from '@/ui/charts/intergreenBoard'
+import { cycleScanBoardSvg } from '@/ui/charts/cycleScanBoard'
+import { cycleScanMarkdown, cycleScanCsv } from '@/domain/analysis/cycleScan'
 import { bandBandwidthOption, compareSchemesOption, flowLtrOption, phaseTimingOption, vcDelayOption, xsectionWidthOption, cycleScanOption } from '@/ui/charts/interactiveBoards'
 import { loadDraft, clearDraft } from '@/io/autosave'
 import { persistAutosave, redo, undo, useAppStore } from '@/state/store'
@@ -670,7 +673,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.130 · 绿波专页</span>
+          <span>Crossdraw v0.5.131 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -692,7 +695,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.130</span>
+            <span className="brand-ver">v0.5.131</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -801,9 +804,17 @@ export default function App() {
                 ))}
                 {mode === 'channel' && (
                   <>
-                    <button type="button" className="ghost approach-chip-tool" onClick={() => canvasRef.current?.fitView()}>
-                      <Icon name="fit" size={14} /><span>适应</span>
-                    </button>
+                    <div className="canvas-zoom-bar" role="toolbar" aria-label="画布缩放">
+                      <button type="button" className="ghost approach-chip-tool" title="缩小" onClick={() => canvasRef.current?.zoomOut()}>
+                        −
+                      </button>
+                      <button type="button" className="ghost approach-chip-tool" title="放大" onClick={() => canvasRef.current?.zoomIn()}>
+                        +
+                      </button>
+                      <button type="button" className="ghost approach-chip-tool" onClick={() => canvasRef.current?.fitView()}>
+                        <Icon name="fit" size={14} /><span>适应</span>
+                      </button>
+                    </div>
                     {(['ROAD', 'MARKING', 'ISLAND', 'FLOW'] as LayerKey[]).map((k) => (
                       <button
                         key={k}
@@ -838,6 +849,9 @@ export default function App() {
                 flowDisplayMode={flowDisplayMode}
                 flowDiagramStyle={flowDiagramStyle}
                 theme={theme}
+                focusPhaseId={focusPhaseId}
+                onFocusPhase={setFocusPhaseId}
+                onUpdatePhaseTiming={updatePhaseTiming}
                 canvasHeight={
                   typeof window !== 'undefined'
                     ? Math.max(
@@ -1027,7 +1041,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.130</span>
+        <span>Crossdraw v0.5.131</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1142,6 +1156,54 @@ export default function App() {
               width: 900,
               height: 360,
             })
+          },
+          
+          'intergreen-svg': () => {
+            if (!channel || !signal) return
+            exportSvgFile(
+              `${project.name}-intergreen.svg`,
+              intergreenBoardSvg(signal, channel.approaches, { width: 860 }),
+            )
+          },
+          'intergreen-md': () => {
+            if (!channel || !signal) return
+            const rows = collectIntergreenRows(signal, channel.approaches)
+            downloadText(`${project.name}-intergreen.md`, intergreenMarkdown(project.name, rows), 'text/markdown')
+          },
+          'intergreen-csv': () => {
+            if (!channel || !signal) return
+            const rows = collectIntergreenRows(signal, channel.approaches)
+            downloadText(`${project.name}-intergreen.csv`, intergreenCsv(rows), 'text/csv')
+          },
+          'cycle-scan-svg': () => {
+            if (!channel || !flow || !signal || signal.unsignalized) return
+            const r = scanCycleSensitivity(channel.approaches, flow, signal, {
+              minCycle: 50,
+              maxCycle: 150,
+              stepSec: 5,
+            })
+            exportSvgFile(
+              `${project.name}-cycle-scan.svg`,
+              cycleScanBoardSvg(channel.approaches, flow, signal, { width: 900, scan: r }),
+            )
+          },
+          'cycle-scan-md': () => {
+            if (!channel || !flow || !signal || signal.unsignalized) return
+            const r = scanCycleSensitivity(channel.approaches, flow, signal, {
+              minCycle: 50,
+              maxCycle: 150,
+              stepSec: 5,
+            })
+            downloadText(`${project.name}-cycle-scan.md`, cycleScanMarkdown(project.name, r), 'text/markdown')
+          },
+          'cycle-scan-csv': () => {
+            if (!channel || !flow || !signal || signal.unsignalized) return
+            const r = scanCycleSensitivity(channel.approaches, flow, signal, {
+              minCycle: 50,
+              maxCycle: 150,
+              stepSec: 5,
+            })
+            downloadText(`${project.name}-cycle-scan.csv`, cycleScanCsv(r), 'text/csv')
           },
           'mesh-svg': () => exportSvg(),
           'mesh-dxf': () => exportDxf(),

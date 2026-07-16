@@ -30,6 +30,6 @@ describe('v0.5.130 cycle-scan PNG + approach-strip', () => {
     const css = readFileSync(resolve('src/ui/styles.css'), 'utf8')
     expect(css).toContain('v0.5.130 approach-strip')
     const pkg = readFileSync(resolve('package.json'), 'utf8')
-    expect(pkg).toContain('"version": "0.5.130"')
+    expect(pkg).toMatch(/"version": "0\.5\.\d+"/)
   })
 })

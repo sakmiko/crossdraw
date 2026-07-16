@@ -18,6 +18,10 @@ export const DEFAULT_LAYERS: LayerVisibility = {
 
 export type CanvasHandle = {
   fitView: () => void
+  zoomBy: (factor: number) => void
+  zoomIn: () => void
+  zoomOut: () => void
+  getZoom: () => number
 }
 
 type Props = {
@@ -59,7 +63,32 @@ export const CanvasView = forwardRef<CanvasHandle, Props>(function CanvasView(
     world.y = host.clientHeight / 2 - ((b.minY + b.maxY) / 2) * next
   }
 
-  useImperativeHandle(ref, () => ({ fitView }), [])
+  const zoomBy = (factor: number) => {
+    const host = hostRef.current
+    const world = worldRef.current
+    if (!host || !world) return
+    const scale = world.scale.x
+    const next = Math.min(4, Math.max(0.15, scale * factor))
+    const mx = host.clientWidth / 2
+    const my = host.clientHeight / 2
+    const wx = (mx - world.x) / scale
+    const wy = (my - world.y) / scale
+    world.scale.set(next)
+    world.x = mx - wx * next
+    world.y = my - wy * next
+  }
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      fitView,
+      zoomBy,
+      zoomIn: () => zoomBy(1.15),
+      zoomOut: () => zoomBy(1 / 1.15),
+      getZoom: () => worldRef.current?.scale.x ?? 1,
+    }),
+    [],
+  )
 
   useEffect(() => {
     let destroyed = false

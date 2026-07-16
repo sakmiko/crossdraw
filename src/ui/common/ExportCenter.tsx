@@ -92,7 +92,7 @@ export function ExportCenter({
           <div>
             <h2 style={{ margin: 0 }}>导出中心</h2>
             <p className="hint" style={{ margin: '4px 0 0' }}>
-              按层次选择图面 / 信号 / 评价 / 绿波 / 数据 · 与当前方案联动
+              按层次选择图面 / 信号 / 评价 / 绿波 / 交互图 PNG / 数据 · 与当前方案联动
             </p>
           </div>
           <button type="button" className="ghost" onClick={onClose}>

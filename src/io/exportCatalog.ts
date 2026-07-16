@@ -2,7 +2,7 @@
  * Unified export center catalog — hierarchical checklist of deliverables.
  * Each item knows when it is available and how to run.
  */
-export type ExportCategory = 'drawing' | 'signal' | 'analysis' | 'band' | 'data' | 'package'
+export type ExportCategory = 'drawing' | 'signal' | 'analysis' | 'band' | 'data' | 'package' | 'interactive'
 
 export type ExportItemId =
   | 'mesh-png'
@@ -153,7 +153,7 @@ export type ExportItem = {
 export const EXPORT_CATALOG: ExportItem[] = [
   {
     id: 'echarts-cycle-scan-png',
-    category: 'signal',
+    category: 'interactive',
     title: '周期 C 敏感性 PNG',
     format: 'PNG',
     description: 'ECharts 同源 scanCycleSensitivity · 非完整 HCM 优化器',
@@ -162,7 +162,7 @@ export const EXPORT_CATALOG: ExportItem[] = [
   },
   {
     id: 'echarts-xsection-png',
-    category: 'drawing',
+    category: 'interactive',
     title: '断面构件宽度 PNG',
     format: 'PNG',
     description: 'ECharts 同源 section.components',
@@ -171,7 +171,7 @@ export const EXPORT_CATALOG: ExportItem[] = [
   },
   {
     id: 'echarts-band-png',
-    category: 'band',
+    category: 'interactive',
     title: '绿波带宽交互 PNG',
     format: 'PNG',
     description: 'ECharts 同源 BandResult / 路口相位差',
@@ -180,7 +180,7 @@ export const EXPORT_CATALOG: ExportItem[] = [
   },
   {
     id: 'echarts-compare-png',
-    category: 'analysis',
+    category: 'interactive',
     title: '多方案比选交互 PNG',
     format: 'PNG',
     description: 'ECharts 同源 analyzeIntersection 行',
@@ -189,7 +189,7 @@ export const EXPORT_CATALOG: ExportItem[] = [
   },
   {
     id: 'echarts-vc-delay-png',
-    category: 'analysis',
+    category: 'interactive',
     title: '交互分析 v/c·延误 PNG',
     format: 'PNG',
     description: 'ECharts 同源 analyzeIntersection · 非第二套公式',
@@ -198,7 +198,7 @@ export const EXPORT_CATALOG: ExportItem[] = [
   },
   {
     id: 'echarts-flow-ltr-png',
-    category: 'signal',
+    category: 'interactive',
     title: '流量 L/T/R 交互 PNG',
     format: 'PNG',
     description: 'ECharts 同源 flowAlign',
@@ -207,7 +207,7 @@ export const EXPORT_CATALOG: ExportItem[] = [
   },
   {
     id: 'echarts-phase-timing-png',
-    category: 'signal',
+    category: 'interactive',
     title: '相位 G/Y/AR 交互 PNG',
     format: 'PNG',
     description: 'ECharts 同源相位表',
@@ -1365,6 +1365,7 @@ export const CATEGORY_LABEL: Record<ExportCategory, string> = {
   signal: '信号与流量图',
   analysis: '评价与比选',
   band: '绿波走廊',
+  interactive: '交互图 PNG',
   data: '数据交换',
   package: '打包导出',
 }

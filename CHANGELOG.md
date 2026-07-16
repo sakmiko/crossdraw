@@ -1,3 +1,9 @@
+## 0.5.131 — Canvas zoom bar + stage chrome + interactive export group
+
+- CanvasHandle zoomIn/zoomOut/zoomBy; channel strip zoom toolbar.
+- Export category `interactive` for all ECharts PNG deliverables.
+- Stage border/background unify (light/dark). Schematic UI — not GIS viewer.
+
 ## 0.5.130 — Cycle-scan PNG + approach-strip polish
 
 - Export center `echarts-cycle-scan-png` + Signal「周期 C 敏感性」导出 PNG (homology scanCycleSensitivity).
