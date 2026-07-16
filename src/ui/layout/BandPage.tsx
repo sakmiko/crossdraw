@@ -127,75 +127,86 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
   return (
     <div className="band-page" data-theme={theme}>
       <header className="band-page-bar">
-        <div className="band-page-bar-left">
-          <button type="button" className="ghost" onClick={onBackToIntersection}>
-            <Icon name="chevronLeft" size={16} /><span>交叉口</span>
-          </button>
-          <div className="band-page-title">
-            <strong className="icon-label"><Icon name="band" size={16} /><span>干道绿波</span></strong>
-            <span className="hint">{corridor.name}</span>
+        <div className="band-page-bar-row band-page-bar-row--main">
+          <div className="band-page-bar-left">
+            <button type="button" className="ghost band-bar-btn" onClick={onBackToIntersection}>
+              <Icon name="chevronLeft" size={16} /><span>交叉口</span>
+            </button>
+            <div className="band-page-title">
+              <strong className="icon-label"><Icon name="band" size={16} /><span>干道绿波</span></strong>
+              <span className="hint">{corridor.name}</span>
+            </div>
+          </div>
+          <div className="band-page-bar-right">
+            <button
+              type="button"
+              className="primary band-bar-btn"
+              onClick={() => {
+                optimizeBand()
+                setBatchNote(null)
+              }}
+            >
+              <Icon name="optimize" size={15} /><span>优化</span>
+            </button>
+            {onProgressiveOffsets && (
+              <button
+                type="button"
+                className="ghost band-bar-btn"
+                onClick={() => onProgressiveOffsets(false)}
+                title="按行程时间推连续相位差"
+              >
+                <Icon name="band" size={15} /><span>连续相位差</span>
+              </button>
+            )}
+            <button
+              type="button"
+              className="ghost band-bar-btn"
+              onClick={() => {
+                const r = optimizeAllBands()
+                setBatchNote(`${r.improved}/${r.count}`)
+              }}
+            >
+              批量
+            </button>
+            <button
+              type="button"
+              className="ghost band-bar-btn"
+              onClick={() => {
+                const md = [
+                  `# ${project.name} · ${corridor.name}`,
+                  `- 方法 ${band.method} · 带宽比 ${(band.bandwidthRatio * 100).toFixed(1)}%`,
+                  `- b↑ ${(band.forwardBandwidthSec ?? band.bandwidthSec).toFixed(1)}s · b↓ ${(band.backwardBandwidthSec ?? 0).toFixed(1)}s`,
+                ].join('\n')
+                downloadText(`${project.name}-band.md`, md, 'text/markdown')
+              }}
+            >
+              导出
+            </button>
           </div>
         </div>
-        <div className="band-page-tabs" role="tablist" aria-label="绿波视图">
-          {(
-            [
-              ['table', '路口参数表', 'table'],
-              ['timespace', '时距图', 'chart'],
-              ['map', '路网预览', 'map'],
-              ['maxband', 'MAXBAND', 'optimize'],
-              ['compare', '多走廊', 'compare'],
-            ] as const
-          ).map(([id, label, icon]) => (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              aria-selected={tab === id}
-              className={tab === id ? 'active' : ''}
-              onClick={() => setTab(id)}
-            >
-              <Icon name={icon} size={14} /><span>{label}</span>
-            </button>
-          ))}
-        </div>
-        <div className="band-page-bar-right">
-          <button
-            type="button"
-            className="primary"
-            onClick={() => {
-              optimizeBand()
-              setBatchNote(null)
-            }}
-          ><Icon name="optimize" size={15} /><span>优化</span>
-          </button>
-          {onProgressiveOffsets && (
-            <button type="button" className="ghost" onClick={() => onProgressiveOffsets(false)} title="按行程时间推连续相位差"><Icon name="band" size={15} /><span>连续相位差</span>
-            </button>
-          )}
-          <button
-            type="button"
-            className="ghost"
-            onClick={() => {
-              const r = optimizeAllBands()
-              setBatchNote(`${r.improved}/${r.count}`)
-            }}
-          >
-            批量
-          </button>
-          <button
-            type="button"
-            className="ghost"
-            onClick={() => {
-              const md = [
-                `# ${project.name} · ${corridor.name}`,
-                `- 方法 ${band.method} · 带宽比 ${(band.bandwidthRatio * 100).toFixed(1)}%`,
-                `- b↑ ${(band.forwardBandwidthSec ?? band.bandwidthSec).toFixed(1)}s · b↓ ${(band.backwardBandwidthSec ?? 0).toFixed(1)}s`,
-              ].join('\n')
-              downloadText(`${project.name}-band.md`, md, 'text/markdown')
-            }}
-          >
-            导出
-          </button>
+        <div className="band-page-bar-row band-page-bar-row--tabs">
+          <div className="band-page-tabs" role="tablist" aria-label="绿波视图">
+            {(
+              [
+                ['table', '路口参数表', 'table'],
+                ['timespace', '时距图', 'chart'],
+                ['map', '路网预览', 'map'],
+                ['maxband', 'MAXBAND', 'optimize'],
+                ['compare', '多走廊', 'compare'],
+              ] as const
+            ).map(([id, label, icon]) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={tab === id}
+                className={tab === id ? 'active' : ''}
+                onClick={() => setTab(id)}
+              >
+                <Icon name={icon} size={14} /><span>{label}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 

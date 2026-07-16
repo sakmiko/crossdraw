@@ -128,3 +128,7 @@
 | 右转渠化审查 | rightTurn/安全岛参数表 | 与 mesh 同源示意 |
 
 | 多走廊绿波报告 | 带宽柱 + 协调指数 | measureCorridor 同源；协调分为工程合成 |
+
+| 一键全方案优化 | Webster + 连续相位差 + 多走廊离散优化 | 工程合成；非商业黑箱 |
+| 净图导出 | 去标题/脚注/说明句 | 方法说明仅 MD |
+| 竞品调研 2026-07 | docs/research/06-competitor-optimization-survey | RoadGee/教材/HCM |

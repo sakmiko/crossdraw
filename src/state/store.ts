@@ -29,6 +29,11 @@ import { saveDraft } from '@/io/autosave'
 import { applyPedTimingToSignal } from '@/domain/signal/pedTiming'
 import { allocateGreensByBarrierCriticalY } from '@/domain/signal/barrierGreenAlloc'
 import { applyProgressiveOffsets } from '@/domain/analysis/progressiveOffset'
+import {
+  runFullSchemeOptimize,
+  projectAfterFullOptimize,
+  type FullOptimizeResult,
+} from '@/domain/optimize/fullSchemeOptimize' 
 
 export type UiTheme = 'dark' | 'light'
 
@@ -104,6 +109,7 @@ export type AppState = {
   applyPedTiming: () => void
   allocateBarrierGreens: () => void
   optimizeAllBands: () => { count: number; improved: number }
+  applyFullSchemeOptimize: () => FullOptimizeResult | null
   setBandSegmentLength: (toNodeId: string, lengthM: number) => void
   updateBasemap: (patch: Partial<NonNullable<Project["settings"]["basemap"]>>) => void
   setActiveBand: (id: string) => void
@@ -694,6 +700,24 @@ export const useAppStore = create<AppState>()(
           improved = summaries.filter((x) => x.improved).length
         })
         return { count, improved }
+      },
+      applyFullSchemeOptimize: () => {
+        const s = get()
+        const p = s.project
+        const ch =
+          p.channelizationSchemes.find((c) => c.id === p.active?.channelId) ??
+          p.channelizationSchemes[0]
+        if (!ch) return null
+        const fl = ch.flowSchemes.find((f) => f.id === p.active?.flowId) ?? ch.flowSchemes[0]
+        if (!fl) return null
+        const sg =
+          fl.signalSchemes.find((x) => x.id === p.active?.signalId) ?? fl.signalSchemes[0]
+        if (!sg || sg.unsignalized) return null
+        const corridors = p.bandCorridors?.length ? p.bandCorridors : [p.bandCorridor]
+        const r = runFullSchemeOptimize(ch.approaches, fl, sg, corridors, p.activeBandId)
+        const next = projectAfterFullOptimize(p, r)
+        set({ project: next, dirty: true })
+        return r
       },
       setBandSegmentLength: (toNodeId, lengthM) =>
         set((s) => {

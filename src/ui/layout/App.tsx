@@ -14,6 +14,18 @@ import {
   rightTurnBoardCsv,
 } from '@/domain/channel/rightTurnReview'
 import {
+  runFullSchemeOptimize,
+  fullOptimizeMarkdown,
+} from '@/domain/optimize/fullSchemeOptimize'
+import {
+  cleanChannelPlanSvg,
+  cleanFlowDiagramSvg,
+  cleanAnalysisPlanSvg,
+  cleanTimeSpaceSvg,
+  cleanSignalTimingSvg,
+  cleanCorridorNetworkSvg,
+} from '@/io/cleanDrawingPack' 
+import {
   professionalMultiCorridorReportSvg,
   multiCorridorReportMarkdown,
   multiCorridorReportCsv,
@@ -188,6 +200,7 @@ export default function App() {
   const applyPedTiming = useAppStore((s) => s.applyPedTiming)
   const allocateBarrierGreens = useAppStore((s) => s.allocateBarrierGreens)
   const optimizeAllBands = useAppStore((s) => s.optimizeAllBands)
+  const applyFullSchemeOptimize = useAppStore((s) => s.applyFullSchemeOptimize)
   const setBandSegmentLength = useAppStore((s) => s.setBandSegmentLength)
   const setActiveBand = useAppStore((s) => s.setActiveBand)
   const addBandCorridor = useAppStore((s) => s.addBandCorridor)
@@ -589,7 +602,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.102 · 绿波专页</span>
+          <span>Crossdraw v0.5.104 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -611,7 +624,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.102</span>
+            <span className="brand-ver">v0.5.104</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -903,7 +916,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.102</span>
+        <span>Crossdraw v0.5.104</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1127,6 +1140,67 @@ export default function App() {
             )
           },
           'pro-pack': () => exportProfessionalDiagrams(),
+          'full-scheme-optimize-md': () => {
+            const r =
+              typeof applyFullSchemeOptimize === 'function'
+                ? applyFullSchemeOptimize()
+                : null
+            if (!r) {
+              if (!channel || !flow || !signal) return
+              const rr = runFullSchemeOptimize(
+                channel.approaches,
+                flow,
+                signal,
+                project.bandCorridors?.length ? project.bandCorridors : [project.bandCorridor],
+                project.activeBandId,
+              )
+              downloadText(
+                `${project.name}-一键全方案优化.md`,
+                fullOptimizeMarkdown(project.name, rr),
+                'text/markdown',
+              )
+              return
+            }
+            downloadText(
+              `${project.name}-一键全方案优化.md`,
+              fullOptimizeMarkdown(project.name, r),
+              'text/markdown',
+            )
+          },
+          'clean-channel-svg': () => {
+            if (!channel) return
+            exportSvgFile(`${project.name}-渠化净图.svg`, cleanChannelPlanSvg(channel))
+          },
+          'clean-flow-svg': () => {
+            if (!channel || !flow) return
+            exportSvgFile(
+              `${project.name}-流向净图.svg`,
+              cleanFlowDiagramSvg(channel.approaches, flow),
+            )
+          },
+          'clean-analysis-svg': () => {
+            if (!channel || !analysis) return
+            exportSvgFile(
+              `${project.name}-评价净图.svg`,
+              cleanAnalysisPlanSvg(channel.approaches, analysis, 'los'),
+            )
+          },
+          'clean-timespace-svg': () => {
+            exportSvgFile(
+              `${project.name}-时距净图.svg`,
+              cleanTimeSpaceSvg(project.bandCorridor, band),
+            )
+          },
+          'clean-timing-svg': () => {
+            if (!signal) return
+            exportSvgFile(`${project.name}-配时净图.svg`, cleanSignalTimingSvg(signal))
+          },
+          'clean-network-svg': () => {
+            exportSvgFile(
+              `${project.name}-路网净图.svg`,
+              cleanCorridorNetworkSvg(project.bandCorridor, band),
+            )
+          },
           'multi-corridor-report-svg': () => {
             const list = project.bandCorridors?.length
               ? project.bandCorridors

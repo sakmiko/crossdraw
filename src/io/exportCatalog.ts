@@ -80,6 +80,13 @@ export type ExportItemId =
   | 'multi-corridor-report-svg'
   | 'multi-corridor-report-md'
   | 'multi-corridor-report-csv'
+  | 'full-scheme-optimize-md'
+  | 'clean-channel-svg'
+  | 'clean-flow-svg'
+  | 'clean-analysis-svg'
+  | 'clean-timespace-svg'
+  | 'clean-timing-svg'
+  | 'clean-network-svg'
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
@@ -98,6 +105,70 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'full-scheme-optimize-md',
+    category: 'analysis',
+    title: '一键全方案优化报告',
+    format: 'MD',
+    description: 'Webster配时 + 连续相位差 + 多走廊优化（工程近似）',
+    modes: ['analysis', 'signal', 'band'],
+    requires: ['signal', 'flow'],
+  },
+  {
+    id: 'clean-channel-svg',
+    category: 'drawing',
+    title: '渠化净图',
+    format: 'SVG',
+    description: '无标题/脚注/说明文字的几何出图',
+    modes: ['channel'],
+    requires: ['channel'],
+  },
+  {
+    id: 'clean-flow-svg',
+    category: 'drawing',
+    title: '流向净图',
+    format: 'SVG',
+    description: '无多余文字的流向飘带图',
+    modes: ['flow'],
+    requires: ['flow'],
+  },
+  {
+    id: 'clean-analysis-svg',
+    category: 'drawing',
+    title: '评价净图',
+    format: 'SVG',
+    description: '无脚注的服务水平平面图',
+    modes: ['analysis'],
+    requires: ['analysis'],
+  },
+  {
+    id: 'clean-timespace-svg',
+    category: 'band',
+    title: '时距净图',
+    format: 'SVG',
+    description: '无脚注时距图',
+    modes: ['band'],
+    requires: ['band'],
+  },
+  {
+    id: 'clean-timing-svg',
+    category: 'signal',
+    title: '配时净图',
+    format: 'SVG',
+    description: '无脚注配时条',
+    modes: ['signal'],
+    requires: ['signal'],
+  },
+  {
+    id: 'clean-network-svg',
+    category: 'band',
+    title: '路网净图',
+    format: 'SVG',
+    description: '无脚注走廊路网预览',
+    modes: ['band'],
+    requires: ['band'],
+  },
+
   {
     id: 'multi-corridor-report-svg',
     category: 'band',
