@@ -18,6 +18,8 @@ import { buildFlowAlignment, type FlowDisplayMode } from '@/domain/flow/flowAlig
 import { roadgeeFlowDiagramSvg, type RoadGeeFlowStyle, DEFAULT_ROADGEE_FLOW_STYLE } from '@/ui/charts/roadgeeFlowDiagram'
 import { roadgeeSignalBoardSvg } from '@/ui/charts/roadgeeSignalBoard'
 import { roadgeeAnalysisPlanSvg, type AnalysisPlanMetric } from '@/ui/charts/roadgeeAnalysisPlan'
+import { unsignalizedPlanSvg } from '@/ui/charts/unsignalizedPlan'
+import { analyzeUnsignalized } from '@/domain/analysis/unsignalized'
 import { professionalCrossSectionSvg } from '@/ui/charts/crossSectionDiagram'
 import { schemeMetricsCompareSvg, collectSchemeSnapshots } from '@/ui/charts/schemeCompareDiagrams'
 import { analyzeIntersection } from '@/domain/analysis'
@@ -204,6 +206,24 @@ export function ModeCenterStage(props: ModeCenterProps) {
   if (mode === 'analysis') {
     if (!channel || !analysis) {
       return <StageChrome title="平面评价"><p className="hint">需要完整渠化·流量·信号</p></StageChrome>
+    }
+    if (signal?.unsignalized && flow) {
+      const u = analyzeUnsignalized(channel.approaches, flow, signal, channel.intersectionType)
+      const usvg = unsignalizedPlanSvg(channel.approaches, u, {
+        size: Math.min(560, Math.max(400, canvasHeight - 20)),
+      })
+      return (
+        <StageChrome
+          title={u.mode === 'roundabout' ? '环形能力平面图' : '无信号评价平面图'}
+          unit={`${u.mode} · LOS ${u.los} · 示意`}
+          onDownload={() => downloadSvg('crossdraw-无信号平面.svg', usvg)}
+        >
+          <div
+            className="chart-svg-host chart-svg-host--pro mode-stage-svg"
+            dangerouslySetInnerHTML={{ __html: usvg }}
+          />
+        </StageChrome>
+      )
     }
     const labels: [AnalysisPlanMetric, string][] = [
       ['los', '服务水平'],

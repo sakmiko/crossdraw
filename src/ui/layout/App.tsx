@@ -67,6 +67,8 @@ import {
 } from '@/ui/charts/professionalDiagrams'
 import { roadgeeFlowDiagramSvg, DEFAULT_ROADGEE_FLOW_STYLE } from '@/ui/charts/roadgeeFlowDiagram'
 import { roadgeeAnalysisPlanSvg } from '@/ui/charts/roadgeeAnalysisPlan'
+import { unsignalizedPlanSvg, unsignalizedLegsCsv } from '@/ui/charts/unsignalizedPlan'
+import { analyzeUnsignalized, unsignalizedMarkdown } from '@/domain/analysis/unsignalized'
 import { maxbandReportDiagramSvg } from '@/ui/charts/maxbandReportDiagram'
 import { buildMaxbandReport, maxbandReportMarkdown, maxbandReportCsv } from '@/domain/analysis/maxbandReport'
 import { roadgeeSignalBoardSvg } from '@/ui/charts/roadgeeSignalBoard'
@@ -602,7 +604,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.84 · 绿波专页</span>
+          <span>Crossdraw v0.5.85 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -624,7 +626,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.84</span>
+            <span className="brand-ver">v0.5.85</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -864,6 +866,7 @@ export default function App() {
                   onClearScheme={onClearScheme}
                   onExportAutoTimingReport={onExportAutoTimingReport}
                   yReportText={yReportText}
+                  onToggleUnsignalized={(v) => setSignalMeta({ unsignalized: v })}
                 />
               )}
               {mode === 'xsection' && xsection && selected && (
@@ -886,6 +889,7 @@ export default function App() {
                   theme={theme}
                   onOpenCompare={() => setMode('compare')}
                   onExportProPack={exportProfessionalDiagrams}
+                  onToggleUnsignalized={(v) => setSignalMeta({ unsignalized: v })}
                 />
               )}
               {mode === 'compare' && (
@@ -913,7 +917,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.84</span>
+        <span>Crossdraw v0.5.85</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1173,7 +1177,22 @@ export default function App() {
             })
             downloadText(`${project.name}-band-multi.md`, multiBandMarkdown(project.name, rows), 'text/markdown')
           },
-          'maxband-report-svg': () => {
+          'unsignalized-plan-svg': () => {
+      if (!channel || !flow || !signal) return
+      const u = analyzeUnsignalized(channel.approaches, flow, signal, channel.intersectionType)
+      exportSvgFile(`${project.name}-无信号平面.svg`, unsignalizedPlanSvg(channel.approaches, u, { size: 560 }))
+    },
+    'unsignalized-md': () => {
+      if (!channel || !flow || !signal) return
+      const u = analyzeUnsignalized(channel.approaches, flow, signal, channel.intersectionType)
+      downloadText(`${project.name}-unsignalized.md`, unsignalizedMarkdown(project.name, u), 'text/markdown')
+    },
+    'unsignalized-csv': () => {
+      if (!channel || !flow || !signal) return
+      const u = analyzeUnsignalized(channel.approaches, flow, signal, channel.intersectionType)
+      downloadText(`${project.name}-unsignalized.csv`, unsignalizedLegsCsv(u), 'text/csv')
+    },
+    'maxband-report-svg': () => {
       const rep = buildMaxbandReport(project.bandCorridor)
       exportSvgFile(`${project.name}-maxband.svg`, maxbandReportDiagramSvg(project.bandCorridor, { report: rep, width: 900, height: 340 }))
     },

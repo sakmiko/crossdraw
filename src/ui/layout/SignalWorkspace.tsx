@@ -78,6 +78,7 @@ export type SignalWorkspaceProps = {
   onClearScheme?: () => void
   onExportAutoTimingReport?: () => void
   yReportText?: string
+  onToggleUnsignalized?: (v: boolean) => void
 }
 
 export function SignalWorkspace(props: SignalWorkspaceProps) {
@@ -130,6 +131,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
     onClearScheme,
     onExportAutoTimingReport,
     yReportText,
+    onToggleUnsignalized,
   } = props
 
   const al = buildSignalTimingAlignment(signal)
@@ -149,6 +151,14 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
     <div className="card" style={{ marginTop: 12 }}>
       <div className="panel-header">
         <h2 style={{ margin: 0 }}>信号 · {signal.name}</h2>
+        <label className="check-inline" style={{ marginLeft: 'auto', fontSize: 12 }}>
+          <input
+            type="checkbox"
+            checked={!!signal.unsignalized}
+            onChange={(e) => onToggleUnsignalized?.(e.target.checked)}
+          />{' '}
+          无信号控制
+        </label>
         <div className="panel-header-meta">
           <span className={`integrity-badge ${al.closed ? 'ok' : 'bad'}`} title="配时闭合">
             {al.closed ? '闭合' : '未闭合'}

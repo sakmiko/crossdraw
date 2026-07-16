@@ -94,7 +94,7 @@ export type AppState = {
   loadTemplate: (kind: IntersectionType | 'cross' | 't') => void
   applyOptimizedTiming: (phases: Phase[], cycle: number) => void
   replaceSignalScheme: (signal: SignalScheme) => void
-  setSignalMeta: (patch: Partial<Pick<SignalScheme, 'startLossSec' | 'lostTimeSec' | 'name'>>) => void
+  setSignalMeta: (patch: Partial<Pick<SignalScheme, 'startLossSec' | 'lostTimeSec' | 'name' | 'unsignalized'>>) => void
   updateBand: (patch: Partial<BandCorridor>) => void
   updateBandNode: (nodeId: string, patch: Partial<BandCorridor['nodes'][0]>) => void
   addBandNode: () => void
@@ -598,6 +598,7 @@ export const useAppStore = create<AppState>()(
           if (patch.startLossSec !== undefined) sg.startLossSec = patch.startLossSec
           if (patch.lostTimeSec !== undefined) sg.lostTimeSec = patch.lostTimeSec
           if (patch.name !== undefined) sg.name = patch.name
+          if (patch.unsignalized !== undefined) sg.unsignalized = patch.unsignalized
           s.dirty = true
         }),
       updateBand: (patch) =>

@@ -18,6 +18,7 @@ import { analyzeIntersection } from '@/domain/analysis'
 import { analyzeUnsignalized, unsignalizedMarkdown } from '@/domain/analysis/unsignalized'
 import { AnalysisCharts, CompareCharts } from '@/ui/charts/ChartPanels'
 import { unsignalizedChartSvg } from '@/ui/charts/unsignalizedChart'
+import { unsignalizedPlanSvg, unsignalizedLegsCsv } from '@/ui/charts/unsignalizedPlan'
 import { useMemo } from 'react'
 import { AnalysisLaneTable } from '@/ui/layout/AnalysisLaneTable'
 import { collectCompareRows, compareSchemesCsv } from '@/io/report'
@@ -39,6 +40,7 @@ export type AnalysisWorkspaceProps = {
   theme: 'dark' | 'light'
   onOpenCompare: () => void
   onExportProPack: () => void
+  onToggleUnsignalized?: (v: boolean) => void
 }
 
 export function AnalysisWorkspace({
@@ -51,6 +53,7 @@ export function AnalysisWorkspace({
   theme,
   onOpenCompare,
   onExportProPack,
+  onToggleUnsignalized,
 }: AnalysisWorkspaceProps) {
   const compareRows = collectCompareRows(project, analyzeIntersection)
   const unsig = useMemo(() => {
@@ -105,35 +108,96 @@ export function AnalysisWorkspace({
 
 
       <AnalysisCharts analysis={analysis} />
-      {unsig && (
-        <div style={{ marginTop: 12 }}>
-          <div className="chart-title">
-            <span>无信号 / 环形能力</span>
-            <small>{unsig.mode} · LOS {unsig.los}</small>
-          </div>
-          <div
-            className="chart-svg-host chart-svg-host--pro"
-            dangerouslySetInnerHTML={{ __html: unsignalizedChartSvg(unsig, { width: 520 }) }}
-          />
-          <p className="hint quiet" style={{ marginTop: 4 }}>
-        {unsig.notes[0]}
-      </p>
-      <button
-        type="button"
-        className="ghost"
-        style={{ marginTop: 4 }}
-        onClick={() =>
-          downloadText(
-            `${project.name}-unsignalized.md`,
-            unsignalizedMarkdown(project.name, unsig),
-            'text/markdown',
-          )
-        }
-      >
-        导出简报
-      </button>
+      <div className="rg-section" style={{ marginTop: 12 }}>
+        <div className="rg-section-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          无信号 / 环形评价
+          <label className="check-inline" style={{ fontWeight: 400, fontSize: 12 }}>
+            <input
+              type="checkbox"
+              checked={!!signal?.unsignalized}
+              onChange={(e) => onToggleUnsignalized?.(e.target.checked)}
+            />{' '}
+            启用无信号模式
+          </label>
         </div>
-      )}
+        {!signal?.unsignalized && (
+          <p className="hint quiet">勾选后按 TWSC 间隙接受 / 环形进口能力示意评价（非完整 HCM / SIDRA）。</p>
+        )}
+        {unsig && channel && (
+          <>
+            <div className="metric-grid" style={{ marginBottom: 8 }}>
+              <div className="metric">
+                <div className="label">模式</div>
+                <div className="value" style={{ fontSize: 16 }}>{unsig.mode}</div>
+              </div>
+              <div className="metric">
+                <div className="label">均延误</div>
+                <div className="value">{unsig.avgDelay.toFixed(1)}<small>s</small></div>
+              </div>
+              <div className="metric">
+                <div className="label">均 v/c</div>
+                <div className="value">{unsig.avgVc.toFixed(2)}</div>
+              </div>
+              <div className={`metric los-${unsig.los}`}>
+                <div className="label">LOS</div>
+                <div className="value">{unsig.los}</div>
+              </div>
+            </div>
+            <div
+              className="chart-svg-host chart-svg-host--pro"
+              dangerouslySetInnerHTML={{
+                __html: unsignalizedPlanSvg(channel.approaches, unsig, { size: 420 }),
+              }}
+            />
+            <div
+              className="chart-svg-host chart-svg-host--pro"
+              style={{ marginTop: 8 }}
+              dangerouslySetInnerHTML={{ __html: unsignalizedChartSvg(unsig, { width: 520 }) }}
+            />
+            <div className="toolbar dense" style={{ marginTop: 8 }}>
+              <button
+                type="button"
+                className="ghost"
+                onClick={() =>
+                  exportSvgFile(
+                    `${project.name}-无信号平面.svg`,
+                    unsignalizedPlanSvg(channel.approaches, unsig, { size: 560 }),
+                  )
+                }
+              >
+                平面图
+              </button>
+              <button
+                type="button"
+                className="ghost"
+                onClick={() =>
+                  downloadText(
+                    `${project.name}-unsignalized.md`,
+                    unsignalizedMarkdown(project.name, unsig),
+                    'text/markdown',
+                  )
+                }
+              >
+                MD
+              </button>
+              <button
+                type="button"
+                className="ghost"
+                onClick={() =>
+                  downloadText(
+                    `${project.name}-unsignalized.csv`,
+                    unsignalizedLegsCsv(unsig),
+                    'text/csv',
+                  )
+                }
+              >
+                CSV
+              </button>
+            </div>
+            <p className="hint quiet">{unsig.notes.join(' · ')}</p>
+          </>
+        )}
+      </div>
       <AnalysisLaneTable analysis={analysis} projectName={project.name} />
       <CompareCharts
         rows={compareRows.map((r) => ({

@@ -2739,12 +2739,16 @@ button.primary .cd-icon {
   grid-template-rows: minmax(200px, 44vh) minmax(0, 1fr) !important;
 }
 @media (max-width: 1100px) {
+  /* non-signal pages may stack on narrow screens for readability */
   .shell--channel .page-fill-body,
-  .shell--signal .page-fill-body,
-  .shell--flow .page-fill-body {
+  .shell--flow .page-fill-body,
+  .shell--analysis .page-fill-body,
+  .shell--compare .page-fill-body,
+  .shell--xsection .page-fill-body {
     grid-template-columns: 1fr;
     grid-template-rows: minmax(220px, 42vh) minmax(0, 1fr);
   }
+  /* signal already forced vertical at all widths via .app.shell--signal rules */
 }
 .page-fill-params .card {
   margin-top: 0 !important;
@@ -2865,25 +2869,37 @@ button.primary .cd-icon {
 }
 
 
-/* v0.5.84 flow vertical stack — top diagram, bottom form (like signal) */
-.app.shell--flow .page-fill-body {
-  display: grid !important;
-  grid-template-columns: 1fr !important;
-  grid-template-rows: minmax(210px, 44vh) minmax(0, 1fr) !important;
-  gap: 0 !important;
-}
-.app.shell--flow .page-fill-stage {
-  min-height: 200px;
-  max-height: 46vh;
-  border-bottom: 1px solid var(--border);
-}
-.app.shell--flow .page-fill-params {
-  border-left: none !important;
-  overflow: auto;
-  padding: 8px 12px 20px;
-}
-.app.shell--flow .page-fill-params .card {
-  max-width: 1100px;
-  margin-left: auto;
-  margin-right: auto;
+
+
+/* layout policy: ONLY signal is vertical stack; other modes stay left diagram / right params on desktop */
+@media (min-width: 1101px) {
+  .app.shell--flow .page-fill-body,
+  .app.shell--channel .page-fill-body,
+  .app.shell--analysis .page-fill-body,
+  .app.shell--compare .page-fill-body,
+  .app.shell--xsection .page-fill-body {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 38%) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+  }
+  .app.shell--flow .page-fill-stage,
+  .app.shell--channel .page-fill-stage,
+  .app.shell--analysis .page-fill-stage,
+  .app.shell--compare .page-fill-stage,
+  .app.shell--xsection .page-fill-stage {
+    max-height: none;
+    border-bottom: none;
+  }
+  .app.shell--flow .page-fill-params,
+  .app.shell--channel .page-fill-params,
+  .app.shell--analysis .page-fill-params,
+  .app.shell--compare .page-fill-params,
+  .app.shell--xsection .page-fill-params {
+    border-left: 1px solid var(--border) !important;
+    border-top: none !important;
+  }
+  .app.shell--signal .page-fill-body {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: minmax(210px, 46vh) minmax(0, 1fr) !important;
+  }
 }

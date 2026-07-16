@@ -40,6 +40,9 @@ export type ExportItemId =
   | 'maxband-report-svg'
   | 'maxband-report-md'
   | 'maxband-report-csv'
+  | 'unsignalized-plan-svg'
+  | 'unsignalized-md'
+  | 'unsignalized-csv'
 
 export type ExportItem = {
   id: ExportItemId
@@ -53,6 +56,34 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'unsignalized-plan-svg',
+    category: 'analysis',
+    title: '无信号评价平面图',
+    format: 'SVG',
+    description: 'TWSC/环形 · LOS 色块 · 非完整 HCM',
+    modes: ['analysis', 'signal'],
+    requires: ['channel', 'flow', 'signal'],
+  },
+  {
+    id: 'unsignalized-md',
+    category: 'analysis',
+    title: '无信号评价简报',
+    format: 'MD',
+    description: '腿部能力表 + 说明',
+    modes: ['analysis'],
+    requires: ['channel', 'flow', 'signal'],
+  },
+  {
+    id: 'unsignalized-csv',
+    category: 'analysis',
+    title: '无信号腿部 CSV',
+    format: 'CSV',
+    description: 'volume/capacity/vc/delay/los',
+    modes: ['analysis'],
+    requires: ['channel', 'flow', 'signal'],
+  },
+
   {
     id: 'maxband-report-svg',
     category: 'band',
