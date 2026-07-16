@@ -313,6 +313,105 @@ export function placeCircleLine(
   })
 }
 
+
+/** Free-right channel ribbon between outerR and midR along ang0→ang1 (CCW/CW via order). */
+export function placeChannelRibbon(
+  mesh: Mesh,
+  center: Vec,
+  outerR: number,
+  midR: number,
+  ang0: number,
+  ang1: number,
+  theme: ThemeLike,
+  steps = 26,
+) {
+  const outer = circleArc(center, outerR, ang0, ang1, steps)
+  const inner = circleArc(center, midR, ang1, ang0, Math.max(12, steps - 4))
+  pushPoly(mesh, {
+    layer: 'ROAD',
+    points: [...outer, ...inner],
+    fill: theme.laneFill,
+    stroke: theme.asphaltEdge,
+    strokeWidth: 0.25,
+    alpha: 0.92,
+  })
+  pushLine(mesh, {
+    layer: 'MARKING',
+    points: circleArc(center, outerR, ang0, ang1, steps - 4),
+    stroke: theme.marking,
+    strokeWidth: 0.2,
+  })
+  pushLine(mesh, {
+    layer: 'MARKING',
+    points: circleArc(center, midR, ang0 + 0.02, ang1 - 0.02, steps - 6),
+    stroke: theme.marking,
+    strokeWidth: 0.18,
+    dashed: true,
+    alpha: 0.9,
+  })
+}
+
+/** Channelization island (solid or painted hatch) between midR and innerR. */
+export function placeChannelIslandArc(
+  mesh: Mesh,
+  center: Vec,
+  midR: number,
+  innerR: number,
+  ang0: number,
+  ang1: number,
+  theme: ThemeLike,
+  painted = false,
+  steps = 24,
+) {
+  const outer = circleArc(center, midR, ang0, ang1, steps)
+  const inner = circleArc(center, innerR, ang1, ang0, Math.max(12, steps - 4))
+  pushPoly(mesh, {
+    layer: 'ISLAND',
+    points: [...outer, ...inner],
+    fill: painted ? theme.yellow : theme.island,
+    stroke: theme.islandEdge,
+    strokeWidth: 0.4,
+    alpha: painted ? 0.4 : 0.95,
+  })
+  if (painted) {
+    for (const frac of [0.35, 0.55, 0.75]) {
+      const rr = innerR + (midR - innerR) * frac
+      pushLine(mesh, {
+        layer: 'MARKING',
+        points: circleArc(center, rr, ang0 + 0.08, ang1 - 0.08, 12),
+        stroke: theme.yellow,
+        strokeWidth: 0.15,
+        alpha: 0.7,
+      })
+    }
+  }
+}
+
+/** Circular safety / refuge island disc. */
+export function placeSafetyDisc(
+  mesh: Mesh,
+  center: Vec,
+  r: number,
+  fill: string,
+  theme: ThemeLike,
+  alpha = 0.98,
+  steps = 20,
+) {
+  placeCirclePoly(mesh, center, r, fill, theme.islandEdge, 0.35, steps, 'ISLAND')
+  // curb ring
+  placeCircleLine(mesh, center, r, theme.curb, 0.3, false, steps, 0.95)
+}
+
+function circleArc(center: Vec, r: number, a0: number, a1: number, steps: number): Vec[] {
+  const pts: Vec[] = []
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps
+    const a = a0 + (a1 - a0) * t
+    pts.push([center[0] + Math.cos(a) * r, center[1] + Math.sin(a) * r])
+  }
+  return pts
+}
+
 /** Rectangle lane strip between lat a..b and s0..s1 along frame. */
 export function placeLaneStrip(
   mesh: Mesh,

@@ -1,3 +1,9 @@
+## 0.5.118 — Channel island glyphs + page polish
+
+- Free-right **ribbon / island / safety disc** as reusable glyphs (`placeChannelRibbon`, `placeChannelIslandArc`, `placeSafetyDisc`).
+- Stage chrome + denser params; breakpoints 1100/900 for responsive columns.
+- Schematic channelization — not survey CAD / not RoadGee clone.
+
 ## 0.5.117 — Stop-line glyph + RoadGee-style band a-scan
 
 - `placeStopLine` double-bar glyph wired into approach rebuild (with zebra/arrows).

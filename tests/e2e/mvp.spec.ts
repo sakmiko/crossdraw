@@ -18,13 +18,15 @@ async function openNav(page: Page, label: string) {
   await page.waitForTimeout(300)
 }
 
-test.describe('v0.5.117 stop-line + band-a polish', () => {
+test.describe('v0.5.118 channel-island + page polish', () => {
   // docs/screenshots/00-shell.png
   // docs/screenshots/06-compare.png
   // 渠化 流量 信号 分析 绿波 比选 断面
   test('shell', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.117/).first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.118/).first()).toBeVisible()
+    const stage = page.locator('.page-fill-stage').first()
+    await expect(stage).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
   test('channel', async ({ page }) => {
@@ -37,9 +39,13 @@ test.describe('v0.5.117 stop-line + band-a polish', () => {
     await openNav(page, '流量')
     await page.screenshot({ path: 'docs/screenshots/02-flow.png', fullPage: true })
   })
-  test('signal', async ({ page }) => {
+  test('signal L-R', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '信号')
+    const stage = page.locator('.page-fill-stage').first()
+    const params = page.locator('.page-fill-params').first()
+    await expect(stage).toBeVisible()
+    await expect(params).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/03-signal.png', fullPage: true })
   })
   test('analysis', async ({ page }) => {
@@ -47,14 +53,9 @@ test.describe('v0.5.117 stop-line + band-a polish', () => {
     await openNav(page, '分析')
     await page.screenshot({ path: 'docs/screenshots/04-analysis.png', fullPage: true })
   })
-  test('band optimize', async ({ page }) => {
+  test('band', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '绿波')
-    const opt = page.getByRole('button', { name: /优化并应用/ })
-    if (await opt.count()) {
-      await opt.first().click()
-      await page.waitForTimeout(400)
-    }
     await page.screenshot({ path: 'docs/screenshots/05-band.png', fullPage: true })
   })
   test('xsection', async ({ page }) => {

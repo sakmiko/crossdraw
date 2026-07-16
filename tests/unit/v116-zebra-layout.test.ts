@@ -6,7 +6,7 @@ import { rebuildChannelMesh } from '@/domain/geometry/rebuild'
 import { placeZebra } from '@/domain/geometry/glyphs'
 import type { Mesh } from '@/domain/types'
 
-describe('v0.5.117 zebra glyph + left-right layout', () => {
+describe('v0.5.118 zebra glyph + left-right layout', () => {
   it('placeZebra writes polylines', () => {
     const mesh: Mesh = {
       polygons: [],

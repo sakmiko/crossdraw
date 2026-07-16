@@ -18,6 +18,9 @@ import {
   placeStopLine,
   placeYield,
   placeTeardropSplitter,
+  placeChannelRibbon,
+  placeChannelIslandArc,
+  placeSafetyDisc,
   placeCirclePoly,
   placeCircleLine,
   type Frame,
@@ -323,57 +326,10 @@ function drawCornerFillets(mesh: Mesh, approaches: Approach[], core: number) {
       const midR = Math.max(outerR - chW * 0.55, 2.5)
       const innerR = Math.max(midR - islandW * 0.55, 1.8)
 
-      // free-right channel ribbon (between outer curb arc and island outer)
-      const chOuter = arcPoints(center, outerR, ang0, ang1, 26)
-      const chInner = arcPoints(center, midR, ang1, ang0, 22)
-      pushPoly(mesh, {
-        layer: 'ROAD',
-        points: [...chOuter, ...chInner],
-        fill: THEME.laneFill,
-        stroke: THEME.asphaltEdge,
-        strokeWidth: 0.25,
-        alpha: 0.92,
-      })
-      // channel edge lines
-      pushLine(mesh, {
-        layer: 'MARKING',
-        points: arcPoints(center, outerR, ang0, ang1, 22),
-        stroke: THEME.marking,
-        strokeWidth: 0.2,
-      })
-      pushLine(mesh, {
-        layer: 'MARKING',
-        points: arcPoints(center, midR, ang0 + 0.02, ang1 - 0.02, 20),
-        stroke: THEME.marking,
-        strokeWidth: 0.18,
-        dashed: true,
-      })
-
-      // main channelization island body (between midR and innerR)
-      const outer = arcPoints(center, midR, ang0, ang1, 24)
-      const inner = arcPoints(center, innerR, ang1, ang0, 20)
+      // free-right ribbon + channel island via reusable glyphs
       const painted = a.rightTurn.style === 'painted'
-      pushPoly(mesh, {
-        layer: 'ISLAND',
-        points: [...outer, ...inner],
-        fill: painted ? THEME.yellow : THEME.island,
-        stroke: THEME.islandEdge,
-        strokeWidth: 0.4,
-        alpha: painted ? 0.4 : 0.95,
-      })
-      if (painted) {
-        // hatch suggestion via parallel arcs
-        for (const frac of [0.35, 0.55, 0.75]) {
-          const rr = innerR + (midR - innerR) * frac
-          pushLine(mesh, {
-            layer: 'MARKING',
-            points: arcPoints(center, rr, ang0 + 0.08, ang1 - 0.08, 12),
-            stroke: THEME.doubleYellow,
-            strokeWidth: 0.15,
-            alpha: 0.7,
-          })
-        }
-      }
+      placeChannelRibbon(mesh, center, outerR, midR, ang0, ang1, THEME, 26)
+      placeChannelIslandArc(mesh, center, midR, innerR, ang0, ang1, THEME, painted, 24)
 
       // safety island (refuge) — smaller disc near pedestrian path
       const si = a.rightTurn.safetyIsland
@@ -386,32 +342,7 @@ function drawCornerFillets(mesh: Mesh, approaches: Approach[], core: number) {
         )
         const surfaceFill =
           si.surface === 'landscaped' ? THEME.island : si.surface === 'painted' ? THEME.yellow : '#d6d3d1'
-        const segs = 20
-        const disc: Vec[] = []
-        for (let i = 0; i < segs; i++) {
-          const th = (i / segs) * Math.PI * 2
-          disc.push([siCenter[0] + Math.cos(th) * siR, siCenter[1] + Math.sin(th) * siR])
-        }
-        pushPoly(mesh, {
-          layer: 'ISLAND',
-          points: disc,
-          fill: surfaceFill,
-          stroke: THEME.islandEdge,
-          strokeWidth: 0.35,
-          alpha: si.surface === 'painted' ? 0.45 : 0.98,
-        })
-        // curb ring
-        const ring: Vec[] = []
-        for (let i = 0; i <= segs; i++) {
-          const th = (i / segs) * Math.PI * 2
-          ring.push([siCenter[0] + Math.cos(th) * siR, siCenter[1] + Math.sin(th) * siR])
-        }
-        pushLine(mesh, {
-          layer: 'ANNO',
-          points: ring,
-          stroke: THEME.curb,
-          strokeWidth: 0.3,
-        })
+        placeSafetyDisc(mesh, siCenter, siR, surfaceFill, THEME, si.surface === 'painted' ? 0.45 : 0.98, 20)
         if (si.showYield) {
           const tip = add(siCenter, mul(ux, siR * 0.15))
           pushPoly(mesh, {

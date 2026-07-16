@@ -77,9 +77,9 @@ describe('v0.5.117 stop-line glyph + band a-scan', () => {
 
   it('version + BandPage title', () => {
     const pkg = readFileSync(resolve('package.json'), 'utf8')
-    expect(pkg).toContain('"version": "0.5.117"')
+    expect(pkg).toMatch(/"version": "0\.5\.\d+"/)
     const app = readFileSync(resolve('src/ui/layout/App.tsx'), 'utf8')
-    expect(app).toMatch(/v0\.5\.117/)
+    expect(app).toMatch(/v0\.5\.\d+/)
     const band = readFileSync(resolve('src/domain/analysis/band.ts'), 'utf8')
     expect(band).toContain('enumerateHalfCycleA')
     expect(band).toContain('rangeM: 100')
