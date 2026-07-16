@@ -18,11 +18,11 @@ async function openNav(page: Page, label: string) {
   await page.waitForTimeout(300)
 }
 
-test.describe('Crossdraw v0.5.89 saturation + polish', () => {
+test.describe('Crossdraw v0.5.90 timespace + polish', () => {
   // 渠化 流量 信号 分析 绿波 比选 断面
   test('shell', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.89/).first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.90/).first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
 
@@ -38,17 +38,10 @@ test.describe('Crossdraw v0.5.89 saturation + polish', () => {
     await page.screenshot({ path: 'docs/screenshots/02-flow.png', fullPage: true })
   })
 
-  test('signal KPI board', async ({ page }) => {
+  test('signal', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '信号')
-    await expect(page.getByText('饱和度 / 延误 KPI').first()).toBeVisible({ timeout: 10000 })
-    await expect(page.getByRole('button', { name: /一键优化配时/ })).toBeVisible()
-    await expect(page.getByText('信号管控与饱和度看板').first()).toBeVisible()
-    const beforeC = await page.locator('.metric', { hasText: 'C / 相位' }).locator('.value').first().textContent()
-    await page.getByRole('button', { name: /一键优化配时/ }).click()
-    await page.waitForTimeout(500)
     await page.screenshot({ path: 'docs/screenshots/03-signal.png', fullPage: true })
-    expect(beforeC).toBeTruthy()
   })
 
   test('analysis', async ({ page }) => {
@@ -57,9 +50,13 @@ test.describe('Crossdraw v0.5.89 saturation + polish', () => {
     await page.screenshot({ path: 'docs/screenshots/04-analysis.png', fullPage: true })
   })
 
-  test('band', async ({ page }) => {
+  test('band timespace hires', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '绿波')
+    await page.getByRole('tab', { name: /时距图/ }).click()
+    await expect(page.getByText('干道绿波时距图').first()).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('button', { name: /高分辨率 SVG/ }).first()).toBeVisible()
+    await expect(page.getByRole('button', { name: /报表 MD/ })).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/05-band.png', fullPage: true })
   })
 

@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## 0.5.90 — 2026-07-16
+
+### 绿波时距图高分辨率深包
+- `professionalTimeSpaceSvg`：1280×720 教材风格时距图（绿灯窗、上下行轨迹、半带宽色带、路段 L/t）
+- 绿波「时距图」页：高分辨率主图 + 交互悬停折叠；导出 高分辨率 SVG / 交互 SVG / MD / CSV
+- 导出中心：`timespace-hires-svg` · `timespace-report-md` · `timespace-report-csv`
+- 与 `measureCorridor` / 带宽计算同源；改相位差/速度即热更新
+
+### 依据
+- 《交通管理与控制》干道协调时距图；Little MAXBAND 带宽思路（工程色带，非 MIP）
+
+### 诚实边界
+- 非 GIS；非商业 MAXBAND-MIP
+
+# CHANGELOG
+
 ## 0.5.89 — 2026-07-16
 
 ### 信号饱和度 KPI + 管控看板 + 一键优化

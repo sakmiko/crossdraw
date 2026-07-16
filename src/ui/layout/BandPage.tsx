@@ -8,6 +8,12 @@ import { BandCorridorSidebar } from '@/ui/layout/BandCorridorSidebar'
 import { BandCharts, CorridorCompareCharts } from '@/ui/charts/ChartPanels'
 import { TimeSpacePanel } from '@/ui/charts/ProfessionalPanels'
 import { InteractiveTimeSpace, buildTimeSpaceExportSvg } from '@/ui/charts/InteractiveTimeSpace'
+import {
+  professionalTimeSpaceSvg,
+  timeSpaceReportMarkdown,
+  timeSpaceReportCsv,
+} from '@/ui/charts/professionalTimeSpace'
+
 import { collectCorridorKpis, corridorKpiCompareSvg, multiBandMarkdown } from '@/ui/charts/bandCorridorCompare'
 import { corridorMapSvg } from '@/ui/charts/corridorMap'
 import { corridorNetworkPreviewSvg } from '@/ui/charts/corridorNetworkPreview'
@@ -88,7 +94,17 @@ export function BandPage(props: BandPageProps) {
       }),
     [corridor, band],
   )
-  const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
+  
+  const hiResTimeSpace = useMemo(
+    () =>
+      professionalTimeSpaceSvg(corridor, band, {
+        width: 1280,
+        height: 720,
+        theme: theme === 'light' ? 'light' : 'dark',
+      }),
+    [corridor, band, theme],
+  )
+const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
   const maxbandSvg = useMemo(
     () =>
       maxbandReportDiagramSvg(corridor, {
@@ -431,20 +447,65 @@ export function BandPage(props: BandPageProps) {
             <div className="card band-pane compact-card">
               <div className="panel-header">
                 <h2 style={{ margin: 0 }}>时距图</h2>
-                <button
-                  type="button"
-                  className="ghost"
-                  onClick={() => {
-                    exportSvgFile(
-                      `${project.name}-timespace.svg`,
-                      buildTimeSpaceExportSvg(corridor, band, theme),
-                    )
-                  }}
-                >
-                  SVG
-                </button>
+                <div className="panel-header-meta" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="primary"
+                    onClick={() =>
+                      exportSvgFile(`${project.name}-timespace-hires.svg`, hiResTimeSpace)
+                    }
+                  >
+                    高分辨率 SVG
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() => {
+                      exportSvgFile(
+                        `${project.name}-timespace.svg`,
+                        buildTimeSpaceExportSvg(corridor, band, theme),
+                      )
+                    }}
+                  >
+                    交互尺寸 SVG
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() =>
+                      downloadText(
+                        `${project.name}-timespace.md`,
+                        timeSpaceReportMarkdown(project.name, corridor, band),
+                        'text/markdown',
+                      )
+                    }
+                  >
+                    报表 MD
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() =>
+                      downloadText(
+                        `${project.name}-timespace.csv`,
+                        timeSpaceReportCsv(corridor, band),
+                        'text/csv',
+                      )
+                    }
+                  >
+                    数据 CSV
+                  </button>
+                </div>
               </div>
-              <InteractiveTimeSpace corridor={corridor} result={band} />
+              <div
+                className="chart-svg-host chart-svg-host--pro band-network-host"
+                style={{ overflow: 'auto', marginBottom: 10 }}
+                dangerouslySetInnerHTML={{ __html: hiResTimeSpace }}
+              />
+              <details className="subpanel">
+                <summary className="subpanel-summary">交互时距图（悬停）</summary>
+                <InteractiveTimeSpace corridor={corridor} result={band} />
+              </details>
               <TimeSpacePanel corridor={corridor} />
               <BandCharts corridor={corridor} />
             </div>

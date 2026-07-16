@@ -46,6 +46,9 @@ export type ExportItemId =
   | 'signal-control-board'
   | 'saturation-kpi-md'
   | 'optimize-preview-md'
+  | 'timespace-hires-svg'
+  | 'timespace-report-md'
+  | 'timespace-report-csv'
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
@@ -64,6 +67,34 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'timespace-hires-svg',
+    category: 'band',
+    title: '绿波时距图（高分辨率）',
+    format: 'SVG',
+    description: '1280×720 教材风格时距图 · 与带宽计算同源',
+    modes: ['band'],
+    requires: ['band'],
+  },
+  {
+    id: 'timespace-report-md',
+    category: 'band',
+    title: '绿波时距简报',
+    format: 'MD',
+    description: '路口/路段表 + b↑/b↓/带宽比',
+    modes: ['band'],
+    requires: ['band'],
+  },
+  {
+    id: 'timespace-report-csv',
+    category: 'band',
+    title: '绿波时距数据 CSV',
+    format: 'CSV',
+    description: '节点与路段行程时间',
+    modes: ['band'],
+    requires: ['band'],
+  },
+
   {
     id: 'signal-control-board',
     category: 'signal',
