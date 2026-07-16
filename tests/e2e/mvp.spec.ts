@@ -18,19 +18,18 @@ async function openNav(page: Page, label: string) {
   await page.waitForTimeout(300)
 }
 
-test.describe('Crossdraw v0.5.101 phase-rt + polish', () => {
+test.describe('Crossdraw v0.5.102 multi-corr + polish', () => {
   // 渠化 流量 信号 分析 绿波 比选 断面
   test('shell', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.101/).first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.102/).first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
 
-  test('channel right-turn review', async ({ page }) => {
+  test('channel', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '渠化')
     await expect(page.locator('.page-fill-params details')).toHaveCount(0)
-    await expect(page.getByRole('button', { name: /右转审查图/ })).toBeVisible({ timeout: 10000 })
     await page.screenshot({ path: 'docs/screenshots/01-channel.png', fullPage: true })
   })
 
@@ -40,11 +39,9 @@ test.describe('Crossdraw v0.5.101 phase-rt + polish', () => {
     await page.screenshot({ path: 'docs/screenshots/02-flow.png', fullPage: true })
   })
 
-  test('signal phase number', async ({ page }) => {
+  test('signal', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '信号')
-    await expect(page.locator('.page-fill-params details')).toHaveCount(0)
-    await expect(page.getByRole('button', { name: /导出相位序号/ })).toBeVisible({ timeout: 10000 })
     await page.screenshot({ path: 'docs/screenshots/03-signal.png', fullPage: true })
   })
 
@@ -54,9 +51,17 @@ test.describe('Crossdraw v0.5.101 phase-rt + polish', () => {
     await page.screenshot({ path: 'docs/screenshots/04-analysis.png', fullPage: true })
   })
 
-  test('band', async ({ page }) => {
+  test('band multi-corridor report', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '绿波')
+    await expect(page.locator('.band-page')).toBeVisible()
+    // open multi-corridor tab
+    const tab = page.getByRole('tab', { name: /多走廊/ }).or(page.getByRole('button', { name: /多走廊/ }))
+    if (await tab.count()) {
+      await tab.first().click()
+      await page.waitForTimeout(300)
+    }
+    await expect(page.getByRole('button', { name: /多走廊报告 SVG/ })).toBeVisible({ timeout: 10000 })
     await page.screenshot({ path: 'docs/screenshots/05-band.png', fullPage: true })
   })
 

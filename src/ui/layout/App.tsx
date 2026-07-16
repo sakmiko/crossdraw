@@ -12,7 +12,12 @@ import {
   professionalRightTurnBoardSvg,
   rightTurnBoardMarkdown,
   rightTurnBoardCsv,
-} from '@/domain/channel/rightTurnReview'  
+} from '@/domain/channel/rightTurnReview'
+import {
+  professionalMultiCorridorReportSvg,
+  multiCorridorReportMarkdown,
+  multiCorridorReportCsv,
+} from '@/ui/charts/professionalMultiCorridorReport'   
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CanvasView, meshToPngBlob, DEFAULT_LAYERS, type CanvasHandle, type LayerVisibility, type LayerKey } from '@/canvas/CanvasView'
 import { rebuildChannelMesh, THEME } from '@/domain/geometry/rebuild'
@@ -584,7 +589,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.101 · 绿波专页</span>
+          <span>Crossdraw v0.5.102 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -606,7 +611,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.101</span>
+            <span className="brand-ver">v0.5.102</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -898,7 +903,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.101</span>
+        <span>Crossdraw v0.5.102</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1122,6 +1127,38 @@ export default function App() {
             )
           },
           'pro-pack': () => exportProfessionalDiagrams(),
+          'multi-corridor-report-svg': () => {
+            const list = project.bandCorridors?.length
+              ? project.bandCorridors
+              : [project.bandCorridor]
+            exportSvgFile(
+              `${project.name}-多走廊报告.svg`,
+              professionalMultiCorridorReportSvg(list, {
+                width: 1000,
+                projectName: project.name,
+              }),
+            )
+          },
+          'multi-corridor-report-md': () => {
+            const list = project.bandCorridors?.length
+              ? project.bandCorridors
+              : [project.bandCorridor]
+            downloadText(
+              `${project.name}-多走廊报告.md`,
+              multiCorridorReportMarkdown(project.name, list),
+              'text/markdown',
+            )
+          },
+          'multi-corridor-report-csv': () => {
+            const list = project.bandCorridors?.length
+              ? project.bandCorridors
+              : [project.bandCorridor]
+            downloadText(
+              `${project.name}-多走廊报告.csv`,
+              multiCorridorReportCsv(list),
+              'text/csv',
+            )
+          },
           'phase-number-board-svg': () => {
             if (!signal) return
             exportSvgFile(

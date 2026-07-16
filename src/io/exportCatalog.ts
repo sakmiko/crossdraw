@@ -77,6 +77,9 @@ export type ExportItemId =
   | 'right-turn-review-svg'
   | 'right-turn-review-md'
   | 'right-turn-review-csv'
+  | 'multi-corridor-report-svg'
+  | 'multi-corridor-report-md'
+  | 'multi-corridor-report-csv'
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
@@ -95,6 +98,34 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'multi-corridor-report-svg',
+    category: 'band',
+    title: '多走廊绿波报告',
+    format: 'SVG',
+    description: '带宽柱图 + 协调指数表 · measureCorridor 同源',
+    modes: ['band'],
+    requires: ['band'],
+  },
+  {
+    id: 'multi-corridor-report-md',
+    category: 'band',
+    title: '多走廊绿波 MD',
+    format: 'MD',
+    description: '多走廊 KPI + 协调分',
+    modes: ['band'],
+    requires: ['band'],
+  },
+  {
+    id: 'multi-corridor-report-csv',
+    category: 'band',
+    title: '多走廊绿波 CSV',
+    format: 'CSV',
+    description: '带宽与协调指数数据表',
+    modes: ['band'],
+    requires: ['band'],
+  },
+
   {
     id: 'phase-number-board-svg',
     category: 'signal',

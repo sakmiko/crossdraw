@@ -15,6 +15,11 @@ import {
 } from '@/ui/charts/professionalTimeSpace'
 
 import { collectCorridorKpis, corridorKpiCompareSvg, multiBandMarkdown } from '@/ui/charts/bandCorridorCompare'
+import {
+  professionalMultiCorridorReportSvg,
+  multiCorridorReportMarkdown,
+  multiCorridorReportCsv,
+} from '@/ui/charts/professionalMultiCorridorReport' 
 import { corridorMapSvg } from '@/ui/charts/corridorMap'
 import { corridorNetworkPreviewSvg } from '@/ui/charts/corridorNetworkPreview'
 import { exportSvgFile } from '@/io/exportCharts'
@@ -628,22 +633,75 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
             <div className="flat-block band-pane flat-block">
               <div className="panel-header">
                 <h2 style={{ margin: 0 }}>多走廊对比</h2>
-                <button
-                  type="button"
-                  className="ghost"
-                  onClick={() => {
-                    const kpis = collectCorridorKpis(corridors)
-                    exportSvgFile(`${project.name}-band-compare.svg`, corridorKpiCompareSvg(kpis))
-                    downloadText(
-                      `${project.name}-band-multi.md`,
-                      multiBandMarkdown(project.name, kpis),
-                      'text/markdown',
-                    )
-                  }}
-                >
-                  导出
-                </button>
+                <div className="toolbar dense">
+                  <button
+                    type="button"
+                    className="primary"
+                    onClick={() => {
+                      exportSvgFile(
+                        `${project.name}-多走廊报告.svg`,
+                        professionalMultiCorridorReportSvg(corridors, {
+                          width: 1000,
+                          projectName: project.name,
+                        }),
+                      )
+                    }}
+                  >
+                    多走廊报告 SVG
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() => {
+                      downloadText(
+                        `${project.name}-多走廊报告.md`,
+                        multiCorridorReportMarkdown(project.name, corridors),
+                        'text/markdown',
+                      )
+                    }}
+                  >
+                    报告 MD
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() => {
+                      downloadText(
+                        `${project.name}-多走廊报告.csv`,
+                        multiCorridorReportCsv(corridors),
+                        'text/csv',
+                      )
+                    }}
+                  >
+                    报告 CSV
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() => {
+                      const kpis = collectCorridorKpis(corridors)
+                      exportSvgFile(`${project.name}-band-compare.svg`, corridorKpiCompareSvg(kpis))
+                      downloadText(
+                        `${project.name}-band-multi.md`,
+                        multiBandMarkdown(project.name, kpis),
+                        'text/markdown',
+                      )
+                    }}
+                  >
+                    简图导出
+                  </button>
+                </div>
               </div>
+              <div
+                className="chart-svg-host chart-svg-host--pro"
+                style={{ marginBottom: 12, overflow: 'auto' }}
+                dangerouslySetInnerHTML={{
+                  __html: professionalMultiCorridorReportSvg(corridors, {
+                    width: 960,
+                    projectName: project.name,
+                  }),
+                }}
+              />
               <CorridorCompareCharts corridors={corridors} />
             </div>
           )}

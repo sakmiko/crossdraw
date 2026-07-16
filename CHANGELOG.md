@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 0.5.102 — 2026-07-16
+
+### 多走廊绿波报告包
+- `professionalMultiCorridorReportSvg`：带宽柱图 + 协调指数表（A–F）
+- `collectCorridorReportRows` = measureCorridor + coordinationIndex
+- 绿波「多走廊」页签：报告 SVG/MD/CSV + 简图导出
+- 导出中心：`multi-corridor-report-svg|md|csv`
+
+### 诚实边界
+- 协调分为工程合成指标，非国标分级；带宽为弧相交示意，非 MAXBAND-MIP
+
+# CHANGELOG
+
 ## 0.5.101 — 2026-07-16
 
 ### 相位序号图 + 右转渠化审查
