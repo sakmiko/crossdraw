@@ -69,6 +69,9 @@ export type ExportItemId =
   | 'channel-draft-svg'
   | 'channel-draft-md'
   | 'engineering-print-a4'
+  | 'capacity-matrix-svg'
+  | 'capacity-matrix-md'
+  | 'capacity-matrix-csv'
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
@@ -87,6 +90,34 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'capacity-matrix-svg',
+    category: 'analysis',
+    title: '通行能力 / 饱和度矩阵',
+    format: 'SVG',
+    description: '车道组 v/c 矩阵 + 迷你 v/c 条 · 与 analyzeIntersection 同源',
+    modes: ['analysis'],
+    requires: ['channel', 'analysis'],
+  },
+  {
+    id: 'capacity-matrix-md',
+    category: 'analysis',
+    title: '通行能力简报',
+    format: 'MD',
+    description: '车道组参数表 + LOS/v/c KPI',
+    modes: ['analysis'],
+    requires: ['analysis'],
+  },
+  {
+    id: 'capacity-matrix-csv',
+    category: 'analysis',
+    title: '通行能力 CSV',
+    format: 'CSV',
+    description: 'v/s/λ/c/v/c/d/Q 数据表',
+    modes: ['analysis'],
+    requires: ['analysis'],
+  },
+
   {
     id: 'engineering-print-a4',
     category: 'package',

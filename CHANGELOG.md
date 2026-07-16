@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 0.5.99 — 2026-07-16
+
+### 通行能力 / 饱和度矩阵
+- `professionalCapacityMatrixSvg`：车道组 v/c 矩阵 + KPI + 迷你 v/c 条
+- 分析页扁平「通行能力矩阵」/ CSV；导出中心 3 项
+- 与 `analyzeIntersection` 同源；HCM/Webster 工程近似
+
+# CHANGELOG
+
 ## 0.5.98 — 2026-07-16
 
 ### A4 工程拼版（联通渠化出图）

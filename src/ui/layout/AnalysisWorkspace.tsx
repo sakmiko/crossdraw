@@ -30,6 +30,11 @@ import { buildMultiPageReportHtml } from '@/io/multiPageReport'
 import { analysisMarkdown, exportSvgFile } from '@/io/exportCharts'
 import { buildAnalysisReportSvg } from '@/io/analysisReportSvg'
 import { downloadText } from '@/io/download'
+import {
+  professionalCapacityMatrixSvg,
+  capacityMatrixMarkdown,
+  capacityMatrixCsv,
+} from '@/ui/charts/professionalCapacityMatrix' 
 import { buildA4PrintSheet, printSheetHtml } from '@/io/printSheet'
 import {
   collectEngineeringPrintPanels,
@@ -136,6 +141,39 @@ export function AnalysisWorkspace({
           }}
         >
           四指标平面合图
+        </button>
+        <button
+          type="button"
+          className="ghost"
+          disabled={!analysis}
+          onClick={() => {
+            if (!analysis) return
+            exportSvgFile(
+              `${project.name}-通行能力矩阵.svg`,
+              professionalCapacityMatrixSvg(
+                channel?.approaches ?? [],
+                analysis,
+                { width: 920, projectName: project.name, signalName: signal?.name },
+              ),
+            )
+          }}
+        >
+          通行能力矩阵
+        </button>
+        <button
+          type="button"
+          className="ghost"
+          disabled={!analysis}
+          onClick={() => {
+            if (!analysis) return
+            downloadText(
+              `${project.name}-通行能力.csv`,
+              capacityMatrixCsv(analysis),
+              'text/csv',
+            )
+          }}
+        >
+          能力 CSV
         </button>
         <button
           type="button"

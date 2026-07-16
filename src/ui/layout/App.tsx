@@ -1,4 +1,9 @@
 import { professionalDualRingBoardSvg, dualRingBoardMarkdown, dualRingBoardCsv } from '@/ui/charts/professionalDualRingBoard'
+import {
+  professionalCapacityMatrixSvg,
+  capacityMatrixMarkdown,
+  capacityMatrixCsv,
+} from '@/ui/charts/professionalCapacityMatrix' 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CanvasView, meshToPngBlob, DEFAULT_LAYERS, type CanvasHandle, type LayerVisibility, type LayerKey } from '@/canvas/CanvasView'
 import { rebuildChannelMesh, THEME } from '@/domain/geometry/rebuild'
@@ -570,7 +575,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.98 · 绿波专页</span>
+          <span>Crossdraw v0.5.99 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -592,7 +597,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.98</span>
+            <span className="brand-ver">v0.5.99</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -884,7 +889,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.98</span>
+        <span>Crossdraw v0.5.99</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1108,6 +1113,29 @@ export default function App() {
             )
           },
           'pro-pack': () => exportProfessionalDiagrams(),
+          'capacity-matrix-svg': () => {
+            if (!analysis || !channel) return
+            exportSvgFile(
+              `${project.name}-通行能力矩阵.svg`,
+              professionalCapacityMatrixSvg(channel.approaches, analysis, {
+                width: 920,
+                projectName: project.name,
+                signalName: signal?.name,
+              }),
+            )
+          },
+          'capacity-matrix-md': () => {
+            if (!analysis) return
+            downloadText(
+              `${project.name}-通行能力.md`,
+              capacityMatrixMarkdown(project.name, analysis),
+              'text/markdown',
+            )
+          },
+          'capacity-matrix-csv': () => {
+            if (!analysis) return
+            downloadText(`${project.name}-通行能力.csv`, capacityMatrixCsv(analysis), 'text/csv')
+          },
           'engineering-print-a4': () => {
             if (!channel) return
             const panels = collectEngineeringPrintPanels({
