@@ -606,6 +606,40 @@ export function placeWaitBay(
   }
 }
 
+
+/**
+ * Borrow-left pocket across median (schematic dashed bay).
+ * lat along px from median edge into opposing half.
+ */
+export function placeBorrowLeftPocket(
+  mesh: Mesh,
+  f: Frame,
+  s0: number,
+  s1: number,
+  latInner: number,
+  latOuter: number,
+  theme: ThemeLike,
+  opts?: { fill?: string; alpha?: number },
+) {
+  if (s1 <= s0) return
+  const fill = opts?.fill ?? '#f97316'
+  const alpha = opts?.alpha ?? 0.22
+  placeWaitBay(mesh, f, s0, s1, latInner, latOuter, fill, {
+    alpha,
+    stroke: '#fb923c',
+    dashed: true,
+  })
+  // outer edge emphasis
+  pushLine(mesh, {
+    layer: 'MARKING',
+    points: [at(f, s0, latInner), at(f, s1, latInner)],
+    stroke: '#fb923c',
+    strokeWidth: 0.25,
+    dashed: true,
+    alpha: 0.85,
+  })
+}
+
 /** Rectangle lane strip between lat a..b and s0..s1 along frame. */
 export function placeLaneStrip(
   mesh: Mesh,

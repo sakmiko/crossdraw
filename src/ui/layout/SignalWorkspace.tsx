@@ -32,6 +32,7 @@ import { detectPedVehicleConflicts, pedVehicleSummary } from '@/domain/signal/pe
 import { SignalCharts, TimingCompareCharts } from '@/ui/charts/ChartPanels'
 import { EChart } from '@/ui/charts/EChart'
 import { phaseTimingOption, cycleScanOption } from '@/ui/charts/interactiveBoards'
+import { downloadEchartsPng } from '@/io/exportEchartsPng'
 import { buildDualRingAlignment, dualRingSummaryText } from '@/domain/signal/dualRing'
 import { applyPedTimingToSignal } from '@/domain/signal/pedTiming'
 import {
@@ -1121,7 +1122,21 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
           />
         )}
       <div className="rg-section" id="signal-echarts">
-        <div className="rg-section-title">交互相位 · G/Y/AR</div>
+        <div className="rg-section-title">
+          交互相位 · G/Y/AR
+          <button
+            type="button"
+            className="ghost"
+            onClick={() =>
+              void downloadEchartsPng(`相位GYAR.png`, phaseTimingOption(signal), {
+                width: 900,
+                height: 360,
+              })
+            }
+          >
+            导出 PNG
+          </button>
+        </div>
         <EChart option={phaseTimingOption(signal)} style={{ height: 240 }} />
       </div>
         <SignalCharts

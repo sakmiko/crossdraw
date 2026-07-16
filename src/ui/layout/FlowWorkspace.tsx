@@ -17,7 +17,8 @@ import {
   flowOdReportCsv,
 } from '@/ui/charts/professionalFlowReport'
 import { exportSvgFile } from '@/io/exportCharts'
-import { downloadText } from '@/io/download' 
+import { downloadText } from '@/io/download'
+import { downloadEchartsPng } from '@/io/exportEchartsPng' 
 import { EChart } from '@/ui/charts/EChart'
 import { flowLtrOption } from '@/ui/charts/interactiveBoards'
 
@@ -254,7 +255,22 @@ export function FlowWorkspace({
 
       {/* 进口道转向流量 */}
       <div className="rg-section" id="flow-echarts">
-        <div className="rg-section-title">交互流量 · L/T/R</div>
+        <div className="rg-section-title">
+          交互流量 · L/T/R
+          <button
+            type="button"
+            className="ghost"
+            onClick={() =>
+              void downloadEchartsPng(
+                `流量LTR.png`,
+                flowLtrOption(channel.approaches, flow, displayMode),
+                { width: 960, height: 400 },
+              )
+            }
+          >
+            导出 PNG
+          </button>
+        </div>
         <EChart option={flowLtrOption(channel.approaches, flow, displayMode)} style={{ height: 260 }} />
       </div>
       <div className="rg-section">

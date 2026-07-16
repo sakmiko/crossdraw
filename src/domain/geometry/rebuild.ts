@@ -27,6 +27,7 @@ import {
   placeCurbStroke,
   placeAuxRoadRibbon,
   placeWaitBay,
+  placeBorrowLeftPocket,
   placeCirclePoly,
   placeCircleLine,
   type Frame,
@@ -643,29 +644,19 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
     }
   }
 
-  // borrow-left: dashed pocket into opposing half
+  // borrow-left pocket (glyph)
   if (ap.borrowLeft) {
-    pushPoly(mesh, {
-      layer: 'MARKING',
-      points: [
-        add(mul(ux, start + 2), mul(px, medL - 0.2)),
-        add(mul(ux, start + 14), mul(px, medL - 0.2)),
-        add(mul(ux, start + 14), mul(px, medL + med * 0.55)),
-        add(mul(ux, start + 2), mul(px, medL + med * 0.55)),
-      ],
-      fill: '#f97316',
-      alpha: 0.22,
-    })
-    pushLine(mesh, {
-      layer: 'MARKING',
-      points: [
-        add(mul(ux, start + 2), mul(px, medL)),
-        add(mul(ux, start + 14), mul(px, medL)),
-      ],
-      stroke: '#fb923c',
-      strokeWidth: 0.25,
-      dashed: true,
-    })
+    const f: Frame = { origin: [0, 0], ux, px }
+    placeBorrowLeftPocket(
+      mesh,
+      f,
+      start + 2,
+      start + 14,
+      medL - 0.2,
+      medL + med * 0.55,
+      THEME,
+      { fill: '#f97316', alpha: 0.22 },
+    )
   }
 
 

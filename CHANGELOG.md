@@ -1,3 +1,9 @@
+## 0.5.129 — Borrow-left glyph + flow/signal PNG buttons
+
+- `placeBorrowLeftPocket` (homology borrowLeft).
+- Flow / Signal workspaces「导出 PNG」aligned with other modes.
+- Light-theme echart/params contrast. Schematic — not design-code borrow bay.
+
 ## 0.5.128 — Wait-bay glyph + xsection PNG + scheme strip
 
 - `placeWaitBay` for left/through wait areas (homology leftWait/throughWait).

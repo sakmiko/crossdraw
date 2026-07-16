@@ -3540,3 +3540,33 @@ button,
     max-width: 8.5rem;
   }
 }
+
+
+/* v0.5.129 light-theme params contrast + echart title row */
+html[data-theme='light'] .page-fill-params,
+.app.theme-light .page-fill-params {
+  --muted: #64748b;
+}
+html[data-theme='light'] .echart-host,
+.app.theme-light .echart-host {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+.rg-section-title .ghost {
+  margin-left: auto;
+}
+
+
+/* v0.5.129 contrast */
+html[data-theme='light'] .page-fill-params,
+.app.theme-light .page-fill-params {
+  --muted: #64748b;
+}
+html[data-theme='light'] .echart-host,
+.app.theme-light .echart-host {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+.rg-section-title .ghost {
+  margin-left: auto;
+}

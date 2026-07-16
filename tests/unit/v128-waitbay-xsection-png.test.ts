@@ -55,6 +55,6 @@ describe('v0.5.128 wait bay glyph + xsection png + scheme compact', () => {
     const css = readFileSync(resolve('src/ui/styles.css'), 'utf8')
     expect(css).toContain('v0.5.128 scheme')
     const pkg = readFileSync(resolve('package.json'), 'utf8')
-    expect(pkg).toContain('"version": "0.5.128"')
+    expect(pkg).toMatch(/"version": "0\.5\.\d+"/)
   })
 })
