@@ -33,6 +33,7 @@ import { buildMultiPageReportHtml } from '@/io/multiPageReport'
 import { analysisMarkdown, exportSvgFile } from '@/io/exportCharts'
 import { buildAnalysisReportSvg } from '@/io/analysisReportSvg'
 import { downloadText } from '@/io/download'
+import { downloadEchartsPng } from '@/io/exportEchartsPng'
 import {
   collectQueueStorageRows,
   queueStorageBoardSvg,
@@ -452,7 +453,22 @@ export function AnalysisWorkspace({
       </div>
       <AnalysisLaneTable analysis={analysis} projectName={project.name} />
       <div className="flat-section" id="analysis-echarts">
-        <div className="rg-section-title">交互分析 · v/c · 延误</div>
+        <div className="rg-section-title">
+          交互分析 · v/c · 延误
+          <button
+            type="button"
+            className="ghost"
+            style={{ marginLeft: 8 }}
+            onClick={() =>
+              void downloadEchartsPng(`${project.name}-交互分析-vc延误.png`, vcDelayOption(analysis), {
+                width: 960,
+                height: 420,
+              })
+            }
+          >
+            导出 PNG
+          </button>
+        </div>
         <EChart option={vcDelayOption(analysis)} style={{ height: 300 }} />
       </div>
       <CompareCharts

@@ -131,6 +131,9 @@ export type ExportItemId =
   | 'unsignalized-csv'
   | 'compare-scorecard-svg'
   | 'compare-delta-md'
+  | 'echarts-vc-delay-png'
+  | 'echarts-flow-ltr-png'
+  | 'echarts-phase-timing-png'
 
 export type ExportItem = {
   id: ExportItemId
@@ -144,6 +147,33 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'echarts-vc-delay-png',
+    category: 'analysis',
+    title: '交互分析 v/c·延误 PNG',
+    format: 'PNG',
+    description: 'ECharts 同源 analyzeIntersection · 非第二套公式',
+    modes: ['analysis'],
+    requires: ['analysis'],
+  },
+  {
+    id: 'echarts-flow-ltr-png',
+    category: 'signal',
+    title: '流量 L/T/R 交互 PNG',
+    format: 'PNG',
+    description: 'ECharts 同源 flowAlign',
+    modes: ['flow'],
+    requires: ['flow', 'channel'],
+  },
+  {
+    id: 'echarts-phase-timing-png',
+    category: 'signal',
+    title: '相位 G/Y/AR 交互 PNG',
+    format: 'PNG',
+    description: 'ECharts 同源相位表',
+    modes: ['signal'],
+    requires: ['signal'],
+  },
   {
     id: 'intergreen-svg',
     category: 'signal',

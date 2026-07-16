@@ -523,6 +523,48 @@ export function placeCurbStroke(
   })
 }
 
+/**
+ * Auxiliary / frontage road ribbon outside main curb (gap near stop line).
+ * Homology: auxRoad.widthM / offsetM / openNearM.
+ */
+export function placeAuxRoadRibbon(
+  mesh: Mesh,
+  f: Frame,
+  s0: number,
+  s1: number,
+  latInner: number,
+  latOuter: number,
+  theme: ThemeLike,
+  opts?: { fill?: string; alpha?: number; dashedCenter?: boolean },
+) {
+  if (s1 - s0 < 4) return
+  const fill = opts?.fill ?? '#57534e'
+  const alpha = opts?.alpha ?? 0.88
+  const a0 = at(f, s0, latInner)
+  const a1 = at(f, s1, latInner)
+  const b1 = at(f, s1, latOuter)
+  const b0 = at(f, s0, latOuter)
+  placeRibbonBetween(mesh, [a0, a1], [b0, b1], fill, theme.asphaltEdge ?? theme.curb, {
+    alpha,
+    strokeWidth: 0.25,
+    meta: { kind: 'aux-road' },
+  })
+  placeCurbStroke(mesh, [a0, a1], theme, 0.18, 0.85)
+  placeCurbStroke(mesh, [b0, b1], theme, 0.16, 0.75)
+  if (opts?.dashedCenter !== false) {
+    const mid = (latInner + latOuter) / 2
+    pushLine(mesh, {
+      layer: 'MARKING',
+      points: [at(f, s0, mid), at(f, s1, mid)],
+      stroke: theme.marking,
+      strokeWidth: 0.15,
+      dashed: true,
+      alpha: 0.7,
+    })
+  }
+}
+
+
 /** Rectangle lane strip between lat a..b and s0..s1 along frame. */
 export function placeLaneStrip(
   mesh: Mesh,

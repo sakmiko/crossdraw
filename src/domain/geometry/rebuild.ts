@@ -25,6 +25,7 @@ import {
   placeFishBellyMedian,
   placeRibbonBetween,
   placeCurbStroke,
+  placeAuxRoadRibbon,
   placeCirclePoly,
   placeCircleLine,
   type Frame,
@@ -602,37 +603,20 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
     placeCurbStroke(mesh, rightOuter, THEME, 0.16, 0.75)
   }
 
-  // frontage / auxiliary road ribbon (outward of bike or main curb)
+  // frontage / auxiliary road ribbon (glyph)
   if (ap.auxRoad?.enabled) {
     const aw = Math.max(3, ap.auxRoad.widthM)
     const off = ap.auxRoad.offsetM ?? 1.0
     const openNear = Math.max(8, ap.auxRoad.openNearM ?? 18)
     const outer0 = half + (ap.bikeEnabled ? ap.bikeWidthM : 0) + off
-    // leave gap near stop line for main-road merge
     const aStart = start + openNear
     if (aStart < end - 5) {
-      pushPoly(mesh, {
-        layer: 'ROAD',
-        points: [
-          add(mul(ux, aStart), mul(px, outer0)),
-          add(mul(ux, end), mul(px, outer0)),
-          add(mul(ux, end), mul(px, outer0 + aw)),
-          add(mul(ux, aStart), mul(px, outer0 + aw)),
-        ],
+      const f: Frame = { origin: [0, 0], ux, px }
+      placeAuxRoadRibbon(mesh, f, aStart, end, outer0, outer0 + aw, THEME, {
         fill: '#57534e',
-        stroke: THEME.asphaltEdge,
-        strokeWidth: 0.25,
         alpha: 0.88,
+        dashedCenter: true,
       })
-      pushLine(mesh, {
-        layer: 'MARKING',
-        points: [add(mul(ux, aStart), mul(px, outer0 + aw * 0.5)), add(mul(ux, end), mul(px, outer0 + aw * 0.5))],
-        stroke: THEME.marking,
-        strokeWidth: 0.15,
-        dashed: true,
-        alpha: 0.7,
-      })
-      // no aux width label on canvas
     }
   }
 

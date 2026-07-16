@@ -1,3 +1,10 @@
+## 0.5.126 — Aux road glyph + ECharts PNG export + density
+
+- `placeAuxRoadRibbon` for frontage/aux road (homology auxRoad width/offset/openNear).
+- Export center: `echarts-vc-delay-png` / `echarts-flow-ltr-png` / `echarts-phase-timing-png` via off-DOM ECharts PNG.
+- Analysis workspace「导出 PNG」; shell params density unify.
+- Schematic only — not survey CAD / not second formula set.
+
 ## 0.5.125 — Sidewalk ribbon glyphs + channel KPI strip
 
 - `placeRibbonBetween` / `placeCurbStroke` for entry/exit sidewalk + bike (homology widen profile).
