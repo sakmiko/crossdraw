@@ -117,6 +117,9 @@ export type ExportItemId =
   | 'speed-scan-svg'
   | 'speed-scan-md'
   | 'speed-scan-csv'
+  | 'multi-corridor-link-svg'
+  | 'multi-corridor-link-md'
+  | 'multi-corridor-link-csv'
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
@@ -135,6 +138,34 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'multi-corridor-link-svg',
+    category: 'band',
+    title: '多走廊相位差联动',
+    format: 'SVG',
+    description: '全走廊连续/扫描相位差前后对比',
+    modes: ['band'],
+    requires: ['band'],
+  },
+  {
+    id: 'multi-corridor-link-md',
+    category: 'band',
+    title: '多走廊联动 MD',
+    format: 'MD',
+    description: '联动结果表',
+    modes: ['band'],
+    requires: ['band'],
+  },
+  {
+    id: 'multi-corridor-link-csv',
+    category: 'band',
+    title: '多走廊联动 CSV',
+    format: 'CSV',
+    description: '联动前后带宽',
+    modes: ['band'],
+    requires: ['band'],
+  },
+
   {
     id: 'speed-scan-svg',
     category: 'band',

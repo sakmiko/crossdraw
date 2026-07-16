@@ -40,7 +40,14 @@ import {
   scanCorridorSpeeds,
   speedScanMarkdown,
   speedScanCsv,
-} from '@/ui/charts/speedScanBoard'  
+} from '@/ui/charts/speedScanBoard'
+import {
+  multiCorridorLinkBoardSvg,
+  multiCorridorLinkMarkdown,
+  multiCorridorLinkCsv,
+  type MultiCorridorLinkResult,
+  type MultiCorridorLinkMode,
+} from '@/ui/charts/multiCorridorLinkBoard'   
 
 export type BandPageProps = {
   project: Project
@@ -55,6 +62,7 @@ export type BandPageProps = {
   applyOffsetScanBest?: () => { bestOffset: number; totalSec: number } | null
   applySpeedScanBest?: () => { bestSpeed: number; totalSec: number } | null
   optimizeAllBands: () => { count: number; improved: number }
+  linkAllCorridorOffsets?: (mode?: MultiCorridorLinkMode) => MultiCorridorLinkResult | null
   onProgressiveOffsets?: (reverse?: boolean) => void
   setBandSegmentLength: (toNodeId: string, lengthM: number) => void
   setActiveBand: (id: string) => void
@@ -80,6 +88,7 @@ export function BandPage(props: BandPageProps) {
     applyOffsetScanBest,
     applySpeedScanBest,
     optimizeAllBands,
+    linkAllCorridorOffsets,
     onProgressiveOffsets,
     setBandSegmentLength,
     setActiveBand,
@@ -89,6 +98,7 @@ export function BandPage(props: BandPageProps) {
     renameBandCorridor,
   } = props
   const [batchNote, setBatchNote] = useState<string | null>(null)
+  const [linkResult, setLinkResult] = useState<MultiCorridorLinkResult | null>(null)
   const [tab, setTab] = useState<BandTab>('table')
   const corridor = project.bandCorridor
   const corridors = project.bandCorridors ?? [corridor]
@@ -212,6 +222,40 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
             >
               批量
             </button>
+            {linkAllCorridorOffsets && (
+              <>
+                <button
+                  type="button"
+                  className="ghost band-bar-btn"
+                  title="全部走廊写连续相位差"
+                  onClick={() => {
+                    const r = linkAllCorridorOffsets('progressive')
+                    if (r) {
+                      setLinkResult(r)
+                      setBatchNote(`联动${r.improvedCount}/${r.rows.length}`)
+                      setTab('compare')
+                    }
+                  }}
+                >
+                  联动连续
+                </button>
+                <button
+                  type="button"
+                  className="ghost band-bar-btn"
+                  title="全部走廊相位差扫描最优"
+                  onClick={() => {
+                    const r = linkAllCorridorOffsets('offset-scan')
+                    if (r) {
+                      setLinkResult(r)
+                      setBatchNote(`扫联${r.improvedCount}/${r.rows.length}`)
+                      setTab('compare')
+                    }
+                  }}
+                >
+                  联动扫描
+                </button>
+              </>
+            )}
             <button
               type="button"
               className="ghost band-bar-btn"
@@ -875,6 +919,83 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
                   }),
                 }}
               />
+              <div className="flat-section" style={{ marginBottom: 12 }}>
+                <div className="rg-section-title">多走廊相位差联动</div>
+                <div className="toolbar dense" style={{ marginBottom: 8 }}>
+                  <button
+                    type="button"
+                    className="primary"
+                    onClick={() => {
+                      const r = linkAllCorridorOffsets?.('progressive')
+                      if (r) {
+                        setLinkResult(r)
+                        setBatchNote(`联动${r.improvedCount}/${r.rows.length}`)
+                      }
+                    }}
+                  >
+                    全走廊连续相位差
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() => {
+                      const r = linkAllCorridorOffsets?.('progressive-reverse')
+                      if (r) {
+                        setLinkResult(r)
+                        setBatchNote(`反联${r.improvedCount}/${r.rows.length}`)
+                      }
+                    }}
+                  >
+                    反向连续
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() => {
+                      const r = linkAllCorridorOffsets?.('offset-scan')
+                      if (r) {
+                        setLinkResult(r)
+                        setBatchNote(`扫联${r.improvedCount}/${r.rows.length}`)
+                      }
+                    }}
+                  >
+                    全走廊相位差扫描
+                  </button>
+                  {linkResult && (
+                    <button
+                      type="button"
+                      className="ghost"
+                      onClick={() => {
+                        exportSvgFile(
+                          `${project.name}-多走廊联动.svg`,
+                          multiCorridorLinkBoardSvg(linkResult, { width: 860 }),
+                        )
+                        downloadText(
+                          `${project.name}-多走廊联动.md`,
+                          multiCorridorLinkMarkdown(project.name, linkResult),
+                          'text/markdown',
+                        )
+                        downloadText(
+                          `${project.name}-多走廊联动.csv`,
+                          multiCorridorLinkCsv(linkResult),
+                          'text/csv',
+                        )
+                      }}
+                    >
+                      联动结果导出
+                    </button>
+                  )}
+                </div>
+                {linkResult && (
+                  <div
+                    className="chart-svg-host"
+                    style={{ overflow: 'auto' }}
+                    dangerouslySetInnerHTML={{
+                      __html: multiCorridorLinkBoardSvg(linkResult, { width: 820 }),
+                    }}
+                  />
+                )}
+              </div>
               <CorridorCompareCharts corridors={corridors} />
             </div>
           )}

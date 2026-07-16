@@ -57,7 +57,13 @@ import {
   scanCorridorSpeeds,
   speedScanMarkdown,
   speedScanCsv,
-} from '@/ui/charts/speedScanBoard'    
+} from '@/ui/charts/speedScanBoard'
+import {
+  multiCorridorLinkBoardSvg,
+  linkMultiCorridorOffsets,
+  multiCorridorLinkMarkdown,
+  multiCorridorLinkCsv,
+} from '@/ui/charts/multiCorridorLinkBoard'     
 import { queueTableMarkdown } from '@/domain/analysis/queueStorage'  
 import {
   professionalMultiCorridorReportSvg,
@@ -251,6 +257,7 @@ export default function App() {
   const applyPedTiming = useAppStore((s) => s.applyPedTiming)
   const allocateBarrierGreens = useAppStore((s) => s.allocateBarrierGreens)
   const optimizeAllBands = useAppStore((s) => s.optimizeAllBands)
+  const linkAllCorridorOffsets = useAppStore((s) => s.linkAllCorridorOffsets)
   const applyOffsetScanBest = useAppStore((s) => s.applyOffsetScanBest)
   const applySpeedScanBest = useAppStore((s) => s.applySpeedScanBest)
   const applyFullSchemeOptimize = useAppStore((s) => s.applyFullSchemeOptimize)
@@ -646,6 +653,7 @@ export default function App() {
           removeBandNode={removeBandNode}
           optimizeBand={optimizeBand}
           optimizeAllBands={optimizeAllBands}
+                  linkAllCorridorOffsets={linkAllCorridorOffsets}
           onProgressiveOffsets={applyProgressiveOffsets}
           setBandSegmentLength={setBandSegmentLength}
           setActiveBand={setActiveBand}
@@ -657,7 +665,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.111 · 绿波专页</span>
+          <span>Crossdraw v0.5.112 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -679,7 +687,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.111</span>
+            <span className="brand-ver">v0.5.112</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -1008,7 +1016,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.111</span>
+        <span>Crossdraw v0.5.112</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1346,6 +1354,47 @@ export default function App() {
             downloadText(
               `${project.name}-Y分解.csv`,
               criticalYCsv(channel.approaches, flow, signal),
+              'text/csv',
+            )
+          },
+          'multi-corridor-link-svg': () => {
+            const list = project.bandCorridors?.length
+              ? project.bandCorridors
+              : project.bandCorridor
+                ? [project.bandCorridor]
+                : []
+            if (!list.length) return
+            const r = linkMultiCorridorOffsets(list, 'progressive')
+            exportSvgFile(
+              `${project.name}-多走廊联动.svg`,
+              multiCorridorLinkBoardSvg(r, { width: 860 }),
+            )
+          },
+          'multi-corridor-link-md': () => {
+            const list = project.bandCorridors?.length
+              ? project.bandCorridors
+              : project.bandCorridor
+                ? [project.bandCorridor]
+                : []
+            if (!list.length) return
+            const r = linkMultiCorridorOffsets(list, 'progressive')
+            downloadText(
+              `${project.name}-多走廊联动.md`,
+              multiCorridorLinkMarkdown(project.name, r),
+              'text/markdown',
+            )
+          },
+          'multi-corridor-link-csv': () => {
+            const list = project.bandCorridors?.length
+              ? project.bandCorridors
+              : project.bandCorridor
+                ? [project.bandCorridor]
+                : []
+            if (!list.length) return
+            const r = linkMultiCorridorOffsets(list, 'progressive')
+            downloadText(
+              `${project.name}-多走廊联动.csv`,
+              multiCorridorLinkCsv(r),
               'text/csv',
             )
           },

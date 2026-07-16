@@ -30,7 +30,12 @@ import { applyPedTimingToSignal } from '@/domain/signal/pedTiming'
 import { allocateGreensByBarrierCriticalY } from '@/domain/signal/barrierGreenAlloc'
 import { applyProgressiveOffsets } from '@/domain/analysis/progressiveOffset'
 import { scanCorridorOffsets, applyOffsetScanBest } from '@/domain/analysis/offsetScan'
-import { scanCorridorSpeeds, applySpeedScanBest } from '@/domain/analysis/speedScan'  
+import { scanCorridorSpeeds, applySpeedScanBest } from '@/domain/analysis/speedScan'
+import {
+  linkMultiCorridorOffsets,
+  type MultiCorridorLinkMode,
+  type MultiCorridorLinkResult,
+} from '@/domain/analysis/multiCorridorLink'   
 import {
   runFullSchemeOptimize,
   projectAfterFullOptimize,
@@ -113,6 +118,7 @@ export type AppState = {
   applyPedTiming: () => void
   allocateBarrierGreens: () => void
   optimizeAllBands: () => { count: number; improved: number }
+  linkAllCorridorOffsets: (mode?: MultiCorridorLinkMode) => MultiCorridorLinkResult | null
   applyFullSchemeOptimize: () => FullOptimizeResult | null
   setBandSegmentLength: (toNodeId: string, lengthM: number) => void
   updateBasemap: (patch: Partial<NonNullable<Project["settings"]["basemap"]>>) => void
@@ -704,6 +710,29 @@ export const useAppStore = create<AppState>()(
           improved = summaries.filter((x) => x.improved).length
         })
         return { count, improved }
+      },
+      linkAllCorridorOffsets: (mode = 'progressive') => {
+        const st = get()
+        normalizeBandCorridors(st.project)
+        let list = st.project.bandCorridors?.length
+          ? [...st.project.bandCorridors]
+          : st.project.bandCorridor
+            ? [st.project.bandCorridor]
+            : []
+        if (!list.length) return null
+        const activeId = st.project.activeBandId
+        list = list.map((c) =>
+          c.id === activeId && st.project.bandCorridor ? st.project.bandCorridor : c,
+        )
+        const r = linkMultiCorridorOffsets(list, mode)
+        const active = r.corridors.find((c) => c.id === activeId) ?? r.corridors[0]
+        set((s) => {
+          s.project.bandCorridors = r.corridors
+          s.project.bandCorridor = active
+          s.project.activeBandId = active.id
+          s.dirty = true
+        })
+        return r
       },
       applyOffsetScanBest: () => {
         const s = get()
