@@ -18,13 +18,15 @@ async function openNav(page: Page, label: string) {
   await page.waitForTimeout(300)
 }
 
-test.describe('v0.5.129 borrow + flow-signal-png polish', () => {
+test.describe('v0.5.130 cycle-scan-png + strip polish', () => {
   // docs/screenshots/00-shell.png
   // docs/screenshots/06-compare.png
   // 渠化 流量 信号 分析 绿波 比选 断面
-  test('shell', async ({ page }) => {
+  test('shell approach strip', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.129/).first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.130/).first()).toBeVisible()
+    await openNav(page, '渠化')
+    await expect(page.locator('.approach-strip').first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
   test('channel', async ({ page }) => {
@@ -32,19 +34,16 @@ test.describe('v0.5.129 borrow + flow-signal-png polish', () => {
     await openNav(page, '渠化')
     await page.screenshot({ path: 'docs/screenshots/01-channel.png', fullPage: true })
   })
-  test('flow png', async ({ page }) => {
+  test('flow', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '流量')
-    await expect(page.locator('#flow-echarts').getByRole('button', { name: /导出 PNG/ })).toBeVisible({
-      timeout: 12000,
-    })
     await page.screenshot({ path: 'docs/screenshots/02-flow.png', fullPage: true })
   })
-  test('signal png', async ({ page }) => {
+  test('signal cycle-scan png', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '信号')
-    await expect(page.locator('#signal-echarts').getByRole('button', { name: /导出 PNG/ })).toBeVisible({
-      timeout: 12000,
+    await expect(page.locator('#cycle-scan-echarts').getByRole('button', { name: /导出 PNG/ })).toBeVisible({
+      timeout: 15000,
     })
     await page.screenshot({ path: 'docs/screenshots/03-signal.png', fullPage: true })
   })

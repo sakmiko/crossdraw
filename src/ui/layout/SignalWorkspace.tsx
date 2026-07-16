@@ -671,7 +671,23 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       )}
       {channel && flow && !signal.unsignalized && (
         <div className="flat-section" id="cycle-scan-echarts" style={{ marginBottom: 10 }}>
-          <div className="rg-section-title">周期 C 敏感性 · 交互</div>
+          <div className="rg-section-title">
+            周期 C 敏感性 · 交互
+            {cycleScanChartOpt ? (
+              <button
+                type="button"
+                className="ghost"
+                onClick={() =>
+                  void downloadEchartsPng(`周期敏感性.png`, cycleScanChartOpt, {
+                    width: 1000,
+                    height: 420,
+                  })
+                }
+              >
+                导出 PNG
+              </button>
+            ) : null}
+          </div>
           {cycleScanChartOpt ? (
             <EChart option={cycleScanChartOpt} style={{ height: 280 }} className="echart-host" />
           ) : null}

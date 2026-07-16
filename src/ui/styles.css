@@ -3570,3 +3570,61 @@ html[data-theme='light'] .echart-host,
 .rg-section-title .ghost {
   margin-left: auto;
 }
+
+
+/* v0.5.130 approach-strip + cycle-scan png density */
+.approach-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+}
+.approach-strip .approach-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: var(--ctrl-h, 30px);
+  height: auto;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+}
+.approach-strip .approach-chip.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+  font-weight: 650;
+}
+.approach-strip .approach-chip small {
+  font-size: 10px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.approach-strip .approach-chip-tool,
+.approach-strip .layer-chip {
+  min-height: var(--ctrl-h, 30px);
+  padding: 3px 8px;
+  font-size: 11px;
+}
+.approach-strip .layer-chip.on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+#cycle-scan-echarts .rg-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+@media (max-width: 900px) {
+  .approach-strip {
+    padding: 4px 8px;
+  }
+  .approach-strip .approach-chip small {
+    display: none;
+  }
+}

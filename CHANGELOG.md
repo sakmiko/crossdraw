@@ -1,3 +1,8 @@
+## 0.5.130 — Cycle-scan PNG + approach-strip polish
+
+- Export center `echarts-cycle-scan-png` + Signal「周期 C 敏感性」导出 PNG (homology scanCycleSensitivity).
+- Approach strip chip density (active ring, lane count, tools). Schematic scan — not full HCM optimizer.
+
 ## 0.5.129 — Borrow-left glyph + flow/signal PNG buttons
 
 - `placeBorrowLeftPocket` (homology borrowLeft).

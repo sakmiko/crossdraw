@@ -137,6 +137,7 @@ export type ExportItemId =
   | 'echarts-band-png'
   | 'echarts-compare-png'
   | 'echarts-xsection-png'
+  | 'echarts-cycle-scan-png'
 
 export type ExportItem = {
   id: ExportItemId
@@ -150,6 +151,15 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'echarts-cycle-scan-png',
+    category: 'signal',
+    title: '周期 C 敏感性 PNG',
+    format: 'PNG',
+    description: 'ECharts 同源 scanCycleSensitivity · 非完整 HCM 优化器',
+    modes: ['signal'],
+    requires: ['signal', 'flow', 'channel'],
+  },
   {
     id: 'echarts-xsection-png',
     category: 'drawing',
