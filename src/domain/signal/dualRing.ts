@@ -154,23 +154,76 @@ export function buildDualRingAlignment(signal: SignalScheme): DualRingAlignment 
 }
 
 /**
- * Apply a standard 4-phase dual-ring split on existing phases (best-effort).
- * Assigns first half of main phases to ring1, rest to ring2, single barrier 0.
- * If fewer than 2 main phases, only tags ring1.
+ * Apply dual-ring split on main phases (best-effort engineering heuristic).
+ * - Default: alternate R1/R2 within barriers
+ * - When main phases >= 4: two barriers (0,1) — first half of each ring in B0, rest B1
+ * - Overlaps: no ring assignment
+ * Not a full NEMA dual-entry concurrency engine.
  */
-export function autoAssignDualRings(signal: SignalScheme): Phase[] {
+export function autoAssignDualRings(signal: SignalScheme, barrierCount = 0): Phase[] {
   const main = signal.phases.filter((p) => !p.isOverlap)
-  const mid = Math.ceil(main.length / 2) || 1
+  const n = main.length
+  // auto pick barrier count: 2 when enough phases, else 1
+  const bCount = barrierCount > 0 ? Math.max(1, Math.min(4, barrierCount)) : n >= 4 ? 2 : 1
   const mainIds = new Set(main.map((p) => p.id))
   return signal.phases.map((p) => {
     if (!mainIds.has(p.id)) {
-      // overlaps: leave ring unset (draw as overlay)
       return { ...p, ring: undefined, barrierIndex: undefined }
     }
     const idx = main.findIndex((m) => m.id === p.id)
-    const ring: RingId = idx < mid ? 1 : 2
-    return { ...p, ring, barrierIndex: 0 }
+    // split phases into barrier slices then alternate rings
+    const slice = Math.max(1, Math.ceil(n / bCount))
+    const barrierIndex = Math.min(bCount - 1, Math.floor(idx / slice))
+    const local = idx - barrierIndex * slice
+    const ring: RingId = local % 2 === 0 ? 1 : 2
+    // ensure each barrier has at least one on each ring when slice>=2
+    return { ...p, ring, barrierIndex }
   })
+}
+
+/** List distinct barrier indices currently used (sorted). */
+export function listBarrierIndices(signal: SignalScheme): number[] {
+  const s = new Set<number>()
+  for (const p of signal.phases) {
+    if (p.ring === 1 || p.ring === 2) s.add(p.barrierIndex ?? 0)
+  }
+  return Array.from(s).sort((a, b) => a - b)
+}
+
+/** Rebalance greens so each barrier's rings have equal duration (pad shorter ring's last phase). */
+export function balanceBarrierRings(signal: SignalScheme): Phase[] {
+  const stages = buildDualRingStages(signal)
+  const patch = new Map<string, number>()
+  for (const st of stages) {
+    const d = st.ring1SumSec - st.ring2SumSec
+    if (Math.abs(d) < 0.15) continue
+    if (d > 0 && st.ring2.length) {
+      // pad ring2 last phase green
+      const last = st.ring2[st.ring2.length - 1]
+      patch.set(last.id, last.greenSec + d)
+    } else if (d < 0 && st.ring1.length) {
+      const last = st.ring1[st.ring1.length - 1]
+      patch.set(last.id, last.greenSec - d)
+    }
+  }
+  if (!patch.size) return signal.phases.map((p) => ({ ...p }))
+  return signal.phases.map((p) => {
+    const g = patch.get(p.id)
+    if (g == null) return { ...p }
+    return { ...p, greenSec: Math.max(4, Math.round(g * 10) / 10) }
+  })
+}
+
+/** Set cycle to dual-ring stage sum (closure helper). */
+export function cycleFromDualRing(signal: SignalScheme): number {
+  const al = buildDualRingAlignment(signal)
+  if (!al.enabled || !al.stages.length) {
+    return Math.max(
+      1,
+      signal.phases.filter((p) => !p.isOverlap).reduce((s, p) => s + phaseDuration(p), 0),
+    )
+  }
+  return Math.max(1, Math.round(al.stageSumSec * 10) / 10)
 }
 
 /** Ensure dualRing flag + optional auto-assign when enabling. */

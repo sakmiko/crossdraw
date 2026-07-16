@@ -89,6 +89,9 @@ export default function App() {
   const setDualRingEnabled = useAppStore((s) => s.setDualRingEnabled)
   const autoAssignDualRings = useAppStore((s) => s.autoAssignDualRings)
   const setPhaseRing = useAppStore((s) => s.setPhaseRing)
+  const setPhaseBarrier = useAppStore((s) => s.setPhaseBarrier)
+  const balanceDualRingBarriers = useAppStore((s) => s.balanceDualRingBarriers)
+  const closeDualRingCycle = useAppStore((s) => s.closeDualRingCycle)
   const resetTemplate = useAppStore((s) => s.resetTemplate)
   const loadProject = useAppStore((s) => s.loadProject)
   const markClean = useAppStore((s) => s.markClean)
@@ -801,6 +804,9 @@ export default function App() {
               onSetDualRing={setDualRingEnabled}
               onAutoAssignDualRings={autoAssignDualRings}
               onSetPhaseRing={setPhaseRing}
+              onSetPhaseBarrier={setPhaseBarrier}
+              onBalanceDualRing={balanceDualRingBarriers}
+              onCloseDualRingCycle={closeDualRingCycle}
               onRunOptimize={runWebster}
               onRunCompare={runTimingCompare}
               onApplyCompareRow={applyTimingCompareRow}
@@ -894,7 +900,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.67</span>
+        <span>Crossdraw v0.5.68</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

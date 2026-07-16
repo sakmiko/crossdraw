@@ -222,29 +222,45 @@ export function createYTemplate(name = 'Y型交叉口'): Project {
   const ch = p.channelizationSchemes[0]
   ch.intersectionType = 'y'
   ch.name = '渠化方案 Y'
-  // three legs at 0, 120, 240
+  // three legs — classic Y: stem + two forks (angles show acute/obtuse corners)
   const legs = [
     { name: '主线北', bearing: 0 },
-    { name: '分叉东南', bearing: 120 },
-    { name: '分叉西南', bearing: 240 },
+    { name: '分叉东南', bearing: 135 },
+    { name: '分叉西南', bearing: 225 },
   ]
   const old = ch.approaches
   ch.approaches = legs.map((l, i) => {
     const base = old[i] ?? old[0]
-    return {
+    const ap = {
       ...JSON.parse(JSON.stringify(base)),
       id: base.id,
       name: l.name,
       bearingDeg: l.bearing,
     }
+    // slightly wider forks for CAD readability; enable free-right on stem
+    if (i === 0) {
+      ap.rightTurn = { ...ap.rightTurn, enabled: true, style: 'island', radiusM: 12, widthM: 3.5 }
+      ap.widen = { ...ap.widen, entryWidenLanes: 1, entryWidenLengthM: 45, entryTaperM: 25 }
+    } else {
+      ap.median = { ...ap.median, widthM: Math.max(1.5, ap.median.widthM * 0.7) }
+    }
+    return ap
   })
-  // reassign volumes keys
+  // reassign volumes keys; drop orphan approach volumes
   const fl = ch.flowSchemes[0]
   const vols: Record<string, TurnVolumes> = {}
   for (const a of ch.approaches) {
     vols[a.id] = fl.volumes[a.id] ?? { U: 10, L: 100, T: 300, R: 80 }
   }
   fl.volumes = vols
+  // signal: only keep releases for remaining approaches
+  const ids = new Set(ch.approaches.map((a) => a.id))
+  const sg = fl.signalSchemes[0]
+  for (const ph of sg.phases) {
+    for (const id of Object.keys(ph.releases)) {
+      if (!ids.has(id)) delete ph.releases[id]
+    }
+  }
   return p
 }
 

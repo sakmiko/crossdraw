@@ -46,8 +46,11 @@ export type SignalWorkspaceProps = {
   onAddOverlap: () => void
   onAddPedPhase?: () => void
   onSetDualRing?: (enabled: boolean) => void
-  onAutoAssignDualRings?: () => void
+  onAutoAssignDualRings?: (barrierCount?: number) => void
   onSetPhaseRing?: (phaseId: string, ring: 1 | 2 | undefined) => void
+  onSetPhaseBarrier?: (phaseId: string, barrierIndex: number) => void
+  onBalanceDualRing?: () => void
+  onCloseDualRingCycle?: () => void
   onRunOptimize: () => void
   onRunCompare: () => void
   onApplyCompareRow: (row: TimingCompareRow) => void
@@ -80,6 +83,9 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
     onSetDualRing,
     onAutoAssignDualRings,
     onSetPhaseRing,
+    onSetPhaseBarrier,
+    onBalanceDualRing,
+    onCloseDualRingCycle,
     onRunOptimize,
     onRunCompare,
     onApplyCompareRow,
@@ -165,6 +171,37 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
               />{' '}
               搭接相位 Overlap
             </label>
+            {signal.dualRing?.enabled && !ph.isOverlap && (
+              <div className="field-row-3" style={{ marginTop: 6 }}>
+                <label title="双环归属 R1/R2">
+                  环
+                  <select
+                    value={ph.ring ?? ''}
+                    onChange={(e) => {
+                      const v = e.target.value
+                      onSetPhaseRing?.(ph.id, v === '1' ? 1 : v === '2' ? 2 : undefined)
+                    }}
+                  >
+                    <option value="">—</option>
+                    <option value="1">R1</option>
+                    <option value="2">R2</option>
+                  </select>
+                </label>
+                <label title="Barrier 阶段组">
+                  B
+                  <select
+                    value={ph.barrierIndex ?? 0}
+                    onChange={(e) => onSetPhaseBarrier?.(ph.id, Number(e.target.value))}
+                  >
+                    {[0, 1, 2, 3].map((b) => (
+                      <option key={b} value={b}>
+                        B{b}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            )}
             <div className="hint" style={{ marginTop: 6 }}>
               放行矩阵
             </div>
@@ -234,8 +271,17 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         </label>
         {signal.dualRing?.enabled && (
           <>
-            <button type="button" className="ghost" onClick={() => onAutoAssignDualRings?.()}>
-              自动分配环
+            <button type="button" className="ghost" onClick={() => onAutoAssignDualRings?.(1)}>
+              单屏障分配
+            </button>
+            <button type="button" className="ghost" onClick={() => onAutoAssignDualRings?.(2)}>
+              双屏障分配
+            </button>
+            <button type="button" className="ghost" onClick={() => onBalanceDualRing?.()}>
+              平衡双环
+            </button>
+            <button type="button" className="primary" onClick={() => onCloseDualRingCycle?.()}>
+              闭合周期 C
             </button>
             <span className={`integrity-badge ${buildDualRingAlignment(signal).closed ? 'ok' : 'bad'}`}>
               {dualRingSummaryText(buildDualRingAlignment(signal))}

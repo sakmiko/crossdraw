@@ -1,6 +1,12 @@
 import type { Approach, FlowScheme, Phase, SignalScheme, WebsterInput, WebsterResult } from '../types'
 import { convertVolumes } from '../flow/convert'
 import { websterTiming as websterCore } from './index'
+import {
+  balanceBarrierRings,
+  buildDualRingAlignment,
+  cycleFromDualRing,
+  isDualRingEnabled,
+} from '../signal/dualRing'
 
 /**
  * Timing optimization methods (选择算法):
@@ -115,13 +121,36 @@ export function optimizeSignalTiming(
     )
   }
 
-  const applied = applyGreens(signal, phaseGreens, cycle, minGreen)
+  let applied = applyGreens(signal, phaseGreens, cycle, minGreen)
+  // Dual-ring post-process: balance barrier rings + set C = stage sum
+  if (isDualRingEnabled(signal)) {
+    const trial: SignalScheme = { ...signal, phases: applied, cycleSec: cycle }
+    const balanced = balanceBarrierRings(trial)
+    applied = balanced
+    const closed = { ...trial, phases: balanced }
+    const stageC = cycleFromDualRing(closed)
+    // if free cycle (not fixed), adopt dual-ring stage sum as C
+    if (!(opts?.fixedCycle && opts.fixedCycle > 0) && method !== 'fixed-cycle') {
+      cycle = clamp(stageC, minCycle, maxCycle)
+    }
+    const al = buildDualRingAlignment({ ...closed, cycleSec: cycle })
+    notes.push(
+      `双环联立：Barrier×${al.stages.length} · 阶段Σ=${al.stageSumSec.toFixed(1)}s · C=${cycle}s · ${al.closed ? '闭合' : '未闭合'}（非完整 NEMA 机）`,
+    )
+    for (const st of al.stages) {
+      notes.push(
+        `  B${st.barrierIndex}: R1=${st.ring1SumSec.toFixed(1)}s R2=${st.ring2SumSec.toFixed(1)}s → ${st.stageSec.toFixed(1)}s`,
+      )
+    }
+  }
   // recompute sum for note
   notes.push('黄灯/全红：保留相位原值或默认；搭接相位不改绿或随周期比例缩放')
   return {
     cycleSec: cycle,
     Y,
-    phaseGreens,
+    phaseGreens: applied
+      .filter((p) => !p.isOverlap)
+      .map((p) => ({ phaseId: p.id, greenSec: p.greenSec })),
     notes,
     appliedPhases: applied,
     method,

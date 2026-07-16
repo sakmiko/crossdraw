@@ -14,35 +14,40 @@ async function openMode(page: Page, tablist: ReturnType<Page['getByRole']>, name
   await page.waitForTimeout(200)
 }
 
-test.describe('Crossdraw v0.5.67 dual-ring + polish', () => {
+test.describe('Crossdraw v0.5.68 multi-barrier + polish', () => {
   // modes covered: 渠化 流量 信号 分析 绿波 比选 断面
   test('shell version', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/Crossdraw v0\.5\.67/).first()).toBeVisible()
+    await expect(page.getByText(/Crossdraw v0\.5\.68/).first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
 
-  test('dual-ring enable shows diagram', async ({ page }) => {
+  test('dual-ring multi-barrier controls', async ({ page }) => {
     const tablist = await bootCross(page)
     await openMode(page, tablist, '信号')
-    await expect(page.getByText('双环栏').first()).toBeVisible({ timeout: 10000 })
     await page.locator('label.check-inline', { hasText: '双环栏' }).locator('input[type="checkbox"]').check()
-    await page.waitForTimeout(400)
-    await expect(page.getByText('双环栏图').first()).toBeVisible({ timeout: 10000 })
-    await expect(page.getByRole('button', { name: '自动分配环' })).toBeVisible()
+    await page.waitForTimeout(300)
+    await expect(page.getByRole('button', { name: '双屏障分配' })).toBeVisible({ timeout: 10000 })
+    await page.getByRole('button', { name: '双屏障分配' }).click()
+    await page.waitForTimeout(200)
+    await expect(page.getByRole('button', { name: '平衡双环' })).toBeVisible()
+    await expect(page.getByRole('button', { name: '闭合周期 C' })).toBeVisible()
+    await page.getByRole('button', { name: '闭合周期 C' }).click()
+    await page.waitForTimeout(200)
+    await expect(page.getByText('双环栏图').first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/03-signal.png', fullPage: true })
   })
 
-  test('skewed template angle labels', async ({ page }) => {
+  test('Y template corner CAD', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto('/')
-    await page.getByRole('button', { name: '斜交', exact: true }).click()
+    await page.getByRole('button', { name: 'Y型', exact: true }).click()
     await expect(page.locator('#canvas-root')).toBeVisible({ timeout: 20000 })
     await page.waitForTimeout(500)
     await page.screenshot({ path: 'docs/screenshots/01-channel.png', fullPage: true })
   })
 
-  test('flow workspace', async ({ page }) => {
+  test('flow', async ({ page }) => {
     const tablist = await bootCross(page)
     await openMode(page, tablist, '流量')
     await expect(page.getByText(/行人|非机动车/).first()).toBeVisible({ timeout: 10000 })

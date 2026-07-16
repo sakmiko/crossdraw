@@ -15,7 +15,7 @@ import type {
 import { createCrossTemplate, createTemplateByType } from '@/domain/templates/cross'
 import { applyOffsetsToCorridor, optimizeAllCorridors, optimizeCorridor, setSegmentLength } from '@/domain/analysis/corridor'
 import { makePedestrianOnlyPhase } from '@/domain/signal/pedestrian'
-import { disableDualRing, enableDualRing } from '@/domain/signal/dualRing'
+import { autoAssignDualRings, balanceBarrierRings, cycleFromDualRing, disableDualRing, enableDualRing } from '@/domain/signal/dualRing'
 import { cloneBandCorridor, defaultBandCorridor, normalizeBandCorridors } from '@/domain/band/corridors'
 import {
   rebuildLaneGroupsFromLanes,
@@ -65,7 +65,10 @@ export type AppState = {
   addPedestrianPhase: () => void
   setDualRingEnabled: (enabled: boolean) => void
   setPhaseRing: (phaseId: string, ring: 1 | 2 | undefined, barrierIndex?: number) => void
-  autoAssignDualRings: () => void
+  setPhaseBarrier: (phaseId: string, barrierIndex: number) => void
+  autoAssignDualRings: (barrierCount?: number) => void
+  balanceDualRingBarriers: () => void
+  closeDualRingCycle: () => void
   setProjectName: (name: string) => void
   markClean: () => void
   touch: () => void
@@ -355,20 +358,45 @@ export const useAppStore = create<AppState>()(
           const ph = sg?.phases.find((p) => p.id === phaseId)
           if (!ph) return
           ph.ring = ring
-          ph.barrierIndex = ring == null ? undefined : barrierIndex
+          ph.barrierIndex = ring == null ? undefined : (ph.barrierIndex ?? barrierIndex)
           if (ring != null) {
             if (!sg!.dualRing) sg!.dualRing = { enabled: true, label: '双环' }
             else sg!.dualRing.enabled = true
           }
           s.dirty = true
         }),
-      autoAssignDualRings: () =>
+      setPhaseBarrier: (phaseId, barrierIndex) =>
+        set((s) => {
+          const sg = activeSignal(s.project)
+          const ph = sg?.phases.find((p) => p.id === phaseId)
+          if (!ph) return
+          ph.barrierIndex = Math.max(0, Math.min(7, Math.round(barrierIndex)))
+          if (ph.ring == null) ph.ring = 1
+          if (!sg!.dualRing) sg!.dualRing = { enabled: true, label: '双环' }
+          else sg!.dualRing.enabled = true
+          s.dirty = true
+        }),
+      autoAssignDualRings: (barrierCount) =>
         set((s) => {
           const sg = activeSignal(s.project)
           if (!sg) return
-          const next = enableDualRing(sg, true)
-          sg.dualRing = next.dualRing
-          sg.phases = next.phases
+          sg.dualRing = { enabled: true, label: sg.dualRing?.label ?? '双环' }
+          sg.phases = autoAssignDualRings(sg, barrierCount ?? 0)
+          s.dirty = true
+        }),
+      balanceDualRingBarriers: () =>
+        set((s) => {
+          const sg = activeSignal(s.project)
+          if (!sg?.dualRing?.enabled) return
+          sg.phases = balanceBarrierRings(sg)
+          s.dirty = true
+        }),
+      closeDualRingCycle: () =>
+        set((s) => {
+          const sg = activeSignal(s.project)
+          if (!sg?.dualRing?.enabled) return
+          sg.phases = balanceBarrierRings(sg)
+          sg.cycleSec = cycleFromDualRing(sg)
           s.dirty = true
         }),
       addOverlapPhase: () =>
