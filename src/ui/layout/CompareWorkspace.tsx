@@ -16,6 +16,13 @@ import {
 import { schemeDeltas, schemeDeltaMarkdown } from '@/domain/analysis/schemeDiff' 
 import { exportJsonFile, exportSvgFile } from '@/io/exportCharts'
 import { downloadText } from '@/io/download'
+import {
+  buildTimingCompareRows,
+  timingCompareBoardSvg,
+  timingCompareMarkdown,
+  timingCompareCsv,
+} from '@/ui/charts/timingCompareBoard'
+import { recommendTimingRow } from '@/domain/analysis/timingCompare' 
 import { vcHeatColor } from '@/ui/charts/svgCharts'
 
 export type CompareWorkspaceProps = {
@@ -55,6 +62,23 @@ export function CompareWorkspace({ project, theme, onActivateScheme }: CompareWo
     [kpis, baseIdx],
   )
 
+  const activeTimingRows = useMemo(() => {
+    const ch =
+      project.channelizationSchemes.find((x) => x.id === project.active?.channelId) ??
+      project.channelizationSchemes[0]
+    if (!ch) return []
+    const fl = ch.flowSchemes.find((f) => f.id === project.active?.flowId) ?? ch.flowSchemes[0]
+    if (!fl) return []
+    const sg = fl.signalSchemes.find((s) => s.id === project.active?.signalId) ?? fl.signalSchemes[0]
+    if (!sg || sg.unsignalized) return []
+    try {
+      return buildTimingCompareRows(ch.approaches, fl, sg)
+    } catch {
+      return []
+    }
+  }, [project])
+  const recTiming = recommendTimingRow(activeTimingRows)
+
   return (
     <div className="flat-params" style={{ marginTop: 12 }}>
       <div className="panel-header">
@@ -88,6 +112,45 @@ export function CompareWorkspace({ project, theme, onActivateScheme }: CompareWo
         style={{ marginBottom: 10 }}
         dangerouslySetInnerHTML={{ __html: scoreSvg }}
       />
+      {activeTimingRows.length > 0 && (
+        <div className="flat-section" style={{ marginBottom: 10 }}>
+          <div className="rg-section-title">
+            当前方案 · 配时方法比选
+            {recTiming ? <span className="subpanel-tag">推荐 {recTiming.label}</span> : null}
+          </div>
+          <div
+            className="chart-svg-host"
+            style={{ overflow: 'auto' }}
+            dangerouslySetInnerHTML={{
+              __html: timingCompareBoardSvg(activeTimingRows, { width: 720 }),
+            }}
+          />
+          <div className="toolbar dense" style={{ marginTop: 6 }}>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => {
+                exportSvgFile(
+                  `${project.name}-配时方法比选.svg`,
+                  timingCompareBoardSvg(activeTimingRows, { width: 880 }),
+                )
+                downloadText(
+                  `${project.name}-配时方法比选.md`,
+                  timingCompareMarkdown(project.name, activeTimingRows),
+                  'text/markdown',
+                )
+                downloadText(
+                  `${project.name}-配时方法比选.csv`,
+                  timingCompareCsv(activeTimingRows),
+                  'text/csv',
+                )
+              }}
+            >
+              配时比选导出
+            </button>
+          </div>
+        </div>
+      )}
       {deltas.length > 0 && (
         <div className="table-wrap" style={{ marginBottom: 10, maxHeight: 160 }}>
           <table className="table table-dense">

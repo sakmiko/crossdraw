@@ -41,7 +41,12 @@ import {
   collectStorageCheckRows,
   storageCheckMarkdown,
   storageCheckCsv,
-} from '@/ui/charts/storageCheckBoard' 
+} from '@/ui/charts/storageCheckBoard'
+import {
+  criticalApproachBoardSvg,
+  criticalApproachMarkdown,
+  criticalApproachCsv,
+} from '@/ui/charts/criticalApproachBoard'  
 import { queueTableMarkdown } from '@/domain/analysis/queueStorage'
 import {
   cleanAnalysisPlanSvg,
@@ -453,6 +458,48 @@ export function AnalysisWorkspace({
         }))}
       />
       
+      {channel && flow && signal && !signal.unsignalized && (
+        <div className="flat-section">
+          <div className="rg-section-title">关键进口</div>
+          <div
+            className="chart-svg-host"
+            style={{ overflow: 'auto' }}
+            dangerouslySetInnerHTML={{
+              __html: criticalApproachBoardSvg(
+                channel.approaches,
+                flow,
+                signal,
+                analysis,
+                { width: 700 },
+              ),
+            }}
+          />
+          <div className="toolbar dense" style={{ marginTop: 6 }}>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => {
+                exportSvgFile(
+                  `${project.name}-关键进口.svg`,
+                  criticalApproachBoardSvg(channel.approaches, flow, signal, analysis, { width: 720 }),
+                )
+                downloadText(
+                  `${project.name}-关键进口.md`,
+                  criticalApproachMarkdown(project.name, channel.approaches, flow, signal, analysis),
+                  'text/markdown',
+                )
+                downloadText(
+                  `${project.name}-关键进口.csv`,
+                  criticalApproachCsv(analysis),
+                  'text/csv',
+                )
+              }}
+            >
+              关键进口导出
+            </button>
+          </div>
+        </div>
+      )}
       {channel && signal && !signal.unsignalized && (
         <div className="flat-section">
           <div className="rg-section-title">进口道储存校核</div>

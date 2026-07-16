@@ -1,6 +1,19 @@
 # CHANGELOG
 
-## 0.5.108 — 2026-07-16
+## 0.5.109 — 2026-07-16
+
+### 关键进口高亮
+- `criticalApproachBoardSvg`：按 v/c 排序 · CRITICAL 徽章
+- 信号页 / 分析页实时看板；导出 `critical-approach-*`
+
+### 比选页 × 配时方法
+- CompareWorkspace 嵌入当前方案 Webster/HCM/等绿/固定C 比选看板
+- 与信号页同源 `buildTimingCompareRows`
+
+### 诚实边界
+- 关键 = 分析车道组最大 v/c；非完整关键路径优化
+
+0.5.108 — 2026-07-16
 
 ### 进口道储存长度校核
 - `collectStorageCheckRows`：排队示意长度 vs 入口展宽段

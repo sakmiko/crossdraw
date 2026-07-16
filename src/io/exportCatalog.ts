@@ -108,6 +108,9 @@ export type ExportItemId =
   | 'storage-check-svg'
   | 'storage-check-md'
   | 'storage-check-csv'
+  | 'critical-approach-svg'
+  | 'critical-approach-md'
+  | 'critical-approach-csv'
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
@@ -126,6 +129,34 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'critical-approach-svg',
+    category: 'analysis',
+    title: '关键进口看板',
+    format: 'SVG',
+    description: '最大 v/c 车道组排序高亮',
+    modes: ['analysis', 'signal'],
+    requires: ['analysis', 'signal'],
+  },
+  {
+    id: 'critical-approach-md',
+    category: 'analysis',
+    title: '关键进口 MD',
+    format: 'MD',
+    description: '关键车道组表',
+    modes: ['analysis'],
+    requires: ['analysis'],
+  },
+  {
+    id: 'critical-approach-csv',
+    category: 'analysis',
+    title: '关键进口 CSV',
+    format: 'CSV',
+    description: 'v/c 排序数据',
+    modes: ['analysis'],
+    requires: ['analysis'],
+  },
+
   {
     id: 'storage-check-svg',
     category: 'analysis',

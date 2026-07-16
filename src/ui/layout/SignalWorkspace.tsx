@@ -42,7 +42,9 @@ import {
   pedTimingOptMarkdown,
   pedTimingOptCsv,
   collectPedOptRows,
-} from '@/ui/charts/pedTimingOptBoard' 
+} from '@/ui/charts/pedTimingOptBoard'
+import { criticalApproachBoardSvg } from '@/ui/charts/criticalApproachBoard'
+import { analyzeIntersection } from '@/domain/analysis'  
 import { allocateGreensByBarrierCriticalY } from '@/domain/signal/barrierGreenAlloc'
 import { dualRingPhaseNumberSvg } from '@/ui/charts/phaseNumberDiagram'
 import {
@@ -557,6 +559,24 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
             </div>
           </div>
         )}
+      {channel && flow && !signal.unsignalized && (
+        <div className="flat-section" style={{ marginBottom: 10 }}>
+          <div className="rg-section-title">关键进口</div>
+          <div
+            className="chart-svg-host"
+            style={{ overflow: 'auto', maxHeight: 280 }}
+            dangerouslySetInnerHTML={{
+              __html: criticalApproachBoardSvg(
+                channel.approaches,
+                flow,
+                signal,
+                analyzeIntersection(channel.approaches, flow, signal),
+                { width: 680 },
+              ),
+            }}
+          />
+        </div>
+      )}
       {kpi && !signal.unsignalized && (
         <div className="rg-section" style={{ marginBottom: 10 }}>
           <div className="rg-section-title">饱和度 / 延误 KPI（实时）</div>

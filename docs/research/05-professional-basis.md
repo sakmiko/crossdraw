@@ -143,3 +143,5 @@
 | 行人 Walk/FDW 优化 | 横道宽/1.2m/s | 工程推算非完整规范 |
 
 | 进口道储存校核 | 排队示意 vs entryWidenLengthM | 工程式；非仿真 |
+
+| 关键进口看板 | max v/c 车道组 | analyzeIntersection |

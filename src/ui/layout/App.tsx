@@ -40,7 +40,12 @@ import {
   collectStorageCheckRows,
   storageCheckMarkdown,
   storageCheckCsv,
-} from '@/ui/charts/storageCheckBoard' 
+} from '@/ui/charts/storageCheckBoard'
+import {
+  criticalApproachBoardSvg,
+  criticalApproachMarkdown,
+  criticalApproachCsv,
+} from '@/ui/charts/criticalApproachBoard'  
 import { queueTableMarkdown } from '@/domain/analysis/queueStorage'  
 import {
   professionalMultiCorridorReportSvg,
@@ -636,7 +641,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.108 · 绿波专页</span>
+          <span>Crossdraw v0.5.109 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -658,7 +663,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.108</span>
+            <span className="brand-ver">v0.5.109</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -987,7 +992,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.108</span>
+        <span>Crossdraw v0.5.109</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1325,6 +1330,29 @@ export default function App() {
             downloadText(
               `${project.name}-Y分解.csv`,
               criticalYCsv(channel.approaches, flow, signal),
+              'text/csv',
+            )
+          },
+          'critical-approach-svg': () => {
+            if (!channel || !flow || !signal || !analysis) return
+            exportSvgFile(
+              `${project.name}-关键进口.svg`,
+              criticalApproachBoardSvg(channel.approaches, flow, signal, analysis, { width: 720 }),
+            )
+          },
+          'critical-approach-md': () => {
+            if (!channel || !flow || !signal || !analysis) return
+            downloadText(
+              `${project.name}-关键进口.md`,
+              criticalApproachMarkdown(project.name, channel.approaches, flow, signal, analysis),
+              'text/markdown',
+            )
+          },
+          'critical-approach-csv': () => {
+            if (!analysis) return
+            downloadText(
+              `${project.name}-关键进口.csv`,
+              criticalApproachCsv(analysis),
               'text/csv',
             )
           },
