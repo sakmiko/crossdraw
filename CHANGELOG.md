@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 0.5.98 — 2026-07-16
+
+### A4 工程拼版（联通渠化出图）
+- `collectEngineeringPrintPanels`：默认四联 **渠化图框 · 流向 · 配时 · 管控**
+- 打印预览 `collectPrintPanels` 改用工程预设（含图框）
+- 分析页 / 渠化页「A4 工程拼版」→ SVG + HTML + 清单 MD
+- 导出中心：`engineering-print-a4`
+
+### 诚实边界
+- 示意拼版，非测绘出图
+
+# CHANGELOG
+
 ## 0.5.97 — 2026-07-16
 
 ### 渠化出图图框（导出稿）

@@ -18,21 +18,21 @@ async function openNav(page: Page, label: string) {
   await page.waitForTimeout(300)
 }
 
-test.describe('Crossdraw v0.5.97 draft + polish', () => {
+test.describe('Crossdraw v0.5.98 eng-print + polish', () => {
   // 渠化 流量 信号 分析 绿波 比选 断面
   test('shell', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.97/).first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.98/).first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
 
-  test('channel draft export', async ({ page }) => {
+  test('channel eng print', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '渠化')
     await expect(page.locator('.page-fill-params details')).toHaveCount(0)
-    await expect(page.getByRole('button', { name: /导出图框 SVG/ })).toBeVisible({ timeout: 10000 })
-    await page.getByRole('button', { name: /导出图框 SVG/ }).click()
-    await page.waitForTimeout(200)
+    await expect(page.getByRole('button', { name: /A4 工程拼版/ }).first()).toBeVisible({
+      timeout: 10000,
+    })
     await page.screenshot({ path: 'docs/screenshots/01-channel.png', fullPage: true })
   })
 
@@ -48,9 +48,12 @@ test.describe('Crossdraw v0.5.97 draft + polish', () => {
     await page.screenshot({ path: 'docs/screenshots/03-signal.png', fullPage: true })
   })
 
-  test('analysis', async ({ page }) => {
+  test('analysis eng print', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '分析')
+    await expect(page.getByRole('button', { name: /A4 工程拼版/ })).toBeVisible({ timeout: 10000 })
+    await page.getByRole('button', { name: /A4 工程拼版/ }).click()
+    await page.waitForTimeout(250)
     await page.screenshot({ path: 'docs/screenshots/04-analysis.png', fullPage: true })
   })
 

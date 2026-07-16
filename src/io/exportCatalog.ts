@@ -68,6 +68,7 @@ export type ExportItemId =
   | 'dual-ring-board-csv'
   | 'channel-draft-svg'
   | 'channel-draft-md'
+  | 'engineering-print-a4'
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
@@ -86,6 +87,16 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'engineering-print-a4',
+    category: 'package',
+    title: 'A4 工程拼版（含渠化图框）',
+    format: 'SVG/HTML/MD',
+    description: '渠化出图+流向+配时+管控 四联 · 与编辑器同源',
+    modes: ['channel', 'analysis', 'signal'],
+    requires: ['channel'],
+  },
+
   {
     id: 'channel-draft-svg',
     category: 'drawing',
@@ -554,7 +565,7 @@ export const EXPORT_CATALOG: ExportItem[] = [
     category: 'package',
     title: 'A4 打印拼版',
     format: 'SVG/HTML',
-    description: '最多 4 图 A4 矢量拼版预览与导出',
+    description: '最多 4 图 A4 矢量拼版（工程预设含渠化图框）',
     modes: ['analysis', 'signal', 'flow'],
     requires: ['channel', 'flow', 'signal'],
   },

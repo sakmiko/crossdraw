@@ -30,6 +30,11 @@ import { buildMultiPageReportHtml } from '@/io/multiPageReport'
 import { analysisMarkdown, exportSvgFile } from '@/io/exportCharts'
 import { buildAnalysisReportSvg } from '@/io/analysisReportSvg'
 import { downloadText } from '@/io/download'
+import { buildA4PrintSheet, printSheetHtml } from '@/io/printSheet'
+import {
+  collectEngineeringPrintPanels,
+  engineeringPrintManifest,
+} from '@/io/engineeringPrintPack' 
 import {
   professionalAnalysisPlanPackSvg,
   analysisPlanPackMarkdown,
@@ -131,6 +136,43 @@ export function AnalysisWorkspace({
           }}
         >
           四指标平面合图
+        </button>
+        <button
+          type="button"
+          className="primary"
+          disabled={!channel || !flow || !signal}
+          onClick={() => {
+            if (!channel || !flow || !signal) return
+            const panels = collectEngineeringPrintPanels({
+              project,
+              channel,
+              flow,
+              signal,
+              analysis,
+              mesh: null,
+              preferChannelDraft: true,
+              preset: 'engineering',
+            })
+            const sheet = buildA4PrintSheet(panels, {
+              projectName: project.name,
+              schemeName: channel.name,
+              paper: 'A4-landscape',
+              footerNote: '渠化图框+配时+管控+流向 · 示意非测绘',
+            })
+            downloadText(`${project.name}-工程拼版.svg`, sheet, 'image/svg+xml')
+            downloadText(
+              `${project.name}-工程拼版.html`,
+              printSheetHtml(sheet, `${project.name}-工程拼版`),
+              'text/html',
+            )
+            downloadText(
+              `${project.name}-工程拼版.md`,
+              engineeringPrintManifest(project.name, panels),
+              'text/markdown',
+            )
+          }}
+        >
+          A4 工程拼版
         </button>
         <button
           type="button"

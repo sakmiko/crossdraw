@@ -14,7 +14,12 @@ import {
   buildChannelDraftSheet,
   channelDraftPreviewSvg,
   channelDraftMarkdown,
-} from '@/io/channelDraftSheet'  
+} from '@/io/channelDraftSheet'
+import { buildA4PrintSheet, printSheetHtml } from '@/io/printSheet'
+import {
+  collectEngineeringPrintPanels,
+  engineeringPrintManifest,
+} from '@/io/engineeringPrintPack'   
 
 export type ChannelWorkspaceProps = {
   project: Project
@@ -165,6 +170,44 @@ export function ChannelWorkspace({
                 >
                   出图说明 MD
                 </button>
+                  <button
+                    type="button"
+                    className="ghost"
+                    disabled={!channel}
+                    onClick={() => {
+                      if (!channel) return
+                      const fl = channel.flowSchemes.find((f) => f.id === project.active?.flowId) ?? channel.flowSchemes[0]
+                      const sg = fl?.signalSchemes.find((s) => s.id === project.active?.signalId) ?? fl?.signalSchemes[0]
+                      const panels = collectEngineeringPrintPanels({
+                        project,
+                        channel,
+                        flow: fl ?? null,
+                        signal: sg ?? null,
+                        analysis: null,
+                        mesh: null,
+                        preferChannelDraft: true,
+                        preset: 'engineering',
+                      })
+                      const sheet = buildA4PrintSheet(panels, {
+                        projectName: project.name,
+                        schemeName: channel.name,
+                        paper: 'A4-landscape',
+                      })
+                      downloadText(`${project.name}-工程拼版.svg`, sheet, 'image/svg+xml')
+                      downloadText(
+                        `${project.name}-工程拼版.html`,
+                        printSheetHtml(sheet, `${project.name}-工程拼版`),
+                        'text/html',
+                      )
+                      downloadText(
+                        `${project.name}-工程拼版.md`,
+                        engineeringPrintManifest(project.name, panels),
+                        'text/markdown',
+                      )
+                    }}
+                  >
+                    A4 工程拼版
+                  </button>
               </div>
               {channel && (
                 <div
@@ -227,6 +270,48 @@ export function ChannelWorkspace({
             }}
           >
             出图说明 MD
+          </button>
+          <button
+            type="button"
+            className="ghost"
+            disabled={!channel}
+            onClick={() => {
+              if (!channel) return
+              const fl =
+                channel.flowSchemes.find((f) => f.id === project.active?.flowId) ??
+                channel.flowSchemes[0]
+              const sg =
+                fl?.signalSchemes.find((s) => s.id === project.active?.signalId) ??
+                fl?.signalSchemes[0]
+              const panels = collectEngineeringPrintPanels({
+                project,
+                channel,
+                flow: fl ?? null,
+                signal: sg ?? null,
+                analysis: null,
+                mesh: null,
+                preferChannelDraft: true,
+                preset: 'engineering',
+              })
+              const sheet = buildA4PrintSheet(panels, {
+                projectName: project.name,
+                schemeName: channel.name,
+                paper: 'A4-landscape',
+              })
+              downloadText(`${project.name}-工程拼版.svg`, sheet, 'image/svg+xml')
+              downloadText(
+                `${project.name}-工程拼版.html`,
+                printSheetHtml(sheet, `${project.name}-工程拼版`),
+                'text/html',
+              )
+              downloadText(
+                `${project.name}-工程拼版.md`,
+                engineeringPrintManifest(project.name, panels),
+                'text/markdown',
+              )
+            }}
+          >
+            A4 工程拼版
           </button>
         </div>
         {channel && (

@@ -37,6 +37,10 @@ import { CompareWorkspace } from '@/ui/layout/CompareWorkspace'
 import { XSectionWorkspace } from '@/ui/layout/XSectionWorkspace'
 import { PrintPreviewModal } from '@/ui/common/PrintPreview'
 import { buildA4PrintSheet, printSheetHtml, type PrintPanel } from '@/io/printSheet'
+import {
+  collectEngineeringPrintPanels,
+  engineeringPrintManifest,
+} from '@/io/engineeringPrintPack' 
 import { collectCorridorKpis, corridorKpiCompareSvg, multiBandMarkdown } from '@/ui/charts/bandCorridorCompare'
 import { conflictHitsMarkdown, conflictMatrixExportSvg, conflictDiagramExportSvg } from '@/ui/charts/conflictExport'
 import { professionalConflictBoardSvg, conflictBoardCsv } from '@/ui/charts/professionalConflictBoard'
@@ -440,89 +444,17 @@ export default function App() {
 
 
   function collectPrintPanels(): PrintPanel[] {
-    const panels: PrintPanel[] = []
-    if (signal) {
-      panels.push({
-        id: 'timing',
-        title: '信号配时图',
-        svg: signalTimingDiagramSvg(
-          signal.phases.map((p) => ({
-            name: p.name,
-            greenSec: p.greenSec,
-            yellowSec: p.yellowSec,
-            allRedSec: p.allRedSec,
-            isOverlap: p.isOverlap,
-          })),
-          signal.cycleSec || 90,
-        ),
-      })
-    }
-    if (channel && signal) {
-      panels.push({
-        id: 'control',
-        title: '放行管控图',
-        svg: controlMatrixSvg(
-          channel.approaches.map((x) => x.name),
-          signal.phases.map((p) => ({ name: p.name, releases: p.releases })),
-          channel.approaches.map((x) => x.id),
-        ),
-      })
-      panels.push({
-        id: 'conflict',
-        title: '冲突矩阵',
-        svg: conflictMatrixExportSvg(
-          channel.approaches,
-          signal,
-          focusPhaseId ?? signal.phases[0]?.id ?? null,
-        ),
-      })
-    }
-    if (channel && flow) {
-      panels.push({
-        id: 'flow',
-        title: '流量流向图',
-        svg: flowMovementDiagramSvg(
-          channel.approaches.map((ap) => {
-            const v = flow.volumes[ap.id] ?? { L: 0, T: 0, R: 0, U: 0 }
-            return { name: ap.name, bearingDeg: ap.bearingDeg, L: v.L, T: v.T, R: v.R }
-          }),
-        ),
-      })
-    }
-    // fill remaining slots: analysis board or band
-    if (panels.length < 4 && analysis && channel && flow && signal) {
-      panels.push({
-        id: 'board',
-        title: '运行评价拼图',
-        svg: buildAnalysisReportSvg({
-          projectName: project.name,
-          channelName: channel.name,
-          signalName: signal.name,
-          approaches: channel.approaches,
-          flow,
-          signal,
-          analysis,
-          theme: 'light',
-        }),
-      })
-    }
-    if (panels.length < 4 && project.bandCorridor.nodes.length >= 2) {
-      panels.push({
-        id: 'band',
-        title: '绿波时距图',
-        svg: timeSpaceDiagramSvg(
-          project.bandCorridor.nodes.map((n) => ({
-            name: n.name,
-            distanceM: n.distanceM,
-            greenRatio: n.greenRatio,
-            offsetSec: n.offsetSec,
-            cycleSec: n.cycleSec,
-          })),
-          project.bandCorridor.speedKmh,
-        ),
-      })
-    }
-    return panels.slice(0, 4)
+    return collectEngineeringPrintPanels({
+      project,
+      channel,
+      flow,
+      signal,
+      analysis,
+      mesh,
+      focusPhaseId,
+      preferChannelDraft: true,
+      preset: 'engineering',
+    })
   }
 
   function openPrintPreview() {
@@ -638,7 +570,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.97 · 绿波专页</span>
+          <span>Crossdraw v0.5.98 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -660,7 +592,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.97</span>
+            <span className="brand-ver">v0.5.98</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -952,7 +884,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.97</span>
+        <span>Crossdraw v0.5.98</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1176,6 +1108,37 @@ export default function App() {
             )
           },
           'pro-pack': () => exportProfessionalDiagrams(),
+          'engineering-print-a4': () => {
+            if (!channel) return
+            const panels = collectEngineeringPrintPanels({
+              project,
+              channel,
+              flow,
+              signal,
+              analysis,
+              mesh,
+              focusPhaseId,
+              preferChannelDraft: true,
+              preset: 'engineering',
+            })
+            const sheet = buildA4PrintSheet(panels, {
+              projectName: project.name,
+              schemeName: channel.name,
+              paper: 'A4-landscape',
+              footerNote: '渠化图框+配时+管控+流向 · 示意非测绘',
+            })
+            downloadText(`${project.name}-工程拼版.svg`, sheet, 'image/svg+xml')
+            downloadText(
+              `${project.name}-工程拼版.html`,
+              printSheetHtml(sheet, `${project.name}-工程拼版`),
+              'text/html',
+            )
+            downloadText(
+              `${project.name}-工程拼版.md`,
+              engineeringPrintManifest(project.name, panels),
+              'text/markdown',
+            )
+          },
           'print-a4': () => openPrintPreview(),
           'analysis-board': () => {
             if (!channel || !flow || !signal || !analysis) return
