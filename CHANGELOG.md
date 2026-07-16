@@ -1,3 +1,9 @@
+## 0.5.121 — Band bandwidth ECharts
+
+- `bandBandwidthOption`: node offsets + green length + forward/backward band (homology BandResult).
+- Band page `#band-echarts` under KPI strip.
+- Schematic green-wave metrics — not MAXBAND-MIP.
+
 ## 0.5.120 — Phase G/Y/AR ECharts + signal params polish
 
 - `phaseTimingOption`: stacked green/yellow/all-red vs cycle C (main phases).

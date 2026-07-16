@@ -3270,3 +3270,19 @@ button,
 }
 #signal-echarts, #flow-echarts, #analysis-echarts { margin-top: 8px; }
 .echart-host { min-height: 220px; }
+
+
+/* v0.5.121 band echarts */
+.band-echarts-host {
+  padding: 6px 12px 4px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+.band-echarts-host .echart-host {
+  min-height: 240px;
+  border: none;
+}
+.band-kpi-strip {
+  gap: 10px;
+  flex-wrap: wrap;
+}

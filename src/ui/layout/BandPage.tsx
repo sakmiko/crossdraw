@@ -47,7 +47,9 @@ import {
   multiCorridorLinkCsv,
   type MultiCorridorLinkResult,
   type MultiCorridorLinkMode,
-} from '@/ui/charts/multiCorridorLinkBoard'   
+} from '@/ui/charts/multiCorridorLinkBoard'
+import { EChart } from '@/ui/charts/EChart'
+import { bandBandwidthOption } from '@/ui/charts/interactiveBoards'   
 
 export type BandPageProps = {
   project: Project
@@ -336,6 +338,9 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
             <span className="bkpi-v">{batchNote}</span>
           </div>
         )}
+      </div>
+      <div id="band-echarts" className="band-echarts-host" aria-label="绿波交互指标">
+        <EChart option={bandBandwidthOption(corridor, band)} style={{ height: 260 }} className="echart-host" />
       </div>
 
       <div className="band-page-body">

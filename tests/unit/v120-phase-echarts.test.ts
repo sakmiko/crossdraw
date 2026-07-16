@@ -26,7 +26,7 @@ describe('v0.5.120 phase timing ECharts', () => {
     const cp = readFileSync(resolve('src/ui/charts/ChartPanels.tsx'), 'utf8')
     expect(cp).toContain('phaseTimingOption')
     const pkg = readFileSync(resolve('package.json'), 'utf8')
-    expect(pkg).toContain('"version": "0.5.120"')
+    expect(pkg).toMatch(/"version": "0\.5\.\d+"/)
     const css = readFileSync(resolve('src/ui/styles.css'), 'utf8')
     expect(css).toContain('v0.5.120 signal polish')
   })

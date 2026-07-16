@@ -1,7 +1,7 @@
 /**
  * Interactive ECharts option builders — homology with AnalysisResult / cycle scan.
  */
-import type { AnalysisResult, Approach, FlowScheme, SignalScheme } from '@/domain/types'
+import type { AnalysisResult, Approach, FlowScheme, SignalScheme, BandCorridor, BandResult } from '@/domain/types'
 import { buildFlowAlignment, type FlowDisplayMode } from '@/domain/flow/flowAlign'
 import type { EChartsCoreOption } from 'echarts/core'
 
@@ -215,6 +215,87 @@ export function phaseTimingOption(signal: SignalScheme): EChartsCoreOption {
         style: {
           text: `Σ主相 ${mainSum.toFixed(0)}s / C ${C}s`,
           fill: Math.abs(mainSum - C) <= 1.5 ? '#22c55e' : '#f97316',
+          fontSize: 11,
+        },
+      },
+    ],
+  }
+}
+
+
+/** Green-wave KPI: forward/backward band + offsets by node (homology BandResult). */
+export function bandBandwidthOption(
+  corridor: BandCorridor,
+  band: BandResult,
+): EChartsCoreOption {
+  const nodes = corridor.nodes
+  const nameById = new Map(nodes.map((n) => [n.id, n.name]))
+  const offMap = new Map(band.offsets.map((o) => [o.id, o.offsetSec]))
+  const cats = nodes.map((n) => n.name.replace('路口', '').slice(0, 8))
+  const offsets = nodes.map((n) => offMap.get(n.id) ?? n.offsetSec)
+  const greens = nodes.map((n) => {
+    const C = Math.max(1, n.cycleSec || 90)
+    return n.greenRatio * C
+  })
+  const fwd = band.forwardBandwidthSec ?? band.bandwidthSec
+  const bwd = band.backwardBandwidthSec ?? 0
+  const C0 = Math.max(1, nodes[0]?.cycleSec ?? 90)
+  return {
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['相位差', '绿时长', '上行b', '下行b'], top: 0, textStyle: { fontSize: 10 } },
+    grid: { left: 48, right: 48, top: 28, bottom: 40 },
+    dataZoom: [{ type: 'inside' }],
+    xAxis: {
+      type: 'category',
+      data: cats,
+      axisLabel: { fontSize: 10, rotate: cats.length > 5 ? 28 : 0 },
+    },
+    yAxis: [
+      { type: 'value', name: 's', min: 0 },
+      { type: 'value', name: 'b(s)', min: 0, position: 'right' },
+    ],
+    series: [
+      {
+        name: '相位差',
+        type: 'bar',
+        data: offsets,
+        itemStyle: { color: '#3b82f6' },
+        barMaxWidth: 22,
+      },
+      {
+        name: '绿时长',
+        type: 'line',
+        data: greens,
+        smooth: true,
+        itemStyle: { color: '#22c55e' },
+        lineStyle: { width: 2 },
+      },
+      {
+        name: '上行b',
+        type: 'line',
+        yAxisIndex: 1,
+        data: cats.map(() => fwd),
+        symbol: 'none',
+        lineStyle: { type: 'dashed', color: '#06b6d4', width: 1.5 },
+      },
+      {
+        name: '下行b',
+        type: 'line',
+        yAxisIndex: 1,
+        data: cats.map(() => bwd),
+        symbol: 'none',
+        lineStyle: { type: 'dotted', color: '#f97316', width: 1.5 },
+      },
+    ],
+    graphic: [
+      {
+        type: 'text',
+        right: 10,
+        top: 6,
+        style: {
+          text: `比 ${(band.bandwidthRatio * 100).toFixed(1)}% · a ${band.halfCycleDistanceM.toFixed(0)}m · C~${C0}s`,
+          fill: '#94a3b8',
           fontSize: 11,
         },
       },
