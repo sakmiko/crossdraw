@@ -5,7 +5,7 @@ import { resolve } from 'node:path'
 describe('v0.5.83 signal vertical layout', () => {
   it('CSS forces signal page-fill rows', () => {
     const css = readFileSync(resolve(__dirname, '../../src/ui/styles.css'), 'utf8')
-    expect(css).toContain('v0.5.83 signal vertical stack')
+    expect(css).toContain('v0.5.100 unified page-fill layout system')
     expect(css).toContain('.app.shell--signal .page-fill-body')
     expect(css).toMatch(/grid-template-rows: minmax\(210px, 46vh\)/)
   })

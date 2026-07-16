@@ -2609,20 +2609,27 @@ button.primary .cd-icon {
 }
 
 
-/* —— v0.5.81 full-page responsive layout (no scheme tree column) —— */
+/* —— v0.5.100 unified page-fill layout system ——
+ * Shell: LeftNav | page-fill only
+ * Desktop ≥1101: left stage | right params (signal: top stage | bottom params)
+ * Narrow ≤1100: stack stage over params for all modes
+ * Flat params: no nested cards/subpanels
+ */
 .center.page-fill {
   display: flex !important;
   flex-direction: column;
   min-width: 0;
   min-height: 0;
   height: 100%;
+  width: 100%;
+  max-width: none;
   padding: 0;
   gap: 0;
   overflow: hidden;
 }
 .page-fill-head {
   flex: 0 0 auto;
-  padding: 6px 10px 4px;
+  padding: 6px 12px 6px;
   border-bottom: 1px solid var(--border);
   background: var(--panel);
 }
@@ -2635,7 +2642,7 @@ button.primary .cd-icon {
   flex-wrap: wrap;
   gap: 6px;
   align-items: center;
-  padding: 2px 0 4px;
+  padding: 2px 0 2px;
 }
 .approach-chip {
   display: inline-flex;
@@ -2664,26 +2671,17 @@ button.primary .cd-icon {
   align-items: center;
   gap: 4px;
 }
+
+/* Default body: desktop left/right */
 .page-fill-body {
   flex: 1 1 auto;
   min-height: 0;
+  width: 100%;
+  height: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 38%);
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 36%);
   grid-template-rows: minmax(0, 1fr);
   gap: 0;
-}
-/* stack on narrow / always for signal-like density preference: use rows when height-priority */
-@media (max-width: 1100px) {
-  .page-fill-body {
-    grid-template-columns: 1fr;
-    grid-template-rows: minmax(220px, 42vh) minmax(0, 1fr);
-  }
-}
-@media (min-width: 1101px) and (max-height: 700px) {
-  .page-fill-body {
-    grid-template-columns: 1fr;
-    grid-template-rows: minmax(200px, 40vh) minmax(0, 1fr);
-  }
 }
 .page-fill-stage {
   min-width: 0;
@@ -2695,8 +2693,11 @@ button.primary .cd-icon {
 }
 .page-fill-stage .mode-stage {
   flex: 1;
-  margin: 8px;
   min-height: 0;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
   display: flex;
   flex-direction: column;
 }
@@ -2717,106 +2718,23 @@ button.primary .cd-icon {
   overflow: auto;
   border-left: 1px solid var(--border);
   background: var(--panel);
-  padding: 8px 10px 16px;
-}
-@media (max-width: 1100px) {
-  .page-fill-params {
-    border-left: none;
-    border-top: 1px solid var(--border);
-  }
-}
-/* channel: give more room to canvas */
-.shell--channel .page-fill-body {
-  grid-template-columns: minmax(0, 1.2fr) minmax(260px, 34%);
-}
-.shell--flow .page-fill-body {
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 40%);
-}
-/* signal: ALWAYS top diagram / bottom params */
-.app.shell--signal .page-fill-body,
-.shell--signal .page-fill-body {
-  grid-template-columns: 1fr !important;
-  grid-template-rows: minmax(200px, 44vh) minmax(0, 1fr) !important;
-}
-@media (max-width: 1100px) {
-  /* non-signal pages may stack on narrow screens for readability */
-  .shell--channel .page-fill-body,
-  .shell--flow .page-fill-body,
-  .shell--analysis .page-fill-body,
-  .shell--compare .page-fill-body,
-  .shell--xsection .page-fill-body {
-    grid-template-columns: 1fr;
-    grid-template-rows: minmax(220px, 42vh) minmax(0, 1fr);
-  }
-  /* signal already forced vertical at all widths via .app.shell--signal rules */
-}
-.page-fill-params .card {
-  margin-top: 0 !important;
-  box-shadow: none;
-  border: none;
-  background: transparent;
-  padding: 0;
-}
-/* hide legacy side columns if any leftover */
-.side.scheme-tree,
-.mode-rail,
-.right--hidden {
-  display: none !important;
+  padding: 10px 14px 20px !important;
 }
 
-
-/* v0.5.81 layout override hard — always nav + full page fill */
-.main {
-  grid-template-columns: var(--shell-nav) minmax(0, 1fr) !important;
+/* Per-mode desktop proportions */
+.app.shell--channel .page-fill-body {
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 32%);
 }
-.app.nav-collapsed .main,
-.app.nav-expanded .main {
-  grid-template-columns: var(--shell-nav-collapsed) minmax(0, 1fr) !important;
+.app.shell--flow .page-fill-body {
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 38%);
 }
-.app.nav-expanded .main {
-  grid-template-columns: var(--shell-nav) minmax(0, 1fr) !important;
-}
-.center.page-fill {
-  width: 100%;
-  max-width: none;
-}
-.page-fill-body {
-  width: 100%;
-  height: 100%;
-}
-/* signal/flow: prefer vertical stack when wide but short content */
-@media (min-width: 1101px) {
-  .app.shell--flow .page-fill-body {
-    grid-template-columns: minmax(0, 1fr) minmax(320px, 38%);
-  }
-  .app.shell--signal .page-fill-body {
-    grid-template-columns: 1fr !important;
-    grid-template-rows: minmax(220px, 46vh) minmax(0, 1fr) !important;
-  }
-  .app.shell--channel .page-fill-body {
-    grid-template-columns: minmax(0, 1.25fr) minmax(280px, 32%);
-  }
-  .app.shell--analysis .page-fill-body,
-  .app.shell--compare .page-fill-body,
-  .app.shell--xsection .page-fill-body {
-    grid-template-columns: minmax(0, 1fr) minmax(300px, 36%);
-  }
+.app.shell--analysis .page-fill-body,
+.app.shell--compare .page-fill-body,
+.app.shell--xsection .page-fill-body {
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 36%);
 }
 
-.y-report-pre {
-  margin: 0;
-  padding: 8px 10px;
-  border-radius: 8px;
-  background: var(--panel-2);
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
-  max-height: 160px;
-  overflow: auto;
-  font-family: var(--mono);
-}
-
-
-/* v0.5.83 signal vertical stack — top diagram, bottom params (all breakpoints) */
+/* SIGNAL ONLY: always vertical stack (all breakpoints) */
 .app.shell--signal .page-fill-body {
   display: grid !important;
   grid-template-columns: 1fr !important;
@@ -2831,12 +2749,10 @@ button.primary .cd-icon {
 .app.shell--signal .page-fill-params {
   border-left: none !important;
   border-top: none;
-  min-height: 0;
-  overflow: auto;
-  padding: 8px 12px 20px;
+  padding: 10px 16px 22px !important;
 }
 .app.shell--signal .page-fill-stage .mode-stage {
-  margin: 6px 10px 4px;
+  margin: 6px 10px 4px !important;
   max-height: 100%;
 }
 .app.shell--signal .page-fill-stage .mode-stage-body {
@@ -2853,68 +2769,27 @@ button.primary .cd-icon {
   width: 100%;
   height: auto;
 }
-.app.shell--signal .page-fill-params .card {
-  max-width: 1100px;
-  margin-left: auto;
-  margin-right: auto;
-}
-/* denser phase tools on signal */
 .app.shell--signal .release-editor {
   max-width: 100%;
 }
-@media (max-width: 900px) {
-  .app.shell--signal .page-fill-body {
-    grid-template-rows: minmax(180px, 38vh) minmax(0, 1fr) !important;
-  }
+
+/* Nav + full page-fill shell (no tree / no right rail) */
+.main {
+  grid-template-columns: var(--shell-nav) minmax(0, 1fr) !important;
+}
+.app.nav-collapsed .main {
+  grid-template-columns: var(--shell-nav-collapsed) minmax(0, 1fr) !important;
+}
+.app.nav-expanded .main {
+  grid-template-columns: var(--shell-nav) minmax(0, 1fr) !important;
+}
+.side.scheme-tree,
+.mode-rail,
+.right--hidden {
+  display: none !important;
 }
 
-
-
-
-/* layout policy: ONLY signal is vertical stack; other modes stay left diagram / right params on desktop */
-@media (min-width: 1101px) {
-  .app.shell--flow .page-fill-body,
-  .app.shell--channel .page-fill-body,
-  .app.shell--analysis .page-fill-body,
-  .app.shell--compare .page-fill-body,
-  .app.shell--xsection .page-fill-body {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) minmax(280px, 38%) !important;
-    grid-template-rows: minmax(0, 1fr) !important;
-  }
-  .app.shell--flow .page-fill-stage,
-  .app.shell--channel .page-fill-stage,
-  .app.shell--analysis .page-fill-stage,
-  .app.shell--compare .page-fill-stage,
-  .app.shell--xsection .page-fill-stage {
-    max-height: none;
-    border-bottom: none;
-  }
-  .app.shell--flow .page-fill-params,
-  .app.shell--channel .page-fill-params,
-  .app.shell--analysis .page-fill-params,
-  .app.shell--compare .page-fill-params,
-  .app.shell--xsection .page-fill-params {
-    border-left: 1px solid var(--border) !important;
-    border-top: none !important;
-  }
-  .app.shell--signal .page-fill-body {
-    grid-template-columns: 1fr !important;
-    grid-template-rows: minmax(210px, 46vh) minmax(0, 1fr) !important;
-  }
-}
-
-
-.page-fill-stage .mode-stage {
-  margin: 0 !important;
-  border-radius: 0 !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-/* —— v0.5.95 flat workspaces: only two levels (stage | params), no nested cards —— */
-.page-fill-params {
-  padding: 10px 12px 20px !important;
-}
+/* Flat params: no nested cards */
 .page-fill-params .flat-params,
 .page-fill-params .flat-block,
 .page-fill-params .card {
@@ -2932,12 +2807,18 @@ button.primary .cd-icon {
 }
 .page-fill-params .rg-section:first-child,
 .page-fill-params .panel-header + .rg-section {
-  margin-top: 8px;
+  margin-top: 4px;
+  padding-top: 0;
+  border-top: none;
 }
 .page-fill-params .rg-section-title {
   margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+  text-transform: none;
 }
-/* collapse subpanel chrome if any remain */
 .page-fill-params .subpanel {
   border: none !important;
   background: transparent !important;
@@ -2948,7 +2829,7 @@ button.primary .cd-icon {
   padding: 0 0 6px !important;
   border: none !important;
   background: transparent !important;
-  color: #dc2626;
+  color: var(--text);
   font-size: 13px;
   font-weight: 700;
 }
@@ -2958,13 +2839,39 @@ button.primary .cd-icon {
 .page-fill-params .subpanel-body {
   padding: 0 !important;
 }
-/* Band page: two panes only — chart area + params/table */
+.page-fill-params .toolbar.dense {
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.page-fill-params .toolbar.dense button {
+  white-space: nowrap;
+}
+.page-fill-params .field-row {
+  gap: 10px;
+}
+.page-fill-params table.table {
+  width: 100%;
+  font-size: 12px;
+}
+
+/* Band page polish — align with main shell */
+.band-page {
+  background: var(--bg);
+}
+.band-page-bar {
+  height: var(--shell-top);
+  min-height: var(--shell-top);
+}
+.band-page-body {
+  grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
+}
 .band-page .card,
 .band-page .compact-card,
 .band-page .band-pane {
   box-shadow: none !important;
   border: 1px solid var(--border) !important;
   background: var(--panel) !important;
+  border-radius: var(--radius) !important;
 }
 .band-page details.subpanel {
   border: none !important;
@@ -2972,10 +2879,156 @@ button.primary .cd-icon {
   margin-top: 10px !important;
 }
 .band-page details.subpanel > summary {
-  color: #dc2626;
+  color: var(--text);
   font-weight: 700;
   padding: 0 0 6px !important;
 }
 .band-page details.subpanel > summary::before {
   content: none !important;
+}
+.band-page-main {
+  padding: 12px 16px 24px;
+}
+.band-page-side.compact {
+  padding: 10px 12px;
+}
+
+/* Topbar denser on wide screens */
+.topbar {
+  gap: 10px;
+}
+.topbar .toolbar.dense button {
+  padding: 5px 9px;
+}
+
+.y-report-pre {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  max-height: 160px;
+  overflow: auto;
+  font-family: var(--mono);
+}
+
+/* —— Responsive breakpoints (unified) —— */
+@media (min-width: 1101px) {
+  /* reinforce desktop split for non-signal modes */
+  .app.shell--flow .page-fill-body,
+  .app.shell--channel .page-fill-body,
+  .app.shell--analysis .page-fill-body,
+  .app.shell--compare .page-fill-body,
+  .app.shell--xsection .page-fill-body {
+    display: grid !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+  }
+  .app.shell--flow .page-fill-params,
+  .app.shell--channel .page-fill-params,
+  .app.shell--analysis .page-fill-params,
+  .app.shell--compare .page-fill-params,
+  .app.shell--xsection .page-fill-params {
+    border-left: 1px solid var(--border) !important;
+    border-top: none !important;
+  }
+  .app.shell--flow .page-fill-stage,
+  .app.shell--channel .page-fill-stage,
+  .app.shell--analysis .page-fill-stage,
+  .app.shell--compare .page-fill-stage,
+  .app.shell--xsection .page-fill-stage {
+    max-height: none;
+    border-bottom: none;
+  }
+}
+
+/* Short wide windows: still prefer columns for non-signal (no forced stack) */
+@media (min-width: 1101px) and (max-height: 700px) {
+  .app.shell--signal .page-fill-body {
+    grid-template-rows: minmax(180px, 40vh) minmax(0, 1fr) !important;
+  }
+  .app.shell--signal .page-fill-stage {
+    max-height: 42vh;
+  }
+}
+
+@media (max-width: 1100px) {
+  .page-fill-body {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: minmax(200px, 40vh) minmax(0, 1fr) !important;
+  }
+  .page-fill-params {
+    border-left: none !important;
+    border-top: 1px solid var(--border) !important;
+  }
+  .app.shell--channel .page-fill-body,
+  .app.shell--flow .page-fill-body,
+  .app.shell--analysis .page-fill-body,
+  .app.shell--compare .page-fill-body,
+  .app.shell--xsection .page-fill-body {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: minmax(200px, 40vh) minmax(0, 1fr) !important;
+  }
+  .scheme-switcher {
+    /* keep chips if present; hide long labels via other rules */
+  }
+}
+
+@media (max-width: 960px) {
+  .band-page-body {
+    grid-template-columns: 1fr !important;
+  }
+  .band-page-side {
+    border-right: none !important;
+    border-bottom: 1px solid var(--border);
+    max-height: 36vh;
+  }
+  .page-fill-head {
+    padding: 6px 8px;
+  }
+  .page-fill-params {
+    padding: 8px 10px 16px !important;
+  }
+  .field-row {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .app.shell--signal .page-fill-body {
+    grid-template-rows: minmax(180px, 38vh) minmax(0, 1fr) !important;
+  }
+  .app.shell--signal .page-fill-stage {
+    max-height: 40vh;
+    min-height: 160px;
+  }
+  .left-nav-label {
+    /* icons still show when collapsed rules apply */
+  }
+}
+
+@media (max-width: 720px) {
+  .page-fill-body {
+    grid-template-rows: minmax(160px, 36vh) minmax(0, 1fr) !important;
+  }
+  .approach-chip {
+    padding: 3px 8px;
+    font-size: 11px;
+  }
+  .topbar .project-name {
+    max-width: 28vw;
+  }
+  .band-page-side {
+    max-height: 32vh;
+  }
+}
+
+@media (max-width: 420px) {
+  .page-fill-body {
+    grid-template-rows: minmax(140px, 32vh) minmax(0, 1fr) !important;
+  }
+  .page-fill-params .toolbar.dense button {
+    font-size: 11px;
+    padding: 4px 6px;
+  }
 }

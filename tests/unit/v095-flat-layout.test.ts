@@ -24,7 +24,7 @@ describe('v0.5.95 flat layout + ped/roundabout', () => {
       expect(t).toMatch(/flat-params|flat-block|flat-section|rg-section/)
     }
     const css = readFileSync(resolve(__dirname, '../../src/ui/styles.css'), 'utf8')
-    expect(css).toContain('v0.5.95 flat workspaces')
+    expect(css).toContain('v0.5.100 unified page-fill layout system')
   })
 
   it('ped board and roundabout plan still work', () => {
