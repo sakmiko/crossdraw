@@ -2281,3 +2281,141 @@ button.primary .cd-icon {
   align-items: center;
   gap: 5px;
 }
+
+
+/* —— v0.5.78 RoadGee-like channel form —— */
+.rg-form h2.rg-page-title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.rg-section {
+  margin-top: 10px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+.rg-section-title {
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  letter-spacing: 0.02em;
+}
+.rg-form .field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+  margin-bottom: 6px;
+}
+.rg-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.rg-form label.rg-check {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text);
+}
+.rg-form .rg-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin: 6px 0 8px;
+}
+.rg-form input[type="number"],
+.rg-form input[type="text"],
+.rg-form select {
+  min-height: 28px;
+}
+.rg-form .rg-unit {
+  color: var(--text-muted);
+  font-size: 11px;
+  margin-left: 2px;
+}
+
+
+/* —— v0.5.79 mode-specific center + silent autosave —— */
+.center--mode {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.mode-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin: 0 8px 8px;
+  overflow: hidden;
+}
+.mode-stage-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.mode-stage-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 14px;
+}
+.mode-stage-unit {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+.mode-stage-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 8px;
+}
+.mode-stage-svg {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mode-stage-svg svg {
+  max-width: 100%;
+  height: auto;
+  max-height: calc(100vh - 200px);
+}
+.mode-stage-tabs {
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+.mode-canvas {
+  flex: 1;
+  min-height: 280px;
+}
+.left--flow .tree-scroll-sm,
+.left--signal .tree-scroll-sm,
+.left--analysis .tree-scroll-sm,
+.left--compare .tree-scroll-sm {
+  /* approach list hidden via JSX for non-geometry modes */
+}
+.shell--flow .stage-bar,
+.shell--signal .stage-bar,
+.shell--analysis .stage-bar {
+  /* channel-only layer bar already gated in JSX */
+}
+/* denser right inspector for non-channel */
+.right .page-title-bar {
+  margin-bottom: 4px;
+}

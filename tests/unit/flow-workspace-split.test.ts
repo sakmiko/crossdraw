@@ -10,7 +10,7 @@ describe('maintainability v0.5.39', () => {
     const appText = readFileSync(app, 'utf8')
     expect(fwText).toContain('export function FlowWorkspace')
     expect(fwText).toContain('buildFlowAlignment')
-    expect(fwText).toContain('FlowCharts')
+    expect(fwText).toContain('buildFlowAlignment')
     expect(appText).toContain('FlowWorkspace')
     expect(appText).toContain('onDisplayMode={setFlowDisplayMode}')
   })

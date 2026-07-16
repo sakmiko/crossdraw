@@ -46,6 +46,7 @@ export type AppState = {
   resetTemplate: () => void
   updateApproach: (approachId: string, patch: Partial<Approach>) => void
   setLaneCount: (approachId: string, count: number) => void
+  setExitLaneCount: (approachId: string, count: number) => void
   setLaneWidth: (approachId: string, laneIndex: number, widthM: number) => void
   setLaneMovements: (approachId: string, laneIndex: number, movements: Movement[]) => void
   setLaneVariable: (approachId: string, laneIndex: number, variable: boolean) => void
@@ -165,6 +166,20 @@ export const useAppStore = create<AppState>()(
           Object.assign(ap, patch)
           s.project.meta.updatedAt = new Date().toISOString()
           s.dirty = true
+        }),
+      
+      setExitLaneCount: (approachId, count) =>
+        set((s) => {
+          const ch = activeChannel(s.project)
+          const ap = ch?.approaches.find((a) => a.id === approachId)
+          if (!ap) return
+          const n = Math.max(1, Math.min(8, Math.floor(count)))
+          while (ap.exitLanes.length < n) {
+            ap.exitLanes.push({ id: newId(), widthM: 3.5, movements: ['T'] })
+          }
+          while (ap.exitLanes.length > n) ap.exitLanes.pop()
+          s.dirty = true
+          s.project.meta.updatedAt = new Date().toISOString()
         }),
       setLaneCount: (approachId, count) =>
         set((s) => {

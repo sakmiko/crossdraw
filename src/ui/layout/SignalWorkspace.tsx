@@ -19,7 +19,6 @@ import { allocateGreensByBarrierCriticalY } from '@/domain/signal/barrierGreenAl
 import { dualRingPhaseNumberSvg } from '@/ui/charts/phaseNumberDiagram'
 import { computeDualRingCriticalFlow, dualRingCriticalSummary } from '@/domain/signal/barrierCritical'
 import { SignalTimingPanel, ControlMatrixPanel, PhaseFacePanel } from '@/ui/charts/ProfessionalPanels'
-import { roadgeeSignalBoardSvg } from '@/ui/charts/roadgeeSignalBoard'
 import { vcHeatColor } from '@/ui/charts/svgCharts'
 import { conflictHitsMarkdown, conflictMatrixExportSvg, conflictDiagramExportSvg } from '@/ui/charts/conflictExport'
 import { exportSvgFile } from '@/io/exportCharts'
@@ -130,37 +129,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         </div>
       </div>
 
-      {channel && (
-        <div className="chart-card" style={{ marginTop: 8 }}>
-          <div className="chart-title">
-            <span>相位灯态 · 配时条</span>
-            <small>改相位即改图 · 无水印</small>
-          </div>
-          <div className="toolbar dense" style={{ marginBottom: 6 }}>
-            <button
-              type="button"
-              className="ghost"
-              onClick={() => {
-                const svg = roadgeeSignalBoardSvg(channel.approaches, signal, { width: 720 })
-                const blob = new Blob([svg], { type: 'image/svg+xml' })
-                const a = document.createElement('a')
-                a.href = URL.createObjectURL(blob)
-                a.download = 'crossdraw-信号相位图.svg'
-                a.click()
-                URL.revokeObjectURL(a.href)
-              }}
-            >
-              下载图片
-            </button>
-          </div>
-          <div
-            className="chart-svg-host chart-svg-host--pro"
-            dangerouslySetInnerHTML={{
-              __html: roadgeeSignalBoardSvg(channel.approaches, signal, { width: 640, faceSize: 96 }),
-            }}
-          />
-        </div>
-      )}
+      
 
       <details className="subpanel" open>
         <summary className="subpanel-summary">相位表 <span className="subpanel-tag">{signal.phases.length} 相 · C={signal.cycleSec}s</span></summary>

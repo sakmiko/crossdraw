@@ -27,6 +27,7 @@ import { ChannelWorkspace } from '@/ui/layout/ChannelWorkspace'
 import { BandWorkspace } from '@/ui/layout/BandWorkspace'
 import { BandPage } from '@/ui/layout/BandPage'
 import { LeftNav, NAV_ITEMS } from '@/ui/layout/LeftNav'
+import { ModeCenterStage } from '@/ui/layout/ModeCenterStage'
 import { Icon, IconLabel, MODE_ICONS } from '@/ui/icons/Icons'
 import { AnalysisWorkspace } from '@/ui/layout/AnalysisWorkspace'
 import { CompareWorkspace } from '@/ui/layout/CompareWorkspace'
@@ -74,6 +75,7 @@ export default function App() {
   const selectApproach = useAppStore((s) => s.selectApproach)
   const updateApproach = useAppStore((s) => s.updateApproach)
   const setLaneCount = useAppStore((s) => s.setLaneCount)
+  const setExitLaneCount = useAppStore((s) => s.setExitLaneCount)
   const setVolume = useAppStore((s) => s.setVolume)
   const setMultimodalVolume = useAppStore((s) => s.setMultimodalVolume)
   const setFlowParams = useAppStore((s) => s.setFlowParams)
@@ -131,8 +133,7 @@ export default function App() {
   const flow = useAppStore((s) => s.getActiveFlow())
   const signal = useAppStore((s) => s.getActiveSignal())
 
-  const [restoreMsg, setRestoreMsg] = useState<string | null>(null)
-  const [paletteOpen, setPaletteOpen] = useState(false)
+    const [paletteOpen, setPaletteOpen] = useState(false)
   const [mobilePane, setMobilePane] = useState<'tree' | 'canvas' | 'inspector'>('canvas')
   const [navCollapsed, setNavCollapsed] = useState(() => {
     try {
@@ -170,19 +171,28 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
 
+  // Silent autosave: restore draft on boot without prompt; persist on every dirty change (debounced).
   useEffect(() => {
     const d = loadDraft()
     if (d?.json) {
-      setRestoreMsg(new Date(d.ts).toLocaleString())
+      try {
+        const file = parseRtp(d.json)
+        loadProject(file.project)
+        markClean()
+      } catch {
+        /* ignore corrupt draft */
+      }
     }
-  }, [])
+  }, [loadProject, markClean])
 
   useEffect(() => {
-    const t = window.setInterval(() => {
-      if (useAppStore.getState().dirty) persistAutosave()
-    }, 15000)
-    return () => clearInterval(t)
-  }, [])
+    if (!dirty) return
+    const t = window.setTimeout(() => {
+      persistAutosave()
+      // keep dirty=true until explicit file export; draft is always current
+    }, 400)
+    return () => clearTimeout(t)
+  }, [dirty, project])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -192,6 +202,7 @@ export default function App() {
       }
       if (e.ctrlKey && e.key.toLowerCase() === 's') {
         e.preventDefault()
+        persistAutosave()
         saveRtp()
       }
       if (e.ctrlKey && e.key.toLowerCase() === 'z') {
@@ -267,7 +278,7 @@ export default function App() {
         const pf = parseRtp(String(reader.result))
         loadProject(pf.project)
         clearDraft()
-        setRestoreMsg(null)
+        persistAutosave()
       } catch (e) {
         alert(String(e))
       }
@@ -275,17 +286,7 @@ export default function App() {
     reader.readAsText(file)
   }
 
-  function restoreDraft() {
-    const d = loadDraft()
-    if (!d) return
-    try {
-      loadProject(parseRtp(d.json).project)
-      setRestoreMsg(null)
-    } catch (e) {
-      alert(String(e))
-    }
-  }
-
+  
   function runWebster() {
     if (!channel || !flow || !signal) return
     const useFixed = fixedCycleOn || timingMethod === 'fixed-cycle'
@@ -535,7 +536,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.77 · 绿波专页</span>
+          <span>Crossdraw v0.5.79 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -557,7 +558,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.77</span>
+            <span className="brand-ver">v0.5.79</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -591,7 +592,7 @@ export default function App() {
                     onChange={(e) => e.target.files?.[0] && onOpenFile(e.target.files[0])}
                   />
                 </label>
-                <button type="button" role="menuitem" onClick={saveRtp}><Icon name="save" size={15} /><span>保存</span></button>
+                <button type="button" role="menuitem" onClick={saveRtp}><Icon name="save" size={15} /><span>导出工程文件</span></button>
                 <button type="button" role="menuitem" onClick={() => duplicateChannel()}><Icon name="copy" size={15} /><span>复制渠化方案</span></button>
               </div>
             </details>
@@ -614,8 +615,6 @@ export default function App() {
           </div>
         </div>
         <div className="topbar-end">
-          <span className={`save-pill ${dirty ? 'dirty' : 'clean'}`}>{dirty ? '未保存' : '已保存'}</span>
-          <button type="button" className="primary topbar-save" onClick={saveRtp}><Icon name="save" size={15} /><span>保存</span></button>
           <div className="theme-toggle" role="group" aria-label="主题">
             <button type="button" className={theme === 'dark' ? 'active' : ''} onClick={() => setTheme('dark')} title="深色"><Icon name="moon" size={15} /></button>
             <button type="button" className={theme === 'light' ? 'active' : ''} onClick={() => setTheme('light')} title="浅色"><Icon name="sun" size={15} /></button>
@@ -703,7 +702,7 @@ export default function App() {
             </div>
           ))}
           </div>
-          <div className="section-title">进口道</div>
+          {(mode === 'channel' || mode === 'xsection') && (<><div className="section-title">进口道</div>
           <div className="tree-scroll tree-scroll-sm">
           {channel?.approaches.map((ap) => (
             <div
@@ -719,61 +718,60 @@ export default function App() {
             </div>
           ))}
           </div>
-          {restoreMsg && (
-            <div className="card">
-              <h3>发现自动保存</h3>
-              <p className="hint">{restoreMsg}</p>
-              <button type="button" className="primary" onClick={restoreDraft}>恢复</button>
-              <button type="button" className="ghost" onClick={() => { clearDraft(); setRestoreMsg(null) }}>丢弃</button>
-            </div>
-          )}
+          </>)}
         </aside>
 
-        <main className="center">
+        <main className="center center--mode">
           <div className="breadcrumb">
             <b>项目</b><span className="sep">/</span>
             <span>{project.name}</span><span className="sep">/</span>
             <span>{channel?.name ?? '—'}</span><span className="sep">/</span>
             <span>{MODES.find((m) => m.id === mode)?.label}</span>
           </div>
-          <div className="stage-bar">
-            <button type="button" className="ghost" onClick={() => canvasRef.current?.fitView()}><Icon name="fit" size={15} /><span>适应</span></button>
-            <span className="legend layer-toggles" style={{ margin: 0 }}>
-              {([
-                ['ROAD', '路面', '#4b5563'],
-                ['MARKING', '标线', '#f8fafc'],
-                ['ISLAND', '岛', '#4ade80'],
-                ['FLOW', '流量', '#38bdf8'],
-              ] as [LayerKey, string, string][]).map(([k, lab, col]) => (
-                <button
-                  key={k}
-                  type="button"
-                  className={`layer-chip ${layerVis[k] ? 'on' : 'off'}`}
-                  onClick={() => toggleLayer(k)}
-                  title={`图层 ${lab}`}
-                >
-                  <span className="legend-swatch" style={{ background: col }} />
-                  {lab}
-                </button>
-              ))}
-            </span>
-            <span className={`pill ${summary.block ? 'block' : summary.warn ? 'warn' : 'ok'}`}>
-              {summary.block ? `BLOCK ${summary.block}` : summary.warn ? `WARN ${summary.warn}` : 'OK'}
-            </span>
-            {analysis && (
-              <span className="pill ok">LOS {analysis.losFinal} · v/c {analysis.avgVc.toFixed(2)} · 延误 {analysis.avgDelay.toFixed(1)}s</span>
-            )}
-          </div>
-          <div className="canvas-shell">
-            {/* basemap UI removed */}
-            <CanvasView
-              ref={canvasRef}
-              mesh={mesh}
-              selectedApproachId={selected?.id}
-              layers={layerVis}
-              height={typeof window !== 'undefined' && window.innerWidth < 720 ? Math.max(320, window.innerHeight - 160) : window.innerHeight - 180}
-            />
-          </div>
+          {(mode === 'channel') && (
+            <div className="stage-bar">
+              <button type="button" className="ghost" onClick={() => canvasRef.current?.fitView()}><Icon name="fit" size={15} /><span>适应</span></button>
+              <span className="legend layer-toggles" style={{ margin: 0 }}>
+                {([
+                  ['ROAD', '路面', '#4b5563'],
+                  ['MARKING', '标线', '#f8fafc'],
+                  ['ISLAND', '岛', '#4ade80'],
+                  ['FLOW', '流量', '#38bdf8'],
+                ] as [LayerKey, string, string][]).map(([k, lab, col]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    className={`layer-chip ${layerVis[k] ? 'on' : 'off'}`}
+                    onClick={() => toggleLayer(k)}
+                    title={`图层 ${lab}`}
+                  >
+                    <span className="legend-swatch" style={{ background: col }} />
+                    {lab}
+                  </button>
+                ))}
+              </span>
+              <span className={`pill ${summary.block ? 'block' : summary.warn ? 'warn' : 'ok'}`}>
+                {summary.block ? `BLOCK ${summary.block}` : summary.warn ? `WARN ${summary.warn}` : 'OK'}
+              </span>
+            </div>
+          )}
+          <ModeCenterStage
+            mode={mode}
+            mesh={mesh}
+            canvasRef={canvasRef}
+            layerVis={layerVis}
+            selectedApproachId={selected?.id}
+            channel={channel}
+            flow={flow}
+            signal={signal}
+            analysis={analysis}
+            project={project}
+            selected={selected}
+            xsection={xsection}
+            flowDisplayMode={flowDisplayMode}
+            theme={theme}
+            canvasHeight={typeof window !== 'undefined' && window.innerWidth < 720 ? Math.max(320, window.innerHeight - 160) : window.innerHeight - 180}
+          />
         </main>
 
         <aside className="right">
@@ -787,6 +785,7 @@ export default function App() {
               selected={selected}
               updateApproach={updateApproach}
               setLaneCount={setLaneCount}
+              setExitLaneCount={setExitLaneCount}
               setLaneWidth={setLaneWidth}
               setLaneMovements={setLaneMovements}
               setLaneVariable={setLaneVariable}
@@ -914,7 +913,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.77</span>
+        <span>Crossdraw v0.5.79</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
