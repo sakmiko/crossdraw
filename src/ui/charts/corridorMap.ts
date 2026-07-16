@@ -5,8 +5,9 @@
 import type { BandCorridor } from '@/domain/types'
 import { CHART_COLORS, escapeXml } from './chartStandards'
 
-function hasGeo(c: BandCorridor): boolean {
-  return c.nodes.some((n) => n.lat != null && n.lon != null)
+function hasGeo(_c: BandCorridor): boolean {
+  // Geographic pick removed from product UI — always use chainage layout.
+  return false
 }
 
 export function corridorMapSvg(

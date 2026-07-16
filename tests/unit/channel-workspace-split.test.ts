@@ -9,7 +9,7 @@ describe('maintainability v0.5.40', () => {
     const cwText = readFileSync(cw, 'utf8')
     const appText = readFileSync(app, 'utf8')
     expect(cwText).toContain('export function ChannelWorkspace')
-    expect(cwText).toContain('地图底图')
+    expect(cwText).not.toContain('纬度')
     expect(cwText).toContain('右转渠化')
     expect(cwText).toContain('分车道宽')
     expect(appText).toContain('ChannelWorkspace')

@@ -1,5 +1,5 @@
 /**
- * Channel workspace — basemap + selected approach channelization editor.
+ * Channel workspace — selected approach channelization editor.
  * Extracted from App for maintainability (v0.5.40).
  */
 import type { Approach, Movement, Project } from '@/domain/types'
@@ -7,7 +7,6 @@ import type { Approach, Movement, Project } from '@/domain/types'
 export type ChannelWorkspaceProps = {
   project: Project
   selected: Approach | null
-  updateBasemap: (patch: Partial<NonNullable<Project['settings']['basemap']>>) => void
   updateApproach: (id: string, patch: Partial<Approach>) => void
   setLaneCount: (approachId: string, count: number) => void
   setLaneWidth: (approachId: string, index: number, widthM: number) => void
@@ -18,9 +17,8 @@ export type ChannelWorkspaceProps = {
 }
 
 export function ChannelWorkspace({
-  project,
+  project: _project,
   selected,
-  updateBasemap,
   updateApproach,
   setLaneCount,
   setLaneWidth,
@@ -31,54 +29,6 @@ export function ChannelWorkspace({
 }: ChannelWorkspaceProps) {
   return (
     <>
-<div className="card" style={{ marginTop: 12 }}>
-              <div className="panel-header">
-                <h2 style={{ margin: 0 }}>地图底图（骨架）</h2>
-                <span className="hint">示意定位 · 非测绘</span>
-              </div>
-              <label className="timing-fixed">
-                <input
-                  type="checkbox"
-                  checked={!!project.settings.basemap?.enabled}
-                  onChange={(e) => updateBasemap({ enabled: e.target.checked })}
-                />{' '}
-                显示 OSM 底图
-              </label>
-              <div className="field-grid" style={{ marginTop: 8 }}>
-                <label>
-                  纬度
-                  <input
-                    type="number"
-                    step={0.0001}
-                    value={project.settings.basemap?.latitude ?? 36.0611}
-                    onChange={(e) => updateBasemap({ latitude: Number(e.target.value) })}
-                  />
-                </label>
-                <label>
-                  经度
-                  <input
-                    type="number"
-                    step={0.0001}
-                    value={project.settings.basemap?.longitude ?? 103.8343}
-                    onChange={(e) => updateBasemap({ longitude: Number(e.target.value) })}
-                  />
-                </label>
-                <label>
-                  透明度
-                  <input
-                    type="number"
-                    min={0.15}
-                    max={0.9}
-                    step={0.05}
-                    value={project.settings.basemap?.opacity ?? 0.55}
-                    onChange={(e) => updateBasemap({ opacity: Number(e.target.value) })}
-                  />
-                </label>
-              </div>
-              <p className="hint">
-                默认兰州附近坐标；瓦片来自 OpenStreetMap。几何仍为本地米制，底图仅作空间语境参考。写入 .rtp。
-              </p>
-            </div>
           {selected && (
 <div className="card" style={{ marginTop: 12 }}>
               <h2>渠化 · {selected.name}</h2>
@@ -170,10 +120,6 @@ export function ChannelWorkspace({
                       />
                     </label>
                   </div>
-                  <p className="hint">
-                    进口加宽 = 车道数×单宽 ={' '}
-                    {(selected.widen.entryWidenCount * selected.widen.entryWidenWidthM).toFixed(1)} m（几何全量，非系数缩小）
-                  </p>
                   <div className="section-title">出口展宽</div>
                   <div className="field-row">
                     <label>
@@ -725,9 +671,6 @@ export function ChannelWorkspace({
                   </table>
                 </>
               )}
-              <p className="hint">
-                可变车道图面标黄「可变」；通行能力按多运动共享×0.85。合并组共享转向（非可变车道跟随组）。
-              </p>
                 </div>
               </details>
             </div>

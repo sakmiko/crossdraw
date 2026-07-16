@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CanvasView, meshToPngBlob, DEFAULT_LAYERS, type CanvasHandle, type LayerVisibility, type LayerKey } from '@/canvas/CanvasView'
-import { BasemapLayer } from '@/canvas/BasemapLayer'
 import { rebuildChannelMesh, THEME } from '@/domain/geometry/rebuild'
 import { analyzeIntersection, websterTiming } from '@/domain/analysis'
 import { buildCrossSection, markStaleIfNeeded } from '@/domain/xsection/build'
@@ -120,7 +119,6 @@ export default function App() {
   const duplicateBandCorridor = useAppStore((s) => s.duplicateBandCorridor)
   const removeBandCorridor = useAppStore((s) => s.removeBandCorridor)
   const renameBandCorridor = useAppStore((s) => s.renameBandCorridor)
-  const updateBasemap = useAppStore((s) => s.updateBasemap)
   const setActiveChannel = useAppStore((s) => s.setActiveChannel)
   const setActiveFlow = useAppStore((s) => s.setActiveFlow)
   const setActiveSignal = useAppStore((s) => s.setActiveSignal)
@@ -508,7 +506,7 @@ export default function App() {
           renameBandCorridor={renameBandCorridor}
         />
         <footer className="status">
-          <span>Crossdraw v0.5.71 · 绿波专页</span>
+          <span>Crossdraw v0.5.72 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -530,7 +528,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.71</span>
+            <span className="brand-ver">v0.5.72</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -739,14 +737,7 @@ export default function App() {
             )}
           </div>
           <div className="canvas-shell">
-            {project.settings.basemap?.enabled ? (
-              <BasemapLayer
-                enabled
-                latitude={project.settings.basemap.latitude}
-                longitude={project.settings.basemap.longitude}
-                opacity={project.settings.basemap.opacity ?? 0.55}
-              />
-            ) : null}
+            {/* basemap UI removed */}
             <CanvasView
               ref={canvasRef}
               mesh={mesh}
@@ -795,7 +786,6 @@ export default function App() {
             <ChannelWorkspace
               project={project}
               selected={selected}
-              updateBasemap={updateBasemap}
               updateApproach={updateApproach}
               setLaneCount={setLaneCount}
               setLaneWidth={setLaneWidth}
@@ -923,7 +913,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.71</span>
+        <span>Crossdraw v0.5.72</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

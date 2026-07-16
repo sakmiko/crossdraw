@@ -137,7 +137,7 @@ export function buildMultiPageReportHtml(ctx: ReportContext): string {
   const nodeRows = ctx.bandCorridor.nodes
     .map(
       (n) =>
-        `<tr><td>${esc(n.name)}</td><td>${n.distanceM.toFixed(0)}</td><td>${n.greenRatio.toFixed(2)}</td><td>${n.cycleSec}</td><td>${n.offsetSec.toFixed(1)}</td><td>${n.lockedOffset ? '锁' : '—'}</td><td>${n.lat != null ? n.lat.toFixed(5) : '—'}</td><td>${n.lon != null ? n.lon.toFixed(5) : '—'}</td></tr>`,
+        `<tr><td>${esc(n.name)}</td><td>${n.distanceM.toFixed(0)}</td><td>${n.greenRatio.toFixed(2)}</td><td>${n.cycleSec}</td><td>${n.offsetSec.toFixed(1)}</td><td>${n.lockedOffset ? '锁' : '—'}</td></tr>`,
     )
     .join('')
 
@@ -147,7 +147,7 @@ export function buildMultiPageReportHtml(ctx: ReportContext): string {
     <p>走廊 <strong>${esc(ctx.bandCorridor.name)}</strong> · 方法 ${esc(String(band.method))} · 速度 ${ctx.bandCorridor.speedKmh} km/h</p>
     <p>上行 b=${(band.forwardBandwidthSec ?? band.bandwidthSec).toFixed(1)} s · 下行 b=${(band.backwardBandwidthSec ?? 0).toFixed(1)} s · 带宽比 ${(band.bandwidthRatio * 100).toFixed(1)}%</p>
     <table>
-      <thead><tr><th>路口</th><th>桩号m</th><th>λ</th><th>C</th><th>o(s)</th><th>锁</th><th>lat</th><th>lon</th></tr></thead>
+      <thead><tr><th>路口</th><th>桩号m</th><th>λ</th><th>C</th><th>o(s)</th><th>锁</th></tr></thead>
       <tbody>${nodeRows}</tbody>
     </table>
     `,

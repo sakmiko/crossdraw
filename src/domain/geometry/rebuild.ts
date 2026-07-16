@@ -726,60 +726,108 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
     })
   }
 
-  // crosswalk zebra (denser bars + outline)
-  const cw = start - 3.8
-  const cwHalf = half * 0.95
-  pushLine(mesh, {
-    layer: 'MARKING',
-    points: [add(mul(ux, cw - 1.6), mul(px, -cwHalf)), add(mul(ux, cw - 1.6), mul(px, cwHalf))],
-    stroke: THEME.crosswalk,
-    strokeWidth: 0.2,
-    alpha: 0.7,
-  })
-  pushLine(mesh, {
-    layer: 'MARKING',
-    points: [add(mul(ux, cw + 1.6), mul(px, -cwHalf)), add(mul(ux, cw + 1.6), mul(px, cwHalf))],
-    stroke: THEME.crosswalk,
-    strokeWidth: 0.2,
-    alpha: 0.7,
-  })
-  for (let i = -7; i <= 7; i++) {
-    const o = (i / 7) * cwHalf
-    pushLine(mesh, {
-      layer: 'MARKING',
-      points: [add(mul(ux, cw - 1.35), mul(px, o)), add(mul(ux, cw + 1.35), mul(px, o))],
-      stroke: THEME.crosswalk,
-      strokeWidth: 0.55,
-    })
+  /**
+   * Crosswalk: across carriageway only (entry curb → exit curb along px).
+   * Zebra bars elongated along traffic (ux), arrayed along walk (px).
+   * Skip if no room inside stop-line (avoids "dead" / flipped strips).
+   */
+  {
+    const cwDepth = 3.0
+    const cwCenter = start - 2.2 - cwDepth / 2
+    const cwHalf = Math.max(1.5, half - 0.25) // stay on pavement, not sidewalk
+    if (cwCenter - cwDepth / 2 > 1.0) {
+      const y0 = cwCenter - cwDepth / 2
+      const y1 = cwCenter + cwDepth / 2
+      // outline (two lines across roadway)
+      pushLine(mesh, {
+        layer: 'MARKING',
+        points: [add(mul(ux, y0), mul(px, -cwHalf)), add(mul(ux, y0), mul(px, cwHalf))],
+        stroke: THEME.crosswalk,
+        strokeWidth: 0.18,
+        alpha: 0.75,
+      })
+      pushLine(mesh, {
+        layer: 'MARKING',
+        points: [add(mul(ux, y1), mul(px, -cwHalf)), add(mul(ux, y1), mul(px, cwHalf))],
+        stroke: THEME.crosswalk,
+        strokeWidth: 0.18,
+        alpha: 0.75,
+      })
+      // zebra: ~0.5m bar + 0.5m gap across width
+      const barPitch = 1.0
+      const nBars = Math.max(3, Math.floor((cwHalf * 2) / barPitch))
+      for (let i = 0; i < nBars; i++) {
+        const o = -cwHalf + (i + 0.5) * ((cwHalf * 2) / nBars)
+        // only draw every other as white bar
+        if (i % 2 !== 0) continue
+        pushLine(mesh, {
+          layer: 'MARKING',
+          points: [add(mul(ux, y0 + 0.15), mul(px, o)), add(mul(ux, y1 - 0.15), mul(px, o))],
+          stroke: THEME.crosswalk,
+          strokeWidth: Math.min(0.75, ((cwHalf * 2) / nBars) * 0.7),
+          alpha: 0.95,
+        })
+      }
+    }
   }
 
-  // sidewalk
-  if (ap.sidewalkWidthM > 0) {
+  /**
+   * Sidewalks: both curbs, follow widen profile (leftPts/rightPts).
+   * No floating segments — only continuous ribbon from stop-line outward.
+   */
+  if (ap.sidewalkWidthM > 0 && leftPts.length >= 2 && rightPts.length >= 2) {
     const sw = ap.sidewalkWidthM
-    pushPoly(mesh, {
-      layer: 'ROAD',
-      points: [
-        add(mul(ux, start), mul(px, -half - sw)),
-        add(mul(ux, end), mul(px, -half - sw)),
-        add(mul(ux, end), mul(px, -half)),
-        add(mul(ux, start), mul(px, -half)),
-      ],
-      fill: THEME.sidewalk,
-      alpha: 0.95,
+    // left (entry) sidewalk: outward of left curb = further -px
+    const leftOuter: Vec[] = leftPts.map((p, i) => {
+      const s = uniq[Math.min(i, uniq.length - 1)] ?? 0
+      const eExtra = entryLateralExtraAt(profile, s)
+      return add(mul(ux, start + s), mul(px, -half - eExtra - sw))
     })
-  }
-  if (ap.bikeEnabled) {
-    const bw = ap.bikeWidthM
     pushPoly(mesh, {
       layer: 'ROAD',
-      points: [
-        add(mul(ux, start), mul(px, half)),
-        add(mul(ux, end), mul(px, half)),
-        add(mul(ux, end), mul(px, half + bw)),
-        add(mul(ux, start), mul(px, half + bw)),
-      ],
-      fill: THEME.bike,
-      alpha: 0.9,
+      points: [...leftOuter, ...leftPts.slice().reverse()],
+      fill: THEME.sidewalk,
+      stroke: '#a8a29e',
+      strokeWidth: 0.12,
+      alpha: 0.96,
+      meta: { approachId: ap.id, kind: 'sidewalk-entry' },
+    })
+    // exit: optional bike then sidewalk, stacked outward from right curb (no overlap / dead gap)
+    const bikeW = ap.bikeEnabled ? Math.max(0, ap.bikeWidthM) : 0
+    if (bikeW > 0) {
+      const bikeOuter: Vec[] = rightPts.map((_p, i) => {
+        const s = uniq[Math.min(i, uniq.length - 1)] ?? 0
+        const xExtra = exitLateralExtraAt(profile, s, len)
+        return add(mul(ux, start + s), mul(px, half + xExtra + bikeW))
+      })
+      pushPoly(mesh, {
+        layer: 'ROAD',
+        points: [...rightPts, ...bikeOuter.slice().reverse()],
+        fill: THEME.bike,
+        stroke: '#0f766e',
+        strokeWidth: 0.1,
+        alpha: 0.88,
+        meta: { approachId: ap.id, kind: 'bike' },
+      })
+    }
+    const rightInner: Vec[] = rightPts.map((_p, i) => {
+      const s = uniq[Math.min(i, uniq.length - 1)] ?? 0
+      const xExtra = exitLateralExtraAt(profile, s, len)
+      return add(mul(ux, start + s), mul(px, half + xExtra + bikeW))
+    })
+    const rightOuter: Vec[] = rightPts.map((_p, i) => {
+      const s = uniq[Math.min(i, uniq.length - 1)] ?? 0
+      const xExtra = exitLateralExtraAt(profile, s, len)
+      return add(mul(ux, start + s), mul(px, half + xExtra + bikeW + sw))
+    })
+    pushPoly(mesh, {
+      layer: 'ROAD',
+      points: [...rightInner, ...rightOuter.slice().reverse()],
+      fill: THEME.sidewalk,
+      stroke: '#a8a29e',
+      strokeWidth: 0.12,
+      alpha: 0.96,
+      meta: { approachId: ap.id, kind: 'sidewalk-exit' },
     })
   }
 
@@ -1587,7 +1635,7 @@ function drawRoundabout(mesh: Mesh, approaches: Approach[], core: number) {
     align: 'center',
   })
   pushLabel(mesh, {
-    text: `环道 ${laneCount} 车道 · 工程示意`,
+    text: `环道 ${laneCount} 车道`,
     at: [0, -outerR - 14],
     color: '#475569',
     size: 2.0,

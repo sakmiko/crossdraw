@@ -1,7 +1,6 @@
 /**
- * Green-wave standalone page (RoadGee-style separate workspace).
- * Full-width: corridor list | map + timespace | KPI / tables.
- * Opened when EditorMode === 'band' — replaces the 3-pane intersection shell.
+ * Green-wave standalone page — multi-intersection corridor editor.
+ * Default view: compact node parameter table + live KPI (RoadGee-style).
  */
 import { useMemo, useState } from 'react'
 import type { BandCorridor, BandResult, Project } from '@/domain/types'
@@ -34,7 +33,7 @@ export type BandPageProps = {
   renameBandCorridor: (id: string, name: string) => void
 }
 
-type BandTab = 'map' | 'timespace' | 'nodes' | 'compare'
+type BandTab = 'table' | 'timespace' | 'map' | 'compare'
 
 export function BandPage(props: BandPageProps) {
   const {
@@ -56,27 +55,34 @@ export function BandPage(props: BandPageProps) {
     renameBandCorridor,
   } = props
   const [batchNote, setBatchNote] = useState<string | null>(null)
-  const [tab, setTab] = useState<BandTab>('timespace')
+  const [tab, setTab] = useState<BandTab>('table')
   const corridor = project.bandCorridor
   const corridors = project.bandCorridors ?? [corridor]
   const segs = useMemo(() => corridorSegments(corridor), [corridor])
+  const sortedNodes = useMemo(
+    () => [...corridor.nodes].sort((a, b) => a.distanceM - b.distanceM),
+    [corridor.nodes],
+  )
 
   const mapSvg = useMemo(
     () =>
       corridorMapSvg(corridor, {
-        width: 640,
-        height: 280,
+        width: 720,
+        height: 260,
         bandwidthRatio: band.bandwidthRatio,
       }),
     [corridor, band.bandwidthRatio],
   )
+
+  const C = sortedNodes[0]?.cycleSec ?? 90
+  const lockedN = corridor.nodes.filter((n) => n.lockedOffset).length
 
   return (
     <div className="band-page" data-theme={theme}>
       <header className="band-page-bar">
         <div className="band-page-bar-left">
           <button type="button" className="ghost" onClick={onBackToIntersection}>
-            ← 交叉口设计
+            ← 交叉口
           </button>
           <div className="band-page-title">
             <strong>干道绿波</strong>
@@ -86,10 +92,10 @@ export function BandPage(props: BandPageProps) {
         <div className="band-page-tabs" role="tablist" aria-label="绿波视图">
           {(
             [
+              ['table', '路口参数表'],
               ['timespace', '时距图'],
               ['map', '走廊图'],
-              ['nodes', '节点表'],
-              ['compare', '多走廊对比'],
+              ['compare', '多走廊'],
             ] as const
           ).map(([id, label]) => (
             <button
@@ -113,17 +119,17 @@ export function BandPage(props: BandPageProps) {
               setBatchNote(null)
             }}
           >
-            优化当前
+            优化
           </button>
           <button
             type="button"
             className="ghost"
             onClick={() => {
               const r = optimizeAllBands()
-              setBatchNote(`批量 ${r.count} 条 · 未降带宽 ${r.improved}`)
+              setBatchNote(`${r.improved}/${r.count}`)
             }}
           >
-            批量优化
+            批量
           </button>
           <button
             type="button"
@@ -131,22 +137,53 @@ export function BandPage(props: BandPageProps) {
             onClick={() => {
               const md = [
                 `# ${project.name} · ${corridor.name}`,
-                '',
-                `- 方法：${band.method}`,
-                `- 带宽比 ${(band.bandwidthRatio * 100).toFixed(1)}% · b=${band.bandwidthSec.toFixed(1)}s`,
-                `- 上行 ${band.forwardBandwidthSec?.toFixed(1) ?? '—'}s · 下行 ${band.backwardBandwidthSec?.toFixed(1) ?? '—'}s`,
-                `- 速度 ${band.standardSpeedKmh} km/h · 节点 ${corridor.nodes.length}`,
+                `- 方法 ${band.method} · 带宽比 ${(band.bandwidthRatio * 100).toFixed(1)}%`,
+                `- b↑ ${(band.forwardBandwidthSec ?? band.bandwidthSec).toFixed(1)}s · b↓ ${(band.backwardBandwidthSec ?? 0).toFixed(1)}s`,
               ].join('\n')
               downloadText(`${project.name}-band.md`, md, 'text/markdown')
             }}
           >
-            导出 MD
+            导出
           </button>
         </div>
       </header>
 
+      {/* live KPI strip — always visible, numbers first */}
+      <div className="band-kpi-strip" aria-label="绿波实时指标">
+        <div className="bkpi">
+          <span className="bkpi-l">带宽比</span>
+          <span className="bkpi-v">{(band.bandwidthRatio * 100).toFixed(1)}%</span>
+        </div>
+        <div className="bkpi">
+          <span className="bkpi-l">上行 b</span>
+          <span className="bkpi-v">{(band.forwardBandwidthSec ?? band.bandwidthSec).toFixed(1)}<small>s</small></span>
+        </div>
+        <div className="bkpi">
+          <span className="bkpi-l">下行 b</span>
+          <span className="bkpi-v">{(band.backwardBandwidthSec ?? 0).toFixed(1)}<small>s</small></span>
+        </div>
+        <div className="bkpi">
+          <span className="bkpi-l">带速</span>
+          <span className="bkpi-v">{band.standardSpeedKmh.toFixed(0)}<small>km/h</small></span>
+        </div>
+        <div className="bkpi">
+          <span className="bkpi-l">C</span>
+          <span className="bkpi-v">{C}<small>s</small></span>
+        </div>
+        <div className="bkpi">
+          <span className="bkpi-l">路口</span>
+          <span className="bkpi-v">{corridor.nodes.length}</span>
+        </div>
+        {batchNote && (
+          <div className="bkpi bkpi-note">
+            <span className="bkpi-l">批量</span>
+            <span className="bkpi-v">{batchNote}</span>
+          </div>
+        )}
+      </div>
+
       <div className="band-page-body">
-        <aside className="band-page-side">
+        <aside className="band-page-side compact">
           <BandCorridorSidebar
             corridors={corridors}
             activeId={project.activeBandId ?? corridor.id}
@@ -165,34 +202,33 @@ export function BandPage(props: BandPageProps) {
             }}
             onOptimizeAll={() => {
               const r = optimizeAllBands()
-              setBatchNote(`批量 ${r.count} 条 · 未降带宽 ${r.improved}`)
+              setBatchNote(`${r.improved}/${r.count}`)
             }}
-            batchNote={batchNote}
+            batchNote={null}
           />
-          <div className="band-page-params card">
-            <div className="section-title">当前走廊</div>
-            <label>
-              名称
-              <input
-                value={corridor.name}
-                onChange={(e) => renameBandCorridor(corridor.id, e.target.value)}
-              />
-            </label>
-            <label>
-              速度 km/h
-              <input
-                type="number"
-                value={corridor.speedKmh}
-                onChange={(e) => updateBand({ speedKmh: Number(e.target.value) })}
-              />
-            </label>
+          <div className="band-page-params card compact-card">
+            <div className="field-row-2">
+              <label>
+                名称
+                <input
+                  value={corridor.name}
+                  onChange={(e) => renameBandCorridor(corridor.id, e.target.value)}
+                />
+              </label>
+              <label>
+                V km/h
+                <input
+                  type="number"
+                  value={corridor.speedKmh}
+                  onChange={(e) => updateBand({ speedKmh: Number(e.target.value) })}
+                />
+              </label>
+            </div>
             <label>
               方法
               <select
                 value={corridor.method}
-                onChange={(e) =>
-                  updateBand({ method: e.target.value as typeof corridor.method })
-                }
+                onChange={(e) => updateBand({ method: e.target.value as typeof corridor.method })}
               >
                 <option value="classic">经典数解</option>
                 <option value="two-way-equal">双向等带宽</option>
@@ -202,54 +238,176 @@ export function BandPage(props: BandPageProps) {
                 <option value="maxband-discrete">MAXBAND 离散</option>
               </select>
             </label>
-            <div className="metric-grid band-kpi" style={{ marginTop: 8 }}>
-              <div className="metric">
-                <div className="label">带宽比</div>
-                <div className="value">{(band.bandwidthRatio * 100).toFixed(1)}%</div>
-              </div>
-              <div className="metric">
-                <div className="label">上行 b</div>
-                <div className="value">{(band.forwardBandwidthSec ?? band.bandwidthSec).toFixed(1)}s</div>
-              </div>
-              <div className="metric">
-                <div className="label">下行 b</div>
-                <div className="value">{(band.backwardBandwidthSec ?? 0).toFixed(1)}s</div>
-              </div>
-              <div className="metric">
-                <div className="label">节点</div>
-                <div className="value">{corridor.nodes.length}</div>
-              </div>
-            </div>
           </div>
         </aside>
 
         <main className="band-page-main">
-          {tab === 'map' && (
-            <div className="card band-pane">
+          {tab === 'table' && (
+            <div className="card band-pane compact-card">
               <div className="panel-header">
-                <h2 style={{ margin: 0 }}>走廊示意</h2>
-                <span className="hint">多路口串联 · 非测绘底图</span>
+                <h2 style={{ margin: 0 }}>路口参数表</h2>
+                <div className="panel-header-meta">
+                  <span className="subpanel-tag">锁 {lockedN}</span>
+                  <button type="button" className="primary" onClick={addBandNode}>
+                    + 路口
+                  </button>
+                </div>
               </div>
-              <div
-                className="chart-svg-host chart-svg-host--pro"
-                dangerouslySetInnerHTML={{ __html: mapSvg }}
-              />
+              <div className="table-wrap band-node-table band-node-table--dense">
+                <table className="table table-dense">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>路口名称</th>
+                      <th>桩号 m</th>
+                      <th>路段 m</th>
+                      <th>λ 绿信比</th>
+                      <th>C s</th>
+                      <th>相位差 s</th>
+                      <th>锁</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedNodes.map((n, idx) => {
+                      const prev = idx > 0 ? sortedNodes[idx - 1] : null
+                      const segLen = prev ? n.distanceM - prev.distanceM : 0
+                      return (
+                        <tr key={n.id}>
+                          <td className="num">{idx + 1}</td>
+                          <td>
+                            <input
+                              value={n.name}
+                              onChange={(e) => updateBandNode(n.id, { name: e.target.value })}
+                              aria-label={`路口${idx + 1}名称`}
+                            />
+                          </td>
+                          <td>
+                            <input
+                              type="number"
+                              className="num"
+                              value={Number(n.distanceM.toFixed(0))}
+                              onChange={(e) =>
+                                updateBandNode(n.id, { distanceM: Number(e.target.value) })
+                              }
+                              aria-label="桩号"
+                            />
+                          </td>
+                          <td>
+                            {idx === 0 ? (
+                              <span className="muted-cell">—</span>
+                            ) : (
+                              <input
+                                type="number"
+                                className="num"
+                                min={50}
+                                value={Math.round(segLen)}
+                                onChange={(e) =>
+                                  setBandSegmentLength(n.id, Number(e.target.value))
+                                }
+                                aria-label="路段长度"
+                              />
+                            )}
+                          </td>
+                          <td>
+                            <input
+                              type="number"
+                              className="num"
+                              step={0.05}
+                              min={0.1}
+                              max={0.95}
+                              value={Number(n.greenRatio.toFixed(2))}
+                              onChange={(e) =>
+                                updateBandNode(n.id, { greenRatio: Number(e.target.value) })
+                              }
+                              aria-label="绿信比"
+                            />
+                          </td>
+                          <td>
+                            <input
+                              type="number"
+                              className="num"
+                              min={40}
+                              max={200}
+                              value={n.cycleSec}
+                              onChange={(e) =>
+                                updateBandNode(n.id, { cycleSec: Number(e.target.value) })
+                              }
+                              aria-label="周期"
+                            />
+                          </td>
+                          <td>
+                            <input
+                              type="number"
+                              className="num"
+                              step={0.1}
+                              value={Number(n.offsetSec.toFixed(1))}
+                              onChange={(e) =>
+                                updateBandNode(n.id, { offsetSec: Number(e.target.value) })
+                              }
+                              aria-label="相位差"
+                            />
+                          </td>
+                          <td className="center">
+                            <input
+                              type="checkbox"
+                              checked={!!n.lockedOffset}
+                              onChange={(e) =>
+                                updateBandNode(n.id, { lockedOffset: e.target.checked })
+                              }
+                              title="锁定相位差"
+                              aria-label="锁定"
+                            />
+                          </td>
+                          <td>
+                            <button
+                              type="button"
+                              className="ghost"
+                              onClick={() => removeBandNode(n.id)}
+                              disabled={corridor.nodes.length <= 2}
+                            >
+                              删
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {segs.length > 0 && (
+                <div className="band-seg-summary">
+                  {segs.map((s) => (
+                    <span key={s.toId} className="seg-chip">
+                      {s.fromName}→{s.toName}{' '}
+                      <b>{Math.round(s.lengthM)}</b>m
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <div className="band-inline-chart">
+                <InteractiveTimeSpace corridor={corridor} result={band} />
+              </div>
             </div>
           )}
 
           {tab === 'timespace' && (
-            <div className="card band-pane">
+            <div className="card band-pane compact-card">
               <div className="panel-header">
                 <h2 style={{ margin: 0 }}>时距图</h2>
                 <button
                   type="button"
                   className="ghost"
                   onClick={() => {
-                    const svg = buildTimeSpaceExportSvg(corridor, band, theme)
-                    exportSvgFile(`${project.name}-timespace.svg`, svg)
+                    exportSvgFile(
+                      `${project.name}-timespace.svg`,
+                      buildTimeSpaceExportSvg(corridor, band, theme),
+                    )
                   }}
                 >
-                  导出时距 SVG
+                  SVG
                 </button>
               </div>
               <InteractiveTimeSpace corridor={corridor} result={band} />
@@ -258,150 +416,20 @@ export function BandPage(props: BandPageProps) {
             </div>
           )}
 
-          {tab === 'nodes' && (
-            <div className="card band-pane">
+          {tab === 'map' && (
+            <div className="card band-pane compact-card">
               <div className="panel-header">
-                <h2 style={{ margin: 0 }}>节点 / 路段</h2>
-                <button type="button" className="primary" onClick={addBandNode}>
-                  添加节点
-                </button>
+                <h2 style={{ margin: 0 }}>走廊图</h2>
               </div>
-              <div className="table-wrap band-node-table">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>名称</th>
-                      <th>桩号 m</th>
-                      <th>绿信比</th>
-                      <th>相位差 s</th>
-                      <th>锁定</th>
-                      <th>lat</th>
-                      <th>lon</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {corridor.nodes.map((n) => (
-                      <tr key={n.id}>
-                        <td>
-                          <input
-                            value={n.name}
-                            onChange={(e) => updateBandNode(n.id, { name: e.target.value })}
-                          />
-                        </td>
-                        <td>
-                          <input
-                            type="number"
-                            value={n.distanceM}
-                            onChange={(e) =>
-                              updateBandNode(n.id, { distanceM: Number(e.target.value) })
-                            }
-                          />
-                        </td>
-                        <td>
-                          <input
-                            type="number"
-                            step={0.05}
-                            value={n.greenRatio}
-                            onChange={(e) =>
-                              updateBandNode(n.id, { greenRatio: Number(e.target.value) })
-                            }
-                          />
-                        </td>
-                        <td>
-                          <input
-                            type="number"
-                            value={n.offsetSec}
-                            onChange={(e) =>
-                              updateBandNode(n.id, { offsetSec: Number(e.target.value) })
-                            }
-                          />
-                        </td>
-                        <td>
-                          <input
-                            type="checkbox"
-                            checked={!!n.lockedOffset}
-                            onChange={(e) =>
-                              updateBandNode(n.id, { lockedOffset: e.target.checked })
-                            }
-                          />
-                        </td>
-                        <td>
-                          <input
-                            type="number"
-                            step={0.0001}
-                            value={n.lat ?? ''}
-                            onChange={(e) => {
-                              const v = e.target.value
-                              updateBandNode(n.id, {
-                                lat: v === '' ? undefined : Number(v),
-                              })
-                            }}
-                          />
-                        </td>
-                        <td>
-                          <input
-                            type="number"
-                            step={0.0001}
-                            value={n.lon ?? ''}
-                            onChange={(e) => {
-                              const v = e.target.value
-                              updateBandNode(n.id, {
-                                lon: v === '' ? undefined : Number(v),
-                              })
-                            }}
-                          />
-                        </td>
-                        <td>
-                          <button type="button" className="ghost" onClick={() => removeBandNode(n.id)}>
-                            删
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {segs.length > 0 && (
-                <>
-                  <div className="section-title" style={{ marginTop: 12 }}>
-                    路段长度
-                  </div>
-                  <div className="table-wrap">
-                    <table className="table">
-                      <thead>
-                        <tr>
-                          <th>区间</th>
-                          <th>长度 m</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {segs.map((s) => (
-                          <tr key={s.toId}>
-                            <td>
-                              {s.fromName} → {s.toName}
-                            </td>
-                            <td>
-                              <input
-                                type="number"
-                                value={s.lengthM}
-                                onChange={(e) =>
-                                  setBandSegmentLength(s.toId, Number(e.target.value))
-                                }
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </>
-              )}
+              <div
+                className="chart-svg-host chart-svg-host--pro"
+                dangerouslySetInnerHTML={{ __html: mapSvg }}
+              />
             </div>
           )}
 
           {tab === 'compare' && (
-            <div className="card band-pane">
+            <div className="card band-pane compact-card">
               <div className="panel-header">
                 <h2 style={{ margin: 0 }}>多走廊对比</h2>
                 <button
@@ -409,10 +437,7 @@ export function BandPage(props: BandPageProps) {
                   className="ghost"
                   onClick={() => {
                     const kpis = collectCorridorKpis(corridors)
-                    exportSvgFile(
-                      `${project.name}-band-compare.svg`,
-                      corridorKpiCompareSvg(kpis),
-                    )
+                    exportSvgFile(`${project.name}-band-compare.svg`, corridorKpiCompareSvg(kpis))
                     downloadText(
                       `${project.name}-band-multi.md`,
                       multiBandMarkdown(project.name, kpis),
@@ -420,7 +445,7 @@ export function BandPage(props: BandPageProps) {
                     )
                   }}
                 >
-                  导出对比
+                  导出
                 </button>
               </div>
               <CorridorCompareCharts corridors={corridors} />

@@ -156,9 +156,7 @@ export function BandWorkspace({
                     <th>C</th>
                     <th>相位差 o(s)</th>
                     <th>锁定</th>
-                    <th>纬度</th>
-                    <th>经度</th>
-                    <th></th>
+                                                            <th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -215,32 +213,6 @@ export function BandWorkspace({
                           />
                           <span>{n.lockedOffset ? '锁' : '—'}</span>
                         </label>
-                      </td>
-                      <td>
-                        <input
-                          type="number"
-                          step={0.0001}
-                          placeholder="lat"
-                          value={n.lat ?? ''}
-                          onChange={(e) =>
-                            updateBandNode(n.id, {
-                              lat: e.target.value === '' ? undefined : Number(e.target.value),
-                            })
-                          }
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="number"
-                          step={0.0001}
-                          placeholder="lon"
-                          value={n.lon ?? ''}
-                          onChange={(e) =>
-                            updateBandNode(n.id, {
-                              lon: e.target.value === '' ? undefined : Number(e.target.value),
-                            })
-                          }
-                        />
                       </td>
                       <td>
                         <button type="button" className="ghost" onClick={() => removeBandNode(n.id)}>
