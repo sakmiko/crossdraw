@@ -31,6 +31,17 @@ import { analysisMarkdown, exportSvgFile } from '@/io/exportCharts'
 import { buildAnalysisReportSvg } from '@/io/analysisReportSvg'
 import { downloadText } from '@/io/download'
 import {
+  collectQueueStorageRows,
+  queueStorageBoardSvg,
+  queueStorageCsv,
+} from '@/ui/charts/queueStorageBoard'
+import { queueTableMarkdown } from '@/domain/analysis/queueStorage'
+import {
+  cleanAnalysisPlanSvg,
+  cleanFlowDiagramSvg,
+  cleanChannelPlanSvg,
+} from '@/io/cleanDrawingPack'
+import {
   professionalCapacityMatrixSvg,
   capacityMatrixMarkdown,
   capacityMatrixCsv,
@@ -57,6 +68,7 @@ export type AnalysisWorkspaceProps = {
   onOpenCompare: () => void
   onExportProPack: () => void
   onToggleUnsignalized?: (v: boolean) => void
+  onApplyFullSchemeOptimize?: () => void
 }
 
 export function AnalysisWorkspace({
@@ -70,6 +82,7 @@ export function AnalysisWorkspace({
   onOpenCompare,
   onExportProPack,
   onToggleUnsignalized,
+  onApplyFullSchemeOptimize,
 }: AnalysisWorkspaceProps) {
   const compareRows = collectCompareRows(project, analyzeIntersection)
   const unsig = useMemo(() => {
@@ -126,6 +139,51 @@ export function AnalysisWorkspace({
         <button
           type="button"
           className="primary"
+          disabled={!channel || !signal || !!signal.unsignalized}
+          onClick={() => onApplyFullSchemeOptimize?.()}
+          title="Webster + 连续相位差 + 多走廊"
+        >
+          一键全方案优化
+        </button>
+        <button
+          type="button"
+          className="ghost"
+          disabled={!channel}
+          onClick={() => {
+            if (!channel) return
+            exportSvgFile(`${project.name}-渠化净图.svg`, cleanChannelPlanSvg(channel))
+          }}
+        >
+          渠化净图
+        </button>
+        <button
+          type="button"
+          className="ghost"
+          disabled={!channel || !flow}
+          onClick={() => {
+            if (!channel || !flow) return
+            exportSvgFile(`${project.name}-流向净图.svg`, cleanFlowDiagramSvg(channel.approaches, flow))
+          }}
+        >
+          流向净图
+        </button>
+        <button
+          type="button"
+          className="ghost"
+          disabled={!channel}
+          onClick={() => {
+            if (!channel) return
+            exportSvgFile(
+              `${project.name}-评价净图.svg`,
+              cleanAnalysisPlanSvg(channel.approaches, analysis, 'los'),
+            )
+          }}
+        >
+          评价净图
+        </button>
+        <button
+          type="button"
+          className="ghost"
           disabled={!channel}
           onClick={() => {
             if (!channel) return
@@ -388,6 +446,34 @@ export function AnalysisWorkspace({
         }))}
       />
       
+      {channel && signal && !signal.unsignalized && (
+        <div className="flat-section">
+          <div className="rg-section-title">排队储存审查</div>
+          <div
+            className="chart-svg-host"
+            style={{ overflow: 'auto' }}
+            dangerouslySetInnerHTML={{
+              __html: queueStorageBoardSvg(
+                collectQueueStorageRows(channel.approaches, signal, analysis),
+                { width: 720 },
+              ),
+            }}
+          />
+          <div className="toolbar dense" style={{ marginTop: 6 }}>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => {
+                const rows = collectQueueStorageRows(channel.approaches, signal, analysis)
+                downloadText(`${project.name}-排队储存.md`, queueTableMarkdown(project.name, rows), 'text/markdown')
+                downloadText(`${project.name}-排队储存.csv`, queueStorageCsv(rows), 'text/csv')
+              }}
+            >
+              排队 MD/CSV
+            </button>
+          </div>
+        </div>
+      )}
       <div className="flat-section ">
         <div className="rg-section-title">转向能力 · 排队 · 损失时间</div>
         <div className="flat-body">

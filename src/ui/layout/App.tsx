@@ -24,7 +24,18 @@ import {
   cleanTimeSpaceSvg,
   cleanSignalTimingSvg,
   cleanCorridorNetworkSvg,
-} from '@/io/cleanDrawingPack' 
+} from '@/io/cleanDrawingPack'
+import {
+  criticalYBoardSvg,
+  criticalYMarkdown,
+  criticalYCsv,
+} from '@/ui/charts/criticalYBoard'
+import {
+  collectQueueStorageRows,
+  queueStorageBoardSvg,
+  queueStorageCsv,
+} from '@/ui/charts/queueStorageBoard'
+import { queueTableMarkdown } from '@/domain/analysis/queueStorage'  
 import {
   professionalMultiCorridorReportSvg,
   multiCorridorReportMarkdown,
@@ -602,7 +613,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.104 · 绿波专页</span>
+          <span>Crossdraw v0.5.105 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -624,7 +635,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.104</span>
+            <span className="brand-ver">v0.5.105</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -814,6 +825,33 @@ export default function App() {
               )}
               {mode === 'signal' && signal && (
                 <SignalWorkspace
+                  onApplyFullSchemeOptimize={() => {
+                    const r = applyFullSchemeOptimize()
+                    if (r) {
+                      downloadText(
+                        `${project.name}-一键全方案优化.md`,
+                        fullOptimizeMarkdown(project.name, r),
+                        'text/markdown',
+                      )
+                    }
+                  }}
+                  onExportCriticalY={() => {
+                    if (!channel || !flow || !signal) return
+                    exportSvgFile(
+                      `${project.name}-Y分解.svg`,
+                      criticalYBoardSvg(channel.approaches, flow, signal, { width: 720 }),
+                    )
+                    downloadText(
+                      `${project.name}-Y分解.md`,
+                      criticalYMarkdown(project.name, channel.approaches, flow, signal),
+                      'text/markdown',
+                    )
+                    downloadText(
+                      `${project.name}-Y分解.csv`,
+                      criticalYCsv(channel.approaches, flow, signal),
+                      'text/csv',
+                    )
+                  }}
                   projectName={project.name}
                   signal={signal}
                   channel={channel}
@@ -879,6 +917,16 @@ export default function App() {
               )}
               {mode === 'analysis' && analysis && analysisIntegrity && (
                 <AnalysisWorkspace
+                  onApplyFullSchemeOptimize={() => {
+                    const r = applyFullSchemeOptimize()
+                    if (r) {
+                      downloadText(
+                        `${project.name}-一键全方案优化.md`,
+                        fullOptimizeMarkdown(project.name, r),
+                        'text/markdown',
+                      )
+                    }
+                  }}
                   project={project}
                   analysis={analysis}
                   analysisIntegrity={analysisIntegrity}
@@ -916,7 +964,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.104</span>
+        <span>Crossdraw v0.5.105</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1140,6 +1188,56 @@ export default function App() {
             )
           },
           'pro-pack': () => exportProfessionalDiagrams(),
+          'critical-y-board-svg': () => {
+            if (!channel || !flow || !signal) return
+            exportSvgFile(
+              `${project.name}-Y分解.svg`,
+              criticalYBoardSvg(channel.approaches, flow, signal, { width: 720 }),
+            )
+          },
+          'critical-y-md': () => {
+            if (!channel || !flow || !signal) return
+            downloadText(
+              `${project.name}-Y分解.md`,
+              criticalYMarkdown(project.name, channel.approaches, flow, signal),
+              'text/markdown',
+            )
+          },
+          'critical-y-csv': () => {
+            if (!channel || !flow || !signal) return
+            downloadText(
+              `${project.name}-Y分解.csv`,
+              criticalYCsv(channel.approaches, flow, signal),
+              'text/csv',
+            )
+          },
+          'queue-storage-svg': () => {
+            if (!channel || !signal || !analysis) return
+            exportSvgFile(
+              `${project.name}-排队储存.svg`,
+              queueStorageBoardSvg(
+                collectQueueStorageRows(channel.approaches, signal, analysis),
+                { width: 800 },
+              ),
+            )
+          },
+          'queue-storage-md': () => {
+            if (!channel || !signal || !analysis) return
+            const rows = collectQueueStorageRows(channel.approaches, signal, analysis)
+            downloadText(
+              `${project.name}-排队储存.md`,
+              queueTableMarkdown(project.name, rows),
+              'text/markdown',
+            )
+          },
+          'queue-storage-csv': () => {
+            if (!channel || !signal || !analysis) return
+            downloadText(
+              `${project.name}-排队储存.csv`,
+              queueStorageCsv(collectQueueStorageRows(channel.approaches, signal, analysis)),
+              'text/csv',
+            )
+          },
           'full-scheme-optimize-md': () => {
             const r =
               typeof applyFullSchemeOptimize === 'function'

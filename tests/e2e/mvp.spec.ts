@@ -18,11 +18,11 @@ async function openNav(page: Page, label: string) {
   await page.waitForTimeout(300)
 }
 
-test.describe('Crossdraw v0.5.104 full-opt + polish', () => {
+test.describe('Crossdraw v0.5.105 y-queue + polish', () => {
   // 渠化 流量 信号 分析 绿波 比选 断面
   test('shell', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.104/).first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.105/).first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
   test('channel', async ({ page }) => {
@@ -35,24 +35,19 @@ test.describe('Crossdraw v0.5.104 full-opt + polish', () => {
     await openNav(page, '流量')
     await page.screenshot({ path: 'docs/screenshots/02-flow.png', fullPage: true })
   })
-  test('signal', async ({ page }) => {
+  test('signal Y + full scheme', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '信号')
+    await expect(page.getByRole('button', { name: /一键全方案/ })).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('button', { name: /Y分解图/ })).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/03-signal.png', fullPage: true })
   })
-  test('analysis export center has full optimize', async ({ page }) => {
+  test('analysis full + clean + queue', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '分析')
-    // open export menu if present
-    const exp = page.locator('details.menu-dropdown').filter({ hasText: /^导出$/ }).or(
-      page.locator('details.menu-dropdown', { hasText: '导出中心' }),
-    )
-    // optional open export dropdown (avoid strict multi-match)
-    const sum = page.getByRole('button', { name: '导出' }).or(page.locator('summary').filter({ hasText: /^导出$/ }))
-    if (await sum.count()) {
-      await sum.first().click()
-      await page.waitForTimeout(200)
-    }
+    await expect(page.getByRole('button', { name: /一键全方案优化/ })).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('button', { name: /评价净图/ })).toBeVisible()
+    await expect(page.getByText(/排队储存审查/)).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/04-analysis.png', fullPage: true })
   })
   test('band', async ({ page }) => {

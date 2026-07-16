@@ -8,6 +8,11 @@ import type { Approach, ChannelizationScheme, FlowScheme, Movement, SignalScheme
 import type { TimingMethod } from '@/domain/analysis/timing'
 import { TIMING_METHOD_LABELS } from '@/domain/analysis/timing'
 import { criticalFlowRatios } from '@/domain/analysis/timing'
+import {
+  criticalYBoardSvg,
+  criticalYMarkdown,
+  criticalYCsv,
+} from '@/ui/charts/criticalYBoard' 
 import { recommendTimingRow, type TimingCompareRow } from '@/domain/analysis/timingCompare'
 import { buildSignalTimingAlignment } from '@/domain/signal/timingAlign'
 import { releaseMatrixAlignsWithPhases } from '@/domain/signal/releaseAlign'
@@ -83,6 +88,8 @@ export type SignalWorkspaceProps = {
   onCloseDualRingCycle?: () => void
   onApplyPedTiming?: () => void
   onAllocateBarrierGreens?: () => void
+  onApplyFullSchemeOptimize?: () => void
+  onExportCriticalY?: () => void
   onRunOptimize: () => void
   onRunCompare: () => void
   onApplyCompareRow: (row: TimingCompareRow) => void
@@ -138,6 +145,8 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
   onApplyPedTiming,
   onAllocateBarrierGreens,
     onRunOptimize,
+  onApplyFullSchemeOptimize,
+  onExportCriticalY,
     onRunCompare,
     onApplyCompareRow,
     designTargetVc = 0.9,
@@ -465,6 +474,37 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         </button>
         <button type="button" className="ghost" onClick={() => onComputeY?.()} title="计算关键流量比 Y">
           计算Y值
+        </button>
+        <button
+          type="button"
+          className="ghost"
+          title="导出 Y 分解看板"
+          onClick={() => {
+            if (onExportCriticalY) {
+              onExportCriticalY()
+              return
+            }
+            if (!channel || !flow) return
+            exportSvgFile(
+              `${projectName}-Y分解.svg`,
+              criticalYBoardSvg(channel.approaches, flow, signal, { width: 720 }),
+            )
+            downloadText(
+              `${projectName}-Y分解.md`,
+              criticalYMarkdown(projectName, channel.approaches, flow, signal),
+              'text/markdown',
+            )
+          }}
+        >
+          Y分解图
+        </button>
+        <button
+          type="button"
+          className="primary"
+          title="Webster + 连续相位差 + 多走廊"
+          onClick={() => onApplyFullSchemeOptimize?.()}
+        >
+          一键全方案
         </button>
         <button type="button" className="ghost" onClick={() => onGenerateScheme?.()} title="按进口生成保护相位方案">
           生成方案

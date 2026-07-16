@@ -132,3 +132,6 @@
 | 一键全方案优化 | Webster + 连续相位差 + 多走廊离散优化 | 工程合成；非商业黑箱 |
 | 净图导出 | 去标题/脚注/说明句 | 方法说明仅 MD |
 | 竞品调研 2026-07 | docs/research/06-competitor-optimization-survey | RoadGee/教材/HCM |
+
+| 关键流 Y 分解图 | computeSchemeY | 教材临界流比 |
+| 排队储存审查 | 红灯到达×间距/车道 | 工程示意非仿真 |

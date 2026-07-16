@@ -1,6 +1,26 @@
 # CHANGELOG
 
-## 0.5.104 — 2026-07-16
+## 0.5.105 — 2026-07-16
+
+### 调研补强
+- `docs/research/07-online-methods-supplement-20260716.md`：方法要点与竞品动作映射
+
+### 关键流 Y 分解
+- `criticalYBoardSvg` + MD/CSV；信号页实时条形图、「Y分解图」「一键全方案」
+- 导出：`critical-y-board-svg|md|csv`
+
+### 排队储存审查
+- 红灯到达示意排队长度；分析页看板 + MD/CSV
+- 导出：`queue-storage-*`
+
+### 净图/全方案入口
+- 分析页：一键全方案优化 · 渠化/流向/评价净图快捷按钮
+- 同源：`computeSchemeY` / `analyzeIntersection` / `runFullSchemeOptimize`
+
+### 诚实边界
+- Y/排队为工程示意；非仿真轨迹；非商业黑箱
+
+0.5.104 — 2026-07-16
 
 ### 调研与文档
 - `docs/research/06-competitor-optimization-survey-20260716.md`：竞品·痛点·论文/教材可落地方法·出图规则

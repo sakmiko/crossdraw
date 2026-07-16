@@ -95,9 +95,9 @@
 |--------|------|------|
 | P0 已有 | 同源图表、Webster、绿波、冲突、比选… | 0.5.x 已交付 |
 | **P1 本轮/近轮** | 调研文档固化 + 路线图 | 本文件 |
-| **P2 中优先** | `runFullSchemeOptimize` 一键全方案 | Webster + progressive + multi-corridor |
-| **P2 中优先** | `cleanDrawingPack` 净图 SVG 包 | 用户出图要求 |
-| P3 | 关键进口自动高亮、排队储存校核 UI 化 | HCM/教材 |
+| **P2 已交付 0.5.104–105** | `runFullSchemeOptimize` + UI | Webster + progressive + multi-corridor |
+| **P2 已交付 0.5.104–105** | `cleanDrawingPack` + 分析页净图按钮 | 用户出图要求 |
+| **P3 部分 0.5.105** | Y 分解图、排队储存审查 UI | HCM/教材 |
 | P3 | 更多交叉口类型几何审查 | 工程制图 |
 | 降级 | 全站布局精调 | 用户：先别调布局 |
 

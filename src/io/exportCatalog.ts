@@ -87,6 +87,12 @@ export type ExportItemId =
   | 'clean-timespace-svg'
   | 'clean-timing-svg'
   | 'clean-network-svg'
+  | 'critical-y-board-svg'
+  | 'critical-y-md'
+  | 'critical-y-csv'
+  | 'queue-storage-svg'
+  | 'queue-storage-md'
+  | 'queue-storage-csv'
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
@@ -105,6 +111,61 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'critical-y-board-svg',
+    category: 'signal',
+    title: '关键流 Y 分解图',
+    format: 'SVG',
+    description: '相位 y 条形图 · computeSchemeY 同源',
+    modes: ['signal', 'analysis'],
+    requires: ['signal', 'flow'],
+  },
+  {
+    id: 'critical-y-md',
+    category: 'signal',
+    title: '关键流 Y 报告',
+    format: 'MD',
+    description: 'Y 与相位占比说明',
+    modes: ['signal'],
+    requires: ['signal', 'flow'],
+  },
+  {
+    id: 'critical-y-csv',
+    category: 'signal',
+    title: '关键流 Y 表',
+    format: 'CSV',
+    description: '相位 y 数据',
+    modes: ['signal'],
+    requires: ['signal', 'flow'],
+  },
+  {
+    id: 'queue-storage-svg',
+    category: 'analysis',
+    title: '排队储存图',
+    format: 'SVG',
+    description: '红灯到达示意排队长度',
+    modes: ['analysis'],
+    requires: ['analysis', 'signal'],
+  },
+  {
+    id: 'queue-storage-md',
+    category: 'analysis',
+    title: '排队储存 MD',
+    format: 'MD',
+    description: '排队储存表',
+    modes: ['analysis'],
+    requires: ['analysis'],
+  },
+  {
+    id: 'queue-storage-csv',
+    category: 'analysis',
+    title: '排队储存 CSV',
+    format: 'CSV',
+    description: '排队储存数据',
+    modes: ['analysis'],
+    requires: ['analysis'],
+  },
+
   {
     id: 'full-scheme-optimize-md',
     category: 'analysis',
