@@ -1,19 +1,16 @@
 /**
- * Channel workspace — compact approach editor (v0.5.132).
- * Dense property tables; no draft-sheet / right-turn review boards in params.
- * Params write domain Approach; canvas rebuilds live.
+ * Channel workspace — RoadGee-style approach property form (v0.5.133).
+ * Section order / two-column rows mirror reference product UI.
+ * Values write domain Approach; canvas rebuilds live. No long hints.
  */
+import { useMemo, useState } from 'react'
 import type { Approach, Movement, Project } from '@/domain/types'
-import {
-  professionalRoundaboutPlanSvg,
-  roundaboutLayoutMarkdown,
-} from '@/ui/charts/professionalRoundaboutPlan'
-import { exportSvgFile } from '@/io/exportCharts'
-import { downloadText } from '@/io/download'
 
 export type ChannelWorkspaceProps = {
   project: Project
   selected: Approach | null
+  approaches?: Approach[]
+  onSelectApproach?: (id: string) => void
   updateApproach: (id: string, patch: Partial<Approach>) => void
   setLaneCount: (approachId: string, count: number) => void
   setExitLaneCount?: (approachId: string, count: number) => void
@@ -24,23 +21,64 @@ export type ChannelWorkspaceProps = {
   splitLaneGroupAt: (approachId: string, groupId: string) => void
 }
 
-function CellNum({
+function Row({ left, right }: { left: React.ReactNode; right?: React.ReactNode }) {
+  return (
+    <div className="rg-form-row">
+      <div className="rg-form-col">{left}</div>
+      <div className="rg-form-col">{right ?? null}</div>
+    </div>
+  )
+}
+
+function Field({
+  label,
+  children,
+  unit,
+  disabled,
+  info,
+}: {
+  label: string
+  children: React.ReactNode
+  unit?: string
+  disabled?: boolean
+  info?: boolean
+}) {
+  return (
+    <label className={`rg-field ${disabled ? 'is-disabled' : ''}`}>
+      <span className="rg-field-label">
+        {label}
+        {info ? <span className="rg-info" title="工程示意参数">i</span> : null}
+      </span>
+      <span className="rg-field-ctrl">
+        {children}
+        {unit ? <span className="rg-unit">{unit}</span> : null}
+      </span>
+    </label>
+  )
+}
+
+function NumInput({
   value,
   onChange,
   min,
   max,
   step = 1,
+  disabled,
+  highlight,
 }: {
   value: number
   onChange: (n: number) => void
   min?: number
   max?: number
   step?: number
+  disabled?: boolean
+  highlight?: boolean
 }) {
   return (
     <input
       type="number"
-      className="cell-num"
+      className={`rg-input ${highlight ? 'is-highlight' : ''}`}
+      disabled={disabled}
       min={min}
       max={max}
       step={step}
@@ -50,9 +88,19 @@ function CellNum({
   )
 }
 
+function ResetLink({ onClick }: { onClick: () => void }) {
+  return (
+    <button type="button" className="rg-reset" onClick={onClick}>
+      重置
+    </button>
+  )
+}
+
 export function ChannelWorkspace({
   project,
   selected,
+  approaches: approachesProp,
+  onSelectApproach,
   updateApproach,
   setLaneCount,
   setExitLaneCount,
@@ -65,177 +113,192 @@ export function ChannelWorkspace({
   const channel =
     project.channelizationSchemes.find((c) => c.id === project.active?.channelId) ??
     project.channelizationSchemes[0]
-  const isRoundabout = channel?.intersectionType === 'roundabout'
-  const channelKpi = (() => {
-    if (!channel) return null
-    const aps = channel.approaches
-    return {
-      legs: aps.length,
-      entryLanes: aps.reduce((s, a) => s + a.entryLanes.length, 0),
-      exitLanes: aps.reduce((s, a) => s + a.exitLanes.length, 0),
-      rtOn: aps.filter((a) => a.rightTurn?.enabled && a.rightTurn.style !== 'none').length,
-      sw: selected?.sidewalkWidthM ?? 0,
-      med: selected?.median?.widthM ?? 0,
-    }
-  })()
+  const approaches = approachesProp ?? channel?.approaches ?? []
+  const ap = selected ?? approaches[0] ?? null
 
-  if (!selected) {
+  // UI-only cosmetic controls matching reference product (not in mesh domain)
+  const [ixSize, setIxSize] = useState(5)
+  const [rtCurve, setRtCurve] = useState(0.5)
+  const [approachOffset, setApproachOffset] = useState(0.5)
+  const [crossTo, setCrossTo] = useState<'no' | 'yes'>('no')
+  const [leftTurnRange, setLeftTurnRange] = useState(135)
+  const [rightTurnRange, setRightTurnRange] = useState(135)
+  const [showAngleGuides, setShowAngleGuides] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(true)
+  const [auxOpen, setAuxOpen] = useState(true)
+
+  const dirLabel = useMemo(() => {
+    if (!ap || !approaches.length) return '—'
+    const i = approaches.findIndex((a) => a.id === ap.id)
+    return i >= 0 ? `方向${i + 1}` : ap.name
+  }, [ap, approaches])
+
+  if (!ap || !channel) {
     return (
-      <div className="flat-params channel-params-compact">
-        {isRoundabout && channel ? (
-          <div className="rg-section">
-            <div className="rg-section-title">环岛布局</div>
-            <div className="toolbar dense">
-              <button
-                type="button"
-                className="primary"
-                onClick={() =>
-                  exportSvgFile(
-                    `${project.name}-环岛布局.svg`,
-                    professionalRoundaboutPlanSvg(channel.approaches, {
-                      size: 720,
-                      projectName: project.name,
-                    }),
-                  )
-                }
-              >
-                布局图
-              </button>
-              <button
-                type="button"
-                className="ghost"
-                onClick={() =>
-                  downloadText(
-                    `${project.name}-环岛布局.md`,
-                    roundaboutLayoutMarkdown(project.name, channel.approaches),
-                    'text/markdown',
-                  )
-                }
-              >
-                MD
-              </button>
-            </div>
-          </div>
-        ) : (
-          <p className="muted" style={{ fontSize: 12, margin: '8px 0' }}>
-            在上方选择进口道编辑参数
-          </p>
-        )}
+      <div className="rg-channel-form">
+        <p className="muted" style={{ fontSize: 12, margin: 8 }}>
+          请选择进口方向
+        </p>
       </div>
     )
   }
 
-  const ap = selected
   const id = ap.id
   const rt = ap.rightTurn
   const w = ap.widen
   const med = ap.median
   const si = rt.safetyIsland
+  const aux = ap.auxRoad ?? { enabled: false, widthM: 3.5, offsetM: 0, openNearM: 18 }
+  const rtOn = rt.enabled && rt.style !== 'none'
+  const bikeOn = ap.bikeEnabled
+  const auxOn = !!aux.enabled
+  const entryWidenOn = w.entryWidenCount > 0
+  const exitWidenOn = w.exitWidenCount > 0
 
   return (
-    <div className="flat-params rg-form channel-params-compact">
-      <div className="channel-params-head">
-        <b>{ap.name}</b>
-        {channelKpi ? (
-          <span className="channel-kpi-inline muted">
-            {channelKpi.legs}向 · 进{channelKpi.entryLanes}/出{channelKpi.exitLanes} · 右渠
-            {channelKpi.rtOn}
-          </span>
-        ) : null}
-      </div>
-
-      {/* 道路 + 开关 */}
-      <div className="rg-section">
-        <div className="rg-section-title">道路</div>
-        <table className="table table-dense prop-table">
-          <tbody>
-            <tr>
-              <th>路名</th>
-              <td colSpan={3}>
-                <input
-                  type="text"
-                  className="cell-text"
-                  value={ap.name}
-                  onChange={(e) => updateApproach(id, { name: e.target.value })}
-                />
-              </td>
-            </tr>
-            <tr>
-              <th>方位角 °</th>
-              <td>
-                <CellNum value={ap.bearingDeg} step={1} onChange={(n) => updateApproach(id, { bearingDeg: n })} />
-              </td>
-              <th>路段速度</th>
-              <td>
-                <CellNum
-                  value={ap.designSpeedKmh}
-                  min={20}
-                  max={80}
-                  onChange={(n) => updateApproach(id, { designSpeedKmh: n })}
-                />
-                <span className="rg-unit">km/h</span>
-              </td>
-            </tr>
-            <tr>
-              <th>人行宽 m</th>
-              <td>
-                <CellNum
-                  value={ap.sidewalkWidthM}
-                  min={0}
-                  step={0.1}
-                  onChange={(n) => updateApproach(id, { sidewalkWidthM: Math.max(0, n) })}
-                />
-              </td>
-              <th>非机宽 m</th>
-              <td>
-                <CellNum
-                  value={ap.bikeWidthM}
-                  min={0}
-                  step={0.1}
-                  onChange={(n) => updateApproach(id, { bikeWidthM: n, bikeEnabled: n > 0 })}
-                />
-              </td>
-            </tr>
-            <tr>
-              <th>中分</th>
-              <td>
-                <select
-                  value={med.style}
-                  onChange={(e) =>
-                    updateApproach(id, { median: { ...med, style: e.target.value as typeof med.style } })
+    <div className="rg-channel-form">
+      {/* 顶栏 */}
+      <div className="rg-form-top">
+        <Row
+          left={
+            <Field label="方向:">
+              <select
+                className="rg-select"
+                value={ap.id}
+                onChange={(e) => onSelectApproach?.(e.target.value)}
+              >
+                {approaches.map((a, i) => (
+                  <option key={a.id} value={a.id}>
+                    方向{i + 1}
+                    {a.name && a.name !== `方向${i + 1}` ? ` · ${a.name}` : ''}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          }
+          right={
+            <Field label="非机动车道:">
+              <span className="rg-btn-pair">
+                <button
+                  type="button"
+                  className={`rg-btn-accent ${bikeOn ? 'is-on' : ''}`}
+                  onClick={() =>
+                    updateApproach(id, {
+                      bikeEnabled: true,
+                      bikeWidthM: Math.max(ap.bikeWidthM || 2, 2),
+                    })
                   }
                 >
-                  <option value="doubleYellow">双黄线</option>
-                  <option value="singleYellow">单黄线</option>
-                  <option value="barrier">护栏</option>
-                  <option value="yellowHatch">黄斜线</option>
-                  <option value="greenBelt">绿化带</option>
-                  <option value="fishBelly">鱼腹式</option>
-                </select>
-              </td>
-              <th>中分宽 m</th>
-              <td>
-                <CellNum
-                  value={med.widthM}
-                  min={0}
-                  step={0.1}
-                  onChange={(n) => updateApproach(id, { median: { ...med, widthM: n } })}
-                />
-              </td>
-            </tr>
-            <tr>
-              <th>进口倾斜°</th>
-              <td>
-                <CellNum value={ap.tiltEntryDeg} step={1} onChange={(n) => updateApproach(id, { tiltEntryDeg: n })} />
-              </td>
-              <th>出口倾斜°</th>
-              <td>
-                <CellNum value={ap.tiltExitDeg} step={1} onChange={(n) => updateApproach(id, { tiltExitDeg: n })} />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <div className="rg-checks dense-checks">
+                  设置
+                </button>
+                <button
+                  type="button"
+                  className="rg-btn-muted"
+                  onClick={() => updateApproach(id, { bikeEnabled: false })}
+                >
+                  取消
+                </button>
+              </span>
+            </Field>
+          }
+        />
+        <Row
+          left={
+            <Field label="交叉口大小:">
+              <NumInput value={ixSize} min={1} max={20} step={0.5} onChange={setIxSize} />
+            </Field>
+          }
+          right={
+            <Field label="右转曲度:">
+              <span className="rg-inline">
+                <NumInput value={rtCurve} min={0.1} max={2} step={0.1} onChange={setRtCurve} />
+                <ResetLink onClick={() => setRtCurve(0.5)} />
+              </span>
+            </Field>
+          }
+        />
+      </div>
+
+      {/* 道路属性 */}
+      <section className="rg-sec">
+        <h3 className="rg-sec-title">道路属性</h3>
+        <Row
+          left={
+            <Field label="路名:">
+              <input
+                type="text"
+                className="rg-input is-highlight"
+                value={ap.name || dirLabel}
+                onChange={(e) => updateApproach(id, { name: e.target.value })}
+              />
+            </Field>
+          }
+          right={
+            <Field label="偏移量:">
+              <span className="rg-inline">
+                <NumInput value={approachOffset} step={0.1} onChange={setApproachOffset} />
+                <ResetLink onClick={() => setApproachOffset(0.5)} />
+              </span>
+            </Field>
+          }
+        />
+        <Row
+          left={
+            <Field label="穿越到:">
+              <select
+                className="rg-select"
+                value={crossTo}
+                onChange={(e) => setCrossTo(e.target.value as 'no' | 'yes')}
+              >
+                <option value="no">否</option>
+                <option value="yes">是</option>
+              </select>
+            </Field>
+          }
+          right={
+            <Field label="穿越方式:" disabled={crossTo === 'no'} info>
+              <select className="rg-select" disabled={crossTo === 'no'} defaultValue="none">
+                <option value="none">无</option>
+                <option value="mark">标线</option>
+              </select>
+            </Field>
+          }
+        />
+        <Row
+          left={
+            <Field label="人行道宽度:" unit="米">
+              <NumInput
+                value={ap.sidewalkWidthM}
+                min={0}
+                step={0.1}
+                onChange={(n) => updateApproach(id, { sidewalkWidthM: Math.max(0, n) })}
+              />
+            </Field>
+          }
+          right={
+            <Field label="路段速度:" unit="km/h">
+              <NumInput
+                value={ap.designSpeedKmh}
+                min={20}
+                max={80}
+                onChange={(n) => updateApproach(id, { designSpeedKmh: n })}
+              />
+            </Field>
+          }
+        />
+        <div className="rg-checks">
+          <label className="rg-check">
+            <input
+              type="checkbox"
+              checked={ap.sidewalkWidthM > 0}
+              onChange={(e) =>
+                updateApproach(id, {
+                  sidewalkWidthM: e.target.checked ? Math.max(ap.sidewalkWidthM, 2) : 0,
+                })
+              }
+            />
+            人行横道
+          </label>
           <label className="rg-check">
             <input
               type="checkbox"
@@ -266,197 +329,88 @@ export function ChannelWorkspace({
               checked={ap.redRightTurn}
               onChange={(e) => updateApproach(id, { redRightTurn: e.target.checked })}
             />
-            红灯右转
-          </label>
-          <label className="rg-check">
-            <input
-              type="checkbox"
-              checked={ap.bikeEnabled}
-              onChange={(e) => updateApproach(id, { bikeEnabled: e.target.checked })}
-            />
-            非机动车
+            红灯时右转
           </label>
         </div>
-        {ap.redRightTurn ? (
-          <table className="table table-dense prop-table">
-            <tbody>
-              <tr>
-                <th>红灯右转比</th>
-                <td>
-                  <CellNum
-                    value={ap.redRightTurnRatio}
-                    min={0}
-                    max={1}
-                    step={0.05}
-                    onChange={(n) => updateApproach(id, { redRightTurnRatio: n })}
-                  />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        ) : null}
-      </div>
+      </section>
 
-      {/* 进口 / 出口 一体表 */}
-      <div className="rg-section">
-        <div className="rg-section-title">进 / 出口</div>
-        <table className="table table-dense prop-table">
-          <thead>
-            <tr>
-              <th />
-              <th>进口</th>
-              <th>出口</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th>车道数</th>
-              <td>
-                <CellNum value={ap.entryLanes.length} min={1} max={8} onChange={(n) => setLaneCount(id, n)} />
-              </td>
-              <td>
-                <CellNum
-                  value={ap.exitLanes.length}
-                  min={1}
-                  max={8}
-                  onChange={(n) => setExitLaneCount?.(id, n)}
-                />
-              </td>
-            </tr>
-            <tr>
-              <th>车道宽 m</th>
-              <td>
-                <CellNum
-                  value={ap.entryLanes[0]?.widthM ?? 3.5}
-                  min={2.5}
-                  max={4.5}
-                  step={0.05}
-                  onChange={(n) => ap.entryLanes.forEach((_, i) => setLaneWidth(id, i, n))}
-                />
-              </td>
-              <td>
-                <CellNum
-                  value={ap.exitLanes[0]?.widthM ?? 3.5}
-                  min={2.5}
-                  max={4.5}
-                  step={0.05}
-                  onChange={(n) => {
-                    const lanes = ap.exitLanes.map((ln) => ({
-                      ...ln,
-                      widthM: Math.max(2.5, Math.min(4.5, n)),
-                    }))
-                    updateApproach(id, { exitLanes: lanes })
-                  }}
-                />
-              </td>
-            </tr>
-            <tr>
-              <th>展宽条数</th>
-              <td>
-                <CellNum
-                  value={w.entryWidenCount}
-                  min={0}
-                  max={4}
-                  onChange={(n) => updateApproach(id, { widen: { ...w, entryWidenCount: n } })}
-                />
-              </td>
-              <td>
-                <CellNum
-                  value={w.exitWidenCount}
-                  min={0}
-                  max={4}
-                  onChange={(n) => updateApproach(id, { widen: { ...w, exitWidenCount: n } })}
-                />
-              </td>
-            </tr>
-            <tr>
-              <th>展宽宽 m</th>
-              <td>
-                <CellNum
-                  value={w.entryWidenWidthM}
-                  min={0}
-                  step={0.1}
-                  onChange={(n) => updateApproach(id, { widen: { ...w, entryWidenWidthM: n } })}
-                />
-              </td>
-              <td>
-                <CellNum
-                  value={w.exitWidenWidthM}
-                  min={0}
-                  step={0.1}
-                  onChange={(n) => updateApproach(id, { widen: { ...w, exitWidenWidthM: n } })}
-                />
-              </td>
-            </tr>
-            <tr>
-              <th>展宽长 m</th>
-              <td>
-                <CellNum
-                  value={w.entryWidenLengthM}
-                  min={0}
-                  onChange={(n) => updateApproach(id, { widen: { ...w, entryWidenLengthM: n } })}
-                />
-              </td>
-              <td>
-                <CellNum
-                  value={w.exitWidenLengthM}
-                  min={0}
-                  onChange={(n) => updateApproach(id, { widen: { ...w, exitWidenLengthM: n } })}
-                />
-              </td>
-            </tr>
-            <tr>
-              <th>渐变长 m</th>
-              <td>
-                <CellNum
-                  value={w.entryTaperM}
-                  min={0}
-                  onChange={(n) => updateApproach(id, { widen: { ...w, entryTaperM: n } })}
-                />
-              </td>
-              <td>
-                <CellNum
-                  value={w.exitTaperM}
-                  min={0}
-                  onChange={(n) => updateApproach(id, { widen: { ...w, exitTaperM: n } })}
-                />
-              </td>
-            </tr>
-            <tr>
-              <th>内侧偏移 m</th>
-              <td colSpan={2}>
-                <CellNum
-                  value={w.innerOffsetM}
-                  step={0.1}
-                  onChange={(n) => updateApproach(id, { widen: { ...w, innerOffsetM: n } })}
-                />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      {/* 右转渠化参数（保留编辑，去掉审查大图） */}
-      <div className="rg-section">
-        <div className="rg-section-title">右转渠化</div>
-        <table className="table table-dense prop-table">
-          <tbody>
-            <tr>
-              <th>启用</th>
-              <td>
+      {/* 右转渠化 */}
+      <section className="rg-sec">
+        <h3 className="rg-sec-title">右转渠化</h3>
+        <Row
+          left={
+            <Field label="右转渠化:">
+              <select
+                className="rg-select"
+                value={rtOn ? 'yes' : 'no'}
+                onChange={(e) => {
+                  const on = e.target.value === 'yes'
+                  updateApproach(id, {
+                    rightTurn: {
+                      ...rt,
+                      enabled: on,
+                      style: on ? (rt.style === 'none' ? 'solid' : rt.style) : 'none',
+                    },
+                  })
+                }}
+              >
+                <option value="no">否</option>
+                <option value="yes">是</option>
+              </select>
+            </Field>
+          }
+          right={
+            <Field label="右转单独入口:" unit="个" info>
+              <select
+                className="rg-select"
+                value={rt.separateEntry ? 1 : 0}
+                onChange={(e) =>
+                  updateApproach(id, {
+                    rightTurn: { ...rt, separateEntry: Number(e.target.value) > 0 },
+                  })
+                }
+              >
+                <option value={0}>0</option>
+                <option value={1}>1</option>
+              </select>
+            </Field>
+          }
+        />
+        <Row
+          left={
+            <Field label="出入口宽度:" unit="米" disabled={!rtOn} info>
+              <NumInput
+                value={rt.widthM}
+                min={1}
+                step={0.1}
+                disabled={!rtOn}
+                onChange={(n) => updateApproach(id, { rightTurn: { ...rt, widthM: n } })}
+              />
+            </Field>
+          }
+          right={
+            <Field label="右转单独出口:" unit="个" info>
+              <select
+                className="rg-select"
+                value={rt.separateExit ? 1 : 0}
+                onChange={(e) =>
+                  updateApproach(id, {
+                    rightTurn: { ...rt, separateExit: Number(e.target.value) > 0 },
+                  })
+                }
+              >
+                <option value={0}>0</option>
+                <option value={1}>1</option>
+              </select>
+            </Field>
+          }
+        />
+        {rtOn ? (
+          <Row
+            left={
+              <Field label="渠化样式:">
                 <select
-                  value={rt.enabled ? 'yes' : 'no'}
-                  onChange={(e) =>
-                    updateApproach(id, { rightTurn: { ...rt, enabled: e.target.value === 'yes' } })
-                  }
-                >
-                  <option value="no">否</option>
-                  <option value="yes">是</option>
-                </select>
-              </td>
-              <th>样式</th>
-              <td>
-                <select
+                  className="rg-select"
                   value={rt.style}
                   onChange={(e) =>
                     updateApproach(id, {
@@ -464,205 +418,571 @@ export function ChannelWorkspace({
                     })
                   }
                 >
-                  <option value="solid">实体岛</option>
+                  <option value="solid">实体导流岛</option>
                   <option value="painted">标线岛</option>
                   <option value="none">无</option>
                 </select>
-              </td>
-            </tr>
-            <tr>
-              <th>半径 m</th>
-              <td>
-                <CellNum
+              </Field>
+            }
+            right={
+              <Field label="右转半径:" unit="米">
+                <NumInput
                   value={rt.radiusM}
                   min={6}
                   step={0.5}
                   onChange={(n) => updateApproach(id, { rightTurn: { ...rt, radiusM: n } })}
                 />
-              </td>
-              <th>道宽 m</th>
-              <td>
-                <CellNum
-                  value={rt.channelWidthM ?? rt.widthM}
-                  min={3}
-                  step={0.1}
-                  onChange={(n) => updateApproach(id, { rightTurn: { ...rt, channelWidthM: n } })}
-                />
-              </td>
-            </tr>
-            <tr>
-              <th>口宽 m</th>
-              <td>
-                <CellNum
-                  value={rt.widthM}
-                  min={1}
-                  step={0.1}
-                  onChange={(n) => updateApproach(id, { rightTurn: { ...rt, widthM: n } })}
-                />
-              </td>
-              <th>岛偏 m</th>
-              <td>
-                <CellNum
-                  value={rt.islandOffsetM ?? 0}
-                  step={0.2}
-                  onChange={(n) => updateApproach(id, { rightTurn: { ...rt, islandOffsetM: n } })}
-                />
-              </td>
-            </tr>
-            <tr>
-              <th>安全岛</th>
-              <td>
-                <input
-                  type="checkbox"
-                  checked={si?.enabled ?? false}
-                  onChange={(e) =>
-                    updateApproach(id, {
-                      rightTurn: {
-                        ...rt,
-                        safetyIsland: {
-                          enabled: e.target.checked,
-                          surface: si?.surface ?? 'raised',
-                          radiusM: si?.radiusM ?? 3.5,
-                          setbackM: si?.setbackM ?? 1.5,
-                          showYield: si?.showYield ?? true,
-                          label: si?.label ?? '安全岛',
-                        },
-                      },
-                    })
-                  }
-                />
-              </td>
-              <th>岛半径/退距</th>
-              <td className="cell-pair">
-                <CellNum
-                  value={si?.radiusM ?? 3.5}
-                  min={1}
-                  step={0.1}
-                  onChange={(n) =>
-                    updateApproach(id, {
-                      rightTurn: {
-                        ...rt,
-                        safetyIsland: {
-                          enabled: si?.enabled ?? true,
-                          surface: si?.surface ?? 'raised',
-                          radiusM: n,
-                          setbackM: si?.setbackM ?? 1.5,
-                          showYield: si?.showYield ?? true,
-                          label: si?.label ?? '安全岛',
-                        },
-                      },
-                    })
-                  }
-                />
-                <CellNum
-                  value={si?.setbackM ?? 1.5}
-                  min={0}
-                  step={0.1}
-                  onChange={(n) =>
-                    updateApproach(id, {
-                      rightTurn: {
-                        ...rt,
-                        safetyIsland: {
-                          enabled: si?.enabled ?? true,
-                          surface: si?.surface ?? 'raised',
-                          radiusM: si?.radiusM ?? 3.5,
-                          setbackM: n,
-                          showYield: si?.showYield ?? true,
-                          label: si?.label ?? '安全岛',
-                        },
-                      },
-                    })
-                  }
-                />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+              </Field>
+            }
+          />
+        ) : null}
+      </section>
 
-      {/* 辅路 */}
-      <div className="rg-section">
-        <div className="rg-section-title">辅路</div>
-        <table className="table table-dense prop-table">
-          <tbody>
-            <tr>
-              <th>启用</th>
-              <td>
-                <input
-                  type="checkbox"
-                  checked={!!ap.auxRoad?.enabled}
-                  onChange={(e) =>
-                    updateApproach(id, {
-                      auxRoad: {
-                        enabled: e.target.checked,
-                        widthM: ap.auxRoad?.widthM ?? 5.5,
-                        offsetM: ap.auxRoad?.offsetM ?? 1,
-                        openNearM: ap.auxRoad?.openNearM ?? 18,
-                      },
-                    })
-                  }
-                />
-              </td>
-              <th>宽/偏/开口 m</th>
-              <td className="cell-pair">
-                <CellNum
-                  value={ap.auxRoad?.widthM ?? 5.5}
-                  min={3}
-                  step={0.1}
-                  onChange={(n) =>
-                    updateApproach(id, {
-                      auxRoad: {
-                        enabled: ap.auxRoad?.enabled ?? true,
-                        widthM: n,
-                        offsetM: ap.auxRoad?.offsetM ?? 1,
-                        openNearM: ap.auxRoad?.openNearM ?? 18,
-                      },
-                    })
-                  }
-                />
-                <CellNum
-                  value={ap.auxRoad?.offsetM ?? 1}
-                  min={0}
-                  step={0.1}
-                  onChange={(n) =>
-                    updateApproach(id, {
-                      auxRoad: {
-                        enabled: ap.auxRoad?.enabled ?? true,
-                        widthM: ap.auxRoad?.widthM ?? 5.5,
-                        offsetM: n,
-                        openNearM: ap.auxRoad?.openNearM ?? 18,
-                      },
-                    })
-                  }
-                />
-                <CellNum
-                  value={ap.auxRoad?.openNearM ?? 18}
-                  min={5}
-                  onChange={(n) =>
-                    updateApproach(id, {
-                      auxRoad: {
-                        enabled: ap.auxRoad?.enabled ?? true,
-                        widthM: ap.auxRoad?.widthM ?? 5.5,
-                        offsetM: ap.auxRoad?.offsetM ?? 1,
-                        openNearM: n,
-                      },
-                    })
-                  }
-                />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      {/* 进口属性 */}
+      <section className="rg-sec">
+        <h3 className="rg-sec-title">进口属性</h3>
+        <Row
+          left={
+            <Field label="进口车道:" unit="个">
+              <select
+                className="rg-select"
+                value={ap.entryLanes.length}
+                onChange={(e) => setLaneCount(id, Number(e.target.value))}
+              >
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          }
+          right={
+            <Field label="车道宽度:" unit="米">
+              <NumInput
+                value={ap.entryLanes[0]?.widthM ?? 3.5}
+                min={2.5}
+                max={4.5}
+                step={0.05}
+                onChange={(n) => ap.entryLanes.forEach((_, i) => setLaneWidth(id, i, n))}
+              />
+            </Field>
+          }
+        />
+        <Row
+          left={
+            <Field label="进口展宽:" unit="个">
+              <select
+                className="rg-select"
+                value={entryWidenOn ? w.entryWidenCount : 0}
+                onChange={(e) => {
+                  const n = Number(e.target.value)
+                  updateApproach(id, {
+                    widen: { ...w, entryWidenCount: n },
+                  })
+                }}
+              >
+                {[0, 1, 2, 3, 4].map((n) => (
+                  <option key={n} value={n}>
+                    {n === 0 ? '否' : n}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          }
+          right={
+            <Field label="展宽车道宽度:" unit="米" disabled={!entryWidenOn} info>
+              <NumInput
+                value={w.entryWidenWidthM}
+                min={0}
+                step={0.1}
+                disabled={!entryWidenOn}
+                onChange={(n) => updateApproach(id, { widen: { ...w, entryWidenWidthM: n } })}
+              />
+            </Field>
+          }
+        />
+        <Row
+          left={
+            <Field label="展宽段长:" unit="米">
+              <NumInput
+                value={w.entryWidenLengthM}
+                min={0}
+                onChange={(n) => updateApproach(id, { widen: { ...w, entryWidenLengthM: n } })}
+              />
+            </Field>
+          }
+          right={
+            <Field label="外侧渐变段长:" unit="米">
+              <NumInput
+                value={w.entryTaperM}
+                min={0}
+                onChange={(n) => updateApproach(id, { widen: { ...w, entryTaperM: n } })}
+              />
+            </Field>
+          }
+        />
+        <Row
+          left={
+            <Field label="内侧偏移:" unit="米">
+              <NumInput
+                value={w.innerOffsetM}
+                step={0.1}
+                onChange={(n) => updateApproach(id, { widen: { ...w, innerOffsetM: n } })}
+              />
+            </Field>
+          }
+          right={
+            <Field label="内侧渐变段长:" unit="米">
+              <NumInput
+                value={w.entryTaperM}
+                min={0}
+                onChange={(n) => updateApproach(id, { widen: { ...w, entryTaperM: n } })}
+              />
+            </Field>
+          }
+        />
+      </section>
 
-      {/* 分车道 */}
-      <div className="rg-section">
-        <div className="rg-section-title">分车道</div>
-        <table className="table table-dense prop-table">
+      {/* 出口属性 */}
+      <section className="rg-sec">
+        <h3 className="rg-sec-title">出口属性</h3>
+        <Row
+          left={
+            <Field label="出口车道:" unit="个">
+              <select
+                className="rg-select"
+                value={ap.exitLanes.length}
+                onChange={(e) => setExitLaneCount?.(id, Number(e.target.value))}
+              >
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          }
+          right={
+            <Field label="车道宽度:" unit="米">
+              <NumInput
+                value={ap.exitLanes[0]?.widthM ?? 3.5}
+                min={2.5}
+                max={4.5}
+                step={0.05}
+                onChange={(n) => {
+                  const lanes = ap.exitLanes.map((ln) => ({
+                    ...ln,
+                    widthM: Math.max(2.5, Math.min(4.5, n)),
+                  }))
+                  updateApproach(id, { exitLanes: lanes })
+                }}
+              />
+            </Field>
+          }
+        />
+        <Row
+          left={
+            <Field label="出口展宽:" unit="个">
+              <select
+                className="rg-select"
+                value={exitWidenOn ? w.exitWidenCount : 0}
+                onChange={(e) =>
+                  updateApproach(id, {
+                    widen: { ...w, exitWidenCount: Number(e.target.value) },
+                  })
+                }
+              >
+                {[0, 1, 2, 3, 4].map((n) => (
+                  <option key={n} value={n}>
+                    {n === 0 ? '否' : n}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          }
+          right={
+            <Field label="展宽车道宽度:" unit="米" disabled={!exitWidenOn} info>
+              <NumInput
+                value={w.exitWidenWidthM}
+                min={0}
+                step={0.1}
+                disabled={!exitWidenOn}
+                onChange={(n) => updateApproach(id, { widen: { ...w, exitWidenWidthM: n } })}
+              />
+            </Field>
+          }
+        />
+        <Row
+          left={
+            <Field label="展宽段长:" unit="米">
+              <NumInput
+                value={w.exitWidenLengthM}
+                min={0}
+                onChange={(n) => updateApproach(id, { widen: { ...w, exitWidenLengthM: n } })}
+              />
+            </Field>
+          }
+          right={
+            <Field label="渐变段长:" unit="米">
+              <NumInput
+                value={w.exitTaperM}
+                min={0}
+                onChange={(n) => updateApproach(id, { widen: { ...w, exitTaperM: n } })}
+              />
+            </Field>
+          }
+        />
+      </section>
+
+      {/* 中央隔离 */}
+      <section className="rg-sec">
+        <h3 className="rg-sec-title">中央隔离</h3>
+        <Row
+          left={
+            <Field label="分割形式:">
+              <select
+                className="rg-select"
+                value={med.style}
+                onChange={(e) =>
+                  updateApproach(id, {
+                    median: { ...med, style: e.target.value as typeof med.style },
+                  })
+                }
+              >
+                <option value="doubleYellow">双黄线</option>
+                <option value="singleYellow">单黄线</option>
+                <option value="barrier">护栏</option>
+                <option value="yellowHatch">黄斜线</option>
+                <option value="greenBelt">绿化带</option>
+                <option value="fishBelly">鱼腹式</option>
+              </select>
+            </Field>
+          }
+          right={
+            <Field label="分割带宽:" unit="米" info>
+              <NumInput
+                value={med.widthM}
+                min={0}
+                step={0.1}
+                onChange={(n) => updateApproach(id, { median: { ...med, widthM: n } })}
+              />
+            </Field>
+          }
+        />
+        <Row
+          left={
+            <Field label="安全岛:">
+              <select
+                className="rg-select"
+                value={si?.enabled ? 'yes' : 'no'}
+                onChange={(e) =>
+                  updateApproach(id, {
+                    rightTurn: {
+                      ...rt,
+                      safetyIsland: {
+                        enabled: e.target.value === 'yes',
+                        surface: si?.surface ?? 'raised',
+                        radiusM: si?.radiusM ?? 3.5,
+                        setbackM: si?.setbackM ?? 1.5,
+                        showYield: si?.showYield ?? true,
+                        label: si?.label ?? '安全岛',
+                      },
+                    },
+                  })
+                }
+              >
+                <option value="no">否</option>
+                <option value="yes">是</option>
+              </select>
+            </Field>
+          }
+          right={
+            <Field label="提前掉头:">
+              <select className="rg-select" defaultValue="no" disabled title="示意项，暂无域写入">
+                <option value="no">否</option>
+                <option value="yes">是</option>
+              </select>
+            </Field>
+          }
+        />
+      </section>
+
+      {/* 非机动车道 */}
+      <section className="rg-sec">
+        <h3 className="rg-sec-title">非机动车道</h3>
+        <Row
+          left={
+            <Field label="进口:">
+              <select
+                className="rg-select"
+                value={bikeOn ? 'yes' : 'no'}
+                onChange={(e) =>
+                  updateApproach(id, {
+                    bikeEnabled: e.target.value === 'yes',
+                    bikeWidthM: e.target.value === 'yes' ? Math.max(ap.bikeWidthM, 2) : ap.bikeWidthM,
+                  })
+                }
+              >
+                <option value="no">否</option>
+                <option value="yes">是</option>
+              </select>
+            </Field>
+          }
+          right={
+            <Field label="出口:">
+              <select
+                className="rg-select"
+                value={bikeOn ? 'yes' : 'no'}
+                onChange={(e) =>
+                  updateApproach(id, {
+                    bikeEnabled: e.target.value === 'yes',
+                    bikeWidthM: e.target.value === 'yes' ? Math.max(ap.bikeWidthM, 2) : ap.bikeWidthM,
+                  })
+                }
+              >
+                <option value="no">否</option>
+                <option value="yes">是</option>
+              </select>
+            </Field>
+          }
+        />
+        <Row
+          left={
+            <Field label="车道宽度:" unit="米" disabled={!bikeOn}>
+              <NumInput
+                value={ap.bikeWidthM || 2}
+                min={1}
+                step={0.1}
+                disabled={!bikeOn}
+                onChange={(n) => updateApproach(id, { bikeWidthM: n, bikeEnabled: n > 0 })}
+              />
+            </Field>
+          }
+          right={
+            <Field label="车道宽度:" unit="米" disabled={!bikeOn}>
+              <NumInput
+                value={ap.bikeWidthM || 2}
+                min={1}
+                step={0.1}
+                disabled={!bikeOn}
+                onChange={(n) => updateApproach(id, { bikeWidthM: n, bikeEnabled: n > 0 })}
+              />
+            </Field>
+          }
+        />
+        <Row
+          left={
+            <Field label="分割形式:" disabled={!bikeOn}>
+              <select className="rg-select" disabled={!bikeOn} defaultValue="line">
+                <option value="line">划线</option>
+                <option value="curb">路缘</option>
+              </select>
+            </Field>
+          }
+          right={
+            <Field label="分割形式:" disabled={!bikeOn}>
+              <select className="rg-select" disabled={!bikeOn} defaultValue="line">
+                <option value="line">划线</option>
+                <option value="curb">路缘</option>
+              </select>
+            </Field>
+          }
+        />
+        <Row
+          left={
+            <Field label="分割带宽:" unit="米" disabled={!bikeOn} info>
+              <NumInput value={0} disabled={!bikeOn} onChange={() => undefined} />
+            </Field>
+          }
+          right={
+            <Field label="分割带宽:" unit="米" disabled={!bikeOn} info>
+              <NumInput value={0} disabled={!bikeOn} onChange={() => undefined} />
+            </Field>
+          }
+        />
+      </section>
+
+      {/* 辅路属性 */}
+      <section className="rg-sec">
+        <button type="button" className="rg-sec-title rg-sec-toggle" onClick={() => setAuxOpen((v) => !v)}>
+          辅路属性 <span className="rg-caret">{auxOpen ? '▲' : '▼'}</span>
+        </button>
+        {auxOpen ? (
+          <>
+            <Row
+              left={
+                <Field label="进口辅道:" unit="个">
+                  <select
+                    className="rg-select"
+                    value={auxOn ? 1 : 0}
+                    onChange={(e) =>
+                      updateApproach(id, {
+                        auxRoad: {
+                          enabled: Number(e.target.value) > 0,
+                          widthM: aux.widthM || 3.5,
+                          offsetM: aux.offsetM ?? 0,
+                          openNearM: aux.openNearM ?? 18,
+                        },
+                      })
+                    }
+                  >
+                    <option value={0}>0</option>
+                    <option value={1}>1</option>
+                  </select>
+                </Field>
+              }
+              right={
+                <Field label="出口辅道:" unit="个">
+                  <select
+                    className="rg-select"
+                    value={auxOn ? 1 : 0}
+                    onChange={(e) =>
+                      updateApproach(id, {
+                        auxRoad: {
+                          enabled: Number(e.target.value) > 0,
+                          widthM: aux.widthM || 3.5,
+                          offsetM: aux.offsetM ?? 0,
+                          openNearM: aux.openNearM ?? 18,
+                        },
+                      })
+                    }
+                  >
+                    <option value={0}>0</option>
+                    <option value={1}>1</option>
+                  </select>
+                </Field>
+              }
+            />
+            <Row
+              left={
+                <Field label="车道宽度:" unit="米" disabled={!auxOn}>
+                  <NumInput
+                    value={aux.widthM || 3.5}
+                    min={3}
+                    step={0.1}
+                    disabled={!auxOn}
+                    onChange={(n) =>
+                      updateApproach(id, {
+                        auxRoad: { ...aux, enabled: true, widthM: n },
+                      })
+                    }
+                  />
+                </Field>
+              }
+              right={
+                <Field label="车道宽度:" unit="米" disabled={!auxOn}>
+                  <NumInput
+                    value={aux.widthM || 3.5}
+                    min={3}
+                    step={0.1}
+                    disabled={!auxOn}
+                    onChange={(n) =>
+                      updateApproach(id, {
+                        auxRoad: { ...aux, enabled: true, widthM: n },
+                      })
+                    }
+                  />
+                </Field>
+              }
+            />
+            <Row
+              left={
+                <Field label="分割形式:" disabled={!auxOn}>
+                  <select className="rg-select" disabled={!auxOn} defaultValue="line">
+                    <option value="line">划线</option>
+                  </select>
+                </Field>
+              }
+              right={
+                <Field label="分割形式:" disabled={!auxOn}>
+                  <select className="rg-select" disabled={!auxOn} defaultValue="line">
+                    <option value="line">划线</option>
+                  </select>
+                </Field>
+              }
+            />
+            <Row
+              left={
+                <Field label="分割带宽:" unit="米" disabled={!auxOn} info>
+                  <NumInput value={0} disabled={!auxOn} onChange={() => undefined} />
+                </Field>
+              }
+              right={
+                <Field label="分割带宽:" unit="米" disabled={!auxOn} info>
+                  <NumInput value={0} disabled={!auxOn} onChange={() => undefined} />
+                </Field>
+              }
+            />
+          </>
+        ) : null}
+      </section>
+
+      {/* 更多属性 */}
+      <section className="rg-sec">
+        <button type="button" className="rg-sec-title rg-sec-toggle" onClick={() => setMoreOpen((v) => !v)}>
+          更多属性 <span className="rg-caret">{moreOpen ? '▲' : '▼'}</span>
+        </button>
+        {moreOpen ? (
+          <>
+            <Row
+              left={
+                <Field label="进口倾斜:">
+                  <span className="rg-inline">
+                    <NumInput
+                      value={ap.tiltEntryDeg}
+                      step={1}
+                      onChange={(n) => updateApproach(id, { tiltEntryDeg: n })}
+                    />
+                    <ResetLink onClick={() => updateApproach(id, { tiltEntryDeg: 0 })} />
+                  </span>
+                </Field>
+              }
+              right={
+                <Field label="左转角度范围:" unit="度" info>
+                  <NumInput value={leftTurnRange} min={90} max={180} onChange={setLeftTurnRange} />
+                </Field>
+              }
+            />
+            <Row
+              left={
+                <Field label="出口倾斜:">
+                  <span className="rg-inline">
+                    <NumInput
+                      value={ap.tiltExitDeg}
+                      step={1}
+                      onChange={(n) => updateApproach(id, { tiltExitDeg: n })}
+                    />
+                    <ResetLink onClick={() => updateApproach(id, { tiltExitDeg: 0 })} />
+                  </span>
+                </Field>
+              }
+              right={
+                <Field label="右转角度范围:" unit="度" info>
+                  <NumInput value={rightTurnRange} min={90} max={180} onChange={setRightTurnRange} />
+                </Field>
+              }
+            />
+            <label className="rg-check rg-check-block">
+              <input
+                type="checkbox"
+                checked={showAngleGuides}
+                onChange={(e) => setShowAngleGuides(e.target.checked)}
+              />
+              显示左右转角度辅助线
+            </label>
+          </>
+        ) : null}
+      </section>
+
+      {/* 分车道明细 — 原版侧栏后的工程明细，紧凑保留 */}
+      <section className="rg-sec">
+        <h3 className="rg-sec-title">分车道明细</h3>
+        <table className="table table-dense rg-lane-table">
           <thead>
             <tr>
               <th>#</th>
-              <th>宽 m</th>
+              <th>宽m</th>
               <th>ULTR</th>
               <th>可变</th>
               <th />
@@ -673,7 +993,7 @@ export function ChannelWorkspace({
               <tr key={ln.id}>
                 <td>{i + 1}</td>
                 <td>
-                  <CellNum
+                  <NumInput
                     value={ln.widthM}
                     step={0.05}
                     min={2.5}
@@ -683,7 +1003,7 @@ export function ChannelWorkspace({
                 </td>
                 <td>
                   <input
-                    className="cell-text cell-text--narrow"
+                    className="rg-input rg-input--narrow"
                     value={ln.movements.join('')}
                     onChange={(e) => {
                       const raw = e.target.value.toUpperCase().replace(/[^ULTR]/g, '')
@@ -711,7 +1031,7 @@ export function ChannelWorkspace({
           </tbody>
         </table>
         {ap.laneGroups.length > 0 ? (
-          <table className="table table-dense prop-table" style={{ marginTop: 4 }}>
+          <table className="table table-dense rg-lane-table" style={{ marginTop: 4 }}>
             <thead>
               <tr>
                 <th>组</th>
@@ -743,7 +1063,7 @@ export function ChannelWorkspace({
             </tbody>
           </table>
         ) : null}
-      </div>
+      </section>
     </div>
   )
 }

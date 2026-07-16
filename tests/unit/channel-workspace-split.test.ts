@@ -11,7 +11,7 @@ describe('maintainability v0.5.40', () => {
     expect(cwText).toContain('export function ChannelWorkspace')
     expect(cwText).not.toContain('纬度')
     expect(cwText).toContain('右转渠化')
-    expect(cwText).toContain('分车道')
+    expect(cwText).toContain('分车道明细')
     expect(appText).toContain('ChannelWorkspace')
     expect(appText).toContain('setLaneVariable={setLaneVariable}')
   })

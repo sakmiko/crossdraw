@@ -21,7 +21,7 @@ describe('v0.5.95 flat layout + ped/roundabout', () => {
     ]) {
       const t = readFileSync(resolve(__dirname, `../../src/ui/layout/${name}`), 'utf8')
       expect(t).not.toMatch(/<details\b/)
-      expect(t).toMatch(/flat-params|flat-block|flat-section|rg-section/)
+      expect(t).toMatch(/flat-params|flat-block|flat-section|rg-section|rg-channel-form|rg-sec/)
     }
     const css = readFileSync(resolve(__dirname, '../../src/ui/styles.css'), 'utf8')
     expect(css).toContain('v0.5.100 unified page-fill layout system')

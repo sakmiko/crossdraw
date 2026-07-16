@@ -1,3 +1,10 @@
+## 0.5.133 — RoadGee-style channel form
+
+- Channel right params rebuilt to reference product: red section titles, two-column rows, disabled gray fields.
+- Sections: 道路属性 / 右转渠化 / 进口 / 出口 / 中央隔离 / 非机动车 / 辅路 / 更多 + 分车道明细.
+- Direction switcher + 非机动车 设置/取消; no draft/review boards.
+- Honesty: cosmetic fields (交叉口大小/曲度/角度辅助) UI-only unless domain-backed.
+
 ## 0.5.132 — Channel params compact (cut draft/review boards)
 
 - Remove 渠化出图稿 / 右转渠化审查 boards from right params (export center still has draft/right-turn if cataloged).

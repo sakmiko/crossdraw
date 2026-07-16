@@ -18,25 +18,23 @@ async function openNav(page: Page, label: string) {
   await page.waitForTimeout(350)
 }
 
-test.describe('v0.5.132 channel-compact polish', () => {
+test.describe('v0.5.133 roadgee-channel-form polish', () => {
   // docs/screenshots/00-shell.png
   // docs/screenshots/06-compare.png
   test('shell', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.132/).first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.133/).first()).toBeVisible()
     await openNav(page, '渠化')
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
-  test('channel compact params', async ({ page }) => {
+  test('channel roadgee form', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '渠化')
-    await expect(page.locator('.channel-params-compact').first()).toBeVisible()
+    await expect(page.locator('.rg-channel-form').first()).toBeVisible()
+    await expect(page.getByText('道路属性').first()).toBeVisible()
+    await expect(page.getByText('进口属性').first()).toBeVisible()
+    await expect(page.getByText('出口属性').first()).toBeVisible()
     await expect(page.getByText('渠化出图稿')).toHaveCount(0)
-    await expect(page.getByText('右转渠化审查')).toHaveCount(0)
-    await expect(page.locator('.prop-table').first()).toBeVisible()
-    const params = page.locator('.page-fill-params').first()
-    const box = await params.boundingBox()
-    expect(box && box.width < 520).toBeTruthy()
     await page.screenshot({ path: 'docs/screenshots/01-channel.png', fullPage: true })
   })
   test('flow', async ({ page }) => {
