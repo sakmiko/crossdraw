@@ -1,7 +1,7 @@
 /**
  * Interactive ECharts option builders — homology with AnalysisResult / cycle scan.
  */
-import type { AnalysisResult, Approach, FlowScheme } from '@/domain/types'
+import type { AnalysisResult, Approach, FlowScheme, SignalScheme } from '@/domain/types'
 import { buildFlowAlignment, type FlowDisplayMode } from '@/domain/flow/flowAlign'
 import type { EChartsCoreOption } from 'echarts/core'
 
@@ -156,6 +156,68 @@ export function flowLtrOption(
       { name: 'L', type: 'bar', stack: 'ltr', data: pick('L'), itemStyle: { color: '#0891b2' }, barMaxWidth: 28 },
       { name: 'T', type: 'bar', stack: 'ltr', data: pick('T'), itemStyle: { color: '#2563eb' }, barMaxWidth: 28 },
       { name: 'R', type: 'bar', stack: 'ltr', data: pick('R'), itemStyle: { color: '#7c3aed' }, barMaxWidth: 28 },
+    ],
+  }
+}
+
+
+/** Stacked G/Y/AR bars per phase — axis sum vs cycle C (homology timing). */
+export function phaseTimingOption(signal: SignalScheme): EChartsCoreOption {
+  const phases = signal.phases.filter((p) => !p.isOverlap)
+  const names = phases.map((p) => p.name)
+  const greens = phases.map((p) => p.greenSec)
+  const yellows = phases.map((p) => p.yellowSec)
+  const allReds = phases.map((p) => p.allRedSec)
+  const sums = phases.map((p) => p.greenSec + p.yellowSec + p.allRedSec)
+  const C = Math.max(1, signal.cycleSec)
+  const mainSum = sums.reduce((a, b) => a + b, 0)
+  return {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      formatter: (params: unknown) => {
+        const items = Array.isArray(params) ? params : [params as Record<string, unknown>]
+        const idx = (items[0] as { dataIndex?: number })?.dataIndex ?? 0
+        const p = phases[idx]
+        if (!p) return ''
+        const s = p.greenSec + p.yellowSec + p.allRedSec
+        return `${p.name}<br/>G ${p.greenSec}s · Y ${p.yellowSec}s · AR ${p.allRedSec}s · Σ ${s}s`
+      },
+    },
+    legend: { data: ['绿', '黄', '全红'], top: 0, textStyle: { fontSize: 11 } },
+    grid: { left: 48, right: 16, top: 28, bottom: 36 },
+    xAxis: { type: 'category', data: names, axisLabel: { fontSize: 10, rotate: names.length > 5 ? 24 : 0 } },
+    yAxis: {
+      type: 'value',
+      name: 's',
+      min: 0,
+      max: Math.max(C, ...sums, 1) * 1.05,
+    },
+    series: [
+      { name: '绿', type: 'bar', stack: 'ph', data: greens, itemStyle: { color: '#22c55e' }, barMaxWidth: 36 },
+      { name: '黄', type: 'bar', stack: 'ph', data: yellows, itemStyle: { color: '#eab308' }, barMaxWidth: 36 },
+      { name: '全红', type: 'bar', stack: 'ph', data: allReds, itemStyle: { color: '#ef4444' }, barMaxWidth: 36 },
+      {
+        name: 'C',
+        type: 'line',
+        data: names.map(() => C),
+        symbol: 'none',
+        lineStyle: { type: 'dashed', color: '#a855f7', width: 1.5 },
+        tooltip: { show: false },
+      },
+    ],
+    graphic: [
+      {
+        type: 'text',
+        right: 12,
+        top: 8,
+        style: {
+          text: `Σ主相 ${mainSum.toFixed(0)}s / C ${C}s`,
+          fill: Math.abs(mainSum - C) <= 1.5 ? '#22c55e' : '#f97316',
+          fontSize: 11,
+        },
+      },
     ],
   }
 }

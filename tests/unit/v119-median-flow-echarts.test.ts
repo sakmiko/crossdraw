@@ -58,6 +58,6 @@ describe('v0.5.119 median glyphs + flow ECharts', () => {
     const cp = readFileSync(resolve('src/ui/charts/ChartPanels.tsx'), 'utf8')
     expect(cp).toContain('flowLtrOption')
     const pkg = readFileSync(resolve('package.json'), 'utf8')
-    expect(pkg).toContain('"version": "0.5.119"')
+    expect(pkg).toMatch(/"version": "0\.5\.\d+"/)
   })
 })

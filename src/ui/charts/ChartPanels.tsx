@@ -44,7 +44,7 @@ import { professionalCrossSectionSvg, crossSectionShareSvg } from './crossSectio
 import { collectCorridorKpis, corridorKpiCompareSvg } from './bandCorridorCompare'
 import { chartColorsForTheme, themeSvg } from './chartTheme'
 import { EChart } from '@/ui/charts/EChart'
-import { vcDelayOption, flowLtrOption } from '@/ui/charts/interactiveBoards'
+import { vcDelayOption, flowLtrOption, phaseTimingOption } from '@/ui/charts/interactiveBoards'
 
 function useChartColors() {
   const theme = useAppStore((s) => s.theme)
@@ -278,9 +278,16 @@ export function SignalCharts({
     return themeSvg(conflictDiagramSvg(model, { width: 360, height: 300 }), colors)
   }, [approaches, signal, phaseId, colors])
 
+  const phaseOpt = useMemo(() => phaseTimingOption(signal), [signal])
+
   return (
     <div className="chart-card">
       <div className="chart-title">
+        <span>相位 G/Y/AR</span>
+        <small>ECharts · Σ≈C</small>
+      </div>
+      <EChart option={phaseOpt} style={{ height: 240 }} className="echart-host" />
+      <div className="chart-title" style={{ marginTop: 10 }}>
         <span>环栏</span>
         <small>轴 = C</small>
       </div>

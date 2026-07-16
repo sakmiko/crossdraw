@@ -3232,3 +3232,41 @@ button,
     grid-template-rows: minmax(220px, 40vh) minmax(0, 1fr) !important;
   }
 }
+
+
+/* v0.5.120 signal / params polish */
+.app.shell--signal .page-fill-params .rg-section-title {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--panel);
+  padding: 4px 0;
+}
+.app.shell--signal .table input[type='number'] {
+  width: var(--input-num, 5.5rem);
+  max-width: 6.5rem;
+}
+#signal-echarts,
+#flow-echarts,
+#analysis-echarts {
+  margin-top: 8px;
+}
+.echart-host {
+  min-height: 220px;
+}
+
+
+/* v0.5.120 signal polish */
+.app.shell--signal .page-fill-params .rg-section-title {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--panel);
+  padding: 4px 0;
+}
+.app.shell--signal .table input[type='number'] {
+  width: var(--input-num, 5.5rem);
+  max-width: 6.5rem;
+}
+#signal-echarts, #flow-echarts, #analysis-echarts { margin-top: 8px; }
+.echart-host { min-height: 220px; }

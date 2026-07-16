@@ -1,3 +1,9 @@
+## 0.5.120 — Phase G/Y/AR ECharts + signal params polish
+
+- `phaseTimingOption`: stacked green/yellow/all-red vs cycle C (main phases).
+- Signal workspace `#signal-echarts` + SignalCharts interactive board.
+- Sticky section titles / number input width on signal params.
+
 ## 0.5.119 — Median glyphs + interactive flow L/T/R
 
 - `placeMedianStrip` / `placeFishBellyMedian` in approach rebuild.

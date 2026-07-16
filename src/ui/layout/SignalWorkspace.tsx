@@ -30,6 +30,8 @@ import { releaseMatrixAlignsWithPhases } from '@/domain/signal/releaseAlign'
 import { allPhasesConflictHits } from '@/domain/signal/phaseConflictView'
 import { detectPedVehicleConflicts, pedVehicleSummary } from '@/domain/signal/pedVehicleConflict'
 import { SignalCharts, TimingCompareCharts } from '@/ui/charts/ChartPanels'
+import { EChart } from '@/ui/charts/EChart'
+import { phaseTimingOption } from '@/ui/charts/interactiveBoards'
 import { buildDualRingAlignment, dualRingSummaryText } from '@/domain/signal/dualRing'
 import { applyPedTimingToSignal } from '@/domain/signal/pedTiming'
 import {
@@ -1092,6 +1094,10 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
             dangerouslySetInnerHTML={{ __html: dualRingPhaseNumberSvg(signal, 360) }}
           />
         )}
+      <div className="rg-section" id="signal-echarts">
+        <div className="rg-section-title">交互相位 · G/Y/AR</div>
+        <EChart option={phaseTimingOption(signal)} style={{ height: 240 }} />
+      </div>
         <SignalCharts
         signal={signal}
         approaches={channel?.approaches}
