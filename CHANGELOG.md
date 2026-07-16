@@ -1,3 +1,8 @@
+## 0.5.134 — Channel form density
+
+- Horizontal label|control rows; 22px inputs; tighter section gaps.
+- Channel params column ~30%; less empty vertical space.
+
 ## 0.5.133 — RoadGee-style channel form
 
 - Channel right params rebuilt to reference product: red section titles, two-column rows, disabled gray fields.

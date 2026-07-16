@@ -18,12 +18,12 @@ async function openNav(page: Page, label: string) {
   await page.waitForTimeout(350)
 }
 
-test.describe('v0.5.133 roadgee-channel-form polish', () => {
+test.describe('v0.5.134 channel-density polish', () => {
   // docs/screenshots/00-shell.png
   // docs/screenshots/06-compare.png
   test('shell', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.133/).first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.134/).first()).toBeVisible()
     await openNav(page, '渠化')
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })

@@ -4261,3 +4261,112 @@ html[data-theme='dark'] .rg-sec-toggle {
     grid-template-columns: minmax(0, 1fr) minmax(300px, 34%) !important;
   }
 }
+
+
+/* ========== v0.5.134 channel form density (horizontal labels, tight gaps) ========== */
+.rg-channel-form {
+  padding: 4px 6px 10px !important;
+  font-size: 11.5px !important;
+  line-height: 1.2 !important;
+}
+.rg-form-top {
+  margin-bottom: 2px !important;
+  padding-bottom: 2px !important;
+}
+.rg-sec {
+  margin-top: 4px !important;
+  padding-top: 0 !important;
+}
+.rg-sec-title,
+.rg-sec-toggle {
+  margin: 0 0 3px !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+}
+.rg-form-row {
+  grid-template-columns: 1fr 1fr !important;
+  gap: 2px 8px !important;
+  margin-bottom: 2px !important;
+  align-items: center !important;
+}
+/* label | control on ONE line — kills vertical empty air */
+.rg-field {
+  display: grid !important;
+  grid-template-columns: minmax(4.2rem, 38%) minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 2px 4px !important;
+  font-size: 11px !important;
+}
+.rg-field-label {
+  font-size: 11px !important;
+  color: var(--text-secondary, #475569);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rg-field-ctrl {
+  gap: 2px !important;
+  min-width: 0;
+}
+.rg-input,
+.rg-select {
+  height: 22px !important;
+  min-height: 22px !important;
+  padding: 0 4px !important;
+  font-size: 11px !important;
+  border-radius: 2px !important;
+}
+.rg-select {
+  padding-right: 18px !important;
+  background-position: right 4px center !important;
+}
+.rg-btn-accent,
+.rg-btn-muted {
+  height: 22px !important;
+  min-height: 22px !important;
+  padding: 0 8px !important;
+  font-size: 11px !important;
+}
+.rg-btn-pair {
+  gap: 4px !important;
+}
+.rg-unit {
+  font-size: 10px !important;
+}
+.rg-reset {
+  font-size: 10px !important;
+  padding: 0 1px !important;
+}
+.rg-info {
+  width: 12px !important;
+  height: 12px !important;
+  font-size: 9px !important;
+}
+.rg-checks {
+  gap: 2px 8px !important;
+  margin: 2px 0 1px !important;
+  padding: 0 !important;
+}
+.rg-check {
+  font-size: 11px !important;
+  gap: 2px !important;
+}
+.rg-check-block {
+  margin-top: 3px !important;
+}
+.rg-lane-table th,
+.rg-lane-table td {
+  padding: 1px 2px !important;
+}
+.rg-lane-table .rg-input {
+  height: 20px !important;
+  min-height: 20px !important;
+}
+@media (min-width: 1101px) {
+  .app.shell--channel .page-fill-body {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 30%) !important;
+  }
+}
+.app.shell--channel .page-fill-params {
+  padding: 0 !important;
+}
