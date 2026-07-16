@@ -49,6 +49,9 @@ export type ExportItemId =
   | 'timespace-hires-svg'
   | 'timespace-report-md'
   | 'timespace-report-csv'
+  | 'flow-report-hires-svg'
+  | 'flow-od-md'
+  | 'flow-od-csv'
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
@@ -67,6 +70,34 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'flow-report-hires-svg',
+    category: 'drawing',
+    title: '流量流向报告（高分辨率）',
+    format: 'SVG',
+    description: '飘带图 + OD 分向表 · 与流量表同源',
+    modes: ['flow'],
+    requires: ['channel', 'flow', 'flowAligned'],
+  },
+  {
+    id: 'flow-od-md',
+    category: 'data',
+    title: '流量 OD 简报',
+    format: 'MD',
+    description: '分向 L/T/R/U 表',
+    modes: ['flow'],
+    requires: ['channel', 'flow'],
+  },
+  {
+    id: 'flow-od-csv',
+    category: 'data',
+    title: '流量 OD CSV',
+    format: 'CSV',
+    description: '分向流量数据',
+    modes: ['flow'],
+    requires: ['channel', 'flow'],
+  },
+
   {
     id: 'timespace-hires-svg',
     category: 'band',

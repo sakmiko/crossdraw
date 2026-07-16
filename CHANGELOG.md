@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## 0.5.91 — 2026-07-16
+
+### 流量流向高分辨率报告
+- `professionalFlowReportSvg`：飘带图 + OD 分向表合图（与 flowAlign 同源）
+- 流量页：高分辨率流向报告 / OD MD / OD CSV；Σ LTR KPI
+- 导出中心：`flow-report-hires-svg` · `flow-od-md` · `flow-od-csv`
+- 中心流向图尺寸加大；分析页多页工程报告入口保持
+
+### 依据
+- 交叉口流量流向图教材表达；PHF/大车换算见 convertVolumes
+
+### 诚实边界
+- 非交通仿真 OD 矩阵估计；示意流向几何
+
+# CHANGELOG
+
 ## 0.5.90 — 2026-07-16
 
 ### 绿波时距图高分辨率深包

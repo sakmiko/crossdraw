@@ -72,6 +72,11 @@ import {
   timeSpaceDiagramSvg,
 } from '@/ui/charts/professionalDiagrams'
 import { roadgeeFlowDiagramSvg, DEFAULT_ROADGEE_FLOW_STYLE } from '@/ui/charts/roadgeeFlowDiagram'
+import {
+  professionalFlowReportSvg,
+  flowOdReportMarkdown,
+  flowOdReportCsv,
+} from '@/ui/charts/professionalFlowReport' 
 import { roadgeeAnalysisPlanSvg } from '@/ui/charts/roadgeeAnalysisPlan'
 import { unsignalizedPlanSvg, unsignalizedLegsCsv } from '@/ui/charts/unsignalizedPlan'
 import { schemeScorecardSvg, kpisFromCompareRows } from '@/ui/charts/schemeScorecard'
@@ -615,7 +620,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.90 · 绿波专页</span>
+          <span>Crossdraw v0.5.91 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -637,7 +642,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.90</span>
+            <span className="brand-ver">v0.5.91</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -929,7 +934,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.90</span>
+        <span>Crossdraw v0.5.91</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1051,7 +1056,38 @@ export default function App() {
             if (!channel || !flow) return
             exportSvgFile(
               `${project.name}-流量流向图.svg`,
-              roadgeeFlowDiagramSvg(channel.approaches, flow, { size: 640, mode: flowDisplayMode }),
+              roadgeeFlowDiagramSvg(channel.approaches, flow, {
+                size: 720,
+                mode: flowDisplayMode,
+                style: flowDiagramStyle,
+              }),
+            )
+          },
+          'flow-report-hires-svg': () => {
+            if (!channel || !flow) return
+            exportSvgFile(
+              `${project.name}-流量流向报告.svg`,
+              professionalFlowReportSvg(channel.approaches, flow, {
+                size: 900,
+                mode: flowDisplayMode,
+                style: flowDiagramStyle,
+              }),
+            )
+          },
+          'flow-od-md': () => {
+            if (!channel || !flow) return
+            downloadText(
+              `${project.name}-OD.md`,
+              flowOdReportMarkdown(project.name, channel.approaches, flow, flowDisplayMode),
+              'text/markdown',
+            )
+          },
+          'flow-od-csv': () => {
+            if (!channel || !flow) return
+            downloadText(
+              `${project.name}-OD.csv`,
+              flowOdReportCsv(channel.approaches, flow, flowDisplayMode),
+              'text/csv',
             )
           },
           'roadgee-plan-los': () => {

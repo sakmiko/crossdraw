@@ -16,6 +16,7 @@ import type {
 import type { CrossSection } from '@/domain/types'
 import { buildFlowAlignment, type FlowDisplayMode } from '@/domain/flow/flowAlign'
 import { roadgeeFlowDiagramSvg, type RoadGeeFlowStyle, DEFAULT_ROADGEE_FLOW_STYLE } from '@/ui/charts/roadgeeFlowDiagram'
+import { professionalFlowReportSvg } from '@/ui/charts/professionalFlowReport' 
 import { roadgeeSignalBoardSvg } from '@/ui/charts/roadgeeSignalBoard'
 import { roadgeeAnalysisPlanSvg, type AnalysisPlanMetric } from '@/ui/charts/roadgeeAnalysisPlan'
 import { unsignalizedPlanSvg } from '@/ui/charts/unsignalizedPlan'
