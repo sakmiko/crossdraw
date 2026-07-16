@@ -1,7 +1,9 @@
+import { roadgeeFlowDiagramSvg, DEFAULT_ROADGEE_FLOW_STYLE, type RoadGeeFlowStyle } from './roadgeeFlowDiagram'
 import { useMemo, useState } from 'react'
 import {
   controlMatrixSvg,
   flowMovementDiagramSvg,
+  // classic kept; RoadGee panel uses roadgeeFlowDiagram
   phaseFaceDiagramSvg,
   signalTimingDiagramSvg,
   timeSpaceDiagramSvg,
@@ -181,21 +183,71 @@ export function FlowDirectionPanel({
   mode?: FlowDisplayMode
 }) {
   const colors = useChartColors()
+  const [style, setStyle] = useState<RoadGeeFlowStyle>({ ...DEFAULT_ROADGEE_FLOW_STYLE })
   const align = useMemo(() => buildFlowAlignment(approaches, flow, mode), [approaches, flow, mode])
   const check = useMemo(() => flowChartsAlignWithTable(approaches, flow, mode), [approaches, flow, mode])
-  const svg = useMemo(
-    () => themeSvg(flowMovementDiagramSvg(align.diagramData, { size: 340 }), colors),
+  const svgRoadgee = useMemo(
+    () => roadgeeFlowDiagramSvg(approaches, flow, { size: 420, mode, style }),
+    [approaches, flow, mode, style],
+  )
+  const svgClassic = useMemo(
+    () => themeSvg(flowMovementDiagramSvg(align.diagramData, { size: 320 }), colors),
     [align, colors],
   )
+  const patch = (p: Partial<RoadGeeFlowStyle>) => setStyle((s) => ({ ...s, ...p }))
   return (
     <div className="chart-card">
       <div className="chart-title">
-        <span>流量流向箭头图</span>
+        <span>流量流向图</span>
         <small>
-          线宽∝流量 · {align.unit} · {check.ok ? '与表同源✓' : '同源异常'}
+          {align.unit} · {check.ok ? '与表同源✓' : '同源异常'} · 改表即改图
         </small>
       </div>
-      <div dangerouslySetInnerHTML={{ __html: svg }} />
+      <div className="field-row" style={{ flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
+        <label>
+          颜色方案
+          <select value={style.scheme} onChange={(e) => patch({ scheme: Number(e.target.value) as 1 | 2 | 3 })}>
+            <option value={1}>方案1</option>
+            <option value={2}>方案2</option>
+            <option value={3}>方案3</option>
+          </select>
+        </label>
+        <label>
+          粗细
+          <input type="number" step={0.1} min={0.5} max={3} value={style.thickness}
+            onChange={(e) => patch({ thickness: Number(e.target.value) })} />
+        </label>
+        <label>
+          字号Σ
+          <input type="number" min={10} max={24} value={style.font3}
+            onChange={(e) => patch({ font3: Number(e.target.value) })} />
+        </label>
+        <label>
+          间距
+          <input type="number" min={20} max={80} value={style.spacing}
+            onChange={(e) => patch({ spacing: Number(e.target.value) })} />
+        </label>
+        <button
+          type="button"
+          className="ghost"
+          onClick={() => {
+            const blob = new Blob([svgRoadgee], { type: 'image/svg+xml' })
+            const a = document.createElement('a')
+            a.href = URL.createObjectURL(blob)
+            a.download = 'crossdraw-流量流向图.svg'
+            a.click()
+            URL.revokeObjectURL(a.href)
+          }}
+        >
+          下载图片
+        </button>
+      </div>
+      <div className="chart-svg-host chart-svg-host--pro" dangerouslySetInnerHTML={{ __html: svgRoadgee }} />
+      <details className="subpanel" style={{ marginTop: 8 }}>
+        <summary className="subpanel-summary">经典流向（对照）</summary>
+        <div className="subpanel-body" dangerouslySetInnerHTML={{ __html: svgClassic }} />
+      </details>
+
       <div className="table-wrap" style={{ marginTop: 8, maxHeight: 140 }}>
         <table className="table">
           <thead>

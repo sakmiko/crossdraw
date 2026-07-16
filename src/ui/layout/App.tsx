@@ -55,6 +55,8 @@ import {
   signalTimingDiagramSvg,
   timeSpaceDiagramSvg,
 } from '@/ui/charts/professionalDiagrams'
+import { roadgeeFlowDiagramSvg } from '@/ui/charts/roadgeeFlowDiagram'
+import { roadgeeAnalysisPlanSvg } from '@/ui/charts/roadgeeAnalysisPlan'
 import type { EditorMode, Movement, TurnVolumes } from '@/domain/types'
 import '@/ui/styles.css'
 
@@ -532,7 +534,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.75 · 绿波专页</span>
+          <span>Crossdraw v0.5.76 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -554,7 +556,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.75</span>
+            <span className="brand-ver">v0.5.76</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -911,7 +913,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.75</span>
+        <span>Crossdraw v0.5.76</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1007,6 +1009,41 @@ export default function App() {
                 signal.phases.map((p) => ({ name: p.name, releases: p.releases })),
                 channel.approaches.map((x) => x.id),
               ),
+            )
+          },
+          'roadgee-flow-svg': () => {
+            if (!channel || !flow) return
+            exportSvgFile(
+              `${project.name}-流量流向图.svg`,
+              roadgeeFlowDiagramSvg(channel.approaches, flow, { size: 640, mode: flowDisplayMode }),
+            )
+          },
+          'roadgee-plan-los': () => {
+            if (!channel || !analysis) return
+            exportSvgFile(
+              `${project.name}-服务水平.svg`,
+              roadgeeAnalysisPlanSvg(channel.approaches, analysis, { size: 640, metric: 'los' }),
+            )
+          },
+          'roadgee-plan-delay': () => {
+            if (!channel || !analysis) return
+            exportSvgFile(
+              `${project.name}-延误时间.svg`,
+              roadgeeAnalysisPlanSvg(channel.approaches, analysis, { size: 640, metric: 'delay' }),
+            )
+          },
+          'roadgee-plan-queue': () => {
+            if (!channel || !analysis) return
+            exportSvgFile(
+              `${project.name}-排队长度.svg`,
+              roadgeeAnalysisPlanSvg(channel.approaches, analysis, { size: 640, metric: 'queue' }),
+            )
+          },
+          'roadgee-plan-vc': () => {
+            if (!channel || !analysis) return
+            exportSvgFile(
+              `${project.name}-饱和度.svg`,
+              roadgeeAnalysisPlanSvg(channel.approaches, analysis, { size: 640, metric: 'vc' }),
             )
           },
           'flow-dir-svg': () => {

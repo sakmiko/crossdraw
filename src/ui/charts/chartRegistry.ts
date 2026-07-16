@@ -169,3 +169,5 @@ export function chartsForMode(mode: string): ChartRegistryEntry[] {
 export function chartByExportId(exportId: string): ChartRegistryEntry | undefined {
   return CHART_REGISTRY.find((c) => c.exportIds?.includes(exportId))
 }
+
+// v0.5.76 roadgee flow/plan: roadgeeFlowDiagramSvg, roadgeeAnalysisPlanSvg

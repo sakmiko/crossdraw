@@ -18,7 +18,8 @@ import { analyzeIntersection } from '@/domain/analysis'
 import { analyzeUnsignalized, unsignalizedMarkdown } from '@/domain/analysis/unsignalized'
 import { AnalysisCharts, CompareCharts } from '@/ui/charts/ChartPanels'
 import { unsignalizedChartSvg } from '@/ui/charts/unsignalizedChart'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { roadgeeAnalysisPlanSvg, type AnalysisPlanMetric } from '@/ui/charts/roadgeeAnalysisPlan'
 import { AnalysisLaneTable } from '@/ui/layout/AnalysisLaneTable'
 import { collectCompareRows, compareSchemesCsv } from '@/io/report'
 import { exportVissimCsvBundle } from '@/io/vissimCsv'
@@ -52,6 +53,7 @@ export function AnalysisWorkspace({
   onOpenCompare,
   onExportProPack,
 }: AnalysisWorkspaceProps) {
+  const [planMetric, setPlanMetric] = useState<AnalysisPlanMetric>('los')
   const compareRows = collectCompareRows(project, analyzeIntersection)
   const unsig = useMemo(() => {
     if (!channel || !flow || !signal) return null
@@ -102,6 +104,54 @@ export function AnalysisWorkspace({
           <div className="sub">与图表/表格同源</div>
         </div>
       </div>
+      
+      <div className="chart-card" style={{ marginTop: 10 }}>
+        <div className="chart-title">
+          <span>平面评价图</span>
+          <small>与车道表同源 · 无水印</small>
+        </div>
+        <div className="toolbar dense" style={{ marginBottom: 8 }}>
+          {([
+            ['los', '服务水平'],
+            ['delay', '延误时间'],
+            ['queue', '排队长度'],
+            ['vc', '饱和度'],
+          ] as [AnalysisPlanMetric, string][]).map(([id, lab]) => (
+            <button
+              key={id}
+              type="button"
+              className={planMetric === id ? 'primary' : 'ghost'}
+              onClick={() => setPlanMetric(id)}
+            >
+              {lab}
+            </button>
+          ))}
+          <button
+            type="button"
+            className="ghost"
+            onClick={() => {
+              const svg = roadgeeAnalysisPlanSvg(channel?.approaches ?? [], analysis, { size: 520, metric: planMetric })
+              const blob = new Blob([svg], { type: 'image/svg+xml' })
+              const a = document.createElement('a')
+              a.href = URL.createObjectURL(blob)
+              a.download = `crossdraw-${planMetric}.svg`
+              a.click()
+              URL.revokeObjectURL(a.href)
+            }}
+          >
+            下载图片
+          </button>
+        </div>
+        {channel && (
+          <div
+            className="chart-svg-host chart-svg-host--pro"
+            dangerouslySetInnerHTML={{
+              __html: roadgeeAnalysisPlanSvg(channel.approaches, analysis, { size: 480, metric: planMetric }),
+            }}
+          />
+        )}
+      </div>
+
       <AnalysisCharts analysis={analysis} />
       {unsig && (
         <div style={{ marginTop: 12 }}>

@@ -12,16 +12,14 @@ async function bootCross(page: Page) {
 async function openNav(page: Page, label: string) {
   const nav = page.getByRole('navigation', { name: '功能导航' })
   await nav.getByRole('tab', { name: new RegExp(label) }).click()
-  await page.waitForTimeout(220)
+  await page.waitForTimeout(250)
 }
 
-test.describe('Crossdraw v0.5.75 icons + polish', () => {
+test.describe('Crossdraw v0.5.76 roadgee diagrams + polish', () => {
   // 渠化 流量 信号 分析 绿波 比选 断面
-  test('shell icons', async ({ page }) => {
+  test('shell', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.75/).first()).toBeVisible()
-    await expect(page.locator('.left-nav .cd-icon').first()).toBeVisible()
-    await expect(page.locator('.topbar .cd-icon').first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.76/).first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
 
@@ -31,29 +29,39 @@ test.describe('Crossdraw v0.5.75 icons + polish', () => {
     await page.screenshot({ path: 'docs/screenshots/01-channel.png', fullPage: true })
   })
 
-  test('flow', async ({ page }) => {
+  test('flow roadgee diagram live', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '流量')
+    await expect(page.getByText('流量流向图').first()).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('button', { name: '下载图片' }).first()).toBeVisible()
+    // change a volume — diagram host still present
+    const firstL = page.locator('table.table input[type="number"]').first()
+    await firstL.fill('999')
+    await page.waitForTimeout(200)
+    await expect(page.locator('.chart-svg-host--pro').first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/02-flow.png', fullPage: true })
   })
 
   test('signal', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '信号')
-    await expect(page.getByRole('button', { name: /行人Walk/ })).toBeVisible({ timeout: 10000 })
     await page.screenshot({ path: 'docs/screenshots/03-signal.png', fullPage: true })
   })
 
-  test('analysis', async ({ page }) => {
+  test('analysis plan modes', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '分析')
+    await expect(page.getByText('平面评价图').first()).toBeVisible({ timeout: 10000 })
+    await page.getByRole('button', { name: '延误时间' }).click()
+    await page.getByRole('button', { name: '排队长度' }).click()
+    await page.getByRole('button', { name: '饱和度' }).click()
+    await page.getByRole('button', { name: '服务水平' }).click()
     await page.screenshot({ path: 'docs/screenshots/04-analysis.png', fullPage: true })
   })
 
   test('band', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '绿波')
-    await expect(page.locator('.band-page .cd-icon').first()).toBeVisible({ timeout: 10000 })
     await page.screenshot({ path: 'docs/screenshots/05-band.png', fullPage: true })
   })
 

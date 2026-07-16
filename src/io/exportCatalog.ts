@@ -31,6 +31,11 @@ export type ExportItemId =
   | 'pro-pack'
   | 'print-a4'
   | 'conflict-matrix-svg'
+  | 'roadgee-flow-svg'
+  | 'roadgee-plan-los'
+  | 'roadgee-plan-delay'
+  | 'roadgee-plan-queue'
+  | 'roadgee-plan-vc'
 
 export type ExportItem = {
   id: ExportItemId
@@ -44,6 +49,52 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'roadgee-flow-svg',
+    category: 'drawing',
+    title: '流量流向图（RoadGee 式）',
+    format: 'SVG',
+    description: '彩色转向飘带 + 进口合计 · 与流量表同源 · 无水印',
+    modes: ['flow'],
+    requires: ['channel', 'flow', 'flowAligned'],
+  },
+  {
+    id: 'roadgee-plan-los',
+    category: 'analysis',
+    title: '服务水平平面图',
+    format: 'SVG',
+    description: '进口转向 LOS 色块 + 中心综合 · 与分析同源',
+    modes: ['analysis'],
+    requires: ['channel', 'flow', 'signal', 'analysis'],
+  },
+  {
+    id: 'roadgee-plan-delay',
+    category: 'analysis',
+    title: '延误时间平面图',
+    format: 'SVG',
+    description: 's/pcu · 与分析表同源',
+    modes: ['analysis'],
+    requires: ['channel', 'flow', 'signal', 'analysis'],
+  },
+  {
+    id: 'roadgee-plan-queue',
+    category: 'analysis',
+    title: '排队长度平面图',
+    format: 'SVG',
+    description: 'm · 与分析表同源',
+    modes: ['analysis'],
+    requires: ['channel', 'flow', 'signal', 'analysis'],
+  },
+  {
+    id: 'roadgee-plan-vc',
+    category: 'analysis',
+    title: '饱和度平面图',
+    format: 'SVG',
+    description: 'v/c · 与分析表同源',
+    modes: ['analysis'],
+    requires: ['channel', 'flow', 'signal', 'analysis'],
+  },
+
   {
     id: 'project-rtp',
     category: 'data',
