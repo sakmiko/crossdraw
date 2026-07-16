@@ -493,10 +493,10 @@ export default function App() {
       </nav>
       <header className="topbar">
         <div className="brand">
-          <div className="brand-badge" />
-          <div>
-            Crossdraw
-            <small>LOCAL INTERSECTION DESIGN</small>
+          <div className="brand-badge" aria-hidden />
+          <div className="brand-text">
+            <span className="brand-name">Crossdraw</span>
+            <span className="brand-ver">v0.5.70</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -506,51 +506,58 @@ export default function App() {
           onChange={(e) => setProjectName(e.target.value)}
           aria-label="项目名称"
         />
-        <div className="toolbar">
-          <div className="template-menu" role="group" aria-label="路口类型">
-            <button type="button" onClick={() => loadTemplate('cross')}>十字</button>
-            <button type="button" onClick={() => loadTemplate('t')}>T型</button>
-            <button type="button" onClick={() => loadTemplate('y')}>Y型</button>
-            <button type="button" onClick={() => loadTemplate('skewed')}>斜交</button>
-            <button type="button" onClick={() => loadTemplate('roundabout')}>环形</button>
+        <div className="topbar-main">
+          <div className="menu-group">
+            <details className="menu-dropdown">
+              <summary>新建</summary>
+              <div className="menu-panel" role="menu">
+                <button type="button" role="menuitem" onClick={() => loadTemplate('cross')}>十字交叉口</button>
+                <button type="button" role="menuitem" onClick={() => loadTemplate('t')}>T 型</button>
+                <button type="button" role="menuitem" onClick={() => loadTemplate('y')}>Y 型</button>
+                <button type="button" role="menuitem" onClick={() => loadTemplate('skewed')}>斜交</button>
+                <button type="button" role="menuitem" onClick={() => loadTemplate('roundabout')}>环形</button>
+              </div>
+            </details>
+            <details className="menu-dropdown">
+              <summary>文件</summary>
+              <div className="menu-panel" role="menu">
+                <label className="menu-file">
+                  打开 .rtp
+                  <input
+                    type="file"
+                    accept=".rtp,application/json"
+                    hidden
+                    onChange={(e) => e.target.files?.[0] && onOpenFile(e.target.files[0])}
+                  />
+                </label>
+                <button type="button" role="menuitem" onClick={saveRtp}>保存</button>
+                <button type="button" role="menuitem" onClick={() => duplicateChannel()}>复制渠化方案</button>
+              </div>
+            </details>
+            <details className="menu-dropdown">
+              <summary>导出</summary>
+              <div className="menu-panel" role="menu">
+                <button type="button" role="menuitem" className="primary" onClick={() => setExportOpen(true)}>导出中心…</button>
+                <button type="button" role="menuitem" onClick={() => openPrintPreview()}>打印拼版</button>
+                <hr className="menu-sep" />
+                <button type="button" role="menuitem" onClick={exportPng}>画布 PNG</button>
+                <button type="button" role="menuitem" onClick={exportSvg}>画布 SVG</button>
+                <button type="button" role="menuitem" onClick={exportDxf}>画布 DXF</button>
+              </div>
+            </details>
           </div>
-          <label style={{ margin: 0 }}>
-            <span className="hint">打开</span>
-            <input
-              type="file"
-              accept=".rtp,application/json"
-              style={{ display: 'none' }}
-              onChange={(e) => e.target.files?.[0] && onOpenFile(e.target.files[0])}
-            />
-            <button type="button" onClick={(e) => (e.currentTarget.previousElementSibling as HTMLInputElement)?.click()}>
-              打开 .rtp
-            </button>
-          </label>
-          <button type="button" className="primary" onClick={saveRtp}>保存</button>
-          <button type="button" onClick={() => undo()}>撤销</button>
-          <button type="button" onClick={() => redo()}>重做</button>
-          <div className="toolbar-secondary">
-            <button type="button" className="primary" onClick={() => setExportOpen(true)}>
-              导出中心
-            </button>
-            <button type="button" onClick={() => openPrintPreview()}>
-              打印拼版
-            </button>
-            <button type="button" onClick={exportPng}>PNG</button>
-            <button type="button" onClick={exportSvg}>SVG</button>
-            <button type="button" onClick={exportDxf}>DXF</button>
+          <div className="topbar-actions">
+            <button type="button" className="ghost" onClick={() => undo()} title="撤销">撤销</button>
+            <button type="button" className="ghost" onClick={() => redo()} title="重做">重做</button>
+            <button type="button" className="ghost" onClick={() => setPaletteOpen(true)} title="命令面板">⌘K</button>
           </div>
-          <button type="button" onClick={() => duplicateChannel()}>复制</button>
-          <button type="button" onClick={() => setPaletteOpen(true)}>命令 ⌘K</button>
         </div>
         <div className="topbar-end">
-          <button type="button" className="primary" onClick={saveRtp}>保存</button>
+          <span className={`save-pill ${dirty ? 'dirty' : 'clean'}`}>{dirty ? '未保存' : '已保存'}</span>
+          <button type="button" className="primary topbar-save" onClick={saveRtp}>保存</button>
           <div className="theme-toggle" role="group" aria-label="主题">
-            <button type="button" className={theme === 'dark' ? 'active' : ''} onClick={() => setTheme('dark')}>深色</button>
-            <button type="button" className={theme === 'light' ? 'active' : ''} onClick={() => setTheme('light')}>浅色</button>
-          </div>
-          <div className="hint">
-            {dirty ? '未保存' : '已保存'}
+            <button type="button" className={theme === 'dark' ? 'active' : ''} onClick={() => setTheme('dark')}>深</button>
+            <button type="button" className={theme === 'light' ? 'active' : ''} onClick={() => setTheme('light')}>浅</button>
           </div>
         </div>
       </header>
@@ -900,7 +907,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.68</span>
+        <span>Crossdraw v0.5.70</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

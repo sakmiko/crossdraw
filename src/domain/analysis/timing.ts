@@ -7,6 +7,10 @@ import {
   cycleFromDualRing,
   isDualRingEnabled,
 } from '../signal/dualRing'
+import {
+  allocateDualRingGreens,
+  computeDualRingCriticalFlow,
+} from '../signal/barrierCritical'
 
 /**
  * Timing optimization methods (选择算法):
@@ -56,11 +60,23 @@ export function optimizeSignalTiming(
   }
 
   const yis = phaseY(approaches, flow, workPhases)
-  const Y = yis.reduce((s, i) => s + i.y, 0) || 0.2
+  const dualCrit = isDualRingEnabled(signal)
+    ? computeDualRingCriticalFlow(approaches, flow, signal)
+    : null
+  const Y = dualCrit?.enabled ? dualCrit.Y : yis.reduce((s, i) => s + i.y, 0) || 0.2
   const n = Math.max(1, workPhases.length)
-  // L ≈ n * startLoss + n * yellow/2 简化；与教材总损失时间一致量级
-  const L = signal.lostTimeSec && signal.lostTimeSec > 0 ? signal.lostTimeSec : n * startLoss + n * 2
-  notes.push(`关键流量比 Y=${Y.toFixed(3)} · 损失时间 L≈${L.toFixed(1)}s · 相位 ${n} 个`)
+  // Dual-ring: lost time ≈ barriers * (startLoss + clearance proxy); else n * ...
+  const nBarrier = dualCrit?.enabled ? Math.max(1, dualCrit.barriers.length) : n
+  const L =
+    signal.lostTimeSec && signal.lostTimeSec > 0
+      ? signal.lostTimeSec
+      : nBarrier * startLoss + nBarrier * 2
+  notes.push(
+    dualCrit?.enabled
+      ? `双环关键 Y=${Y.toFixed(3)}（seq ${dualCrit.sequentialY.toFixed(3)}）· L≈${L.toFixed(1)}s · 屏障 ${nBarrier}`
+      : `关键流量比 Y=${Y.toFixed(3)} · 损失时间 L≈${L.toFixed(1)}s · 相位 ${n} 个`,
+  )
+  if (dualCrit?.enabled) notes.push(...dualCrit.notes.filter((x) => x.startsWith('  ')))
 
   let cycle = signal.cycleSec
   let phaseGreens: { phaseId: string; greenSec: number }[] = []
@@ -119,6 +135,22 @@ export function optimizeSignalTiming(
     notes.push(
       `延误最小搜索：候选周期上最小化 HCM 风格延误代理，C*=${cycle}s，估延误≈${bestDelay.toFixed(1)}s`,
     )
+  }
+
+  // Dual-ring: re-allocate greens by barrier critical Y when enabled (except pure equal split stays equal)
+  if (isDualRingEnabled(signal) && method !== 'equal') {
+    // Webster C0 with dual-ring Y already used; greens from barrier allocation
+    if (!(opts?.fixedCycle && opts.fixedCycle > 0) && method === 'webster') {
+      // C0 already from websterCore with sequential phases — recompute C0 using dual Y
+      const X = targetVc
+      if (Y < X) {
+        const c0 = (1.5 * L + 5) / (1 - Y / X)
+        cycle = clamp(Math.round(c0), minCycle, maxCycle)
+        notes.push(`双环 Webster C₀(Y_dual)=${cycle}s`)
+      }
+    }
+    phaseGreens = allocateDualRingGreens(approaches, flow, signal, cycle, L, minGreen)
+    notes.push('双环分绿：按屏障 max(Σy_R1,Σy_R2) 分配阶段有效绿，环内按 y 再分')
   }
 
   let applied = applyGreens(signal, phaseGreens, cycle, minGreen)

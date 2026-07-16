@@ -67,11 +67,11 @@ export function dualRingDiagramSvg(
 
   let g = ''
   g += `<rect x="0.5" y="0.5" width="${width - 1}" height="${height - 1}" rx="10" fill="${CHART_COLORS.bg}" stroke="${CHART_COLORS.grid}"/>`
-  g += `<text x="14" y="18" fill="${CHART_COLORS.axis}" font-size="12" font-weight="700" font-family="system-ui,sans-serif">双环栏图 · Dual-Ring Barrier</text>`
-  g += `<text x="14" y="32" fill="${CHART_COLORS.muted}" font-size="9.5" font-family="system-ui,sans-serif">${escapeXml(dualRingSummaryText(align))} · 轴=C · 阶段宽=max(R1,R2)</text>`
+  g += `<text x="14" y="20" fill="${CHART_COLORS.axis}" font-size="12" font-weight="700" font-family="system-ui,sans-serif">双环栏</text>`
+  g += `<text x="${width - 14}" y="20" text-anchor="end" fill="${CHART_COLORS.muted}" font-size="10" font-family="system-ui,sans-serif">C=${fmtNum(align.cycleSec, 'int')}s</text>`
 
   if (!align.enabled || !align.stages.length) {
-    g += `<text x="${width / 2}" y="${height / 2}" text-anchor="middle" fill="${CHART_COLORS.muted}" font-size="12" font-family="system-ui,sans-serif">未启用双环或未分配 ring · 请在信号页开启并自动分配</text>`
+    g += `<text x="${width / 2}" y="${height / 2}" text-anchor="middle" fill="${CHART_COLORS.muted}" font-size="12" font-family="system-ui,sans-serif">未启用双环</text>`
     return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" class="chart-svg chart-svg--pro">${g}</svg>`
   }
 
@@ -97,8 +97,8 @@ export function dualRingDiagramSvg(
     g += stageBlocks(st, scale, y2, rowH, 'ring2')
     g += `</g>`
     // stage label
-    if (sw > 40) {
-      g += `<text x="${x0 + sw / 2}" y="${y2 + rowH + 14}" text-anchor="middle" fill="${CHART_COLORS.muted}" font-size="8" font-family="system-ui,sans-serif">B${st.barrierIndex} ${fmtNum(st.stageSec, 'int')}s</text>`
+    if (sw > 48) {
+      g += `<text x="${x0 + sw / 2}" y="${y2 + rowH + 12}" text-anchor="middle" fill="${CHART_COLORS.muted}" font-size="8" font-family="system-ui,sans-serif">B${st.barrierIndex}</text>`
     }
     t += st.stageSec
   }
@@ -110,11 +110,7 @@ export function dualRingDiagramSvg(
 
   // ticks
   g += `<text x="${left}" y="${height - 10}" fill="${CHART_COLORS.muted}" font-size="9" font-family="system-ui,sans-serif">0</text>`
-  g += `<text x="${left + plotW}" y="${height - 10}" text-anchor="end" fill="${CHART_COLORS.muted}" font-size="9" font-family="system-ui,sans-serif">C=${fmtNum(C, 'int')}s</text>`
-  const bal = align.closed
-    ? '阶段Σ=C 闭合'
-    : `阶段Σ=${align.stageSumSec.toFixed(1)}s 差${align.balanceSec > 0 ? '+' : ''}${align.balanceSec}`
-  g += `<text x="${width / 2}" y="${height - 10}" text-anchor="middle" fill="${align.closed ? '#34d399' : '#f87171'}" font-size="9.5" font-weight="600" font-family="system-ui,sans-serif">${escapeXml(bal)}</text>`
+  g += `<text x="${left + plotW}" y="${height - 10}" text-anchor="end" fill="${align.closed ? '#34d399' : '#f87171'}" font-size="9" font-family="system-ui,sans-serif">${align.closed ? '闭合' : '未闭合'}</text>`
 
   return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" class="chart-svg chart-svg--pro">${g}</svg>`
 }

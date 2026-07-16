@@ -32,7 +32,7 @@ describe('v0.5.66 roundabout ped export', () => {
     const ped = makePedestrianOnlyPhase('ped1', '行人相位', ids, 18)
     sg.phases.push(ped)
     const svg = pedestrianRingSvg(ch.approaches, sg, { focusPhaseId: ped.id })
-    expect(svg).toContain('行人过街环图')
+    expect(svg).toContain('行人')
     expect(svg).toContain('专用行人相位')
     expect(svg).toContain('Walk')
   })

@@ -13,6 +13,7 @@ import { allPhasesConflictHits } from '@/domain/signal/phaseConflictView'
 import { detectPedVehicleConflicts, pedVehicleSummary } from '@/domain/signal/pedVehicleConflict'
 import { SignalCharts, TimingCompareCharts } from '@/ui/charts/ChartPanels'
 import { buildDualRingAlignment, dualRingSummaryText } from '@/domain/signal/dualRing'
+import { computeDualRingCriticalFlow, dualRingCriticalSummary } from '@/domain/signal/barrierCritical'
 import { SignalTimingPanel, ControlMatrixPanel, PhaseFacePanel } from '@/ui/charts/ProfessionalPanels'
 import { vcHeatColor } from '@/ui/charts/svgCharts'
 import { conflictHitsMarkdown, conflictMatrixExportSvg, conflictDiagramExportSvg } from '@/ui/charts/conflictExport'
@@ -106,28 +107,25 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
     <div className="card" style={{ marginTop: 12 }}>
       <div className="panel-header">
         <h2 style={{ margin: 0 }}>信号 · {signal.name}</h2>
-        <span className={`integrity-badge ${al.closed ? 'ok' : 'bad'}`}>
-          {al.dualRingEnabled
-            ? al.closed
-              ? `双环闭合 阶段Σ=${(al.dualRingStageSumSec ?? 0).toFixed(1)}=C`
-              : `双环未闭合 阶段Σ=${(al.dualRingStageSumSec ?? 0).toFixed(1)} C=${al.cycleSec}`
-            : al.closed
-              ? `配时闭合 Σ=${al.mainSumSec.toFixed(1)}=C`
-              : `未闭合 Σ=${al.mainSumSec.toFixed(1)} C=${al.cycleSec} 差${al.balanceSec > 0 ? '+' : ''}${al.balanceSec}`}
-        </span>
-        <span className={`integrity-badge ${blocks ? 'bad' : hits.length ? 'warn' : 'ok'}`}>
-          {blocks ? `相位相悖 ${blocks}` : hits.length ? `冲突警告 ${hits.length}` : '无相悖 ✓'}
-        </span>
-        <span className={`integrity-badge ${pedBlocks ? 'bad' : pedVeh.hits.length ? 'warn' : 'ok'}`}>
-          {pedVehicleSummary(pedVeh.hits)}
-        </span>
+        <div className="panel-header-meta">
+          <span className={`integrity-badge ${al.closed ? 'ok' : 'bad'}`} title="配时闭合">
+            {al.closed ? '闭合' : '未闭合'}
+          </span>
+          {(blocks > 0 || pedBlocks > 0) && (
+            <span className="integrity-badge bad" title="冲突">
+              冲突 {blocks + pedBlocks}
+            </span>
+          )}
+        </div>
       </div>
 
-      <label>
+      <details className="subpanel" open>
+        <summary className="subpanel-summary">相位表 <span className="subpanel-tag">{signal.phases.length} 相 · C={signal.cycleSec}s</span></summary>
+        <div className="subpanel-body">
+      <label className="field-inline">
         周期 C (s)
         <input type="number" value={signal.cycleSec} onChange={(e) => onCycle(Number(e.target.value))} />
       </label>
-
       <div className="ring">
         {signal.phases.map((ph) => (
           <div key={ph.id} className="phase" style={{ minWidth: 168 }}>
@@ -169,7 +167,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
                 checked={!!ph.isOverlap}
                 onChange={(e) => onUpdatePhaseTiming(ph.id, { isOverlap: e.target.checked })}
               />{' '}
-              搭接相位 Overlap
+              搭接
             </label>
             {signal.dualRing?.enabled && !ph.isOverlap && (
               <div className="field-row-3" style={{ marginTop: 6 }}>
@@ -202,8 +200,8 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
                 </label>
               </div>
             )}
-            <div className="hint" style={{ marginTop: 6 }}>
-              放行矩阵
+            <div className="hint quiet" style={{ marginTop: 6 }}>
+              放行
             </div>
             {channel?.approaches.map((ap: Approach) => {
               const pedOn = (ph.pedestrian ?? []).some((p) => p.approachId === ap.id)
@@ -251,46 +249,56 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
           </div>
         ))}
       </div>
+        </div>
+      </details>
 
       {channel && (
-        <p className="hint" style={{ marginTop: 8 }}>
+        <p className="hint quiet" style={{ marginTop: 8 }}>
           {releaseHint.ok
             ? '放行矩阵与各相位 L/T/R 按钮已逐格对齐'
             : `放行对齐异常：${releaseHint.mismatches.slice(0, 2).join('；')}`}
         </p>
       )}
 
-      <div className="toolbar dual-ring-bar" style={{ marginTop: 8, flexWrap: 'wrap', gap: 8 }}>
-        <label className="check-inline" title="NEMA 风格双环并发阶段 · 闭合用 max(R1,R2) 阶段和">
-          <input
-            type="checkbox"
-            checked={!!signal.dualRing?.enabled}
-            onChange={(e) => onSetDualRing?.(e.target.checked)}
-          />{' '}
-          双环栏
-        </label>
+      <details className="subpanel" open={!!signal.dualRing?.enabled}>
+        <summary className="subpanel-summary">
+          <label className="check-inline" onClick={(e) => e.stopPropagation()}>
+            <input
+              type="checkbox"
+              checked={!!signal.dualRing?.enabled}
+              onChange={(e) => onSetDualRing?.(e.target.checked)}
+            />{' '}
+            双环栏
+          </label>
+          {signal.dualRing?.enabled && channel && flow && (
+            <span className="subpanel-tag">
+              {dualRingCriticalSummary(computeDualRingCriticalFlow(channel.approaches, flow, signal))}
+            </span>
+          )}
+        </summary>
         {signal.dualRing?.enabled && (
-          <>
+          <div className="subpanel-body toolbar dense">
             <button type="button" className="ghost" onClick={() => onAutoAssignDualRings?.(1)}>
-              单屏障分配
+              单屏障
             </button>
             <button type="button" className="ghost" onClick={() => onAutoAssignDualRings?.(2)}>
-              双屏障分配
+              双屏障
             </button>
             <button type="button" className="ghost" onClick={() => onBalanceDualRing?.()}>
-              平衡双环
+              平衡
             </button>
             <button type="button" className="primary" onClick={() => onCloseDualRingCycle?.()}>
-              闭合周期 C
+              闭合 C
             </button>
-            <span className={`integrity-badge ${buildDualRingAlignment(signal).closed ? 'ok' : 'bad'}`}>
-              {dualRingSummaryText(buildDualRingAlignment(signal))}
-            </span>
-          </>
+          </div>
         )}
-      </div>
+      </details>
 
-      <div className="toolbar" style={{ marginTop: 8 }}>
+      <details className="subpanel">
+        <summary className="subpanel-summary">
+          相位操作 / 配时优化
+        </summary>
+        <div className="subpanel-body toolbar dense" style={{ marginTop: 0 }}>
         <button type="button" onClick={onAddPhase}>
           添加相位
         </button>
@@ -341,7 +349,8 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         <button type="button" onClick={onRunCompare}>
           多方法比选
         </button>
-      </div>
+        </div>
+      </details>
 
       {timingCompare.length > 0 && (
         <div className="card panel-stack" style={{ marginTop: 10 }}>

@@ -12,7 +12,10 @@ import type {
 } from '@/domain/types'
 import type { AnalysisIntegrity } from '@/domain/analysis/integrity'
 import { analyzeIntersection } from '@/domain/analysis'
+import { analyzeUnsignalized, unsignalizedMarkdown } from '@/domain/analysis/unsignalized'
 import { AnalysisCharts, CompareCharts } from '@/ui/charts/ChartPanels'
+import { unsignalizedChartSvg } from '@/ui/charts/unsignalizedChart'
+import { useMemo } from 'react'
 import { AnalysisLaneTable } from '@/ui/layout/AnalysisLaneTable'
 import { collectCompareRows, compareSchemesCsv } from '@/io/report'
 import { exportVissimCsvBundle } from '@/io/vissimCsv'
@@ -47,6 +50,11 @@ export function AnalysisWorkspace({
   onExportProPack,
 }: AnalysisWorkspaceProps) {
   const compareRows = collectCompareRows(project, analyzeIntersection)
+  const unsig = useMemo(() => {
+    if (!channel || !flow || !signal) return null
+    if (!signal.unsignalized) return null
+    return analyzeUnsignalized(channel.approaches, flow, signal, channel.intersectionType)
+  }, [channel, flow, signal])
 
   return (
     <div className="card" style={{ marginTop: 12 }}>
@@ -92,10 +100,35 @@ export function AnalysisWorkspace({
         </div>
       </div>
       <AnalysisCharts analysis={analysis} />
-      <p className="hint" style={{ marginTop: 8 }}>
-        平均饱和度 {analysis.avgVc.toFixed(3)} · 车均延误 {analysis.avgDelay.toFixed(1)} s · 排队{' '}
-        {analysis.avgQueueM.toFixed(1)} m · LOS {analysis.losFinal}
+      {unsig && (
+        <div style={{ marginTop: 12 }}>
+          <div className="chart-title">
+            <span>无信号 / 环形能力</span>
+            <small>{unsig.mode} · LOS {unsig.los}</small>
+          </div>
+          <div
+            className="chart-svg-host chart-svg-host--pro"
+            dangerouslySetInnerHTML={{ __html: unsignalizedChartSvg(unsig, { width: 520 }) }}
+          />
+          <p className="hint quiet" style={{ marginTop: 4 }}>
+        {unsig.notes[0]}
       </p>
+      <button
+        type="button"
+        className="ghost"
+        style={{ marginTop: 4 }}
+        onClick={() =>
+          downloadText(
+            `${project.name}-unsignalized.md`,
+            unsignalizedMarkdown(project.name, unsig),
+            'text/markdown',
+          )
+        }
+      >
+        导出简报
+      </button>
+        </div>
+      )}
       <AnalysisLaneTable analysis={analysis} projectName={project.name} />
       <CompareCharts
         rows={compareRows.map((r) => ({
@@ -105,14 +138,16 @@ export function AnalysisWorkspace({
           los: r.los,
         }))}
       />
-      <div className="toolbar" style={{ marginTop: 8 }}>
+      <details className="subpanel">
+        <summary className="subpanel-summary">导出与报告</summary>
+        <div className="subpanel-body toolbar dense">
         <button
           type="button"
           onClick={() => {
             downloadText(`${project.name}-compare.csv`, compareSchemesCsv(compareRows), 'text/csv')
           }}
         >
-          多方案对比 CSV
+          对比 CSV
         </button>
         <button
           type="button"
@@ -182,13 +217,17 @@ export function AnalysisWorkspace({
         >
           导出分析拼图
         </button>
-      </div>
-      <div className="toolbar" style={{ marginTop: 8 }}>
+        </div>
+      </details>
+      <div className="toolbar dense" style={{ marginTop: 8 }}>
         <button type="button" className="primary" onClick={onOpenCompare}>
-          打开方案比选工作区
+          方案比选
         </button>
       </div>
-      <div className="section-title">方案对比摘要</div>
+      <details className="subpanel">
+        <summary className="subpanel-summary">方案对比摘要 <span className="subpanel-tag">{compareRows.length}</span></summary>
+        <div className="subpanel-body">
+      <div className="section-title" style={{ display: 'none' }}>方案对比摘要</div>
       <table className="table">
         <thead>
           <tr>
@@ -213,6 +252,8 @@ export function AnalysisWorkspace({
           ))}
         </tbody>
       </table>
+        </div>
+      </details>
     </div>
   )
 }

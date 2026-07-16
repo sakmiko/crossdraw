@@ -35,8 +35,8 @@ export function multimodalBarSvg(
   // panel frame
   g += `<rect x="0.5" y="0.5" width="${width - 1}" height="${height - 1}" rx="8" fill="${CHART_COLORS.bg}" stroke="${CHART_COLORS.grid}" stroke-width="1"/>`
   // header
-  g += `<text x="14" y="18" fill="${CHART_COLORS.axis}" font-size="12" font-weight="700" font-family="system-ui,sans-serif">行人 / 非机动车流量</text>`
-  g += `<text x="14" y="32" fill="${CHART_COLORS.muted}" font-size="9.5" font-family="system-ui,sans-serif">示意骨架 · 不并入机动车 v/c · Σ行人 ${fmtNum(sum.ped, 'int')} · Σ非机 ${fmtNum(sum.bike, 'int')}</text>`
+  g += `<text x="14" y="18" fill="${CHART_COLORS.axis}" font-size="12" font-weight="700" font-family="system-ui,sans-serif">行人 · 非机</text>`
+  g += `<text x="14" y="32" fill="${CHART_COLORS.muted}" font-size="9.5" font-family="system-ui,sans-serif">Σ行人 ${fmtNum(sum.ped, 'int')} · Σ非机 ${fmtNum(sum.bike, 'int')}</text>`
 
   // legend
   const lx = width - right - 120
@@ -78,7 +78,7 @@ export function multimodalBarSvg(
     g += `<text x="${cx}" y="${height - 14}" text-anchor="middle" fill="${CHART_COLORS.axis}" font-size="10" font-weight="600" font-family="system-ui,sans-serif">${label}</text>`
   })
 
-  g += `<text x="${left}" y="${height - 4}" fill="${CHART_COLORS.muted}" font-size="8.5" font-family="system-ui,sans-serif">单位：peds/h · veh/h · Crossdraw multimodal</text>`
+  g += `<text x="${left}" y="${height - 4}" fill="${CHART_COLORS.muted}" font-size="8.5" font-family="system-ui,sans-serif"></text>`
 
   return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" class="chart-svg chart-svg--pro">${g}</svg>`
 }

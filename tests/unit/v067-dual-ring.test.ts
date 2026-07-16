@@ -57,7 +57,7 @@ describe('v0.5.67 dual-ring + skewed corners', () => {
     const p = createCrossTemplate()
     const sg = enableDualRing(p.channelizationSchemes[0].flowSchemes[0].signalSchemes[0], true)
     const svg = dualRingDiagramSvg(sg)
-    expect(svg).toContain('双环栏图')
+    expect(svg).toContain('双环栏')
     expect(svg).toContain('R1')
     expect(svg).toContain('R2')
     expect(svg).toContain('chart-svg--pro')

@@ -267,15 +267,15 @@ export function SignalCharts({
   return (
     <div className="chart-card">
       <div className="chart-title">
-        <span>相位环栏条</span>
-        <small>轴=C · 与相位表 G/Y/AR 同源</small>
+        <span>环栏</span>
+        <small>轴 = C</small>
       </div>
       <div dangerouslySetInnerHTML={{ __html: ring }} />
       {dualRing && (
         <>
           <div className="chart-title" style={{ marginTop: 12 }}>
-            <span>双环栏图</span>
-            <small>R1/R2 并发 · 阶段=max · 非完整 NEMA 机</small>
+            <span>双环栏</span>
+            <small>R1 / R2</small>
           </div>
           <div className="chart-svg-host chart-svg-host--pro" dangerouslySetInnerHTML={{ __html: dualRing }} />
         </>
@@ -283,15 +283,15 @@ export function SignalCharts({
       {pedStrip && (
         <>
           <div className="chart-title" style={{ marginTop: 12 }}>
-            <span>行人过街</span>
-            <small>{countPedIntervals(signal)} 处进口面 · Walk/FDW</small>
+            <span>行人</span>
+            <small>{countPedIntervals(signal)} 面</small>
           </div>
           <div dangerouslySetInnerHTML={{ __html: pedStrip }} />
           {pedRing && (
             <>
               <div className="chart-title" style={{ marginTop: 12 }}>
-                <span>行人过街环图</span>
-                <small>聚焦相位进口面 · 与相位条同源</small>
+                <span>行人环图</span>
+                <small>当前相位</small>
               </div>
               <div className="chart-svg-host chart-svg-host--pro" dangerouslySetInnerHTML={{ __html: pedRing }} />
             </>
@@ -301,7 +301,7 @@ export function SignalCharts({
       {matrix && report && (
         <>
           <div className="chart-title" style={{ marginTop: 12 }}>
-            <span>转向冲突 / 相位相悖</span>
+            <span>冲突矩阵</span>
             <small>{phaseConflictSummaryText(report)}</small>
           </div>
           <div className="toolbar" style={{ flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
@@ -320,8 +320,8 @@ export function SignalCharts({
           {diagram && (
             <>
               <div className="chart-title" style={{ marginTop: 12 }}>
-                <span>冲突点示意图</span>
-                <small>路径几何 · 与矩阵规则同源</small>
+                <span>冲突点</span>
+                <small>示意</small>
               </div>
               <div dangerouslySetInnerHTML={{ __html: diagram }} />
             </>

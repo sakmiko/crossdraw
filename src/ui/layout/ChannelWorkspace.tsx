@@ -486,7 +486,7 @@ export function ChannelWorkspace({
                   <option value="barrier">护栏</option>
                   <option value="yellowHatch">黄斜线</option>
                   <option value="singleYellow">单黄线</option>
-                  <option value="fishBelly">鱼肚线</option>
+                  <option value="fishBelly">鱼腹式中分</option>
                 </select>
               </label>
               <label>

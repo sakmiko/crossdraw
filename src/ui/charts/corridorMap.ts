@@ -62,8 +62,8 @@ export function corridorMapSvg(
 
   let g = ''
   g += `<rect x="0.5" y="0.5" width="${width - 1}" height="${height - 1}" rx="8" fill="${CHART_COLORS.bg}" stroke="${CHART_COLORS.grid}"/>`
-  g += `<text x="14" y="18" fill="${CHART_COLORS.axis}" font-size="12" font-weight="700" font-family="system-ui,sans-serif">走廊选点示意 · ${escapeXml(corridor.name)}</text>`
-  g += `<text x="14" y="32" fill="${CHART_COLORS.muted}" font-size="9.5" font-family="system-ui,sans-serif">${useGeo ? 'WGS84 节点投影（示意，非测绘底图）' : '桩号一维展开 · 可在节点表填写 lat/lon 升级为平面示意'} · ${corridor.speedKmh} km/h · ${escapeXml(String(corridor.method))}</text>`
+  g += `<text x="14" y="20" fill="${CHART_COLORS.axis}" font-size="12" font-weight="700" font-family="system-ui,sans-serif">${escapeXml(corridor.name)}</text>`
+  g += `<text x="${width - 14}" y="20" text-anchor="end" fill="${CHART_COLORS.muted}" font-size="10" font-family="system-ui,sans-serif">${corridor.speedKmh} km/h</text>`
 
   // soft path halo
   const pathD = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
@@ -77,7 +77,10 @@ export function corridorMapSvg(
     const mx = (a.x + b.x) / 2
     const my = (a.y + b.y) / 2
     const len = Math.max(0, b.n.distanceM - a.n.distanceM)
-    g += `<text x="${mx}" y="${my - 8}" text-anchor="middle" fill="${CHART_COLORS.muted}" font-size="8.5" font-family="system-ui,sans-serif">${len.toFixed(0)} m</text>`
+    const segPx = Math.hypot(b.x - a.x, b.y - a.y)
+    if (segPx > 56 && len >= 1) {
+      g += `<text x="${mx}" y="${my - 8}" text-anchor="middle" fill="${CHART_COLORS.muted}" font-size="8" font-family="system-ui,sans-serif">${len.toFixed(0)}m</text>`
+    }
   }
 
   pts.forEach((p, i) => {
@@ -86,13 +89,9 @@ export function corridorMapSvg(
     g += `<circle cx="${p.x}" cy="${p.y}" r="${r + 3}" fill="rgba(56,189,248,0.12)"/>`
     g += `<circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${active ? '#0ea5e9' : '#1e293b'}" stroke="#e2e8f0" stroke-width="1.5"/>`
     g += `<text x="${p.x}" y="${p.y + 3}" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="700" font-family="system-ui,sans-serif">${i + 1}</text>`
-    const labelY = p.y + (useGeo ? (i % 2 === 0 ? -14 : 18) : -14)
+    // alternate label side to reduce overlap; name only
+    const labelY = p.y + (i % 2 === 0 ? -12 : 16)
     g += `<text x="${p.x}" y="${labelY}" text-anchor="middle" fill="${CHART_COLORS.axis}" font-size="10" font-weight="600" font-family="system-ui,sans-serif">${escapeXml(p.n.name)}</text>`
-    if (p.n.lat != null && p.n.lon != null) {
-      g += `<text x="${p.x}" y="${labelY + 11}" text-anchor="middle" fill="${CHART_COLORS.muted}" font-size="7.5" font-family="ui-monospace,monospace">${p.n.lat.toFixed(4)}, ${p.n.lon.toFixed(4)}</text>`
-    } else {
-      g += `<text x="${p.x}" y="${labelY + 11}" text-anchor="middle" fill="${CHART_COLORS.muted}" font-size="7.5" font-family="system-ui,sans-serif">K+${p.n.distanceM.toFixed(0)}</text>`
-    }
   })
 
   if (opts.bandwidthRatio != null) {

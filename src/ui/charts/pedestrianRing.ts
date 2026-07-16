@@ -72,9 +72,9 @@ export function pedestrianRingSvg(
 
   let g = ''
   g += `<rect x="0.5" y="0.5" width="${width - 1}" height="${height - 1}" rx="10" fill="${CHART_COLORS.bg}" stroke="${CHART_COLORS.grid}"/>`
-  const title = opts.title ?? (focus ? `行人过街环图 · ${focus.name}` : '行人过街环图 · 全相位并集')
+  const title = opts.title ?? (focus ? `行人 · ${focus.name}` : '行人过街')
   g += `<text x="14" y="20" fill="${CHART_COLORS.axis}" font-size="12" font-weight="700" font-family="system-ui,sans-serif">${esc(title)}</text>`
-  g += `<text x="14" y="34" fill="${CHART_COLORS.muted}" font-size="9.5" font-family="system-ui,sans-serif">斑马线面 = 进口停车线 · 蓝 Walk / 琥珀 FDW · 红框=独占 · 非轨迹仿真</text>`
+  g += `<text x="14" y="34" fill="${CHART_COLORS.muted}" font-size="9.5" font-family="system-ui,sans-serif">Walk / FDW · 红框=独占</text>`
 
   // outer ring guide
   g += `<circle cx="${cx}" cy="${cy}" r="${R + 28}" fill="none" stroke="${CHART_COLORS.grid}" stroke-width="1" stroke-dasharray="4 4"/>`
@@ -119,10 +119,8 @@ export function pedestrianRingSvg(
       // walk / fdw chips
       const chipX = cx + dx * (R + 52)
       const chipY = cy + dy * (R + 52)
-      g += `<rect x="${chipX - 28}" y="${chipY - 18}" width="56" height="14" rx="3" fill="#38bdf8"/>`
-      g += `<text x="${chipX}" y="${chipY - 8}" text-anchor="middle" fill="#0f172a" font-size="8" font-weight="700" font-family="system-ui,sans-serif">W ${fmtNum(face!.walk, 'int')}s</text>`
-      g += `<rect x="${chipX - 28}" y="${chipY - 2}" width="56" height="14" rx="3" fill="#f59e0b"/>`
-      g += `<text x="${chipX}" y="${chipY + 8}" text-anchor="middle" fill="#0f172a" font-size="8" font-weight="700" font-family="system-ui,sans-serif">FDW ${fmtNum(face!.fdw, 'int')}s</text>`
+      g += `<rect x="${chipX - 22}" y="${chipY - 8}" width="44" height="16" rx="3" fill="#38bdf8"/>`
+      g += `<text x="${chipX}" y="${chipY + 3}" text-anchor="middle" fill="#0f172a" font-size="9" font-weight="700" font-family="system-ui,sans-serif">${fmtNum(face!.walk, 'int')}/${fmtNum(face!.fdw, 'int')}</text>`
     } else {
       g += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${CHART_COLORS.grid}" stroke-width="3" stroke-linecap="round" opacity="0.5"/>`
     }
@@ -131,9 +129,7 @@ export function pedestrianRingSvg(
     const lx = cx + dx * (R + 72)
     const ly = cy + dy * (R + 72)
     g += `<text x="${lx}" y="${ly}" text-anchor="middle" fill="${active ? CHART_COLORS.axis : CHART_COLORS.muted}" font-size="11" font-weight="700" font-family="system-ui,sans-serif">${esc(label)}</text>`
-    if (active && face!.phases.length) {
-      g += `<text x="${lx}" y="${ly + 12}" text-anchor="middle" fill="${CHART_COLORS.muted}" font-size="8" font-family="system-ui,sans-serif">${esc(face!.phases.join('/'))}</text>`
-    }
+    // phase names omitted on diagram to avoid overlap; shown in strip chart
   })
 
   // legend

@@ -80,11 +80,11 @@ describe('v0.5.65 depth pack', () => {
   it('corridor map and multimodal charts render pro chrome', () => {
     const p = createCrossTemplate()
     const map = corridorMapSvg(p.bandCorridor, { bandwidthRatio: 0.2 })
-    expect(map).toContain('走廊选点示意')
+    expect(map).toContain('km/h')
     expect(map).toContain('chart-svg--pro')
     const ch = p.channelizationSchemes[0]
     const mm = multimodalBarSvg(ch.approaches, ch.flowSchemes[0])
-    expect(mm).toContain('行人 / 非机动车流量')
+    expect(mm).toContain('行人 · 非机')
     expect(mm).toContain('chart-svg--pro')
   })
 
