@@ -37,6 +37,9 @@ export type ExportItemId =
   | 'roadgee-plan-queue'
   | 'roadgee-plan-vc'
   | 'roadgee-signal-board'
+  | 'maxband-report-svg'
+  | 'maxband-report-md'
+  | 'maxband-report-csv'
 
 export type ExportItem = {
   id: ExportItemId
@@ -50,6 +53,34 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'maxband-report-svg',
+    category: 'band',
+    title: 'MAXBAND 相位差报告图',
+    format: 'SVG',
+    description: '路口相位差茎叶图 + 上下行带宽 · 离散搜索结果 · 非 MIP',
+    modes: ['band'],
+    requires: ['band'],
+  },
+  {
+    id: 'maxband-report-md',
+    category: 'band',
+    title: 'MAXBAND 报告 Markdown',
+    format: 'MD',
+    description: '相位差表 + 带宽 KPI',
+    modes: ['band'],
+    requires: ['band'],
+  },
+  {
+    id: 'maxband-report-csv',
+    category: 'band',
+    title: 'MAXBAND 节点表 CSV',
+    format: 'CSV',
+    description: 'name,distance,offset,λ,C,locked',
+    modes: ['band'],
+    requires: ['band'],
+  },
+
   {
     id: 'roadgee-signal-board',
     category: 'signal',

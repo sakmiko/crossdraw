@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## 0.5.84 — 2026-07-16
+
+### 绿波 MAXBAND 报告可视化
+- 新页签 **MAXBAND**：相位差茎叶图 + 节点表 + b↑/b↓/比
+- 导出 SVG / MD / CSV；「优化并应用」切 maxband-discrete 并写回相位差
+- 导出中心：`maxband-report-svg|md|csv`
+
+### 流量页上下布局
+- 与信号一致：上流向图、下 RoadGee 表单
+
+### 诚实边界
+- MAXBAND 为工程离散搜索，非商业 MIP
+
+# CHANGELOG
+
 ## 0.5.83 — 2026-07-16
 
 ### 信号页上下布局

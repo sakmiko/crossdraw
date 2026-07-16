@@ -15,7 +15,8 @@ import { downloadText } from '@/io/download'
 import { corridorSegments } from '@/domain/analysis/corridor'
 import { Icon } from '@/ui/icons/Icons'
 import { computeCoordinationIndex } from '@/domain/analysis/coordinationIndex'
-import { buildMaxbandReport } from '@/domain/analysis/maxbandReport'
+import { buildMaxbandReport, maxbandReportMarkdown, maxbandReportCsv } from '@/domain/analysis/maxbandReport'
+import { maxbandReportDiagramSvg } from '@/ui/charts/maxbandReportDiagram'
 
 export type BandPageProps = {
   project: Project
@@ -37,7 +38,7 @@ export type BandPageProps = {
   renameBandCorridor: (id: string, name: string) => void
 }
 
-type BandTab = 'table' | 'timespace' | 'map' | 'compare'
+type BandTab = 'table' | 'timespace' | 'map' | 'maxband' | 'compare'
 
 export function BandPage(props: BandPageProps) {
   const {
@@ -78,6 +79,16 @@ export function BandPage(props: BandPageProps) {
       }),
     [corridor, band.bandwidthRatio],
   )
+  const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
+  const maxbandSvg = useMemo(
+    () =>
+      maxbandReportDiagramSvg(corridor, {
+        width: 900,
+        height: 340,
+        report: maxbandRep,
+      }),
+    [corridor, maxbandRep],
+  )
 
   const C = sortedNodes[0]?.cycleSec ?? 90
   const lockedN = corridor.nodes.filter((n) => n.lockedOffset).length
@@ -101,6 +112,7 @@ export function BandPage(props: BandPageProps) {
               ['table', '路口参数表', 'table'],
               ['timespace', '时距图', 'chart'],
               ['map', '走廊图', 'map'],
+              ['maxband', 'MAXBAND', 'optimize'],
               ['compare', '多走廊', 'compare'],
             ] as const
           ).map(([id, label, icon]) => (
@@ -438,6 +450,90 @@ export function BandPage(props: BandPageProps) {
                 className="chart-svg-host chart-svg-host--pro"
                 dangerouslySetInnerHTML={{ __html: mapSvg }}
               />
+            </div>
+          )}
+
+          {tab === 'maxband' && (
+            <div className="card band-pane compact-card">
+              <div className="panel-header">
+                <h2 style={{ margin: 0 }}>MAXBAND 报告</h2>
+                <div className="panel-header-meta">
+                  <span className="subpanel-tag">{maxbandRep.method}</span>
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() => exportSvgFile(`${project.name}-maxband.svg`, maxbandSvg)}
+                  >
+                    图 SVG
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() =>
+                      downloadText(
+                        `${project.name}-maxband.md`,
+                        maxbandReportMarkdown(project.name, maxbandRep),
+                        'text/markdown',
+                      )
+                    }
+                  >
+                    MD
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() =>
+                      downloadText(`${project.name}-maxband.csv`, maxbandReportCsv(maxbandRep), 'text/csv')
+                    }
+                  >
+                    CSV
+                  </button>
+                  <button
+                    type="button"
+                    className="primary"
+                    onClick={() => {
+                      updateBand({ method: 'maxband-discrete' })
+                      optimizeBand()
+                    }}
+                  >
+                    优化并应用
+                  </button>
+                </div>
+              </div>
+              <div
+                className="chart-svg-host chart-svg-host--pro"
+                dangerouslySetInnerHTML={{ __html: maxbandSvg }}
+              />
+              <div className="table-wrap" style={{ marginTop: 10 }}>
+                <table className="table table-dense">
+                  <thead>
+                    <tr>
+                      <th>路口</th>
+                      <th>桩号</th>
+                      <th>o(s)</th>
+                      <th>λ</th>
+                      <th>C</th>
+                      <th>锁</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {maxbandRep.nodes.map((n) => (
+                      <tr key={n.name + n.distanceM}>
+                        <td>{n.name}</td>
+                        <td className="num">{Math.round(n.distanceM)}</td>
+                        <td className="num">{n.offsetSec.toFixed(1)}</td>
+                        <td className="num">{n.greenRatio.toFixed(2)}</td>
+                        <td className="num">{n.cycleSec}</td>
+                        <td>{n.locked ? 'Y' : ''}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="hint quiet" style={{ marginTop: 8 }}>
+                b↑ {maxbandRep.forwardSec.toFixed(1)}s · b↓ {maxbandRep.backwardSec.toFixed(1)}s · 比{' '}
+                {(maxbandRep.bandwidthRatio * 100).toFixed(1)}% · {maxbandRep.honesty}
+              </p>
             </div>
           )}
 
