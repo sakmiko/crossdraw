@@ -1,0 +1,35 @@
+{
+  "arrow_codes": {
+    "ZX": "直行",
+    "ZZ": "左转",
+    "YZ": "右转",
+    "DT": "掉头",
+    "ZX_ZZ": "直左",
+    "ZX_YZ": "直右",
+    "ZZ_YZ": "左右",
+    "ZX_ZZ_YZ": "左直右",
+    "ZX_DT": "直行+掉头",
+    "ZZ_DT": "左转+掉头",
+    "YZ_DT": "右转+掉头",
+    "KB": "可变车道",
+    "CX": "潮汐车道",
+    "BUS": "公交/全向",
+    "BLANK": "空白"
+  },
+  "arrow_png_size": "50x25 RGBA",
+  "arrow_url_pattern": "/static/dist/imgs/50-25/{CODE}.png",
+  "stack": {
+    "intersection": [
+      "Vue2",
+      "spritejs@3.8.3",
+      "echarts@4.9.0",
+      "jquery",
+      "bootstrap"
+    ],
+    "section": [
+      "custom hdm.js",
+      "no echarts"
+    ],
+    "band": "separate /band/ app"
+  }
+}
