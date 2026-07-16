@@ -29,6 +29,12 @@ import { Icon } from '@/ui/icons/Icons'
 import { computeCoordinationIndex } from '@/domain/analysis/coordinationIndex'
 import { buildMaxbandReport, maxbandReportMarkdown, maxbandReportCsv } from '@/domain/analysis/maxbandReport'
 import { maxbandReportDiagramSvg } from '@/ui/charts/maxbandReportDiagram'
+import {
+  offsetScanBoardSvg,
+  scanCorridorOffsets,
+  offsetScanMarkdown,
+  offsetScanCsv,
+} from '@/ui/charts/offsetScanBoard' 
 
 export type BandPageProps = {
   project: Project
@@ -40,6 +46,7 @@ export type BandPageProps = {
   addBandNode: () => void
   removeBandNode: (id: string) => void
   optimizeBand: () => void
+  applyOffsetScanBest?: () => { bestOffset: number; totalSec: number } | null
   optimizeAllBands: () => { count: number; improved: number }
   onProgressiveOffsets?: (reverse?: boolean) => void
   setBandSegmentLength: (toNodeId: string, lengthM: number) => void
@@ -50,7 +57,7 @@ export type BandPageProps = {
   renameBandCorridor: (id: string, name: string) => void
 }
 
-type BandTab = 'table' | 'timespace' | 'map' | 'maxband' | 'compare'
+type BandTab = 'table' | 'timespace' | 'map' | 'maxband' | 'compare' | 'offset-scan'
 
 export function BandPage(props: BandPageProps) {
   const {
@@ -63,6 +70,7 @@ export function BandPage(props: BandPageProps) {
     addBandNode,
     removeBandNode,
     optimizeBand,
+    applyOffsetScanBest,
     optimizeAllBands,
     onProgressiveOffsets,
     setBandSegmentLength,
@@ -158,6 +166,20 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
                 <Icon name="band" size={15} /><span>连续相位差</span>
               </button>
             )}
+            {applyOffsetScanBest && (
+              <button
+                type="button"
+                className="ghost band-bar-btn"
+                onClick={() => {
+                  const r = applyOffsetScanBest()
+                  if (r) setBatchNote(`扫o=${r.bestOffset.toFixed(0)}`)
+                  setTab('offset-scan')
+                }}
+                title="离散扫描自由节点相位差并应用最优"
+              >
+                <Icon name="optimize" size={15} /><span>扫描并应用</span>
+              </button>
+            )}
             <button
               type="button"
               className="ghost band-bar-btn"
@@ -192,6 +214,7 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
                 ['timespace', '时距图', 'chart'],
                 ['map', '路网预览', 'map'],
                 ['maxband', 'MAXBAND', 'optimize'],
+                ['offset-scan', '相位差扫描', 'band'],
                 ['compare', '多走廊', 'compare'],
               ] as const
             ).map(([id, label, icon]) => (
@@ -556,6 +579,59 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
             </div>
           )}
 
+          {tab === 'offset-scan' && (
+            <div className="band-panel">
+              <div className="panel-header">
+                <h2 style={{ margin: 0, fontSize: 15 }}>相位差扫描</h2>
+                <span className="subpanel-tag">scoreOffsets</span>
+              </div>
+              <div
+                className="chart-svg-host"
+                style={{ overflow: 'auto' }}
+                dangerouslySetInnerHTML={{
+                  __html: offsetScanBoardSvg(corridor, { width: 900, height: 300, stepSec: 2 }),
+                }}
+              />
+              <div className="toolbar dense" style={{ marginTop: 8 }}>
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={() => {
+                    const r = applyOffsetScanBest?.()
+                    if (r) setBatchNote(`o=${r.bestOffset.toFixed(0)}`)
+                  }}
+                >
+                  应用最优相位差
+                </button>
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={() => {
+                    const scan = scanCorridorOffsets(corridor, { stepSec: 2 })
+                    exportSvgFile(
+                      `${project.name}-相位差扫描.svg`,
+                      offsetScanBoardSvg(corridor, { width: 900, height: 300, scan }),
+                    )
+                    downloadText(
+                      `${project.name}-相位差扫描.md`,
+                      offsetScanMarkdown(project.name, corridor.name, scan),
+                      'text/markdown',
+                    )
+                    downloadText(
+                      `${project.name}-相位差扫描.csv`,
+                      offsetScanCsv(scan),
+                      'text/csv',
+                    )
+                  }}
+                >
+                  导出 SVG/MD/CSV
+                </button>
+              </div>
+              <p className="hint quiet" style={{ marginTop: 8 }}>
+                蓝=上下行合计 · 绿=上行 · 橙=下行 · 红=最优 · 紫=当前 · 非 MIP
+              </p>
+            </div>
+          )}
           {tab === 'maxband' && (
             <div className="flat-block band-pane flat-block">
               <div className="panel-header">

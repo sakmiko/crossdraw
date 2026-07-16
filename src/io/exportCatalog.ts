@@ -111,6 +111,9 @@ export type ExportItemId =
   | 'critical-approach-svg'
   | 'critical-approach-md'
   | 'critical-approach-csv'
+  | 'offset-scan-svg'
+  | 'offset-scan-md'
+  | 'offset-scan-csv'
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
@@ -129,6 +132,34 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'offset-scan-svg',
+    category: 'band',
+    title: '相位差扫描图',
+    format: 'SVG',
+    description: '自由节点 o 扫描 · Σb 曲线',
+    modes: ['band'],
+    requires: ['band'],
+  },
+  {
+    id: 'offset-scan-md',
+    category: 'band',
+    title: '相位差扫描 MD',
+    format: 'MD',
+    description: '扫描最优与采样表',
+    modes: ['band'],
+    requires: ['band'],
+  },
+  {
+    id: 'offset-scan-csv',
+    category: 'band',
+    title: '相位差扫描 CSV',
+    format: 'CSV',
+    description: 'o–带宽数据点',
+    modes: ['band'],
+    requires: ['band'],
+  },
+
   {
     id: 'critical-approach-svg',
     category: 'analysis',

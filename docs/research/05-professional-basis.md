@@ -145,3 +145,5 @@
 | 进口道储存校核 | 排队示意 vs entryWidenLengthM | 工程式；非仿真 |
 
 | 关键进口看板 | max v/c 车道组 | analyzeIntersection |
+
+| 相位差扫描 | 自由节点 o 离散 + scoreOffsets | 工程扫描非 MIP |

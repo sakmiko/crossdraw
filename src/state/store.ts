@@ -29,6 +29,7 @@ import { saveDraft } from '@/io/autosave'
 import { applyPedTimingToSignal } from '@/domain/signal/pedTiming'
 import { allocateGreensByBarrierCriticalY } from '@/domain/signal/barrierGreenAlloc'
 import { applyProgressiveOffsets } from '@/domain/analysis/progressiveOffset'
+import { scanCorridorOffsets, applyOffsetScanBest } from '@/domain/analysis/offsetScan' 
 import {
   runFullSchemeOptimize,
   projectAfterFullOptimize,
@@ -106,6 +107,7 @@ export type AppState = {
   removeBandNode: (nodeId: string) => void
     optimizeBand: () => void
   applyProgressiveOffsets: (reverse?: boolean) => void
+  applyOffsetScanBest: () => { bestOffset: number; totalSec: number } | null
   applyPedTiming: () => void
   allocateBarrierGreens: () => void
   optimizeAllBands: () => { count: number; improved: number }
@@ -700,6 +702,25 @@ export const useAppStore = create<AppState>()(
           improved = summaries.filter((x) => x.improved).length
         })
         return { count, improved }
+      },
+      applyOffsetScanBest: () => {
+        const s = get()
+        const c = s.project.bandCorridor
+        if (!c?.nodes?.length) return null
+        const scan = scanCorridorOffsets(c)
+        const next = applyOffsetScanBest(c, scan)
+        set({
+          project: { ...s.project, bandCorridor: next },
+          dirty: true,
+        })
+        // also update matching corridor in list if present
+        const list = s.project.bandCorridors
+        if (list?.length) {
+          const proj = get().project
+          const bandCorridors = list.map((bc) => (bc.id === next.id ? next : bc))
+          set({ project: { ...proj, bandCorridors, bandCorridor: next } })
+        }
+        return { bestOffset: scan.bestDeltaSec, totalSec: scan.best.totalSec }
       },
       applyFullSchemeOptimize: () => {
         const s = get()

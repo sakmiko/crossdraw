@@ -9,7 +9,7 @@ describe('v0.5.70 UI declutter', () => {
   it('e2e suite title and modes present', () => {
     const p = resolve(__dirname, '../e2e/mvp.spec.ts')
     const t = readFileSync(p, 'utf8')
-    expect(t).toContain('critical-compare + polish')
+    expect(t).toContain('offset-scan + polish')
     for (const mode of ['流量', '信号', '绿波', '比选', '断面']) {
       expect(t).toContain(mode)
     }

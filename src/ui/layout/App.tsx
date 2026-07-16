@@ -45,7 +45,13 @@ import {
   criticalApproachBoardSvg,
   criticalApproachMarkdown,
   criticalApproachCsv,
-} from '@/ui/charts/criticalApproachBoard'  
+} from '@/ui/charts/criticalApproachBoard'
+import {
+  offsetScanBoardSvg,
+  scanCorridorOffsets,
+  offsetScanMarkdown,
+  offsetScanCsv,
+} from '@/ui/charts/offsetScanBoard'   
 import { queueTableMarkdown } from '@/domain/analysis/queueStorage'  
 import {
   professionalMultiCorridorReportSvg,
@@ -239,6 +245,7 @@ export default function App() {
   const applyPedTiming = useAppStore((s) => s.applyPedTiming)
   const allocateBarrierGreens = useAppStore((s) => s.allocateBarrierGreens)
   const optimizeAllBands = useAppStore((s) => s.optimizeAllBands)
+  const applyOffsetScanBest = useAppStore((s) => s.applyOffsetScanBest)
   const applyFullSchemeOptimize = useAppStore((s) => s.applyFullSchemeOptimize)
   const setBandSegmentLength = useAppStore((s) => s.setBandSegmentLength)
   const setActiveBand = useAppStore((s) => s.setActiveBand)
@@ -620,6 +627,7 @@ export default function App() {
         />
         <div className="band-with-nav-main">
         <BandPage
+                  applyOffsetScanBest={applyOffsetScanBest}
           project={project}
           band={band}
           theme={theme}
@@ -641,7 +649,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.109 · 绿波专页</span>
+          <span>Crossdraw v0.5.110 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -663,7 +671,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.109</span>
+            <span className="brand-ver">v0.5.110</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -992,7 +1000,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.109</span>
+        <span>Crossdraw v0.5.110</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1330,6 +1338,33 @@ export default function App() {
             downloadText(
               `${project.name}-Y分解.csv`,
               criticalYCsv(channel.approaches, flow, signal),
+              'text/csv',
+            )
+          },
+          'offset-scan-svg': () => {
+            const c = project.bandCorridor
+            if (!c) return
+            exportSvgFile(
+              `${project.name}-相位差扫描.svg`,
+              offsetScanBoardSvg(c, { width: 900, height: 300 }),
+            )
+          },
+          'offset-scan-md': () => {
+            const c = project.bandCorridor
+            if (!c) return
+            const scan = scanCorridorOffsets(c)
+            downloadText(
+              `${project.name}-相位差扫描.md`,
+              offsetScanMarkdown(project.name, c.name, scan),
+              'text/markdown',
+            )
+          },
+          'offset-scan-csv': () => {
+            const c = project.bandCorridor
+            if (!c) return
+            downloadText(
+              `${project.name}-相位差扫描.csv`,
+              offsetScanCsv(scanCorridorOffsets(c)),
               'text/csv',
             )
           },

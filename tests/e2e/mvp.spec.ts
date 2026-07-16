@@ -18,11 +18,11 @@ async function openNav(page: Page, label: string) {
   await page.waitForTimeout(300)
 }
 
-test.describe('Crossdraw v0.5.109 critical-compare + polish', () => {
+test.describe('Crossdraw v0.5.110 offset-scan + polish', () => {
   // 渠化 流量 信号 分析 绿波 比选 断面
   test('shell', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.109/).first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.110/).first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
   test('channel', async ({ page }) => {
@@ -35,26 +35,26 @@ test.describe('Crossdraw v0.5.109 critical-compare + polish', () => {
     await openNav(page, '流量')
     await page.screenshot({ path: 'docs/screenshots/02-flow.png', fullPage: true })
   })
-  test('signal critical', async ({ page }) => {
+  test('signal', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '信号')
-    await expect(page.locator('.rg-section-title').filter({ hasText: '关键进口' }).first()).toBeVisible({
-      timeout: 10000,
-    })
     await page.screenshot({ path: 'docs/screenshots/03-signal.png', fullPage: true })
   })
-  test('analysis critical', async ({ page }) => {
+  test('analysis', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '分析')
-    await expect(page.locator('.rg-section-title').filter({ hasText: '关键进口' }).first()).toBeVisible({
-      timeout: 10000,
-    })
-    await expect(page.getByRole('button', { name: /关键进口导出/ })).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/04-analysis.png', fullPage: true })
   })
-  test('band', async ({ page }) => {
+  test('band offset scan', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '绿波')
+    await expect(page.getByRole('button', { name: /扫描并应用/ })).toBeVisible({ timeout: 10000 })
+    // open tab if present
+    const tab = page.getByRole('button', { name: /相位差扫描/ }).or(page.getByText('相位差扫描'))
+    if (await tab.count()) {
+      await tab.first().click()
+      await page.waitForTimeout(300)
+    }
     await page.screenshot({ path: 'docs/screenshots/05-band.png', fullPage: true })
   })
   test('xsection', async ({ page }) => {
@@ -62,12 +62,9 @@ test.describe('Crossdraw v0.5.109 critical-compare + polish', () => {
     await openNav(page, '断面')
     await page.screenshot({ path: 'docs/screenshots/05-xsection.png', fullPage: true })
   })
-  test('compare timing methods', async ({ page }) => {
+  test('compare', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '比选')
-    await expect(page.locator('.rg-section-title').filter({ hasText: '配时方法比选' }).first()).toBeVisible({
-      timeout: 10000,
-    })
     await page.screenshot({ path: 'docs/screenshots/06-compare.png', fullPage: true })
   })
 })

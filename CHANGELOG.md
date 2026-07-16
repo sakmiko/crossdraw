@@ -1,6 +1,16 @@
 # CHANGELOG
 
-## 0.5.109 — 2026-07-16
+## 0.5.110 — 2026-07-16
+
+### 相位差扫描
+- `scanCorridorOffsets`：自由节点 o 全周期离散扫描，`scoreOffsets` 评 Σb
+- 绿波页签「相位差扫描」+ 顶栏「扫描并应用」
+- 导出 `offset-scan-svg|md|csv`
+
+### 诚实边界
+- 工程离散扫描；非 MAXBAND-MIP / 非多变量联合优化
+
+0.5.109 — 2026-07-16
 
 ### 关键进口高亮
 - `criticalApproachBoardSvg`：按 v/c 排序 · CRITICAL 徽章
