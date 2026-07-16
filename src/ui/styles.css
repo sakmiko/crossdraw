@@ -3386,3 +3386,31 @@ button,
     display: none;
   }
 }
+
+
+/* v0.5.125 channel kpi + sidewalk glyphs */
+.channel-kpi-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 8px 4px 10px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.channel-kpi-strip .bkpi {
+  min-width: 3.5rem;
+}
+.channel-kpi-strip .bkpi-l {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+.channel-kpi-strip .bkpi-v {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+.app.shell--channel .page-fill-params {
+  padding-top: 8px !important;
+}

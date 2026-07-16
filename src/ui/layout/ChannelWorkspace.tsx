@@ -90,6 +90,25 @@ export function ChannelWorkspace({
     project.channelizationSchemes.find((c) => c.id === project.active?.channelId) ??
     project.channelizationSchemes[0]
   const isRoundabout = channel?.intersectionType === 'roundabout'
+  const channelKpi = (() => {
+    if (!channel) return null
+    const aps = channel.approaches
+    const entryLanes = aps.reduce((s, a) => s + a.entryLanes.length, 0)
+    const exitLanes = aps.reduce((s, a) => s + a.exitLanes.length, 0)
+    const rtOn = aps.filter((a) => a.rightTurn?.enabled && a.rightTurn.style !== 'none').length
+    const sw = selected?.sidewalkWidthM ?? 0
+    const med = selected?.median?.widthM ?? 0
+    return {
+      legs: aps.length,
+      entryLanes,
+      exitLanes,
+      rtOn,
+      sw,
+      med,
+      type: channel.intersectionType ?? 'signalized',
+    }
+  })()
+
   if (!selected) {
     return (
       <div className="flat-params" style={{ marginTop: 12 }}>
@@ -399,7 +418,17 @@ export function ChannelWorkspace({
       <h2 className="rg-page-title">渠化 · {ap.name}</h2>
 
       {/* 道路属性 */}
-      <div className="rg-section">
+            {channelKpi && (
+        <div className="channel-kpi-strip" id="channel-kpi-strip" aria-label="渠化实时指标">
+          <div className="bkpi"><span className="bkpi-l">进口</span><span className="bkpi-v">{channelKpi.legs}</span></div>
+          <div className="bkpi"><span className="bkpi-l">进车道</span><span className="bkpi-v">{channelKpi.entryLanes}</span></div>
+          <div className="bkpi"><span className="bkpi-l">出车道</span><span className="bkpi-v">{channelKpi.exitLanes}</span></div>
+          <div className="bkpi"><span className="bkpi-l">右转渠化</span><span className="bkpi-v">{channelKpi.rtOn}</span></div>
+          <div className="bkpi"><span className="bkpi-l">人行</span><span className="bkpi-v">{channelKpi.sw.toFixed(1)}<small>m</small></span></div>
+          <div className="bkpi"><span className="bkpi-l">中分</span><span className="bkpi-v">{channelKpi.med.toFixed(1)}<small>m</small></span></div>
+        </div>
+      )}
+<div className="rg-section">
         <div className="rg-section-title">道路属性</div>
         <div className="field-row">
           <label>

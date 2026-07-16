@@ -56,6 +56,8 @@ export type ThemeLike = {
   crosswalk: string
   laneFill: string
   laneAlt: string
+  sidewalk?: string
+  bike?: string
 }
 
 /** Fixed-size movement arrow glyph at lane mid (base is near stop, tip toward intersection). */
@@ -478,6 +480,46 @@ export function placeFishBellyMedian(
     stroke: theme.islandEdge,
     strokeWidth: 0.2,
     alpha: 0.95,
+  })
+}
+
+
+/** Ribbon polygon between two polylines (inner then outer along station). */
+export function placeRibbonBetween(
+  mesh: Mesh,
+  inner: Vec[],
+  outer: Vec[],
+  fill: string,
+  stroke: string,
+  opts?: { alpha?: number; strokeWidth?: number; meta?: Record<string, string>; layer?: 'ROAD' | 'MARKING' | 'ISLAND' },
+) {
+  if (inner.length < 2 || outer.length < 2) return
+  pushPoly(mesh, {
+    layer: opts?.layer ?? 'ROAD',
+    points: [...inner, ...outer.slice().reverse()],
+    fill,
+    stroke,
+    strokeWidth: opts?.strokeWidth ?? 0.12,
+    alpha: opts?.alpha ?? 0.96,
+    meta: opts?.meta,
+  })
+}
+
+/** Continuous curb edge stroke along a polyline. */
+export function placeCurbStroke(
+  mesh: Mesh,
+  pts: Vec[],
+  theme: ThemeLike,
+  strokeWidth = 0.22,
+  alpha = 0.95,
+) {
+  if (pts.length < 2) return
+  pushLine(mesh, {
+    layer: 'MARKING',
+    points: pts,
+    stroke: theme.curb,
+    strokeWidth,
+    alpha,
   })
 }
 

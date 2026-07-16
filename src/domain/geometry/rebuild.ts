@@ -23,6 +23,8 @@ import {
   placeSafetyDisc,
   placeMedianStrip,
   placeFishBellyMedian,
+  placeRibbonBetween,
+  placeCurbStroke,
   placeCirclePoly,
   placeCircleLine,
   type Frame,
@@ -561,16 +563,13 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
       const eExtra = entryLateralExtraAt(profile, s)
       return add(mul(ux, start + s), mul(px, -half - eExtra - sw))
     })
-    pushPoly(mesh, {
-      layer: 'ROAD',
-      points: [...leftOuter, ...leftPts.slice().reverse()],
-      fill: THEME.sidewalk,
-      stroke: '#a8a29e',
-      strokeWidth: 0.12,
+    placeRibbonBetween(mesh, leftPts, leftOuter, THEME.sidewalk, '#a8a29e', {
       alpha: 0.96,
       meta: { approachId: ap.id, kind: 'sidewalk-entry' },
     })
-    // exit: optional bike then sidewalk, stacked outward from right curb (no overlap / dead gap)
+    placeCurbStroke(mesh, leftPts, THEME, 0.2)
+    placeCurbStroke(mesh, leftOuter, THEME, 0.16, 0.75)
+    // exit: optional bike then sidewalk, stacked outward from right curb
     const bikeW = ap.bikeEnabled ? Math.max(0, ap.bikeWidthM) : 0
     if (bikeW > 0) {
       const bikeOuter: Vec[] = rightPts.map((_p, i) => {
@@ -578,15 +577,12 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
         const xExtra = exitLateralExtraAt(profile, s, len)
         return add(mul(ux, start + s), mul(px, half + xExtra + bikeW))
       })
-      pushPoly(mesh, {
-        layer: 'ROAD',
-        points: [...rightPts, ...bikeOuter.slice().reverse()],
-        fill: THEME.bike,
-        stroke: '#0f766e',
-        strokeWidth: 0.1,
+      placeRibbonBetween(mesh, rightPts, bikeOuter, THEME.bike, '#0f766e', {
         alpha: 0.88,
+        strokeWidth: 0.1,
         meta: { approachId: ap.id, kind: 'bike' },
       })
+      placeCurbStroke(mesh, bikeOuter, THEME, 0.16, 0.7)
     }
     const rightInner: Vec[] = rightPts.map((_p, i) => {
       const s = uniq[Math.min(i, uniq.length - 1)] ?? 0
@@ -598,15 +594,12 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
       const xExtra = exitLateralExtraAt(profile, s, len)
       return add(mul(ux, start + s), mul(px, half + xExtra + bikeW + sw))
     })
-    pushPoly(mesh, {
-      layer: 'ROAD',
-      points: [...rightInner, ...rightOuter.slice().reverse()],
-      fill: THEME.sidewalk,
-      stroke: '#a8a29e',
-      strokeWidth: 0.12,
+    placeRibbonBetween(mesh, rightInner, rightOuter, THEME.sidewalk, '#a8a29e', {
       alpha: 0.96,
       meta: { approachId: ap.id, kind: 'sidewalk-exit' },
     })
+    placeCurbStroke(mesh, rightPts, THEME, 0.2)
+    placeCurbStroke(mesh, rightOuter, THEME, 0.16, 0.75)
   }
 
   // frontage / auxiliary road ribbon (outward of bike or main curb)

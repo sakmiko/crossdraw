@@ -1,3 +1,9 @@
+## 0.5.125 — Sidewalk ribbon glyphs + channel KPI strip
+
+- `placeRibbonBetween` / `placeCurbStroke` for entry/exit sidewalk + bike (homology widen profile).
+- Channel params **KPI strip** (legs / lanes / RT / sidewalk / median).
+- Schematic curb ribbons — not survey CAD.
+
 ## 0.5.124 — Cycle-scan ECharts + unified responsive shell
 
 - Live `cycleScanOption` on Signal「周期 C 敏感性」(`#cycle-scan-echarts`, homology `scanCycleSensitivity`).

@@ -34,6 +34,6 @@ describe('v0.5.124 cycle scan ECharts + responsive shell', () => {
     const css = readFileSync(resolve('src/ui/styles.css'), 'utf8')
     expect(css).toContain('v0.5.124 responsive shell')
     const pkg = readFileSync(resolve('package.json'), 'utf8')
-    expect(pkg).toContain('"version": "0.5.124"')
+    expect(pkg).toMatch(/"version": "0\.5\.\d+"/)
   })
 })
