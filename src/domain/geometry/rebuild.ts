@@ -21,6 +21,8 @@ import {
   placeChannelRibbon,
   placeChannelIslandArc,
   placeSafetyDisc,
+  placeMedianStrip,
+  placeFishBellyMedian,
   placeCirclePoly,
   placeCircleLine,
   type Frame,
@@ -480,7 +482,7 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
     })
   }
 
-  // median
+  // median via reusable glyphs
   const medL = -half + eW
   const medR = medL + med
   const medianFill =
@@ -491,58 +493,27 @@ function drawApproach(mesh: Mesh, ap: Approach, core: number, len: number) {
         : ap.median.style === 'barrier'
           ? '#9ca3af'
           : THEME.doubleYellow
-  if (ap.median.style !== 'fishBelly') {
-    pushPoly(mesh, {
-      layer: ap.median.style === 'greenBelt' ? 'ISLAND' : 'MARKING',
-      points: [
-        add(mul(ux, start + 1), mul(px, medL)),
-        add(mul(ux, end - 3), mul(px, medL)),
-        add(mul(ux, end - 3), mul(px, medR)),
-        add(mul(ux, start + 1), mul(px, medR)),
-      ],
-      fill: medianFill,
-      stroke: THEME.islandEdge,
-      strokeWidth: 0.15,
-    })
-  }
-  if (ap.median.style === 'doubleYellow') {
-    pushLine(mesh, {
-      layer: 'MARKING',
-      points: [add(mul(ux, start + 1), mul(px, (medL + medR) / 2 - 0.15)), add(mul(ux, end - 3), mul(px, (medL + medR) / 2 - 0.15))],
-      stroke: THEME.doubleYellow,
-      strokeWidth: 0.12,
-    })
-    pushLine(mesh, {
-      layer: 'MARKING',
-      points: [add(mul(ux, start + 1), mul(px, (medL + medR) / 2 + 0.15)), add(mul(ux, end - 3), mul(px, (medL + medR) / 2 + 0.15))],
-      stroke: THEME.doubleYellow,
-      strokeWidth: 0.12,
-    })
-  }
-  // fish-belly median: wider near stop line, taper to far (engineering schematic)
-  if (ap.median.style === 'fishBelly' && med > 0.5) {
-    const mid = (medL + medR) / 2
-    const halfNear = med * 0.55
-    const halfFar = Math.max(0.4, med * 0.22)
-    const s0 = start + 2
-    const s1 = start + (end - start) * 0.35
-    const s2 = end - 8
-    pushPoly(mesh, {
-      layer: 'ISLAND',
-      points: [
-        add(mul(ux, s0), mul(px, mid - halfNear)),
-        add(mul(ux, s1), mul(px, mid - halfNear * 0.85)),
-        add(mul(ux, s2), mul(px, mid - halfFar)),
-        add(mul(ux, s2), mul(px, mid + halfFar)),
-        add(mul(ux, s1), mul(px, mid + halfNear * 0.85)),
-        add(mul(ux, s0), mul(px, mid + halfNear)),
-      ],
-      fill: THEME.island,
-      stroke: THEME.islandEdge,
-      strokeWidth: 0.2,
-      alpha: 0.95,
-    })
-    // no on-road parameter labels
+  {
+    const frame: Frame = { origin: [0, 0], ux, px }
+    if (ap.median.style === 'fishBelly' && med > 0.5) {
+      const mid = (medL + medR) / 2
+      placeFishBellyMedian(
+        mesh,
+        frame,
+        start + 2,
+        start + (end - start) * 0.35,
+        end - 8,
+        mid,
+        med * 0.55,
+        Math.max(0.4, med * 0.22),
+        THEME,
+      )
+    } else if (med > 0.15) {
+      placeMedianStrip(mesh, frame, start + 1, end - 3, medL, medR, medianFill, THEME, {
+        layer: ap.median.style === 'greenBelt' ? 'ISLAND' : 'MARKING',
+        doubleYellow: ap.median.style === 'doubleYellow',
+      })
+    }
   }
 
   // exit lane dividers

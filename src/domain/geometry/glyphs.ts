@@ -412,6 +412,75 @@ function circleArc(center: Vec, r: number, a0: number, a1: number, steps: number
   return pts
 }
 
+
+/** Rectangular median / barrier strip between lat medL..medR, s0..s1. */
+export function placeMedianStrip(
+  mesh: Mesh,
+  f: Frame,
+  s0: number,
+  s1: number,
+  medL: number,
+  medR: number,
+  fill: string,
+  theme: ThemeLike,
+  opts?: { layer?: 'ISLAND' | 'MARKING'; doubleYellow?: boolean },
+) {
+  if (medR - medL < 0.15) return
+  const layer = opts?.layer ?? 'ISLAND'
+  pushPoly(mesh, {
+    layer,
+    points: [at(f, s0, medL), at(f, s1, medL), at(f, s1, medR), at(f, s0, medR)],
+    fill,
+    stroke: theme.islandEdge,
+    strokeWidth: 0.15,
+    alpha: 0.95,
+  })
+  if (opts?.doubleYellow) {
+    const mid = (medL + medR) / 2
+    pushLine(mesh, {
+      layer: 'MARKING',
+      points: [at(f, s0, mid - 0.15), at(f, s1, mid - 0.15)],
+      stroke: theme.yellow,
+      strokeWidth: 0.12,
+    })
+    pushLine(mesh, {
+      layer: 'MARKING',
+      points: [at(f, s0, mid + 0.15), at(f, s1, mid + 0.15)],
+      stroke: theme.yellow,
+      strokeWidth: 0.12,
+    })
+  }
+}
+
+/** Fish-belly median: wider near stop (s0), taper toward far (s2). */
+export function placeFishBellyMedian(
+  mesh: Mesh,
+  f: Frame,
+  s0: number,
+  s1: number,
+  s2: number,
+  midLat: number,
+  halfNear: number,
+  halfFar: number,
+  theme: ThemeLike,
+) {
+  pushPoly(mesh, {
+    layer: 'ISLAND',
+    points: [
+      at(f, s0, midLat - halfNear),
+      at(f, s1, midLat - halfNear * 0.85),
+      at(f, s2, midLat - halfFar),
+      at(f, s2, midLat + halfFar),
+      at(f, s1, midLat + halfNear * 0.85),
+      at(f, s0, midLat + halfNear),
+    ],
+    fill: theme.island,
+    stroke: theme.islandEdge,
+    strokeWidth: 0.2,
+    alpha: 0.95,
+  })
+}
+
 /** Rectangle lane strip between lat a..b and s0..s1 along frame. */
 export function placeLaneStrip(
   mesh: Mesh,

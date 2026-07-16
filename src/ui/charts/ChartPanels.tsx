@@ -44,7 +44,7 @@ import { professionalCrossSectionSvg, crossSectionShareSvg } from './crossSectio
 import { collectCorridorKpis, corridorKpiCompareSvg } from './bandCorridorCompare'
 import { chartColorsForTheme, themeSvg } from './chartTheme'
 import { EChart } from '@/ui/charts/EChart'
-import { vcDelayOption } from '@/ui/charts/interactiveBoards'
+import { vcDelayOption, flowLtrOption } from '@/ui/charts/interactiveBoards'
 
 function useChartColors() {
   const theme = useAppStore((s) => s.theme)
@@ -160,6 +160,7 @@ export function FlowCharts({
     () => themeSvg(groupedBarSvg(align.barGroups, { height: 160 }), colors),
     [align, colors],
   )
+  const liveOpt = useMemo(() => flowLtrOption(approaches, flow, mode), [approaches, flow, mode])
 
   return (
     <div className="chart-card">
@@ -168,6 +169,11 @@ export function FlowCharts({
         <small>
           L / T / R · {align.unit} · Σ={align.mode === 'peak' ? align.totalPeakLTR.toFixed(0) : align.totalLTR.toFixed(0)}
         </small>
+      </div>
+      <EChart option={liveOpt} style={{ height: 260 }} className="echart-host" />
+      <div className="chart-title" style={{ marginTop: 10 }}>
+        <span>静态条形</span>
+        <small>导出同源</small>
       </div>
       <div dangerouslySetInnerHTML={{ __html: svg }} />
       <div className="legend">

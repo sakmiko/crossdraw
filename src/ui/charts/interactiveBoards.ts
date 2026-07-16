@@ -1,7 +1,8 @@
 /**
  * Interactive ECharts option builders — homology with AnalysisResult / cycle scan.
  */
-import type { AnalysisResult } from '@/domain/types'
+import type { AnalysisResult, Approach, FlowScheme } from '@/domain/types'
+import { buildFlowAlignment, type FlowDisplayMode } from '@/domain/flow/flowAlign'
 import type { EChartsCoreOption } from 'echarts/core'
 
 const LOS_COLORS: Record<string, string> = {
@@ -128,6 +129,33 @@ export function cycleScanOption(
           data: [{ yAxis: 1, lineStyle: { color: '#ef4444', type: 'dashed' }, label: { formatter: '1.0' } }],
         },
       },
+    ],
+  }
+}
+
+
+/** Grouped L/T/R bars per approach — homology buildFlowAlignment */
+export function flowLtrOption(
+  approaches: Approach[],
+  flow: FlowScheme,
+  mode: FlowDisplayMode = 'natural',
+): EChartsCoreOption {
+  const align = buildFlowAlignment(approaches, flow, mode)
+  const cats = align.barGroups.map((g) => g.group)
+  const pick = (key: string) =>
+    align.barGroups.map((g) => g.items.find((i) => i.key === key)?.value ?? 0)
+  return {
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { data: ['L', 'T', 'R'], top: 0, textStyle: { fontSize: 11 } },
+    grid: { left: 48, right: 16, top: 28, bottom: 40 },
+    dataZoom: [{ type: 'inside' }, { type: 'slider', height: 16, bottom: 4 }],
+    xAxis: { type: 'category', data: cats, axisLabel: { fontSize: 10, rotate: cats.length > 5 ? 28 : 0 } },
+    yAxis: { type: 'value', name: align.unit, min: 0 },
+    series: [
+      { name: 'L', type: 'bar', stack: 'ltr', data: pick('L'), itemStyle: { color: '#0891b2' }, barMaxWidth: 28 },
+      { name: 'T', type: 'bar', stack: 'ltr', data: pick('T'), itemStyle: { color: '#2563eb' }, barMaxWidth: 28 },
+      { name: 'R', type: 'bar', stack: 'ltr', data: pick('R'), itemStyle: { color: '#7c3aed' }, barMaxWidth: 28 },
     ],
   }
 }

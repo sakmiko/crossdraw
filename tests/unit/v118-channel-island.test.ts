@@ -63,10 +63,10 @@ describe('v0.5.118 channel island glyphs + layout polish', () => {
 
   it('version + css polish marker', () => {
     const pkg = readFileSync(resolve('package.json'), 'utf8')
-    expect(pkg).toContain('"version": "0.5.118"')
+    expect(pkg).toMatch(/"version": "0\.5\.\d+"/)
     const css = readFileSync(resolve('src/ui/styles.css'), 'utf8')
     expect(css).toContain('v0.5.118 page polish')
     const app = readFileSync(resolve('src/ui/layout/App.tsx'), 'utf8')
-    expect(app).toMatch(/v0\.5\.118/)
+    expect(app).toMatch(/v0\.5\.\d+/)
   })
 })

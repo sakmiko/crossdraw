@@ -1,3 +1,9 @@
+## 0.5.119 — Median glyphs + interactive flow L/T/R
+
+- `placeMedianStrip` / `placeFishBellyMedian` in approach rebuild.
+- ECharts stacked L/T/R (`flowLtrOption`) on Flow workspace + FlowCharts (homology `flowAlign`).
+- Schematic only — not survey CAD.
+
 ## 0.5.118 — Channel island glyphs + page polish
 
 - Free-right **ribbon / island / safety disc** as reusable glyphs (`placeChannelRibbon`, `placeChannelIslandArc`, `placeSafetyDisc`).
