@@ -1,6 +1,19 @@
 # CHANGELOG
 
-## 0.5.106 — 2026-07-16
+## 0.5.107 — 2026-07-16
+
+### 损失时间 L 看板
+- `lostTimeBoardSvg`：L=n×ℓ+ΣAR · C₀–Y 曲线
+- 信号页 / 分析页实时展示 + 导出 `lost-time-*`
+
+### 行人 Walk/FDW 优化
+- `pedTimingOptBoardSvg`：当前 vs 推算；短绿标 !
+- 「应用 Walk/FDW」写回相位；导出 `ped-timing-opt-*`
+
+### 诚实边界
+- Webster 损失与行人时距为工程示意；非实测/非完整国标控制器
+
+0.5.106 — 2026-07-16
 
 ### 配时方法比选看板
 - `timingCompareBoardSvg`：Webster / HCM延误 / 等绿 / 固定C 并排 + 推荐★

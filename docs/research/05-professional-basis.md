@@ -138,3 +138,6 @@
 
 | 配时方法比选看板 | compareTimingMethods | Webster/HCM/等绿/固定C |
 | 搭接相位审查 | isOverlap 不计入主环Σ | 教材搭接示意 |
+
+| 损失时间 L 看板 | L=nℓ+R；C₀=(1.5L+5)/(1−Y) | Webster 1958 示意 |
+| 行人 Walk/FDW 优化 | 横道宽/1.2m/s | 工程推算非完整规范 |

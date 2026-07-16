@@ -99,6 +99,12 @@ export type ExportItemId =
   | 'overlap-review-svg'
   | 'overlap-review-md'
   | 'overlap-review-csv'
+  | 'lost-time-board-svg'
+  | 'lost-time-md'
+  | 'lost-time-csv'
+  | 'ped-timing-opt-svg'
+  | 'ped-timing-opt-md'
+  | 'ped-timing-opt-csv'
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
@@ -117,6 +123,61 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'lost-time-board-svg',
+    category: 'signal',
+    title: '损失时间 L 看板',
+    format: 'SVG',
+    description: 'Webster L=nℓ+R 与 C₀–Y 曲线',
+    modes: ['signal', 'analysis'],
+    requires: ['signal'],
+  },
+  {
+    id: 'lost-time-md',
+    category: 'signal',
+    title: '损失时间 L 报告',
+    format: 'MD',
+    description: 'L 与示例最优周期',
+    modes: ['signal', 'analysis'],
+    requires: ['signal'],
+  },
+  {
+    id: 'lost-time-csv',
+    category: 'signal',
+    title: '损失时间 L 曲线',
+    format: 'CSV',
+    description: 'Y–C₀ 数据点',
+    modes: ['signal'],
+    requires: ['signal'],
+  },
+  {
+    id: 'ped-timing-opt-svg',
+    category: 'signal',
+    title: '行人 Walk/FDW 优化',
+    format: 'SVG',
+    description: '横道推算 vs 当前 · 可一键应用',
+    modes: ['signal'],
+    requires: ['signal', 'channel'],
+  },
+  {
+    id: 'ped-timing-opt-md',
+    category: 'signal',
+    title: '行人优化 MD',
+    format: 'MD',
+    description: 'Walk/FDW 推算表',
+    modes: ['signal'],
+    requires: ['signal'],
+  },
+  {
+    id: 'ped-timing-opt-csv',
+    category: 'signal',
+    title: '行人优化 CSV',
+    format: 'CSV',
+    description: 'Walk/FDW 数据',
+    modes: ['signal'],
+    requires: ['signal'],
+  },
+
   {
     id: 'timing-compare-board-svg',
     category: 'signal',

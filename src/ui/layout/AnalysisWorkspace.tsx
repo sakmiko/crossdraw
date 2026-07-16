@@ -4,6 +4,7 @@
  */
 import { computeMovementCapacities } from '@/domain/analysis/movementSat'
 import { websterLostTime } from '@/domain/analysis/lostTime'
+import { lostTimeBoardSvg, lostTimeMarkdown, lostTimeCsv } from '@/ui/charts/lostTimeBoard' 
 import { applyPhfToHourly } from '@/domain/analysis/phf'
 import type {
   AnalysisResult,
@@ -476,6 +477,31 @@ export function AnalysisWorkspace({
       )}
       <div className="flat-section ">
         <div className="rg-section-title">转向能力 · 排队 · 损失时间</div>
+        {signal && (
+          <div
+            className="chart-svg-host"
+            style={{ overflow: 'auto', marginBottom: 8 }}
+            dangerouslySetInnerHTML={{ __html: lostTimeBoardSvg(signal, { width: 680 }) }}
+          />
+        )}
+        {signal && (
+          <div className="toolbar dense" style={{ marginBottom: 8 }}>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => {
+                exportSvgFile(`${project.name}-损失时间L.svg`, lostTimeBoardSvg(signal, { width: 720 }))
+                downloadText(
+                  `${project.name}-损失时间L.md`,
+                  lostTimeMarkdown(project.name, signal),
+                  'text/markdown',
+                )
+              }}
+            >
+              损失 L 导出
+            </button>
+          </div>
+        )}
         <div className="flat-body">
           {flow && channel && (
             <table className="table table-dense">

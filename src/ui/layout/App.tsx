@@ -128,7 +128,13 @@ import {
   overlapReviewSvg,
   overlapReviewMarkdown,
   overlapReviewCsv,
-} from '@/ui/charts/overlapReviewBoard' 
+} from '@/ui/charts/overlapReviewBoard'
+import { lostTimeBoardSvg, lostTimeMarkdown, lostTimeCsv } from '@/ui/charts/lostTimeBoard'
+import {
+  pedTimingOptBoardSvg,
+  pedTimingOptMarkdown,
+  pedTimingOptCsv,
+} from '@/ui/charts/pedTimingOptBoard'  
 import { vcHeatColor } from '@/ui/charts/svgCharts'
 import { analysisMarkdown, bandMarkdown, exportJsonFile, exportSvgFile } from '@/io/exportCharts'
 import { buildAnalysisReportSvg } from '@/io/analysisReportSvg'
@@ -624,7 +630,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.106 · 绿波专页</span>
+          <span>Crossdraw v0.5.107 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -646,7 +652,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.106</span>
+            <span className="brand-ver">v0.5.107</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -975,7 +981,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.106</span>
+        <span>Crossdraw v0.5.107</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1199,6 +1205,45 @@ export default function App() {
             )
           },
           'pro-pack': () => exportProfessionalDiagrams(),
+          'lost-time-board-svg': () => {
+            if (!signal) return
+            exportSvgFile(`${project.name}-损失时间L.svg`, lostTimeBoardSvg(signal, { width: 720 }))
+          },
+          'lost-time-md': () => {
+            if (!signal) return
+            downloadText(
+              `${project.name}-损失时间L.md`,
+              lostTimeMarkdown(project.name, signal),
+              'text/markdown',
+            )
+          },
+          'lost-time-csv': () => {
+            if (!signal) return
+            downloadText(`${project.name}-损失时间L.csv`, lostTimeCsv(signal), 'text/csv')
+          },
+          'ped-timing-opt-svg': () => {
+            if (!channel || !signal) return
+            exportSvgFile(
+              `${project.name}-行人WalkFDW.svg`,
+              pedTimingOptBoardSvg(signal, channel.approaches, { width: 800 }),
+            )
+          },
+          'ped-timing-opt-md': () => {
+            if (!channel || !signal) return
+            downloadText(
+              `${project.name}-行人WalkFDW.md`,
+              pedTimingOptMarkdown(project.name, signal, channel.approaches),
+              'text/markdown',
+            )
+          },
+          'ped-timing-opt-csv': () => {
+            if (!channel || !signal) return
+            downloadText(
+              `${project.name}-行人WalkFDW.csv`,
+              pedTimingOptCsv(signal, channel.approaches),
+              'text/csv',
+            )
+          },
           'timing-compare-board-svg': () => {
             if (!channel || !flow || !signal) return
             const rows =

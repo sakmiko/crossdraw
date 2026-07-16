@@ -32,6 +32,17 @@ import { detectPedVehicleConflicts, pedVehicleSummary } from '@/domain/signal/pe
 import { SignalCharts, TimingCompareCharts } from '@/ui/charts/ChartPanels'
 import { buildDualRingAlignment, dualRingSummaryText } from '@/domain/signal/dualRing'
 import { applyPedTimingToSignal } from '@/domain/signal/pedTiming'
+import {
+  lostTimeBoardSvg,
+  lostTimeMarkdown,
+  lostTimeCsv,
+} from '@/ui/charts/lostTimeBoard'
+import {
+  pedTimingOptBoardSvg,
+  pedTimingOptMarkdown,
+  pedTimingOptCsv,
+  collectPedOptRows,
+} from '@/ui/charts/pedTimingOptBoard' 
 import { allocateGreensByBarrierCriticalY } from '@/domain/signal/barrierGreenAlloc'
 import { dualRingPhaseNumberSvg } from '@/ui/charts/phaseNumberDiagram'
 import {
@@ -845,6 +856,74 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
           </button>
         </div>
       </div>
+
+      
+      <div className="flat-section" style={{ marginTop: 10 }}>
+        <div className="rg-section-title">损失时间 L · Webster</div>
+        <div
+          className="chart-svg-host"
+          style={{ overflow: 'auto' }}
+          dangerouslySetInnerHTML={{ __html: lostTimeBoardSvg(signal, { width: 700 }) }}
+        />
+        <div className="toolbar dense" style={{ marginTop: 6 }}>
+          <button
+            type="button"
+            className="ghost"
+            onClick={() => {
+              exportSvgFile(`${projectName}-损失时间L.svg`, lostTimeBoardSvg(signal, { width: 720 }))
+              downloadText(`${projectName}-损失时间L.md`, lostTimeMarkdown(projectName, signal), 'text/markdown')
+              downloadText(`${projectName}-损失时间L.csv`, lostTimeCsv(signal), 'text/csv')
+            }}
+          >
+            L SVG/MD/CSV
+          </button>
+        </div>
+      </div>
+
+      {channel && (
+        <div className="flat-section" style={{ marginTop: 10 }}>
+          <div className="rg-section-title">
+            行人 Walk/FDW 优化{' '}
+            <span className="subpanel-tag">{collectPedOptRows(signal, channel.approaches).length}</span>
+          </div>
+          <div
+            className="chart-svg-host"
+            style={{ overflow: 'auto' }}
+            dangerouslySetInnerHTML={{
+              __html: pedTimingOptBoardSvg(signal, channel.approaches, { width: 760 }),
+            }}
+          />
+          <div className="toolbar dense" style={{ marginTop: 6 }}>
+            {onApplyPedTiming && (
+              <button type="button" className="primary" onClick={() => onApplyPedTiming()}>
+                应用 Walk/FDW
+              </button>
+            )}
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => {
+                exportSvgFile(
+                  `${projectName}-行人WalkFDW.svg`,
+                  pedTimingOptBoardSvg(signal, channel.approaches, { width: 800 }),
+                )
+                downloadText(
+                  `${projectName}-行人WalkFDW.md`,
+                  pedTimingOptMarkdown(projectName, signal, channel.approaches),
+                  'text/markdown',
+                )
+                downloadText(
+                  `${projectName}-行人WalkFDW.csv`,
+                  pedTimingOptCsv(signal, channel.approaches),
+                  'text/csv',
+                )
+              }}
+            >
+              行人优化导出
+            </button>
+          </div>
+        </div>
+      )}
 
       {signal.dualRing?.enabled && (
           <div className="chart-svg-host chart-svg-host--pro" style={{ marginTop: 8 }}
