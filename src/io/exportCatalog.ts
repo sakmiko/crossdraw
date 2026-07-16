@@ -123,6 +123,9 @@ export type ExportItemId =
   | 'cycle-scan-svg'
   | 'cycle-scan-md'
   | 'cycle-scan-csv'
+  | 'intergreen-svg'
+  | 'intergreen-md'
+  | 'intergreen-csv'
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
@@ -141,6 +144,34 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'intergreen-svg',
+    category: 'signal',
+    title: '清空间隔审查',
+    format: 'SVG',
+    description: '黄灯/全红 vs 推荐',
+    modes: ['signal'],
+    requires: ['signal'],
+  },
+  {
+    id: 'intergreen-md',
+    category: 'signal',
+    title: '清空间隔 MD',
+    format: 'MD',
+    description: '清空间隔表',
+    modes: ['signal'],
+    requires: ['signal'],
+  },
+  {
+    id: 'intergreen-csv',
+    category: 'signal',
+    title: '清空间隔 CSV',
+    format: 'CSV',
+    description: '黄/全红数据',
+    modes: ['signal'],
+    requires: ['signal'],
+  },
+
   {
     id: 'cycle-scan-svg',
     category: 'signal',

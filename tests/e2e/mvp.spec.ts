@@ -18,11 +18,11 @@ async function openNav(page: Page, label: string) {
   await page.waitForTimeout(300)
 }
 
-test.describe('Crossdraw v0.5.113 cycle-scan + polish', () => {
+test.describe('Crossdraw v0.5.114 intergreen + polish', () => {
   // 渠化 流量 信号 分析 绿波 比选 断面
   test('shell', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.113/).first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.114/).first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
   test('channel', async ({ page }) => {
@@ -35,13 +35,13 @@ test.describe('Crossdraw v0.5.113 cycle-scan + polish', () => {
     await openNav(page, '流量')
     await page.screenshot({ path: 'docs/screenshots/02-flow.png', fullPage: true })
   })
-  test('signal cycle scan', async ({ page }) => {
+  test('signal intergreen', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '信号')
-    await expect(page.locator('.rg-section-title').filter({ hasText: '周期 C 敏感性' })).toBeVisible({
+    await expect(page.locator('.rg-section-title').filter({ hasText: '清空间隔审查' })).toBeVisible({
       timeout: 10000,
     })
-    await expect(page.getByRole('button', { name: /应用最小延误 C/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /修正偏短黄\/全红/ })).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/03-signal.png', fullPage: true })
   })
   test('analysis', async ({ page }) => {

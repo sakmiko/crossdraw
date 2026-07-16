@@ -49,7 +49,13 @@ import {
   scanCycleSensitivity,
   cycleScanMarkdown,
   cycleScanCsv,
-} from '@/ui/charts/cycleScanBoard' 
+} from '@/ui/charts/cycleScanBoard'
+import {
+  intergreenBoardSvg,
+  collectIntergreenRows,
+  intergreenMarkdown,
+  intergreenCsv,
+} from '@/ui/charts/intergreenBoard'  
 import { analyzeIntersection } from '@/domain/analysis'  
 import { allocateGreensByBarrierCriticalY } from '@/domain/signal/barrierGreenAlloc'
 import { dualRingPhaseNumberSvg } from '@/ui/charts/phaseNumberDiagram'
@@ -120,6 +126,7 @@ export type SignalWorkspaceProps = {
   onAllocateBarrierGreens?: () => void
   onApplyFullSchemeOptimize?: () => void
   onApplyCycleScan?: (cycleSec: number) => void
+  onApplyIntergreenRecs?: (onlyShort?: boolean) => void
   onExportCriticalY?: () => void
   onRunOptimize: () => void
   onRunCompare: () => void
@@ -178,6 +185,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
     onRunOptimize,
   onApplyFullSchemeOptimize,
     onApplyCycleScan,
+    onApplyIntergreenRecs,
   onExportCriticalY,
     onRunCompare,
     onApplyCompareRow,
@@ -583,6 +591,57 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
               ),
             }}
           />
+        </div>
+      )}
+      {channel && !signal.unsignalized && (
+        <div className="flat-section" style={{ marginBottom: 10 }}>
+          <div className="rg-section-title">清空间隔审查</div>
+          <div
+            className="chart-svg-host"
+            style={{ overflow: 'auto' }}
+            dangerouslySetInnerHTML={{
+              __html: intergreenBoardSvg(signal, channel.approaches, { width: 820 }),
+            }}
+          />
+          <div className="toolbar dense" style={{ marginTop: 6 }}>
+            <button
+              type="button"
+              className="primary"
+              onClick={() => onApplyIntergreenRecs?.(true)}
+            >
+              修正偏短黄/全红
+            </button>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => onApplyIntergreenRecs?.(false)}
+            >
+              全部套用推荐
+            </button>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => {
+                const rows = collectIntergreenRows(signal, channel.approaches)
+                exportSvgFile(
+                  `${projectName}-清空间隔.svg`,
+                  intergreenBoardSvg(signal, channel.approaches, { width: 860 }),
+                )
+                downloadText(
+                  `${projectName}-清空间隔.md`,
+                  intergreenMarkdown(projectName, rows),
+                  'text/markdown',
+                )
+                downloadText(
+                  `${projectName}-清空间隔.csv`,
+                  intergreenCsv(rows),
+                  'text/csv',
+                )
+              }}
+            >
+              清空导出
+            </button>
+          </div>
         </div>
       )}
       {channel && flow && !signal.unsignalized && (

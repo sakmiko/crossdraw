@@ -1,6 +1,16 @@
 # CHANGELOG
 
-## 0.5.113 — 2026-07-16
+## 0.5.114 — 2026-07-16
+
+### 清空间隔审查（黄灯 / 全红）
+- `collectIntergreenRows` / `applyIntergreenRecommendations`：ITE 式黄灯与全红推荐
+- 信号页看板 +「修正偏短黄/全红」「全部套用推荐」
+- 导出 `intergreen-svg|md|csv`
+
+### 诚实边界
+- 工程示意（t_pr + v/2a · (W+L)/v）；非完整设计规范库
+
+0.5.113 — 2026-07-16
 
 ### 周期 C 敏感性扫描
 - `scanCycleSensitivity`：固定周期按 y 分绿，扫描延误 / max v/c
