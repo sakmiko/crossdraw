@@ -1,7 +1,7 @@
 /**
  * Interactive ECharts option builders — homology with AnalysisResult / cycle scan.
  */
-import type { AnalysisResult, Approach, FlowScheme, SignalScheme, BandCorridor, BandResult } from '@/domain/types'
+import type { AnalysisResult, Approach, FlowScheme, SignalScheme, BandCorridor, BandResult, CrossSection, CrossSectionComponent } from '@/domain/types'
 import { buildFlowAlignment, type FlowDisplayMode } from '@/domain/flow/flowAlign'
 import type { EChartsCoreOption } from 'echarts/core'
 
@@ -374,6 +374,89 @@ export function compareSchemesOption(rows: CompareSchemeRow[]): EChartsCoreOptio
           silent: true,
           symbol: 'none',
           data: [{ yAxis: 1, lineStyle: { color: '#ef4444', type: 'dashed' }, label: { formatter: '1.0' } }],
+        },
+      },
+    ],
+  }
+}
+
+
+/** Cross-section component widths (stacked bar + type share) — homology section.components. */
+export function xsectionWidthOption(
+  components: CrossSectionComponent[],
+  opts?: { title?: string },
+): EChartsCoreOption {
+  const comps = components.filter((c) => c.widthM > 0)
+  const labels = comps.map((c) => c.label.replace('进口', '进').replace('出口', '出').slice(0, 10))
+  const widths = comps.map((c) => c.widthM)
+  const colors = comps.map((c) => c.color || '#64748b')
+  const total = widths.reduce((a, b) => a + b, 0) || 1
+  // type aggregation for pie
+  const byType = new Map<string, number>()
+  for (const c of comps) {
+    byType.set(c.type, (byType.get(c.type) ?? 0) + c.widthM)
+  }
+  const typeNames: Record<string, string> = {
+    sidewalk: '人行',
+    bike: '非机',
+    vehicle: '机动车',
+    median: '中分',
+    shoulder: '路肩/辅',
+    green: '绿化',
+  }
+  const pieData = [...byType.entries()].map(([t, w]) => ({
+    name: typeNames[t] ?? t,
+    value: +w.toFixed(2),
+  }))
+  return {
+    backgroundColor: 'transparent',
+    title: opts?.title
+      ? { text: opts.title, left: 0, top: 0, textStyle: { fontSize: 12, fontWeight: 600 } }
+      : undefined,
+    tooltip: {
+      trigger: 'item',
+      formatter: (p: { seriesType?: string; name?: string; value?: number; percent?: number }) => {
+        if (p.seriesType === 'pie') {
+          return `${p.name}<br/>${Number(p.value).toFixed(2)} m · ${Number(p.percent).toFixed(1)}%`
+        }
+        return `${p.name}<br/>${Number(p.value).toFixed(2)} m · ${((Number(p.value) / total) * 100).toFixed(1)}%`
+      },
+    },
+    legend: { type: 'scroll', bottom: 0, textStyle: { fontSize: 10 } },
+    grid: { left: 48, right: 12, top: 28, bottom: 48 },
+    xAxis: {
+      type: 'category',
+      data: labels,
+      axisLabel: { fontSize: 9, rotate: labels.length > 6 ? 32 : 0 },
+    },
+    yAxis: { type: 'value', name: 'm', min: 0 },
+    series: [
+      {
+        name: '宽度',
+        type: 'bar',
+        data: widths.map((w, i) => ({ value: w, itemStyle: { color: colors[i] } })),
+        barMaxWidth: 28,
+        label: { show: labels.length <= 10, position: 'top', fontSize: 9, formatter: (p: { value?: number }) => `${Number(p.value).toFixed(1)}` },
+      },
+      {
+        name: '类型占比',
+        type: 'pie',
+        radius: ['18%', '32%'],
+        center: ['82%', '38%'],
+        data: pieData,
+        label: { fontSize: 9, formatter: '{b}\n{d}%' },
+        z: 3,
+      },
+    ],
+    graphic: [
+      {
+        type: 'text',
+        left: 8,
+        top: 6,
+        style: {
+          text: `总宽 ${total.toFixed(2)} m · ${comps.length} 构件`,
+          fill: '#94a3b8',
+          fontSize: 11,
         },
       },
     ],

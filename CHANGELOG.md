@@ -1,3 +1,9 @@
+## 0.5.123 — Cross-section width ECharts
+
+- `xsectionWidthOption`: component width bars + type share pie (homology section.components / diagramComps).
+- XSection `#xsection-echarts` + CrossSectionCharts live board.
+- Xsection params metric/table polish. Schematic — not survey CAD.
+
 ## 0.5.122 — Compare schemes ECharts
 
 - `compareSchemesOption`: multi-scheme delay bars (LOS color) + v/c line (homology analyzeIntersection rows).

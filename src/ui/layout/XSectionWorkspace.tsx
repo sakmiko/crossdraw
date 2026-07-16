@@ -7,6 +7,8 @@ import type { Approach, CrossSection } from '@/domain/types'
 import { markStaleIfNeeded } from '@/domain/xsection/build'
 import { sectionAlignsWithApproach } from '@/domain/xsection/align'
 import { CrossSectionCharts } from '@/ui/charts/ChartPanels'
+import { EChart } from '@/ui/charts/EChart'
+import { xsectionWidthOption } from '@/ui/charts/interactiveBoards'
 import { professionalCrossSectionSvg } from '@/ui/charts/crossSectionDiagram'
 import { exportSvgFile } from '@/io/exportCharts'
 import { downloadText } from '@/io/download'
@@ -266,6 +268,13 @@ export function XSectionWorkspace({
       </div>
       <p className="hint quiet">{report.honesty}</p>
 
+      <div className="rg-section" id="xsection-echarts">
+        <div className="rg-section-title">交互断面 · 构件宽度 / 类型占比</div>
+        <EChart
+          option={xsectionWidthOption(diagramComps.length ? diagramComps : xsection.components)}
+          style={{ height: 280 }}
+        />
+      </div>
       <CrossSectionCharts section={xsection} approach={selected} />
 
       <div className="toolbar" style={{ marginTop: 8 }}>

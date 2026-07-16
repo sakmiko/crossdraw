@@ -44,7 +44,7 @@ import { professionalCrossSectionSvg, crossSectionShareSvg } from './crossSectio
 import { collectCorridorKpis, corridorKpiCompareSvg } from './bandCorridorCompare'
 import { chartColorsForTheme, themeSvg } from './chartTheme'
 import { EChart } from '@/ui/charts/EChart'
-import { vcDelayOption, flowLtrOption, phaseTimingOption, compareSchemesOption } from '@/ui/charts/interactiveBoards'
+import { vcDelayOption, flowLtrOption, phaseTimingOption, compareSchemesOption, xsectionWidthOption } from '@/ui/charts/interactiveBoards'
 
 function useChartColors() {
   const theme = useAppStore((s) => s.theme)
@@ -458,9 +458,15 @@ export function CrossSectionCharts({
     return themeSvg(raw, colors)
   }, [section, colors])
   const total = section.components.reduce((s, c) => s + c.widthM, 0)
+  const liveOpt = useMemo(() => xsectionWidthOption(section.components), [section.components])
   return (
     <div className="chart-card">
       <div className="chart-title">
+        <span>断面构件宽度</span>
+        <small>ECharts · 总宽 {total.toFixed(2)} m</small>
+      </div>
+      <EChart option={liveOpt} style={{ height: 280 }} className="echart-host" />
+      <div className="chart-title" style={{ marginTop: 10 }}>
         <span>标准横断面图</span>
         <small>总宽 {total.toFixed(2)} m · 数据联动</small>
       </div>

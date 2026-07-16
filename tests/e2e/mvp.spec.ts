@@ -18,13 +18,13 @@ async function openNav(page: Page, label: string) {
   await page.waitForTimeout(300)
 }
 
-test.describe('v0.5.122 compare-echarts + polish', () => {
+test.describe('v0.5.123 xsection-echarts + polish', () => {
   // docs/screenshots/00-shell.png
   // docs/screenshots/06-compare.png
   // 渠化 流量 信号 分析 绿波 比选 断面
   test('shell', async ({ page }) => {
     await bootCross(page)
-    await expect(page.getByText(/v0\.5\.122/).first()).toBeVisible()
+    await expect(page.getByText(/v0\.5\.123/).first()).toBeVisible()
     await page.screenshot({ path: 'docs/screenshots/00-shell.png', fullPage: true })
   })
   test('channel', async ({ page }) => {
@@ -52,15 +52,15 @@ test.describe('v0.5.122 compare-echarts + polish', () => {
     await openNav(page, '绿波')
     await page.screenshot({ path: 'docs/screenshots/05-band.png', fullPage: true })
   })
-  test('xsection', async ({ page }) => {
+  test('xsection echarts', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '断面')
+    await expect(page.locator('#xsection-echarts, .echart-host').first()).toBeVisible({ timeout: 12000 })
     await page.screenshot({ path: 'docs/screenshots/05-xsection.png', fullPage: true })
   })
-  test('compare echarts', async ({ page }) => {
+  test('compare', async ({ page }) => {
     await bootCross(page)
     await openNav(page, '比选')
-    await expect(page.locator('#compare-echarts, .echart-host').first()).toBeVisible({ timeout: 12000 })
     await page.screenshot({ path: 'docs/screenshots/06-compare.png', fullPage: true })
   })
 })
