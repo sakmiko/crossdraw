@@ -8,6 +8,12 @@ import { analyzeIntersection } from '@/domain/analysis'
 import { CompareCharts, SchemeCompareBoard } from '@/ui/charts/ChartPanels'
 import { collectCompareRows, compareSchemesCsv } from '@/io/report'
 import { collectSchemeSnapshots, schemeTimingStripSvg, schemeMetricsCompareSvg } from '@/ui/charts/schemeCompareDiagrams'
+import {
+  schemeScorecardSvg,
+  kpisFromCompareRows,
+  recommendBestLabel,
+} from '@/ui/charts/schemeScorecard'
+import { schemeDeltas, schemeDeltaMarkdown } from '@/domain/analysis/schemeDiff' 
 import { exportJsonFile, exportSvgFile } from '@/io/exportCharts'
 import { downloadText } from '@/io/download'
 import { vcHeatColor } from '@/ui/charts/svgCharts'
@@ -20,6 +26,7 @@ export type CompareWorkspaceProps = {
 
 export function CompareWorkspace({ project, theme, onActivateScheme }: CompareWorkspaceProps) {
   const [sortKey, setSortKey] = useState<'delay' | 'vc' | 'name'>('delay')
+  const [baseKey, setBaseKey] = useState<string>('')
   const rows = useMemo(() => {
     const raw = collectCompareRows(project, analyzeIntersection)
     return raw.slice().sort((a, b) => {
@@ -28,6 +35,25 @@ export function CompareWorkspace({ project, theme, onActivateScheme }: CompareWo
       return a.avgDelay - b.avgDelay
     })
   }, [project, sortKey])
+  const snaps = useMemo(() => collectSchemeSnapshots(project, analyzeIntersection), [project])
+  const cycleMap = useMemo(() => {
+    const m: Record<string, number> = {}
+    for (const sn of snaps) m[`${sn.channel}/${sn.flow}/${sn.signal}`] = sn.cycleSec
+    return m
+  }, [snaps])
+  const kpis = useMemo(() => kpisFromCompareRows(rows, cycleMap), [rows, cycleMap])
+  const baseLabel = baseKey || kpis[0]?.label || ''
+  const baseIdx = Math.max(0, kpis.findIndex((k) => k.label === baseLabel))
+  const baseKpi = kpis[baseIdx] ?? kpis[0]
+  const deltas = useMemo(
+    () => (baseKpi ? schemeDeltas(baseKpi, kpis) : []),
+    [baseKpi, kpis],
+  )
+  const best = recommendBestLabel(kpis)
+  const scoreSvg = useMemo(
+    () => schemeScorecardSvg(kpis, { width: 680, baseIndex: baseIdx }),
+    [kpis, baseIdx],
+  )
 
   return (
     <div className="card" style={{ marginTop: 12 }}>
@@ -35,7 +61,7 @@ export function CompareWorkspace({ project, theme, onActivateScheme }: CompareWo
         <h2 style={{ margin: 0 }}>方案比选</h2>
         <span className="hint">渠化 × 流量 × 信号 组合评价</span>
       </div>
-      <p className="hint">对方案树中全部渠化/流量/信号组合运行同一评价模型；点击行可激活对应方案。</p>
+      
       <div className="toolbar" style={{ marginBottom: 8 }}>
         <label>
           排序
@@ -45,7 +71,47 @@ export function CompareWorkspace({ project, theme, onActivateScheme }: CompareWo
             <option value="name">渠化名</option>
           </select>
         </label>
+        <label>
+          基准方案
+          <select value={baseLabel} onChange={(e) => setBaseKey(e.target.value)}>
+            {kpis.map((k) => (
+              <option key={k.label} value={k.label}>{k.label}</option>
+            ))}
+          </select>
+        </label>
+        {best && (
+          <span className="subpanel-tag" title="延误最低优先">推荐 {best.split('/').slice(-1)[0]}</span>
+        )}
       </div>
+      <div
+        className="chart-svg-host chart-svg-host--pro"
+        style={{ marginBottom: 10 }}
+        dangerouslySetInnerHTML={{ __html: scoreSvg }}
+      />
+      {deltas.length > 0 && (
+        <div className="table-wrap" style={{ marginBottom: 10, maxHeight: 160 }}>
+          <table className="table table-dense">
+            <thead>
+              <tr>
+                <th>相对基准</th>
+                <th>Δv/c</th>
+                <th>Δ延误s</th>
+                <th>更优</th>
+              </tr>
+            </thead>
+            <tbody>
+              {deltas.map((d) => (
+                <tr key={d.label}>
+                  <td>{d.label}</td>
+                  <td className="num">{d.dVc >= 0 ? '+' : ''}{d.dVc.toFixed(3)}</td>
+                  <td className="num">{d.dDelay >= 0 ? '+' : ''}{d.dDelay.toFixed(1)}</td>
+                  <td>{d.better ? '是' : ''}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       <CompareCharts
         rows={rows.map((r) => ({
           label: `${r.channel}/${r.signal}`,
@@ -118,19 +184,26 @@ export function CompareWorkspace({ project, theme, onActivateScheme }: CompareWo
           type="button"
           className="primary"
           onClick={() => {
-            const snaps = collectSchemeSnapshots(project, analyzeIntersection)
             exportSvgFile(`${project.name}-compare-timing.svg`, schemeTimingStripSvg(snaps, { max: 4, theme }))
             exportSvgFile(
               `${project.name}-compare-delay.svg`,
               schemeMetricsCompareSvg(snaps, { metric: 'delay' }),
             )
             exportSvgFile(`${project.name}-compare-vc.svg`, schemeMetricsCompareSvg(snaps, { metric: 'vc' }))
+            exportSvgFile(`${project.name}-compare-scorecard.svg`, scoreSvg)
+            if (baseKpi) {
+              downloadText(
+                `${project.name}-compare-delta.md`,
+                schemeDeltaMarkdown(project.name, baseKpi, deltas),
+                'text/markdown',
+              )
+            }
           }}
         >
-          导出并排配时图
+          导出并排图/记分卡
         </button>
       </div>
-      <p className="hint">快捷键 6 · 从分析页迁出的独立比选工作区</p>
+      
     </div>
   )
 }

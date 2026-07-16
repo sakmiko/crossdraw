@@ -10,7 +10,7 @@ describe('maintainability v0.5.44', () => {
     const appText = readFileSync(app, 'utf8')
     expect(cwText).toContain('export function CompareWorkspace')
     expect(cwText).toContain('SchemeCompareBoard')
-    expect(cwText).toContain('导出并排配时图')
+    expect(cwText).toContain('导出并排图')
     expect(appText).toContain('CompareWorkspace')
     expect(appText).toContain('onActivateScheme')
   })

@@ -68,6 +68,8 @@ import {
 import { roadgeeFlowDiagramSvg, DEFAULT_ROADGEE_FLOW_STYLE } from '@/ui/charts/roadgeeFlowDiagram'
 import { roadgeeAnalysisPlanSvg } from '@/ui/charts/roadgeeAnalysisPlan'
 import { unsignalizedPlanSvg, unsignalizedLegsCsv } from '@/ui/charts/unsignalizedPlan'
+import { schemeScorecardSvg, kpisFromCompareRows } from '@/ui/charts/schemeScorecard'
+import { schemeDeltas, schemeDeltaMarkdown } from '@/domain/analysis/schemeDiff'
 import { analyzeUnsignalized, unsignalizedMarkdown } from '@/domain/analysis/unsignalized'
 import { maxbandReportDiagramSvg } from '@/ui/charts/maxbandReportDiagram'
 import { buildMaxbandReport, maxbandReportMarkdown, maxbandReportCsv } from '@/domain/analysis/maxbandReport'
@@ -604,7 +606,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.85 · 绿波专页</span>
+          <span>Crossdraw v0.5.86 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -626,7 +628,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.85</span>
+            <span className="brand-ver">v0.5.86</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -917,7 +919,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.85</span>
+        <span>Crossdraw v0.5.86</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -1177,7 +1179,25 @@ export default function App() {
             })
             downloadText(`${project.name}-band-multi.md`, multiBandMarkdown(project.name, rows), 'text/markdown')
           },
-          'unsignalized-plan-svg': () => {
+          'compare-scorecard-svg': () => {
+      const rows = collectCompareRows(project, analyzeIntersection)
+      const snaps = collectSchemeSnapshots(project, analyzeIntersection)
+      const cycleMap: Record<string, number> = {}
+      for (const sn of snaps) cycleMap[`${sn.channel}/${sn.flow}/${sn.signal}`] = sn.cycleSec
+      const kpis = kpisFromCompareRows(rows, cycleMap)
+      exportSvgFile(`${project.name}-compare-scorecard.svg`, schemeScorecardSvg(kpis, { width: 720 }))
+    },
+    'compare-delta-md': () => {
+      const rows = collectCompareRows(project, analyzeIntersection)
+      const snaps = collectSchemeSnapshots(project, analyzeIntersection)
+      const cycleMap: Record<string, number> = {}
+      for (const sn of snaps) cycleMap[`${sn.channel}/${sn.flow}/${sn.signal}`] = sn.cycleSec
+      const kpis = kpisFromCompareRows(rows, cycleMap)
+      if (!kpis.length) return
+      const deltas = schemeDeltas(kpis[0], kpis)
+      downloadText(`${project.name}-compare-delta.md`, schemeDeltaMarkdown(project.name, kpis[0], deltas), 'text/markdown')
+    },
+    'unsignalized-plan-svg': () => {
       if (!channel || !flow || !signal) return
       const u = analyzeUnsignalized(channel.approaches, flow, signal, channel.intersectionType)
       exportSvgFile(`${project.name}-无信号平面.svg`, unsignalizedPlanSvg(channel.approaches, u, { size: 560 }))

@@ -22,6 +22,8 @@ import { unsignalizedPlanSvg } from '@/ui/charts/unsignalizedPlan'
 import { analyzeUnsignalized } from '@/domain/analysis/unsignalized'
 import { professionalCrossSectionSvg } from '@/ui/charts/crossSectionDiagram'
 import { schemeMetricsCompareSvg, collectSchemeSnapshots } from '@/ui/charts/schemeCompareDiagrams'
+import { schemeScorecardSvg, kpisFromCompareRows } from '@/ui/charts/schemeScorecard'
+import { collectCompareRows } from '@/io/report'
 import { analyzeIntersection } from '@/domain/analysis'
 import { CanvasView, type CanvasHandle, type LayerVisibility } from '@/canvas/CanvasView'
 import type { Mesh } from '@/domain/types'
@@ -293,20 +295,25 @@ export function ModeCenterStage(props: ModeCenterProps) {
 
   // —— compare ——
   if (mode === 'compare') {
+    const rows = collectCompareRows(project, analyzeIntersection)
+    const snaps = collectSchemeSnapshots(project, analyzeIntersection)
+    const cycleMap: Record<string, number> = {}
+    for (const sn of snaps) cycleMap[`${sn.channel}/${sn.flow}/${sn.signal}`] = sn.cycleSec
+    const kpis = kpisFromCompareRows(rows, cycleMap)
+    const svg = schemeScorecardSvg(kpis, {
+      width: Math.min(720, Math.max(480, typeof window !== 'undefined' ? window.innerWidth * 0.42 : 640)),
+      baseIndex: 0,
+    })
     return (
       <StageChrome
-        title="方案比选图"
-        unit="多方案指标"
-        onDownload={compareSvg ? () => downloadSvg('crossdraw-方案比选.svg', compareSvg) : undefined}
+        title="方案比选记分卡"
+        unit="与评价模型同源"
+        onDownload={() => downloadSvg('crossdraw-比选记分卡.svg', svg)}
       >
-        {compareSvg ? (
-          <div
-            className="chart-svg-host chart-svg-host--pro mode-stage-svg"
-            dangerouslySetInnerHTML={{ __html: compareSvg }}
-          />
-        ) : (
-          <p className="hint">增加方案后显示对比图</p>
-        )}
+        <div
+          className="chart-svg-host chart-svg-host--pro mode-stage-svg"
+          dangerouslySetInnerHTML={{ __html: svg }}
+        />
       </StageChrome>
     )
   }

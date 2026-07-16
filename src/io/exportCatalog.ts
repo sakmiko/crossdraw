@@ -43,6 +43,8 @@ export type ExportItemId =
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
+  | 'compare-scorecard-svg'
+  | 'compare-delta-md'
 
 export type ExportItem = {
   id: ExportItemId
@@ -56,6 +58,25 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'compare-scorecard-svg',
+    category: 'analysis',
+    title: '方案比选记分卡',
+    format: 'SVG',
+    description: '多方案延误/v/c 卡片 · 基准差量',
+    modes: ['compare'],
+    requires: ['channel', 'flow', 'signal'],
+  },
+  {
+    id: 'compare-delta-md',
+    category: 'analysis',
+    title: '方案差量 Markdown',
+    format: 'MD',
+    description: '相对基准 Δv/c · Δ延误',
+    modes: ['compare'],
+    requires: ['channel', 'flow', 'signal'],
+  },
+
   {
     id: 'unsignalized-plan-svg',
     category: 'analysis',
