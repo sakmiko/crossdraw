@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## 0.5.101 — 2026-07-16
+
+### 相位序号图 + 右转渠化审查
+- `professionalPhaseNumberBoardSvg`：单环顺序编号 / 双环阶段板
+- `collectRightTurnRows` + 审查 SVG/MD/CSV：各进口右转 R/道宽/安全岛
+- 信号页「导出相位序号」；渠化页「右转审查图」扁平两大区
+- 导出中心：`phase-number-board-*` · `right-turn-review-*`
+
+### 诚实边界
+- 相位序号为工程示意编号，非完整 NEMA 映射
+- 右转审查为参数表示意，非设计规范自动校核
+
+# CHANGELOG
+
 ## 0.5.100 — 2026-07-16
 
 ### 全站布局系统统一（响应式精调）

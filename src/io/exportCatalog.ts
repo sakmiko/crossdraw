@@ -72,6 +72,11 @@ export type ExportItemId =
   | 'capacity-matrix-svg'
   | 'capacity-matrix-md'
   | 'capacity-matrix-csv'
+  | 'phase-number-board-svg'
+  | 'phase-number-board-md'
+  | 'right-turn-review-svg'
+  | 'right-turn-review-md'
+  | 'right-turn-review-csv'
   | 'unsignalized-plan-svg'
   | 'unsignalized-md'
   | 'unsignalized-csv'
@@ -90,6 +95,52 @@ export type ExportItem = {
 }
 
 export const EXPORT_CATALOG: ExportItem[] = [
+  {
+    id: 'phase-number-board-svg',
+    category: 'signal',
+    title: '相位序号图',
+    format: 'SVG',
+    description: '顺序/双环相位编号板 · 与 phases 同源',
+    modes: ['signal'],
+    requires: ['signal'],
+  },
+  {
+    id: 'phase-number-board-md',
+    category: 'signal',
+    title: '相位序号表',
+    format: 'MD',
+    description: '相位 G/Y/AR/环/屏障表',
+    modes: ['signal'],
+    requires: ['signal'],
+  },
+  {
+    id: 'right-turn-review-svg',
+    category: 'drawing',
+    title: '右转渠化审查图',
+    format: 'SVG',
+    description: '各进口右转/安全岛参数审查',
+    modes: ['channel'],
+    requires: ['channel'],
+  },
+  {
+    id: 'right-turn-review-md',
+    category: 'drawing',
+    title: '右转渠化审查 MD',
+    format: 'MD',
+    description: '右转与安全岛参数表',
+    modes: ['channel'],
+    requires: ['channel'],
+  },
+  {
+    id: 'right-turn-review-csv',
+    category: 'drawing',
+    title: '右转渠化审查 CSV',
+    format: 'CSV',
+    description: '右转参数数据表',
+    modes: ['channel'],
+    requires: ['channel'],
+  },
+
   {
     id: 'capacity-matrix-svg',
     category: 'analysis',

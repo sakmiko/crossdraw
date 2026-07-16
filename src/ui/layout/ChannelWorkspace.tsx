@@ -15,6 +15,11 @@ import {
   channelDraftPreviewSvg,
   channelDraftMarkdown,
 } from '@/io/channelDraftSheet'
+import {
+  professionalRightTurnBoardSvg,
+  rightTurnBoardMarkdown,
+  rightTurnBoardCsv,
+} from '@/domain/channel/rightTurnReview' 
 import { buildA4PrintSheet, printSheetHtml } from '@/io/printSheet'
 import {
   collectEngineeringPrintPanels,
@@ -320,6 +325,72 @@ export function ChannelWorkspace({
             style={{ marginTop: 8, overflow: 'auto', maxHeight: 280 }}
             dangerouslySetInnerHTML={{
               __html: channelDraftPreviewSvg(project, channel, undefined, 820),
+            }}
+          />
+        )}
+      </div>
+
+      
+      <div className="rg-section">
+        <div className="rg-section-title">右转渠化审查</div>
+        <div className="toolbar dense">
+          <button
+            type="button"
+            className="ghost"
+            disabled={!channel}
+            onClick={() => {
+              if (!channel) return
+              exportSvgFile(
+                `${project.name}-右转审查.svg`,
+                professionalRightTurnBoardSvg(channel, {
+                  width: 900,
+                  projectName: project.name,
+                }),
+              )
+            }}
+          >
+            右转审查图
+          </button>
+          <button
+            type="button"
+            className="ghost"
+            disabled={!channel}
+            onClick={() => {
+              if (!channel) return
+              downloadText(
+                `${project.name}-右转审查.md`,
+                rightTurnBoardMarkdown(project.name, channel),
+                'text/markdown',
+              )
+            }}
+          >
+            审查 MD
+          </button>
+          <button
+            type="button"
+            className="ghost"
+            disabled={!channel}
+            onClick={() => {
+              if (!channel) return
+              downloadText(
+                `${project.name}-右转审查.csv`,
+                rightTurnBoardCsv(channel),
+                'text/csv',
+              )
+            }}
+          >
+            审查 CSV
+          </button>
+        </div>
+        {channel && (
+          <div
+            className="chart-svg-host chart-svg-host--pro"
+            style={{ marginTop: 8, overflow: 'auto', maxHeight: 260 }}
+            dangerouslySetInnerHTML={{
+              __html: professionalRightTurnBoardSvg(channel, {
+                width: 860,
+                projectName: project.name,
+              }),
             }}
           />
         )}

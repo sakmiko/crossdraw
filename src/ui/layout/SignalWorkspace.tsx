@@ -19,6 +19,10 @@ import { applyPedTimingToSignal } from '@/domain/signal/pedTiming'
 import { allocateGreensByBarrierCriticalY } from '@/domain/signal/barrierGreenAlloc'
 import { dualRingPhaseNumberSvg } from '@/ui/charts/phaseNumberDiagram'
 import {
+  professionalPhaseNumberBoardSvg,
+  phaseNumberBoardMarkdown,
+} from '@/ui/charts/professionalPhaseNumberBoard' 
+import {
   professionalDualRingBoardSvg,
   dualRingBoardMarkdown,
   dualRingBoardCsv,
@@ -556,7 +560,51 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         </div>
       )}
 
+      
       <div className="rg-section">
+        <div className="rg-section-title">相位序号图</div>
+        <div className="toolbar dense">
+          <button
+            type="button"
+            className="primary"
+            onClick={() =>
+              exportSvgFile(
+                `${projectName}-相位序号图.svg`,
+                professionalPhaseNumberBoardSvg(signal, channel?.approaches ?? [], {
+                  width: 900,
+                  projectName,
+                }),
+              )
+            }
+          >
+            导出相位序号
+          </button>
+          <button
+            type="button"
+            className="ghost"
+            onClick={() =>
+              downloadText(
+                `${projectName}-相位序号.md`,
+                phaseNumberBoardMarkdown(projectName, signal),
+                'text/markdown',
+              )
+            }
+          >
+            序号 MD
+          </button>
+        </div>
+        <div
+          className="chart-svg-host chart-svg-host--pro"
+          style={{ marginTop: 8, overflow: 'auto', maxHeight: 240 }}
+          dangerouslySetInnerHTML={{
+            __html: professionalPhaseNumberBoardSvg(signal, channel?.approaches ?? [], {
+              width: 860,
+              projectName,
+            }),
+          }}
+        />
+      </div>
+<div className="rg-section">
           <div className="rg-section-title">自动配时设计参数</div>
           <div className="field-row">
             <label>
