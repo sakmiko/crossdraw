@@ -2877,8 +2877,8 @@ button.primary .cd-icon {
   border-radius: 0 !important;
 }
 .page-fill-params .rg-section {
-  margin-top: 8px;
-  padding-top: 4px;
+  margin-top: 4px;
+  padding-top: 2px;
   border-top: none;
 }
 .page-fill-params .rg-section:first-child,
@@ -2888,8 +2888,8 @@ button.primary .cd-icon {
   border-top: none;
 }
 .page-fill-params .rg-section-title {
-  margin-bottom: 4px;
-  font-size: 11px;
+  margin-bottom: 2px;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--text-secondary);
@@ -4111,9 +4111,9 @@ html[data-theme='light'] .app.shell--channel .page-fill-params {
 .rg-field-label {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
   color: var(--text-secondary, #334155);
-  font-size: 11px;
+  font-size: 10px;
   white-space: nowrap;
 }
 .rg-field-ctrl {
@@ -4325,8 +4325,8 @@ html[data-theme='dark'] .rg-sec-toggle {
 }
 .rg-input,
 .rg-select {
-  height: 26px !important;
-  min-height: 26px !important;
+  height: 24px !important;
+  min-height: 24px !important;
   padding: 0 4px !important;
   font-size: 11px !important;
   border-radius: 2px !important;
