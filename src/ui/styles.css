@@ -2754,7 +2754,7 @@ button.primary .cd-icon {
   width: 100%;
   height: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 36%);
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 40%);
   grid-template-rows: minmax(0, 1fr);
   gap: 0;
 }
@@ -2798,15 +2798,15 @@ button.primary .cd-icon {
 
 /* Per-mode desktop proportions */
 .app.shell--channel .page-fill-body {
-  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 32%);
+  grid-template-columns: minmax(0, 1.3fr) minmax(320px, 35%);
 }
 .app.shell--flow .page-fill-body {
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 38%);
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 42%);
 }
 .app.shell--analysis .page-fill-body,
 .app.shell--compare .page-fill-body,
 .app.shell--xsection .page-fill-body {
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 36%);
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 40%);
 }
 
 /* v0.5.116 layout: ALL modes left|right including signal (supersedes vertical) */
