@@ -361,10 +361,8 @@ export function CrossSectionCharts({
         <span>标准横断面图</span>
         <small>总宽 {total.toFixed(2)} m · 数据联动</small>
       </div>
-      {pro ? (
+      {pro && (
         <div className="xsection-pro" dangerouslySetInnerHTML={{ __html: pro }} />
-      ) : (
-        <div dangerouslySetInnerHTML={{ __html: svg }} />
       )}
       <div className="chart-title" style={{ marginTop: 10 }}>
         <span>类型占比</span>
@@ -423,16 +421,6 @@ export function CompareCharts({
         <small>ECharts · 延误+v/c</small>
       </div>
       <EChart option={liveOpt} style={{ height: 280 }} className="echart-host" />
-      <div className="chart-title" style={{ marginTop: 12 }}>
-        <span>多方案延误对比</span>
-        <small>色=LOS · 静态</small>
-      </div>
-      <div dangerouslySetInnerHTML={{ __html: delaySvg }} />
-      <div className="chart-title" style={{ marginTop: 12 }}>
-        <span>多方案 v/c 对比</span>
-        <small>同源 evaluate</small>
-      </div>
-      <div dangerouslySetInnerHTML={{ __html: vcSvg }} />
     </div>
   )
 }
@@ -444,15 +432,7 @@ export function TimingCompareCharts({
   rows: { label: string; avgDelay: number; avgVc: number; los: string; cycleSec: number; method: string }[]
 }) {
   const colors = useChartColors()
-  const delaySvg = useMemo(
-    () => themeSvg(timingCompareBarSvg(rows, { metric: 'delay', height: 150 }), colors),
-    [rows, colors],
-  )
-  const vcSvg = useMemo(
-    () => themeSvg(timingCompareBarSvg(rows, { metric: 'vc', height: 150 }), colors),
-    [rows, colors],
-  )
-  const legend = useMemo(() => themeSvg(saturationHeatLegendSvg(340), colors), [colors])
+  const timingOpt = useMemo(() => timingCompareBarOption(rows.map(r => ({ method: r.method, cycleSec: r.cycleSec, avgVc: r.avgVc, avgDelay: r.avgDelay }))), [rows])
   if (!rows.length) return <p className="hint">暂无比选数据</p>
   return (
     <div className="chart-card">
@@ -460,13 +440,7 @@ export function TimingCompareCharts({
         <span>配时方法比选图</span>
         <small>同流量·同渠化</small>
       </div>
-      <div dangerouslySetInnerHTML={{ __html: delaySvg }} />
-      <div className="chart-title" style={{ marginTop: 10 }}>
-        <span>比选饱和度 v/c</span>
-        <small>色阶=服务水平区</small>
-      </div>
-      <div dangerouslySetInnerHTML={{ __html: vcSvg }} />
-      <div dangerouslySetInnerHTML={{ __html: legend }} />
+      <EChart option={timingOpt} style={{ height: 200 }} />
     </div>
   )
 }
@@ -477,22 +451,7 @@ export type { Phase }
 export function SchemeCompareBoard({ project }: { project: Project }) {
   const colors = useChartColors()
   const snaps = useMemo(() => collectSchemeSnapshots(project, analyzeIntersection), [project])
-  const strip = useMemo(
-    () =>
-      themeSvg(
-        schemeTimingStripSvg(snaps, { max: 4, theme: colors.bg === '#ffffff' ? 'light' : 'dark' }),
-        colors,
-      ),
-    [snaps, colors],
-  )
-  const delaySvg = useMemo(
-    () => themeSvg(schemeMetricsCompareSvg(snaps, { metric: 'delay', width: 360, height: 160 }), colors),
-    [snaps, colors],
-  )
-  const vcSvg = useMemo(
-    () => themeSvg(schemeMetricsCompareSvg(snaps, { metric: 'vc', width: 360, height: 160 }), colors),
-    [snaps, colors],
-  )
+  const compareOpt = useMemo(() => compareSchemesBarOption(snaps.map(s => ({ label: `${s.channel}/${s.signal}`, avgVc: s.avgVc, avgDelay: s.avgDelay, los: s.los }))), [snaps])
   if (!snaps.length) return <p className="hint">请先在方案树中创建渠化/流量/信号方案</p>
   return (
     <div className="chart-card scheme-compare-board">
@@ -502,15 +461,7 @@ export function SchemeCompareBoard({ project }: { project: Project }) {
           {snaps.length} 个组合 · 显示前 4
         </small>
       </div>
-      <div className="scheme-strip" dangerouslySetInnerHTML={{ __html: strip }} />
-      <div className="chart-title" style={{ marginTop: 12 }}>
-        <span>指标对比</span>
-        <small>延误 · v/c</small>
-      </div>
-      <div className="dual-charts">
-        <div dangerouslySetInnerHTML={{ __html: delaySvg }} />
-        <div dangerouslySetInnerHTML={{ __html: vcSvg }} />
-      </div>
+      <EChart option={compareOpt} style={{ height: 200 }} />
     </div>
   )
 }
@@ -519,17 +470,14 @@ export function SchemeCompareBoard({ project }: { project: Project }) {
 export function CorridorCompareCharts({ corridors }: { corridors: BandCorridor[] }) {
   const colors = useChartColors()
   const rows = useMemo(() => collectCorridorKpis(corridors), [corridors])
-  const svg = useMemo(
-    () => themeSvg(corridorKpiCompareSvg(rows, { width: 360, height: 200 }), colors),
-    [rows, colors],
-  )
+  const corridorKpiOpt = useMemo(() => barChartOption(rows.map(r => ({ label: r.name, value: r.forwardSec, color: '#38bdf8' })), { height: 200, unit: 's' }), [rows])
   return (
     <div className="chart-card">
       <div className="chart-title">
         <span>多走廊带宽对比</span>
         <small>{rows.length} 条 · measureCorridor 同源</small>
       </div>
-      <div dangerouslySetInnerHTML={{ __html: svg }} />
+      <EChart option={corridorKpiOpt} style={{ height: 200 }} />
       <div className="table-wrap" style={{ marginTop: 8, maxHeight: 160 }}>
         <table className="table">
           <thead>
