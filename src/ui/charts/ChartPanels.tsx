@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 import {
-  barChartSvg,
   compareSchemesBarSvg,
   conflictMatrixSvg,
   crossSectionBarSvg,
@@ -14,6 +13,7 @@ import {
   timingCompareBarSvg,
   vcHeatColor,
 } from './svgCharts'
+import { barChartOption, losGaugeOption, radarChartOption } from '@/ui/charts/interactiveBoards'
 import type {
   AnalysisResult,
   BandCorridor,
@@ -55,94 +55,70 @@ export function AnalysisCharts({ analysis }: { analysis: AnalysisResult }) {
   const colors = useChartColors()
   const liveOpt = useMemo(() => vcDelayOption(analysis), [analysis])
   const vcSvg = useMemo(() => {
-    const byAp = new Map<string, { name: string; sum: number; n: number; max: number }>()
-    for (const l of analysis.lanes) {
-      const cur = byAp.get(l.approachId) ?? { name: l.approachName, sum: 0, n: 0, max: 0 }
-      cur.sum += l.vc
-      cur.n += 1
-      cur.max = Math.max(cur.max, l.vc)
-      byAp.set(l.approachId, cur)
-    }
-    const raw = barChartSvg(
-      [...byAp.values()].map((v) => {
-        const avg = v.sum / Math.max(1, v.n)
-        return {
-          label: v.name.replace('进口', ''),
-          value: avg,
-          color: vcHeatColor(avg),
-        }
-      }),
-      { height: 150, unit: 'v/c 均值' },
-    )
-    return themeSvg(raw, colors)
-  }, [analysis, colors])
+      const byAp = new Map<string, { name: string; sum: number; n: number; max: number }>()
+      for (const l of analysis.lanes) {
+        const cur = byAp.get(l.approachId) ?? { name: l.approachName, sum: 0, n: 0, max: 0 }
+        cur.sum += l.vc
+        cur.n += 1
+        cur.max = Math.max(cur.max, l.vc)
+        byAp.set(l.approachId, cur)
+      }
+      const data = [...byAp.values()].map(v => ({
+        label: v.name.replace('进口', ''),
+        value: v.sum / Math.max(1, v.n),
+        color: vcHeatColor(v.sum / Math.max(1, v.n)),
+      }))
+      return barChartOption(data, { height: 150, unit: 'v/c 均值' })
+    }, [analysis])
 
-  const delaySvg = useMemo(() => {
-    const raw = barChartSvg(
-      analysis.lanes.slice(0, 12).map((l) => ({
+    const delaySvg = useMemo(() => {
+      const data = analysis.lanes.slice(0, 12).map(l => ({
         label: `${l.approachName.replace('进口', '')}${l.movement}`,
         value: l.delaySec,
         color: l.delaySec >= 80 ? '#e85d5d' : l.delaySec >= 55 ? '#e5a54b' : '#6b8afd',
-      })),
-      { height: 150, unit: 's' },
-    )
-    return themeSvg(raw, colors)
-  }, [analysis, colors])
+      }))
+      return barChartOption(data, { height: 150, unit: 's' })
+    }, [analysis])
 
-  const radar = useMemo(() => {
-    // normalize metrics into comparable axes (lower better for delay/queue/vc; invert for shape)
-    const vc = Math.min(1.5, analysis.avgVc) / 1.5
-    const delay = Math.min(120, analysis.avgDelay) / 120
-    const queue = Math.min(300, analysis.avgQueueM) / 300
-    const losMap: Record<string, number> = { A: 0.1, B: 0.25, C: 0.4, D: 0.55, E: 0.75, F: 1 }
-    const los = losMap[analysis.losFinal] ?? 0.5
-    const raw = radarChartSvg(
-      [
+    const radar = useMemo(() => {
+      // normalize metrics into comparable axes (lower better for delay/queue/vc; invert for shape)
+      const vc = Math.min(1.5, analysis.avgVc) / 1.5
+      const delay = Math.min(120, analysis.avgDelay) / 120
+      const queue = Math.min(300, analysis.avgQueueM) / 300
+      const losMap: Record<string, number> = { A: 0.1, B: 0.25, C: 0.4, D: 0.55, E: 0.75, F: 1 }
+      const los = losMap[analysis.losFinal] ?? 0.5
+      const axes = [
         { label: 'v/c', value: vc, max: 1 },
         { label: '延误', value: delay, max: 1 },
         { label: '排队', value: queue, max: 1 },
         { label: 'LOS', value: los, max: 1 },
         { label: '稳定', value: Math.min(1, analysis.avgVc), max: 1 },
-      ],
-      { height: 190, title: '运行质量雷达（越大越差）' },
+      ]
+      return radarChartOption(axes, { height: 190, title: '运行质量雷达（越大越差）' })
+    }, [analysis])
+
+    const gauge = useMemo(() => losGaugeOption(analysis.losFinal, analysis.avgDelay), [analysis])
+
+    return (
+      <div className="analysis-charts">
+        <EChart option={gauge} style={{ height: 160 }} />
+        <div className="chart-title" style={{ marginTop: 12 }}>
+          <span>饱和度 v/c（按进口）</span>
+          <small>与评价表联动</small>
+        </div>
+        <EChart option={vcSvg} style={{ height: 150 }} />
+        <div className="chart-title" style={{ marginTop: 12 }}>
+          <span>延误 (s)</span>
+          <small>车道组/转向</small>
+        </div>
+        <EChart option={delaySvg} style={{ height: 150 }} />
+        <div className="chart-title" style={{ marginTop: 12 }}>
+          <span>综合雷达</span>
+          <small>归一化指标</small>
+        </div>
+        <EChart option={radar} style={{ height: 190 }} />
+      </div>
     )
-    return themeSvg(raw, colors)
-  }, [analysis, colors])
-
-  const gauge = useMemo(
-    () => themeSvg(losGaugeSvg(analysis.losFinal, analysis.avgDelay), colors),
-    [analysis, colors],
-  )
-
-  return (
-    <div className="chart-card">
-      <div className="chart-title">
-        <span>v/c · 延误</span>
-        <small>ECharts · 与评价表同源</small>
-      </div>
-      <EChart option={liveOpt} style={{ height: 300 }} className="echart-host" />
-      <div className="chart-title" style={{ marginTop: 12 }}>
-        <span>服务水平</span>
-        <small>与 KPI 同源</small>
-      </div>
-      <div dangerouslySetInnerHTML={{ __html: gauge }} />
-      <div className="chart-title" style={{ marginTop: 12 }}>
-        <span>饱和度 v/c（按进口）</span>
-        <small>与评价表联动</small>
-      </div>
-      <div dangerouslySetInnerHTML={{ __html: vcSvg }} />
-      <div className="chart-title" style={{ marginTop: 12 }}>
-        <span>延误 (s)</span>
-        <small>车道组/转向</small>
-      </div>
-      <div dangerouslySetInnerHTML={{ __html: delaySvg }} />
-      <div className="chart-title" style={{ marginTop: 12 }}>
-        <span>综合雷达</span>
-        <small>归一化指标</small>
-      </div>
-      <div dangerouslySetInnerHTML={{ __html: radar }} />
-    </div>
-  )
 }
 
 export function FlowCharts({

@@ -1,8 +1,40 @@
 /**
  * Interactive ECharts option builders — homology with AnalysisResult / cycle scan.
+ * Replaces all static SVG charts with interactive ECharts equivalents.
  */
 import type { AnalysisResult, Approach, FlowScheme, SignalScheme, BandCorridor, BandResult, CrossSection, CrossSectionComponent } from '@/domain/types'
+import type { SaturationKpi } from '@/domain/signal/saturationKpi'
+import type { UnsignalizedAnalysis } from '@/domain/analysis/unsignalized'
+import type { TimingCompareRow } from '@/domain/analysis/timingCompare'
+import type { QueueEstimate } from '@/domain/analysis/queueStorage'
+import type { IntergreenRow } from '@/domain/signal/intergreen'
+import type { StorageCheckRow } from '@/domain/channel/storageCheck'
+import type { OverlapRow } from '@/ui/charts/overlapReviewBoard'
+import type { CriticalLaneRow } from '@/ui/charts/criticalApproachBoard'
+import type { PedOptRow } from '@/ui/charts/pedTimingOptBoard'
+import type { CycleScanResult } from '@/domain/analysis/cycleScan'
+import { buildLostTimeReport } from '@/ui/charts/lostTimeBoard'
 import { buildFlowAlignment, type FlowDisplayMode } from '@/domain/flow/flowAlign'
+import { losByControlDelay } from '@/ui/charts/chartStandards'
+import { isDualRingEnabled, buildDualRingAlignment, phaseDuration } from '@/domain/signal/dualRing'
+import { buildConflictMatrix } from '@/domain/signal/conflictMatrix'
+import { buildPhaseConflictReport } from '@/domain/signal/phaseConflictView'
+import { buildConflictDiagram } from '@/domain/signal/conflictDiagram'
+import { buildReleaseMatrix, controlMatrixChartInput } from '@/domain/signal/releaseAlign'
+import { pedCrossingsOf, pedWalkFdw, phaseHasPed, countPedIntervals } from '@/domain/signal/pedestrian'
+import { collectCriticalLanes } from '@/ui/charts/criticalApproachBoard'
+import { computeSaturationKpi } from '@/domain/signal/saturationKpi'
+import { computeSchemeY } from '@/domain/signal/autoTimingPack'
+import { websterOptimalCycle } from '@/domain/analysis/lostTime'
+import { collectPedOptRows } from '@/ui/charts/pedTimingOptBoard'
+import { collectOverlapRows } from '@/ui/charts/overlapReviewBoard'
+import { buildSignalTimingAlignment } from '@/domain/signal/timingAlign'
+import { collectIntergreenRows } from '@/domain/signal/intergreen'
+import { collectStorageCheckRows } from '@/domain/channel/storageCheck'
+import { estimateQueueStorage } from '@/domain/analysis/queueStorage'
+import { scanCycleSensitivity } from '@/domain/analysis/cycleScan'
+import type { CorridorKpiRow } from './bandCorridorCompare'
+import type { SchemeSnapshot } from './schemeCompareDiagrams'
 import type { EChartsCoreOption } from 'echarts/core'
 
 const LOS_COLORS: Record<string, string> = {
@@ -460,5 +492,664 @@ export function xsectionWidthOption(
         },
       },
     ],
+  }
+}
+
+/** Critical approach board — ranked v/c + heat color bars. */
+export function criticalApproachOption(
+  approaches: Approach[],
+  flow: FlowScheme,
+  signal: SignalScheme,
+  analysis: AnalysisResult,
+  opts: { width?: number } = {},
+): EChartsCoreOption {
+  const W = opts.width ?? 720
+  const kpi = computeSaturationKpi(approaches, flow, signal)
+  const y = computeSchemeY(approaches, flow, signal)
+  const rows = collectCriticalLanes(analysis, 8)
+  const rowH = 30
+  const top = 80
+  const H = top + 24 + Math.max(1, rows.length) * rowH + 32
+
+  return {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'item',
+      formatter: (params: unknown) => {
+        if (!Array.isArray(params)) return ''
+        const idx = (params as { dataIndex?: number }).dataIndex ?? 0
+        if (idx === undefined || idx >= rows.length) return ''
+        const r = rows[idx]
+        return `${r.approachName}<br/>${r.movement}<br/>v/c ${r.vc.toFixed(3)} · 延误 ${r.delaySec.toFixed(1)}s · 量 ${r.volumePeak.toFixed(0)}`
+      },
+    },
+    grid: { left: 80, right: 24, top: top + 8, bottom: 24 },
+    xAxis: {
+      type: 'value',
+      name: 'v/c',
+      min: 0,
+      max: Math.max(1, ...rows.map((r) => r.vc), 1.1) * 1.05,
+      axisLabel: { show: false },
+      splitLine: { show: false },
+    },
+    yAxis: {
+      type: 'category',
+      data: rows.map((r, i) => `${r.approachName.slice(0, 6)}/${r.movement}`),
+      axisLabel: { width: 100 },
+      inverse: true,
+    },
+    series: [
+      {
+        name: 'v/c',
+        type: 'bar',
+        barHeight: 18,
+        data: rows.map((r) => ({
+          value: r.vc,
+          itemStyle: {
+            color:
+              r.vc >= 1.0
+                ? '#dc2626'
+                : r.vc >= 0.9
+                ? '#ea580c'
+                : r.vc >= 0.75
+                ? '#ca8a04'
+                : '#16a34a',
+          },
+        })),
+        label: {
+          show: true,
+          position: 'right',
+          distance: 8,
+          formatter: (params: unknown) => {
+            const idx = (params as { dataIndex?: number }).dataIndex ?? 0
+            const r = rows[idx]
+            if (!r) return ''
+            return `${r.vc.toFixed(3)}`
+          },
+          fontSize: 10,
+        },
+      },
+    ],
+  }
+}
+
+/** Lost-time board — L value + C vs Y curve. */
+export function lostTimeOption(
+  signal: SignalScheme,
+  opts: { width?: number; Y?: number } = {},
+): EChartsCoreOption {
+  const rep = buildLostTimeReport(signal)
+  const Y = opts.Y ?? 0.5
+  const Copt = websterOptimalCycle(Y, rep.L)
+  const W = opts.width ?? 720
+  const H = 280
+
+  return {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      formatter: (params: unknown) => {
+        if (!Array.isArray(params)) return ''
+        const idx = (params as { dataIndex?: number }).dataIndex ?? 0
+        if (idx >= rep.curve.length) return ''
+        const point = rep.curve[idx]
+        return `Y=${point.Y}<br/>C=${point.C}s`
+      },
+    },
+    grid: { left: 20, right: 20, top: 50, bottom: 40 },
+    xAxis: {
+      type: 'value',
+      name: 'Y',
+      min: 0,
+      max: 0.9,
+    },
+    yAxis: {
+      type: 'value',
+      name: 'C (s)',
+      min: 0,
+    },
+    series: [
+      {
+        name: 'C vs Y',
+        type: 'line',
+        smooth: true,
+        data: rep.curve.map((p) => [p.Y, p.C]),
+        lineStyle: { width: 2, color: '#3b82f6' },
+        areaStyle: {},
+      },
+      {
+        name: 'Current Y',
+        type: 'scatter',
+        data: [[Y, Copt]],
+        symbolSize: 12,
+        itemStyle: { color: '#ef4444' },
+      },
+      {
+        name: 'L Line',
+        type: 'line',
+        data: [[0, rep.L], [0.9, rep.L]],
+        lineStyle: { type: 'dashed', width: 1, color: '#64748b' },
+        label: {
+          show: true,
+          position: 'start',
+          formatter: `L = ${rep.L.toFixed(1)}s`,
+          fontSize: 10,
+        },
+      },
+    ],
+  }
+}
+
+/** Pedestrian timing optimization board. */
+export function pedTimingOptOption(
+  signal: SignalScheme,
+  approaches: Approach[],
+  opts: { width?: number } = {},
+): EChartsCoreOption {
+  const rows = collectPedOptRows(signal, approaches)
+  const W = opts.width ?? 800
+  const rowH = 28
+  const top = 56
+  const H = top + 24 + Math.max(1, rows.length) * rowH + 32
+
+  return {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      formatter: (params: unknown) => {
+        if (!Array.isArray(params)) return ''
+        const idx = (params as { dataIndex?: number }).dataIndex ?? 0
+        if (idx >= rows.length) return ''
+        const r = rows[idx]
+        if (!r) return ''
+        const needG = r.recWalk + r.recFdw - (r.curWalk + r.curFdw)
+        return `${r.phaseName}<br/>当前: Walk ${r.curWalk}s / FDW ${r.curFdw}s<br/>建议: Walk ${r.recWalk}s / FDW ${r.recFdw}s<br/>还需绿时: ${needG > 0 ? '+' : ''}${needG.toFixed(1)}s`
+      },
+    },
+    grid: { left: 80, right: 24, top: top + 8, bottom: 24 },
+    xAxis: {
+      type: 'value',
+      name: 'green time (s)',
+      min: 0,
+      max: Math.max(
+        60,
+        ...rows.map((r: { greenSec: number; recWalk: number; recFdw: number }) => Math.max(r.greenSec, r.recWalk + r.recFdw)),
+        1,
+      ) * 1.05,
+    },
+    yAxis: {
+      type: 'category',
+      data: rows.map((r: { phaseName: string }) => r.phaseName.slice(0, 8)),
+      axisLabel: { width: 100 },
+      inverse: true,
+    },
+    series: [
+      {
+        name: '当前绿时',
+        type: 'bar',
+        barHeight: 16,
+        data: rows.map((r: { greenSec: number }) => r.greenSec),
+        itemStyle: { color: '#64748b' },
+      },
+      {
+        name: '建议Walk/FDW',
+        type: 'bar',
+        barHeight: 16,
+        data: rows.map((r: { recWalk: number; recFdw: number }) => r.recWalk + r.recFdw),
+        itemStyle: { color: '#22c55e' },
+      },
+    ],
+  }
+}
+
+/** Overlap (搭接) phase review board. */
+export function overlapReviewOption(
+  signal: SignalScheme,
+  opts: { width?: number } = {},
+): EChartsCoreOption {
+  const rows = collectOverlapRows(signal)
+  const al = buildSignalTimingAlignment(signal)
+  const mainN = signal.phases.filter((p) => !p.isOverlap).length
+  const W = opts.width ?? 760
+  const rowH = 28
+  const top = 56
+  const H = top + 24 + Math.max(1, rows.length) * rowH + 36
+
+  return {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      formatter: (params: unknown) => {
+        if (!Array.isArray(params)) return ''
+        const idx = (params as { dataIndex?: number }).dataIndex ?? 0
+        if (idx >= rows.length) return ''
+        const r = rows[idx]
+        return `${r.name}<br/>G ${r.greenSec}s · Y ${r.yellowSec}s · AR ${r.allRedSec}s<br/>放行: ${r.releases || '—'}`
+      },
+    },
+    grid: { left: 80, right: 24, top: top + 8, bottom: 24 },
+    xAxis: {
+      type: 'value',
+      name: 'green time (s)',
+      min: 0,
+      max: Math.max(60, ...rows.map((r) => r.greenSec + r.yellowSec + r.allRedSec)) * 1.05,
+    },
+    yAxis: {
+      type: 'category',
+      data: rows.map((r) => r.name.slice(0, 8)),
+      axisLabel: { width: 100 },
+      inverse: true,
+    },
+    series: [
+      {
+        name: '相位绿时',
+        type: 'bar',
+        barHeight: 20,
+        data: rows.map((r: { greenSec: number }) => r.greenSec),
+        itemStyle: { color: '#22c55e' },
+      },
+    ],
+  }
+}
+
+/** Intergreen review board — yellow / all-red vs recommendation. */
+export function intergreenOption(
+  signal: SignalScheme,
+  approaches: Approach[],
+  opts: { width?: number } = {},
+): EChartsCoreOption {
+  const rows = collectIntergreenRows(signal, approaches)
+  const W = opts.width ?? 860
+  const rowH = 26
+  const top = 56
+  const H = top + 24 + Math.max(1, rows.length) * rowH + 28
+  const shortN = rows.filter((r) => r.status === 'short').length
+
+  function col(st: IntergreenRow['status']): string {
+    if (st === 'short') return '#dc2626'
+    if (st === 'long') return '#ea580c'
+    return '#16a34a'
+  }
+
+  return {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      formatter: (params: unknown) => {
+        if (!Array.isArray(params)) return ''
+        const idx = (params as { dataIndex?: number }).dataIndex ?? 0
+        if (idx >= rows.length) return ''
+        const r = rows[idx]
+        if (!r) return ''
+        return `${r.phaseName}<br/>黄灯: ${r.yellowSec}s (推荐 ${r.recYellow}s)<br/>全红: ${r.allRedSec}s (推荐 ${r.recAllRed}s)<br/>状态: ${
+          r.status === 'short'
+            ? '偏短'
+            : r.status === 'long'
+            ? '偏长'
+            : '正常'
+        }`
+      },
+    },
+    grid: { left: 80, right: 24, top: top + 8, bottom: 24 },
+    xAxis: {
+      type: 'value',
+      name: 'time (s)',
+      min: 0,
+      max: Math.max(
+        10,
+        ...rows.map((r) => Math.max(r.yellowSec, r.recYellow, r.allRedSec, r.recAllRed)),
+        5,
+      ) * 1.1,
+    },
+    yAxis: {
+      type: 'category',
+      data: rows.map((r: { phaseName: string }) => r.phaseName.slice(0, 8)),
+      axisLabel: { width: 100 },
+      inverse: true,
+    },
+    series: [
+      {
+        name: '现状',
+        type: 'bar',
+        barHeight: 18,
+        data: rows.map((r) => {
+          const total = r.yellowSec + r.allRedSec
+          return { value: total, itemStyle: { color: col(r.status) } }
+        }),
+      },
+      {
+        name: '推荐',
+        type: 'bar',
+        barHeight: 18,
+        data: rows.map((r) => r.recYellow + r.recAllRed),
+        itemStyle: { color: '#64748b' },
+      },
+    ],
+  }
+}
+
+  /** Storage length check board — queue vs bay. */
+  export function storageCheckOption(
+    approaches: Approach[],
+    signal: SignalScheme,
+    analysis: AnalysisResult,
+    opts: { width?: number } = {},
+  ): EChartsCoreOption {
+    const rows = collectStorageCheckRows(approaches, signal, analysis)
+    const W = opts.width ?? 860
+    const rowH = 26
+    const top = 56
+    const H = top + 24 + Math.max(1, rows.length) * rowH + 32
+
+    return {
+      backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        formatter: (params: unknown) => {
+          if (!Array.isArray(params)) return ''
+          const idx = (params as { dataIndex?: number }).dataIndex ?? 0
+          if (idx >= rows.length) return ''
+          const r = rows[idx]
+          if (!r) return ''
+          return `${r.approachName.slice(0, 6)}/${r.movement}<br/>排队 ${r.queueM.toFixed(1)}m<br/>可用存储 ${r.availableM}m<br/>利用率 ${(r.ratio * 100).toFixed(0)}%`
+        },
+      },
+      grid: { left: 80, right: 24, top: top + 8, bottom: 24 },
+      xAxis: {
+        type: 'value',
+        name: '利用率 (%)',
+        min: 0,
+        max: 120,
+      },
+      yAxis: {
+        type: 'category',
+        data: rows.map((r) => `${r.approachName.slice(0, 6)}/${r.movement}`),
+        axisLabel: { width: 120 },
+        inverse: true,
+      },
+      series: [
+        {
+          name: '利用率',
+          type: 'bar',
+          barHeight: 20,
+          data: rows.map((r) => r.ratio * 100),
+          itemStyle: {
+            color: (params: unknown) => {
+              const idx = (params as { dataIndex?: number }).dataIndex ?? 0
+              const r = rows[idx]
+              if (!r) return '#64748b'
+              return r.status === 'overflow'
+                ? '#dc2626'
+                : r.status === 'tight'
+                ? '#ea580c'
+                : '#16a34a'
+            },
+          },
+        },
+      ],
+    }
+  }
+
+  /** Queue storage review board. */
+  export function queueStorageOption(
+    rows: QueueEstimate[],
+    opts: { width?: number } = {},
+  ): EChartsCoreOption {
+    const W = opts.width ?? 800
+    const rowH = 26
+    const top = 44
+    const H = top + 28 + Math.max(1, rows.length) * rowH + 24
+
+    return {
+      backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        formatter: (params: unknown) => {
+          if (!Array.isArray(params)) return ''
+          const idx = (params as { dataIndex?: number }).dataIndex ?? 0
+          if (idx >= rows.length) return ''
+          const r = rows[idx]
+          if (!r) return ''
+          return `${r.approachName.slice(0, 8)}/${r.movement}<br/>流量 ${r.volumeVph.toFixed(0)} veh/h<br/>红时 ${r.redSec}s<br/>车道 ${r.lanes}<br/>车辆 ${r.vehicles.toFixed(1)}<br/>存储长度 ${r.storageM.toFixed(1)}m`
+        },
+      },
+      grid: { left: 80, right: 24, top: top + 8, bottom: 24 },
+      xAxis: {
+        type: 'value',
+        name: '存储长度 (m)',
+        min: 0,
+      },
+      yAxis: {
+        type: 'category',
+        data: rows.map((r) => `${r.approachName.slice(0, 6)}/${r.movement}`),
+        axisLabel: { width: 120 },
+        inverse: true,
+      },
+      series: [
+        {
+          name: '存储长度',
+          type: 'bar',
+          barHeight: 20,
+          data: rows.map((r) => r.storageM),
+          itemStyle: { color: '#3b82f6' },
+        },
+      ],
+    }
+  }
+
+  /** Cycle C sensitivity board — delay & max v/c vs cycle. */
+  export function cycleScanBoardOption(
+    approaches: Approach[],
+    flow: FlowScheme,
+    signal: SignalScheme,
+    opts: {
+      width?: number
+      height?: number
+      minCycle?: number
+      maxCycle?: number
+      stepSec?: number
+      scan?: CycleScanResult
+    } = {},
+  ): EChartsCoreOption {
+    const scan =
+      opts.scan ??
+      scanCycleSensitivity(approaches, flow, signal, {
+        minCycle: opts.minCycle,
+        maxCycle: opts.maxCycle,
+        stepSec: opts.stepSec,
+      })
+    const W = opts.width ?? 900
+    const H = opts.height ?? 300
+    const padL = 52
+    const padR = 52
+    const padT = 56
+    const padB = 36
+    const plotW = W - padL - padR
+    const plotH = H - padT - padB
+    const pts = scan.points
+    const maxD = Math.max(1, ...pts.map((p) => p.avgDelay), scan.bestDelay.avgDelay)
+    const maxV = Math.max(0.5, ...pts.map((p) => p.maxVc), 1.2)
+    const minC = scan.minCycle
+    const maxC = scan.maxCycle
+
+    return {
+      backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        formatter: (params: unknown) => {
+          if (!Array.isArray(params)) return ''
+          const idx = (params as { dataIndex?: number }).dataIndex ?? 0
+          if (idx >= pts.length) return ''
+          const p = pts[idx]
+          if (!p) return ''
+          return `C=${p.cycleSec}s<br/>延误 ${p.avgDelay.toFixed(1)}s<br/>最大 v/c ${p.maxVc.toFixed(3)}`
+        },
+      },
+      grid: { left: padL, right: padR, top: padT, bottom: padB },
+      xAxis: {
+        type: 'value',
+        name: 'C (s)',
+        min: minC,
+        max: maxC,
+      },
+      yAxis: [
+        {
+          type: 'value',
+          name: '延误 (s)',
+          min: 0,
+          max: maxD * 1.05,
+          position: 'left',
+        },
+        {
+          type: 'value',
+          name: '最大 v/c',
+          min: 0,
+          max: maxV * 1.05,
+          position: 'right',
+        },
+      ],
+      series: [
+        {
+          name: '延误',
+          type: 'line',
+          smooth: true,
+          data: pts.map((p) => [p.cycleSec, p.avgDelay]),
+          lineStyle: { width: 2, color: '#0284c7' },
+        },
+        {
+          name: '最大 v/c',
+          type: 'line',
+          smooth: true,
+          yAxisIndex: 1,
+          data: pts.map((p) => [p.cycleSec, p.maxVc]),
+          lineStyle: { width: 1.5, color: '#ea580c', opacity: 0.9 },
+        },
+        {
+          name: '当前延误',
+          type: 'scatter',
+          data: [
+            [
+              scan.currentCycle,
+              scan.current.avgDelay,
+            ],
+          ],
+          symbolSize: 8,
+          itemStyle: { color: '#6366f1' },
+        },
+        {
+          name: '最小延误点',
+          type: 'scatter',
+          data: [
+            [
+              scan.bestDelay.cycleSec,
+              scan.bestDelay.avgDelay,
+            ],
+          ],
+          symbolSize: 10,
+          itemStyle: { color: '#dc2626' },
+        },
+        {
+          name: '最小maxVC点',
+          type: 'scatter',
+          data: [
+            [
+              scan.bestVc.cycleSec,
+              scan.bestVc.maxVc,
+            ],
+          ],
+          symbolSize: 10,
+          itemStyle: { color: '#f97316' },
+        },
+      ],
+    }
+  }
+
+/** LOS gauge chart (ECharts gauge). */
+export function losGaugeOption(los: string, delaySec: number): EChartsCoreOption {
+  const losMap: Record<string, number> = { A: 10, B: 30, C: 50, D: 65, E: 80, F: 95 }
+  const losColor: Record<string, string> = { A: '#22c55e', B: '#84cc16', C: '#eab308', D: '#f97316', E: '#ef4444', F: '#dc2626' }
+  return {
+    series: [{
+      type: 'gauge',
+      min: 0, max: 100,
+      progress: { show: true, width: 14 },
+      axisLine: { lineStyle: { width: 14 } },
+      axisTick: { show: false },
+      splitLine: { show: false },
+      axisLabel: { show: false },
+      pointer: { show: false },
+      detail: {
+        valueAnimation: false,
+        formatter: `${los} (${delaySec.toFixed(1)}s)`,
+        fontSize: 16, fontWeight: 700,
+        color: losColor[los] ?? '#94a3b8',
+        offsetCenter: [0, '0%'],
+      },
+      data: [{ value: losMap[los] ?? 50 }],
+      itemStyle: { color: losColor[los] ?? '#94a3b8' },
+    }],
+  }
+}
+
+/** Radar chart (ECharts radar). */
+export function radarChartOption(
+  axes: { label: string; value: number; max?: number }[],
+  opts: { height?: number; title?: string } = {},
+): EChartsCoreOption {
+  return {
+    title: opts.title ? { text: opts.title, textStyle: { fontSize: 11, color: '#94a3b8' }, left: 'center', top: 0 } : undefined,
+    radar: {
+      indicator: axes.map(a => ({ name: a.label, max: a.max ?? 1 })),
+      radius: '60%',
+      splitNumber: 4,
+      axisName: { color: '#94a3b8', fontSize: 10 },
+      splitLine: { lineStyle: { color: 'rgba(148,163,184,0.15)' } },
+      splitArea: { show: false },
+      axisLine: { lineStyle: { color: 'rgba(148,163,184,0.15)' } },
+    },
+    series: [{
+      type: 'radar',
+      data: [{ value: axes.map(a => a.value), name: '指标' }],
+      areaStyle: { opacity: 0.15 },
+      lineStyle: { width: 2 },
+      itemStyle: { color: '#38bdf8' },
+    }],
+  }
+}
+
+/** Simple bar chart (replaces barChartSvg). */
+export function barChartOption(
+  data: { label: string; value: number; color?: string }[],
+  opts: { height?: number; unit?: string } = {},
+): EChartsCoreOption {
+  return {
+    grid: { left: 50, right: 16, top: 8, bottom: 24 },
+    xAxis: {
+      type: 'category',
+      data: data.map(d => d.label),
+      axisLabel: { fontSize: 10, rotate: data.length > 6 ? 30 : 0 },
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: { fontSize: 10 },
+      name: opts.unit,
+    },
+    tooltip: { trigger: 'axis' },
+    series: [{
+      type: 'bar',
+      data: data.map(d => ({
+        value: d.value,
+        itemStyle: d.color ? { color: d.color } : undefined,
+      })),
+      barMaxWidth: 24,
+      label: { show: data.length <= 8, position: 'top', fontSize: 10, formatter: (p: { value: number }) => p.value.toFixed(1) },
+    }],
   }
 }

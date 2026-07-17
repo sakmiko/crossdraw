@@ -5,7 +5,7 @@
 import { useEffect, useRef, useCallback, useImperativeHandle, forwardRef } from 'react'
 import * as echarts from 'echarts/core'
 import type { EChartsCoreOption } from 'echarts/core'
-import { BarChart, LineChart, ScatterChart, RadarChart, PieChart, HeatmapChart } from 'echarts/charts'
+import { BarChart, LineChart, ScatterChart, RadarChart, PieChart, HeatmapChart, GaugeChart, CustomChart } from 'echarts/charts'
 import {
   TitleComponent,
   TooltipComponent,
@@ -16,14 +16,15 @@ import {
   MarkLineComponent,
   MarkPointComponent,
   VisualMapComponent,
+  GraphicComponent,
 } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 
 echarts.use([
-  BarChart, LineChart, ScatterChart, RadarChart, PieChart, HeatmapChart,
+  BarChart, LineChart, ScatterChart, RadarChart, PieChart, HeatmapChart, GaugeChart, CustomChart,
   TitleComponent, TooltipComponent, LegendComponent, GridComponent,
   DataZoomComponent, ToolboxComponent, MarkLineComponent, MarkPointComponent,
-  VisualMapComponent,
+  VisualMapComponent, GraphicComponent,
   CanvasRenderer,
 ])
 
