@@ -694,7 +694,6 @@ label {
   }
   .center.page-fill { display: flex !important; }
 
-
   .topbar .brand small { display: none; }
   .topbar .topbar-divider { display: none; }
   .topbar .toolbar { display: none; } /* use command palette + inspector on mobile */
@@ -1064,9 +1063,6 @@ tr.row-locked td {
   color: var(--muted);
   background: color-mix(in srgb, #dc2626 12%, transparent);
 }
-
-
-/* === v0.5.19 hierarchy & density polish === */
 .mode-hierarchy {
   display: flex;
   align-items: center;
@@ -1234,9 +1230,6 @@ tr.row-locked td {
 @media (max-width: 900px) {
   .mode-hierarchy .mh-hint { display: none; }
 }
-
-
-/* === v0.5.20 scheme tree + light chart contrast === */
 .scheme-tree {
   display: flex;
   flex-direction: column;
@@ -1395,9 +1388,6 @@ html[data-theme='light'] .tree-item.active {
 html[data-theme='light'] .mode-hierarchy {
   background: linear-gradient(180deg, #ffffff, #f1f5f9);
 }
-
-
-/* === v0.5.24 print preview === */
 .print-preview {
   width: min(960px, 96vw);
   max-height: min(92vh, 900px);
@@ -1426,9 +1416,6 @@ html[data-theme='light'] .mode-hierarchy {
 html[data-theme='light'] .print-stage {
   background: #cbd5e1;
 }
-
-
-/* === v0.5.27 multi band corridor === */
 .band-corridor-bar {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -1442,9 +1429,6 @@ html[data-theme='light'] .print-stage {
 .band-corridor-bar label {
   font-size: 11.5px;
 }
-
-
-/* === v0.5.29 lane editor === */
 .lane-edit-row {
   border-bottom: 1px dashed var(--border);
   padding-bottom: 6px;
@@ -1459,9 +1443,6 @@ html[data-theme='light'] .print-stage {
   font-size: 12px;
   min-width: 64px;
 }
-
-
-/* === v0.5.30 conflict === */
 .row-block td { color: var(--block); }
 .row-warn td { color: var(--warn); }
 .integrity-badge.warn {
@@ -1469,9 +1450,6 @@ html[data-theme='light'] .print-stage {
   color: var(--warn);
   border-color: color-mix(in srgb, var(--warn) 40%, transparent);
 }
-
-
-/* === v0.5.33 analysis table === */
 .th-sort {
   padding: 0 !important;
   font: inherit;
@@ -1485,9 +1463,6 @@ html[data-theme='light'] .print-stage {
 .analysis-table-filters label {
   font-size: 11.5px;
 }
-
-
-/* === v0.5.35 band multi-corridor sidebar === */
 .band-workspace-grid {
   display: grid;
   grid-template-columns: minmax(200px, 240px) 1fr;
@@ -1558,7 +1533,6 @@ html[data-theme='light'] .print-stage {
   min-width: 0;
 }
 
-
 /* v0.5.52+ status */
 .status-issues { font-variant-numeric: tabular-nums; opacity: 0.9; }
 .xsection { display: flex; height: 36px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
@@ -1567,7 +1541,6 @@ html[data-theme='light'] .print-stage {
   font-size: 9px; color: #0f172a; overflow: hidden; white-space: nowrap;
 }
 .check-inline { display: inline-flex; align-items: center; gap: 2px; margin-left: 4px; }
-
 
 /* —— v0.5.65 professional panels —— */
 .chart-svg-host--pro {
@@ -1630,7 +1603,6 @@ tr.row-hot td { background: rgba(56, 189, 248, 0.08); }
   accent-color: #0ea5e9;
 }
 .band-workspace-grid .chart-svg-host--pro { margin-bottom: 4px; }
-
 
 /* —— v0.5.70 shell declutter —— */
 .brand-text { display: flex; flex-direction: column; line-height: 1.15; gap: 1px; }
@@ -1834,7 +1806,6 @@ tr.row-hot td { background: rgba(56, 189, 248, 0.08); }
   .menu-group .menu-dropdown:nth-child(3) { display: none; }
 }
 
-
 /* —— v0.5.71 Band dedicated page (RoadGee-style) —— */
 .app--band {
   grid-template-rows: minmax(0, 1fr) var(--shell-bottom);
@@ -1993,7 +1964,6 @@ tr.row-hot td { background: rgba(56, 189, 248, 0.08); }
   .band-page-tabs button span { /* keep labels */ }
 }
 
-
 /* —— v0.5.72 compact + KPI + no-geo —— */
 .inspector .card { padding: 8px 10px 10px; }
 .inspector .card + .card { margin-top: 6px; }
@@ -2080,7 +2050,6 @@ tr.row-hot td { background: rgba(56, 189, 248, 0.08); }
 
 /* hide verbose mode hierarchy breadcrumb fluff */
 .mode-hierarchy .mh-hint { display: none; }
-
 
 /* —— v0.5.73 left feature nav (collapsible) —— */
 .left-nav {
@@ -2262,7 +2231,6 @@ tr.row-hot td { background: rgba(56, 189, 248, 0.08); }
   .side, .right { /* existing mobile rules still apply via data-pane */ }
 }
 
-
 /* —— v0.5.75 vector icons (rounded stroke) —— */
 .cd-icon {
   display: block;
@@ -2368,7 +2336,6 @@ button.primary .cd-icon {
   gap: 5px;
 }
 
-
 /* —— v0.5.78 RoadGee-like channel form —— */
 .rg-form h2.rg-page-title {
   margin: 0 0 8px;
@@ -2423,7 +2390,6 @@ button.primary .cd-icon {
   font-size: 11px;
   margin-left: 2px;
 }
-
 
 /* —— v0.5.79 mode-specific center + silent autosave —— */
 .center--mode {
@@ -2502,7 +2468,6 @@ button.primary .cd-icon {
 .right .page-title-bar {
   margin-bottom: 4px;
 }
-
 
 /* —— v0.5.80 RoadGee release chips —— */
 .release-editor {
@@ -2587,7 +2552,6 @@ button.primary .cd-icon {
 .mov-glyph {
   flex-shrink: 0;
 }
-
 
 /* —— v0.5.80 top scheme switcher + mode rail + signal stack —— */
 .scheme-switcher {
@@ -2683,7 +2647,6 @@ button.primary .cd-icon {
     display: none; /* use file menu on narrow; still have schemes via open */
   }
 }
-
 
 /* —— v0.5.100 unified page-fill layout system ——
  * Shell: LeftNav | page-fill only
@@ -3109,7 +3072,6 @@ button.primary .cd-icon {
   }
 }
 
-
 /* ECharts host (v0.5.115 RoadGee-style interactive analysis) */
 .echart-host {
   width: 100%;
@@ -3122,7 +3084,6 @@ button.primary .cd-icon {
   min-height: 280px;
   border: none;
 }
-
 
 /* v0.5.116 control density + layout hard fix */
 .page-fill-stage {
@@ -3185,7 +3146,6 @@ button,
   }
 }
 
-
 /* v0.5.118 page polish — denser params, stage chrome */
 .page-fill-params {
   padding: 8px 12px 18px !important;
@@ -3240,7 +3200,6 @@ button,
   }
 }
 
-
 /* v0.5.120 signal / params polish */
 .app.shell--signal .page-fill-params .rg-section-title {
   position: sticky;
@@ -3262,7 +3221,6 @@ button,
   min-height: 220px;
 }
 
-
 /* v0.5.120 signal polish */
 .app.shell--signal .page-fill-params .rg-section-title {
   position: sticky;
@@ -3278,7 +3236,6 @@ button,
 #signal-echarts, #flow-echarts, #analysis-echarts { margin-top: 8px; }
 .echart-host { min-height: 220px; }
 
-
 /* v0.5.121 band echarts */
 .band-echarts-host {
   padding: 6px 12px 4px;
@@ -3293,7 +3250,6 @@ button,
   gap: 10px;
   flex-wrap: wrap;
 }
-
 
 /* v0.5.122 compare echarts + params polish */
 #compare-echarts {
@@ -3314,7 +3270,6 @@ button,
   }
 }
 
-
 /* v0.5.123 xsection echarts + polish */
 #xsection-echarts {
   margin: 8px 0 12px;
@@ -3333,7 +3288,6 @@ button,
     grid-template-columns: minmax(0, 1fr) minmax(260px, 40%) !important;
   }
 }
-
 
 /* v0.5.124 responsive shell — unified breakpoints (left|right until stack) */
 #cycle-scan-echarts {
@@ -3394,7 +3348,6 @@ button,
   }
 }
 
-
 /* v0.5.125 channel kpi + sidewalk glyphs */
 .channel-kpi-strip {
   display: flex;
@@ -3421,7 +3374,6 @@ button,
 .app.shell--channel .page-fill-params {
   padding-top: 8px !important;
 }
-
 
 /* v0.5.126 shell density unify */
 .page-fill-params {
@@ -3451,7 +3403,6 @@ button,
   background: color-mix(in srgb, var(--panel) 92%, transparent);
 }
 
-
 /* v0.5.126 density */
 .page-fill-params {
   padding: 8px 10px 14px !important;
@@ -3479,7 +3430,6 @@ button,
   border-radius: 8px;
   background: color-mix(in srgb, var(--panel) 92%, transparent);
 }
-
 
 /* v0.5.127 topbar density */
 .topbar {
@@ -3518,7 +3468,6 @@ button,
   margin: 0 0 4px;
 }
 
-
 /* v0.5.128 scheme switcher compact + density */
 .scheme-switcher--compact {
   gap: 6px;
@@ -3548,7 +3497,6 @@ button,
   }
 }
 
-
 /* v0.5.129 light-theme params contrast + echart title row */
 html[data-theme='light'] .page-fill-params,
 .app.theme-light .page-fill-params {
@@ -3563,7 +3511,6 @@ html[data-theme='light'] .echart-host,
   margin-left: auto;
 }
 
-
 /* v0.5.129 contrast */
 html[data-theme='light'] .page-fill-params,
 .app.theme-light .page-fill-params {
@@ -3577,7 +3524,6 @@ html[data-theme='light'] .echart-host,
 .rg-section-title .ghost {
   margin-left: auto;
 }
-
 
 /* v0.5.130 approach-strip + cycle-scan png density */
 .approach-strip {
@@ -3636,7 +3582,6 @@ html[data-theme='light'] .echart-host,
   }
 }
 
-
 /* v0.5.131 stage border + canvas zoom bar + export interactive */
 .page-fill-stage {
   border: 1px solid var(--border) !important;
@@ -3670,7 +3615,6 @@ html[data-theme='light'] .page-fill-stage,
   letter-spacing: 0.03em;
 }
 
-
 /* v0.5.131 stage-zoom */
 .page-fill-stage {
   border: 1px solid var(--border) !important;
@@ -3688,9 +3632,6 @@ html[data-theme='light'] .page-fill-stage,
   border-radius: 8px;
   background: color-mix(in srgb, var(--panel) 90%, transparent);
 }
-
-
-/* ========== v0.5.131 DESIGN system — density, LeftNav motion, interactive signal ========== */
 .main {
   transition: grid-template-columns 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -3885,9 +3826,6 @@ html[data-theme='light'] .page-fill-stage,
 .page-fill-stage {
   min-height: 280px !important;
 }
-
-
-/* ========== v0.5.132 channel compact params ========== */
 @media (min-width: 1101px) {
   .app.shell--channel .page-fill-body {
     grid-template-columns: minmax(0, 1fr) minmax(260px, 28%) !important;
@@ -4012,9 +3950,6 @@ html[data-theme='light'] .page-fill-stage,
   padding: 0 6px !important;
   font-size: 11px;
 }
-
-
-/* ========== v0.5.133 roadgee channel form (reference product layout) ========== */
 .app.shell--channel .page-fill-params {
   padding: 0 !important;
   background: var(--panel, #fff);
@@ -4276,9 +4211,6 @@ html[data-theme='dark'] .rg-sec-toggle {
     grid-template-columns: minmax(0, 1fr) minmax(300px, 34%) !important;
   }
 }
-
-
-/* ========== v0.5.134 channel form density (horizontal labels, tight gaps) ========== */
 .rg-channel-form {
   padding: 4px 6px 10px !important;
   font-size: 11.5px !important;
