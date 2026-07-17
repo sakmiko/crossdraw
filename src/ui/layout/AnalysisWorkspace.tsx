@@ -520,11 +520,7 @@ export function AnalysisWorkspace({
               关键进口导出
             </button>
           </div>
-        </div>
-      )}
-      {channel && signal && !signal.unsignalized && (
-        <div className="flat-section">
-          <div className="rg-section-title">进口道储存校核</div>
+          <div className="rg-section-title" style={{ marginTop: 4 }}>进口道储存校核</div>
           <div
             className="chart-svg-host"
             style={{ overflow: 'auto' }}
