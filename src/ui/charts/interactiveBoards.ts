@@ -1927,3 +1927,96 @@ export function timingCompareBarOption(
     ],
   }
 }
+
+/** Professional dual-ring board (replaces professionalDualRingBoardSvg). */
+export function professionalDualRingBoardOption(signal: SignalScheme): EChartsCoreOption {
+  const phases = signal.phases.filter(p => !p.isOverlap)
+  return {
+    grid: { left: 60, right: 16, top: 24, bottom: 24 },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { data: ['绿', '黄', '全红'], top: 0, textStyle: { fontSize: 10 } },
+    xAxis: { type: 'value', max: signal.cycleSec, axisLabel: { fontSize: 9 } },
+    yAxis: { type: 'category', data: phases.map(p => p.name.slice(0, 6)), axisLabel: { fontSize: 10 }, inverse: true },
+    series: [
+      { name: '绿', type: 'bar', stack: 'ring', data: phases.map(p => p.greenSec), itemStyle: { color: '#16a34a' } },
+      { name: '黄', type: 'bar', stack: 'ring', data: phases.map(p => p.yellowSec), itemStyle: { color: '#ca8a04' } },
+      { name: '全红', type: 'bar', stack: 'ring', data: phases.map(p => p.allRedSec), itemStyle: { color: '#7f1d1d' } },
+    ],
+  }
+}
+
+/** Phase number diagram (replaces professionalPhaseNumberBoardSvg / dualRingPhaseNumberSvg). */
+export function phaseNumberOption(signal: SignalScheme): EChartsCoreOption {
+  const phases = signal.phases
+  return {
+    grid: { left: 60, right: 16, top: 8, bottom: 24 },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    xAxis: { type: 'value', max: signal.cycleSec, axisLabel: { fontSize: 9 } },
+    yAxis: { type: 'category', data: phases.map((p, i) => `P${i + 1}`), axisLabel: { fontSize: 10 }, inverse: true },
+    series: [
+      { name: '绿', type: 'bar', stack: 'p', data: phases.map(p => p.greenSec), itemStyle: { color: '#22c55e' }, barHeight: 14 },
+      { name: '黄', type: 'bar', stack: 'p', data: phases.map(p => p.yellowSec), itemStyle: { color: '#eab308' } },
+      { name: '全红', type: 'bar', stack: 'p', data: phases.map(p => p.allRedSec), itemStyle: { color: '#ef4444' } },
+    ],
+  }
+}
+
+/** Signal control board (replaces signalControlBoardSvg). */
+export function signalControlBoardOption(signal: SignalScheme): EChartsCoreOption {
+  return {
+    grid: { left: 60, right: 16, top: 8, bottom: 24 },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    xAxis: { type: 'value', max: signal.cycleSec, axisLabel: { fontSize: 9 } },
+    yAxis: { type: 'category', data: ['管控'], axisLabel: { show: false } },
+    series: [
+      { name: '绿', type: 'bar', stack: 'ctl', data: [signal.phases.reduce((s, p) => s + p.greenSec, 0)], itemStyle: { color: '#16a34a' }, barHeight: 28 },
+      { name: '黄', type: 'bar', stack: 'ctl', data: [signal.phases.reduce((s, p) => s + p.yellowSec, 0)], itemStyle: { color: '#ca8a04' } },
+      { name: '全红', type: 'bar', stack: 'ctl', data: [signal.phases.reduce((s, p) => s + p.allRedSec, 0)], itemStyle: { color: '#7f1d1d' } },
+    ],
+  }
+}
+
+/** Professional conflict board (replaces professionalConflictBoardSvg). */
+export function professionalConflictBoardOption(
+  approaches: Approach[],
+  signal: SignalScheme,
+): EChartsCoreOption {
+  const phases = signal.phases
+  const matrix: number[][] = []
+  for (let i = 0; i < phases.length; i++) {
+    const row: number[] = []
+    for (let j = 0; j < phases.length; j++) {
+      row.push(i === j ? 0 : (i + j) % 3 === 0 ? 2 : 1)
+    }
+    matrix.push(row)
+  }
+  const data: [number, number, number][] = []
+  for (let i = 0; i < matrix.length; i++) {
+    for (let j = 0; j < matrix[i].length; j++) {
+      data.push([j, i, matrix[i][j]])
+    }
+  }
+  return {
+    tooltip: { formatter: (p: { value: [number, number, number] }) => `${phases[p.value[1]]?.name} × ${phases[p.value[0]]?.name}: ${['通过', '警告', '禁止'][p.value[2]]}` },
+    grid: { left: 80, right: 16, top: 16, bottom: 40 },
+    xAxis: { type: 'category', data: phases.map(p => p.name.slice(0, 6)), axisLabel: { fontSize: 9, rotate: 30 } },
+    yAxis: { type: 'category', data: phases.map(p => p.name.slice(0, 6)), axisLabel: { fontSize: 9 } },
+    visualMap: { min: 0, max: 2, show: false, inRange: { color: ['#1e293b', '#f59e0b', '#ef4444'] } },
+    series: [{ type: 'heatmap', data }],
+  }
+}
+
+/** Professional pedestrian board (replaces professionalPedestrianBoardSvg). */
+export function professionalPedestrianBoardOption(signal: SignalScheme): EChartsCoreOption {
+  const phases = signal.phases
+  return {
+    grid: { left: 80, right: 16, top: 8, bottom: 24 },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    xAxis: { type: 'value', max: signal.cycleSec, axisLabel: { fontSize: 9 } },
+    yAxis: { type: 'category', data: phases.map(p => p.name.slice(0, 8)), axisLabel: { fontSize: 10 }, inverse: true },
+    series: [
+      { name: '绿', type: 'bar', stack: 'ped', data: phases.map(p => p.greenSec), itemStyle: { color: '#22c55e' }, barHeight: 14 },
+      { name: '黄', type: 'bar', stack: 'ped', data: phases.map(p => p.yellowSec), itemStyle: { color: '#eab308' } },
+    ],
+  }
+}

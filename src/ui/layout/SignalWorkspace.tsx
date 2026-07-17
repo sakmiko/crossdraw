@@ -31,7 +31,7 @@ import { allPhasesConflictHits } from '@/domain/signal/phaseConflictView'
 import { detectPedVehicleConflicts, pedVehicleSummary } from '@/domain/signal/pedVehicleConflict'
 import { SignalCharts, TimingCompareCharts } from '@/ui/charts/ChartPanels'
 import { EChart } from '@/ui/charts/EChart'
-import { phaseTimingOption, cycleScanOption } from '@/ui/charts/interactiveBoards'
+import { phaseTimingOption, cycleScanOption, cycleScanBoardOption, criticalApproachOption, intergreenOption, lostTimeOption, overlapReviewOption, pedTimingOptOption, professionalDualRingBoardOption, phaseNumberOption, signalControlBoardOption, professionalConflictBoardOption, professionalPedestrianBoardOption } from '@/ui/charts/interactiveBoards'
 import { downloadEchartsPng } from '@/io/exportEchartsPng'
 import { buildDualRingAlignment, dualRingSummaryText } from '@/domain/signal/dualRing'
 import { applyPedTimingToSignal } from '@/domain/signal/pedTiming'
@@ -420,13 +420,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
                 闭合 C
               </button>
             </div>
-            <div
-              className="chart-svg-host chart-svg-host--pro"
-              style={{ marginTop: 4, overflow: 'auto', maxHeight: 380 }}
-              dangerouslySetInnerHTML={{
-                __html: professionalDualRingBoardSvg(signal, { width: 900, projectName }),
-              }}
-            />
+            <EChart option={professionalDualRingBoardOption(signal)} style={{ height: 200 }} />
           </>
         )}
       </div>
@@ -533,27 +527,9 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       {channel && flow && !signal.unsignalized && (
         <div className="flat-section">
           <div className="rg-section-title">关键进口</div>
-          <div
-            className="chart-svg-host"
-            style={{ overflow: 'auto', maxHeight: 280 }}
-            dangerouslySetInnerHTML={{
-              __html: criticalApproachBoardSvg(
-                channel.approaches,
-                flow,
-                signal,
-                analyzeIntersection(channel.approaches, flow, signal),
-                { width: 680 },
-              ),
-            }}
-          />
+          <EChart option={criticalApproachOption(channel.approaches, flow, signal, analyzeIntersection(channel.approaches, flow, signal))} style={{ height: 280 }} />
           <div className="rg-section-title" style={{ marginTop: 4 }}>清空间隔审查</div>
-          <div
-            className="chart-svg-host"
-            style={{ overflow: 'auto' }}
-            dangerouslySetInnerHTML={{
-              __html: intergreenBoardSvg(signal, channel.approaches, { width: 820 }),
-            }}
-          />
+          <EChart option={intergreenOption(signal, channel.approaches)} style={{ height: 200 }} />
           <div className="toolbar dense" style={{ marginTop: 6 }}>
             <button
               type="button"
@@ -582,19 +558,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
             <EChart option={cycleScanChartOpt} style={{ height: 280 }} className="echart-host" />
           ) : null}
           <div className="rg-section-title" style={{ marginTop: 4 }}>静态扫描图</div>
-          <div
-            className="chart-svg-host"
-            style={{ overflow: 'auto' }}
-            dangerouslySetInnerHTML={{
-              __html: cycleScanBoardSvg(channel.approaches, flow, signal, {
-                width: 860,
-                height: 280,
-                minCycle: 50,
-                maxCycle: 150,
-                stepSec: 5,
-              }),
-            }}
-          />
+          <EChart option={cycleScanBoardOption(channel.approaches, flow, signal)} style={{ height: 280 }} />
           <div className="toolbar dense" style={{ marginTop: 6 }}>
             <button
               type="button"
@@ -710,11 +674,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
             )}
           </div>
           {controlBoardSvg && (
-            <div
-              className="chart-svg-host chart-svg-host--pro"
-              style={{ marginTop: 4 }}
-              dangerouslySetInnerHTML={{ __html: controlBoardSvg }}
-            />
+            <EChart option={signalControlBoardOption(signal)} style={{ height: 120 }} />
           )}
         </div>
       )}
@@ -752,16 +712,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
             序号 MD
           </button>
         </div>
-        <div
-          className="chart-svg-host chart-svg-host--pro"
-          style={{ marginTop: 4, overflow: 'auto', maxHeight: 240 }}
-          dangerouslySetInnerHTML={{
-            __html: professionalPhaseNumberBoardSvg(signal, channel?.approaches ?? [], {
-              width: 860,
-              projectName,
-            }),
-          }}
-        />
+        <EChart option={phaseNumberOption(signal)} style={{ height: 200 }} />
       </div>
 <div className="rg-section">
           <div className="rg-section-title">自动配时设计参数</div>
@@ -831,13 +782,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       {timingCompare.length > 0 && (
         <div className="flat-section">
           <div className="rg-section-title">配时方法比选</div>
-          <div
-            className="chart-svg-host"
-            style={{ overflow: 'auto', marginBottom: 8 }}
-            dangerouslySetInnerHTML={{
-              __html: timingCompareBoardSvg(timingCompare, { width: 860 }),
-            }}
-          />
+          <EChart option={phaseNumberOption(signal)} style={{ height: 200 }} />
           <div className="toolbar dense">
             <button
               type="button"
@@ -926,11 +871,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
 
       <div className="flat-section">
         <div className="rg-section-title">搭接相位审查 <span className="subpanel-tag">{collectOverlapRows(signal).length}</span></div>
-        <div
-          className="chart-svg-host"
-          style={{ overflow: 'auto' }}
-          dangerouslySetInnerHTML={{ __html: overlapReviewSvg(signal, { width: 720 }) }}
-        />
+        <EChart option={overlapReviewOption(signal)} style={{ height: 200 }} />
         <div className="toolbar dense" style={{ marginTop: 6 }}>
           <button
             type="button"
@@ -957,11 +898,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       
       <div className="flat-section">
         <div className="rg-section-title">损失时间 L · Webster</div>
-        <div
-          className="chart-svg-host"
-          style={{ overflow: 'auto' }}
-          dangerouslySetInnerHTML={{ __html: lostTimeBoardSvg(signal, { width: 700 }) }}
-        />
+        <EChart option={lostTimeOption(signal)} style={{ height: 200 }} />
         <div className="toolbar dense" style={{ marginTop: 6 }}>
           <button
             type="button"
@@ -983,13 +920,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
             行人 Walk/FDW 优化{' '}
             <span className="subpanel-tag">{collectPedOptRows(signal, channel.approaches).length}</span>
           </div>
-          <div
-            className="chart-svg-host"
-            style={{ overflow: 'auto' }}
-            dangerouslySetInnerHTML={{
-              __html: pedTimingOptBoardSvg(signal, channel.approaches, { width: 760 }),
-            }}
-          />
+          <EChart option={pedTimingOptOption(signal, channel.approaches)} style={{ height: 200 }} />
           <div className="toolbar dense" style={{ marginTop: 6 }}>
             {onApplyPedTiming && (
               <button type="button" className="primary" onClick={() => onApplyPedTiming()}>
@@ -1023,9 +954,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       )}
 
       {signal.dualRing?.enabled && (
-          <div className="chart-svg-host chart-svg-host--pro" style={{ marginTop: 4 }}
-            dangerouslySetInnerHTML={{ __html: dualRingPhaseNumberSvg(signal, 360) }}
-          />
+          <EChart option={phaseNumberOption(signal)} style={{ height: 200 }} />
         )}
       <div className="rg-section" id="signal-echarts">
         <div className="rg-section-title">
@@ -1152,17 +1081,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
               冲突 CSV
             </button>
           </div>
-          <div
-            className="chart-svg-host chart-svg-host--pro"
-            style={{ marginTop: 4, overflow: 'auto', maxHeight: 420 }}
-            dangerouslySetInnerHTML={{
-              __html: professionalConflictBoardSvg(channel.approaches, signal, {
-                phaseId: focusPhaseId ?? signal.phases[0]?.id,
-                projectName,
-                width: 900,
-              }),
-            }}
-          />
+          <EChart option={professionalConflictBoardOption(channel.approaches, signal)} style={{ height: 300 }} />
         </div>
       )}
 
@@ -1218,17 +1137,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
               </button>
             )}
           </div>
-          <div
-            className="chart-svg-host chart-svg-host--pro"
-            style={{ marginTop: 4, overflow: 'auto', maxHeight: 400 }}
-            dangerouslySetInnerHTML={{
-              __html: professionalPedestrianBoardSvg(channel.approaches, signal, {
-                focusPhaseId: focusPhaseId,
-                projectName,
-                width: 900,
-              }),
-            }}
-          />
+          <EChart option={professionalPedestrianBoardOption(signal)} style={{ height: 300 }} />
         </div>
       )}
       <SignalTimingPanel signal={signal} />
