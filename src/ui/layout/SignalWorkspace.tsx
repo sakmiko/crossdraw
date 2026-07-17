@@ -616,11 +616,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
               ),
             }}
           />
-        </div>
-      )}
-      {channel && !signal.unsignalized && (
-        <div className="flat-section">
-          <div className="rg-section-title">清空间隔审查</div>
+          <div className="rg-section-title" style={{ marginTop: 4 }}>清空间隔审查</div>
           <div
             className="chart-svg-host"
             style={{ overflow: 'auto' }}
