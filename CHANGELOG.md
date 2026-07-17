@@ -1,3 +1,9 @@
+## 0.5.141 — 20-round UX closeout
+
+- LeftNav active indicator (accent bar); stable params scrollbar; `prefers-reduced-motion`.
+- Phase review doc closes 20-round layout/usability push (0.5.137–0.5.141).
+- No new domain methods; schematic honesty retained.
+
 ## 0.5.140 — Export PNG on boards + lazy params workspaces
 
 - Analysis / Compare workspace「导出 PNG」on primary ECharts hosts (ExportCenter still canonical).

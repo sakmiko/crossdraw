@@ -4623,3 +4623,26 @@ summary:focus-visible {
 }
 /* Reduce stage bar chrome noise */
 .mode-stage-dl { font-size: 11px; height: 26px !important; min-height: 26px !important; padding: 0 8px !important; }
+
+/* v0.5.141 closeout polish */
+.left-nav-item.active {
+  background: var(--accent-soft);
+  color: var(--text);
+  font-weight: 650;
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.page-fill-params {
+  scrollbar-gutter: stable;
+}
+.page-fill-params::-webkit-scrollbar { width: 8px; }
+.page-fill-params::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--muted) 40%, transparent);
+  border-radius: 4px;
+}
+/* Reduce motion for a11y */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
