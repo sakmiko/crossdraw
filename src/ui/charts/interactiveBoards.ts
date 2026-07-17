@@ -1153,3 +1153,622 @@ export function barChartOption(
     }],
   }
 }
+
+// ─── Professional diagram ECharts options (replace professionalDiagrams.ts SVGs) ───
+
+/**
+ * Signal timing diagram — horizontal stacked bar per phase.
+ * Homology: signalTimingDiagramSvg in professionalDiagrams.ts
+ */
+export function signalTimingDiagramOption(
+  phases: { name: string; greenSec: number; yellowSec: number; allRedSec: number; isOverlap?: boolean }[],
+  cycleSec: number,
+): EChartsCoreOption {
+  const C = Math.max(1, cycleSec)
+  const main = phases.filter((p) => !p.isOverlap)
+  const overlaps = phases.filter((p) => p.isOverlap)
+  const rows = [...main, ...overlaps]
+  const names = rows.map((p) => p.name + (p.isOverlap ? '*' : ''))
+  const greens = rows.map((p) => Math.max(0, p.greenSec))
+  const yellows = rows.map((p) => Math.max(0, p.yellowSec))
+  const allReds = rows.map((p) => Math.max(0, p.allRedSec))
+  // rest red = C - (G+Y+AR) for main phases; 0 for overlaps
+  const restReds = rows.map((p) => p.isOverlap ? 0 : Math.max(0, C - p.greenSec - p.yellowSec - p.allRedSec))
+  const sumMain = main.reduce((s, p) => s + p.greenSec + p.yellowSec + p.allRedSec, 0)
+  const balance = Math.round((sumMain - C) * 10) / 10
+
+  return {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      formatter: (params: unknown) => {
+        const items = Array.isArray(params) ? params : [params as Record<string, unknown>]
+        const idx = (items[0] as { dataIndex?: number })?.dataIndex ?? 0
+        const p = rows[idx]
+        if (!p) return ''
+        const dur = p.greenSec + p.yellowSec + p.allRedSec
+        return `<b>${p.name}${p.isOverlap ? ' (搭接)' : ''}</b><br/>G ${p.greenSec}s · Y ${p.yellowSec}s · AR ${p.allRedSec}s<br/>时长 ${dur.toFixed(1)}s`
+      },
+    },
+    legend: {
+      data: ['绿灯 G', '黄灯 Y', '全红 AR', '红灯(余)'],
+      top: 0,
+      textStyle: { fontSize: 10 },
+    },
+    grid: { left: 80, right: 48, top: 32, bottom: 32 },
+    yAxis: {
+      type: 'category',
+      data: names,
+      axisLabel: { fontSize: 11 },
+      inverse: true,
+    },
+    xAxis: {
+      type: 'value',
+      name: 't (s)',
+      min: 0,
+      max: C,
+      splitLine: { lineStyle: { type: 'dashed', opacity: 0.3 } },
+    },
+    series: [
+      {
+        name: '绿灯 G',
+        type: 'bar',
+        stack: 'timing',
+        data: greens,
+        itemStyle: { color: '#16a34a' },
+        barMaxWidth: 22,
+        label: {
+          show: true,
+          position: 'inside',
+          fontSize: 9,
+          fontWeight: 'bold',
+          color: '#052e16',
+          formatter: (p: { value?: number }) => {
+            const v = Number(p.value ?? 0)
+            return v >= 2 ? `${Math.round(v)}` : ''
+          },
+        },
+      },
+      {
+        name: '黄灯 Y',
+        type: 'bar',
+        stack: 'timing',
+        data: yellows,
+        itemStyle: { color: '#ca8a04' },
+        barMaxWidth: 22,
+        label: {
+          show: true,
+          position: 'inside',
+          fontSize: 8,
+          fontWeight: 'bold',
+          color: '#422006',
+          formatter: (p: { value?: number }) => {
+            const v = Number(p.value ?? 0)
+            return v >= 1 ? `${Math.round(v)}` : ''
+          },
+        },
+      },
+      {
+        name: '全红 AR',
+        type: 'bar',
+        stack: 'timing',
+        data: allReds,
+        itemStyle: { color: '#7f1d1d' },
+        barMaxWidth: 22,
+        label: {
+          show: true,
+          position: 'inside',
+          fontSize: 8,
+          fontWeight: 'bold',
+          color: '#fecaca',
+          formatter: (p: { value?: number }) => {
+            const v = Number(p.value ?? 0)
+            return v >= 1 ? `${Math.round(v)}` : ''
+          },
+        },
+      },
+      {
+        name: '红灯(余)',
+        type: 'bar',
+        stack: 'timing',
+        data: restReds,
+        itemStyle: { color: '#dc2626', opacity: 0.35 },
+        barMaxWidth: 22,
+      },
+    ],
+    graphic: [
+      {
+        type: 'text',
+        right: 12,
+        top: 8,
+        style: {
+          text: `C=${C}s · Σ主=${sumMain.toFixed(1)}s · ${Math.abs(balance) < 0.15 ? '闭合' : `差${balance > 0 ? '+' : ''}${balance}s`}`,
+          fill: Math.abs(balance) < 0.15 ? '#22c55e' : '#f97316',
+          fontSize: 11,
+        },
+      },
+    ],
+  }
+}
+
+/**
+ * Control matrix — heatmap-like grid showing phase releases per approach.
+ * Homology: controlMatrixSvg in professionalDiagrams.ts
+ */
+export function controlMatrixOption(
+  approaches: string[],
+  phases: { name: string; releases: Record<string, string[]> }[],
+  approachIds: string[],
+): EChartsCoreOption {
+  const data: { value: [number, number, number]; label: string; active: boolean }[] = []
+  phases.forEach((ph, j) => {
+    approaches.forEach((name, i) => {
+      const id = approachIds[i]
+      const movs = [...(ph.releases[id] ?? [])].sort((a, b) => 'LTRU'.indexOf(a) - 'LTRU'.indexOf(b))
+      const label = movs.length ? movs.join('·') : '—'
+      data.push({ value: [j, i, movs.length > 0 ? 1 : 0], label, active: movs.length > 0 })
+    })
+  })
+
+  return {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'item',
+      formatter: (params: unknown) => {
+        const p = params as { value?: [number, number, number]; data?: { label?: string; active?: boolean } }
+        if (!p.value) return ''
+        const [j, i] = p.value
+        const ph = phases[j]
+        const ap = approaches[i]
+        const d = p.data
+        return `<b>${ap} / ${ph?.name ?? ''}</b><br/>放行: ${d?.label ?? '—'}<br/>${d?.active ? '✅ 放行' : '⛔ 禁行'}`
+      },
+    },
+    grid: { left: 72, right: 16, top: 32, bottom: 24 },
+    xAxis: {
+      type: 'category',
+      data: phases.map((p) => p.name),
+      axisLabel: { fontSize: 10 },
+      splitArea: { show: true, areaStyle: { color: ['rgba(255,255,255,0.02)', 'rgba(0,0,0,0.02)'] } },
+    },
+    yAxis: {
+      type: 'category',
+      data: approaches,
+      axisLabel: { fontSize: 10 },
+      inverse: true,
+    },
+    series: [
+      {
+        type: 'custom',
+        renderItem: (params: unknown, api: unknown) => {
+          const apiTyped = api as { coord: (v: [number, number]) => [number, number]; size: (v: [number, number]) => [number, number] }
+          const val = (params as { data: { value: [number, number, number]; label: string; active: boolean } }).data
+          const [x, y] = apiTyped.coord([val.value[0], val.value[1]])
+          const [w, h] = apiTyped.size([1, 1])
+          const on = val.active
+          return {
+            type: 'group',
+            children: [
+              {
+                type: 'rect',
+                shape: { x: x - w / 2 + 2, y: y - h / 2 + 2, width: w - 4, height: h - 4, r: 4 },
+                style: {
+                  fill: on ? '#14532d' : '#1e293b',
+                  stroke: '#334155',
+                  lineWidth: 1,
+                },
+              },
+              {
+                type: 'text',
+                style: {
+                  text: val.label,
+                  x,
+                  y,
+                  fill: on ? '#86efac' : '#64748b',
+                  fontSize: 10,
+                  fontWeight: 'bold',
+                  align: 'center',
+                  verticalAlign: 'middle',
+                },
+              },
+            ],
+          }
+        },
+        data: data.map((d) => ({ value: d.value, label: d.label, active: d.active })),
+        encode: { x: 0, y: 1 },
+      },
+    ],
+    graphic: [
+      {
+        type: 'text',
+        left: 12,
+        top: 8,
+        style: {
+          text: '相位放行管控图 · 单元格=该相位放行转向(L/T/R) · 空=禁行',
+          fill: '#64748b',
+          fontSize: 10,
+        },
+      },
+    ],
+  }
+}
+
+/**
+ * Phase face diagram — circular layout showing approach release status.
+ * Homology: phaseFaceDiagramSvg in professionalDiagrams.ts
+ */
+export function phaseFaceDiagramOption(
+  approaches: { name: string; bearingDeg: number; id: string }[],
+  phase: { name: string; releases: Record<string, string[]> },
+): EChartsCoreOption {
+  // Place approaches around a circle based on bearing
+  const R = 1
+  const points: { x: number; y: number; name: string; movs: string; on: boolean; bearing: number }[] = []
+  for (const ap of approaches) {
+    const rad = ((ap.bearingDeg - 90) * Math.PI) / 180
+    const movs = phase.releases[ap.id] ?? []
+    points.push({
+      x: +(Math.cos(rad) * R).toFixed(4),
+      y: +(Math.sin(rad) * R).toFixed(4),
+      name: ap.name.replace('进口', ''),
+      movs: movs.join('·') || '·',
+      on: movs.length > 0,
+      bearing: ap.bearingDeg,
+    })
+  }
+
+  return {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'item',
+      formatter: (params: unknown) => {
+        const p = params as { data?: { name?: string; movs?: string; on?: boolean; bearing?: number } }
+        const d = p.data
+        if (!d) return ''
+        return `<b>${d.name} (${d.bearing}°)</b><br/>放行: ${d.movs}<br/>${d.on ? '✅ 绿灯' : '🔴 红灯'}`
+      },
+    },
+    xAxis: {
+      type: 'value',
+      min: -1.6,
+      max: 1.6,
+      show: false,
+    },
+    yAxis: {
+      type: 'value',
+      min: -1.6,
+      max: 1.6,
+      show: false,
+    },
+    series: [
+      // Center circle
+      {
+        type: 'scatter',
+        data: [[0, 0]],
+        symbolSize: 60,
+        itemStyle: { color: '#111827', borderColor: '#475569', borderWidth: 2 },
+        label: {
+          show: true,
+          position: 'inside',
+          formatter: phase.name,
+          fontSize: 10,
+          fontWeight: 'bold',
+          color: '#94a3b8',
+        },
+        tooltip: { show: false },
+        z: 1,
+      },
+      // Approach dots
+      {
+        type: 'scatter',
+        data: points.map((p) => ({
+          value: [p.x * 0.7, p.y * 0.7],
+          name: p.name,
+          movs: p.movs,
+          on: p.on,
+          bearing: p.bearing,
+          itemStyle: {
+            color: p.on ? '#14532d' : '#1e293b',
+            borderColor: p.on ? '#22c55e' : '#334155',
+            borderWidth: 2,
+          },
+        })),
+        symbolSize: 36,
+        label: {
+          show: true,
+          position: 'inside',
+          fontSize: 8,
+          fontWeight: 'bold',
+          formatter: (p: { data?: { movs?: string } }) => p.data?.movs ?? '',
+          color: (p: { data?: { on?: boolean } }) => p.data?.on ? '#86efac' : '#64748b',
+        },
+        z: 2,
+      },
+      // Approach name labels
+      {
+        type: 'scatter',
+        data: points.map((p) => ({
+          value: [p.x * 1.35, p.y * 1.35],
+          name: p.name,
+        })),
+        symbolSize: 0,
+        label: {
+          show: true,
+          position: 'inside',
+          fontSize: 9,
+          color: '#64748b',
+          formatter: (p: { data?: { name?: string } }) => p.data?.name ?? '',
+        },
+        tooltip: { show: false },
+        z: 0,
+      },
+    ],
+    graphic: [
+      // Outer circle
+      {
+        type: 'circle',
+        shape: { cx: 0, cy: 0, r: 0 },
+        position: ['50%', '50%'],
+        style: { fill: 'transparent', stroke: '#475569', lineWidth: 1 },
+        silent: true,
+      },
+    ],
+  }
+}
+
+/**
+ * Flow movement diagram — polar bars showing L/T/R per approach.
+ * Homology: flowMovementDiagramSvg in professionalDiagrams.ts
+ * Uses polar coordinates with bar chart for directional flow visualization.
+ */
+export function flowMovementDiagramOption(
+  approaches: { name: string; bearingDeg: number; L: number; T: number; R: number }[],
+): EChartsCoreOption {
+  const total = approaches.reduce((s, a) => s + a.L + a.T + a.R, 0)
+  const maxV = Math.max(1, ...approaches.flatMap((a) => [a.L, a.T, a.R]))
+
+  // Sort by bearing for consistent polar layout
+  const sorted = [...approaches].sort((a, b) => a.bearingDeg - b.bearingDeg)
+  const categories = sorted.map((a) => `${a.name}\n${a.bearingDeg}°`)
+
+  return {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      formatter: (params: unknown) => {
+        const items = Array.isArray(params) ? params : [params as Record<string, unknown>]
+        const idx = (items[0] as { dataIndex?: number })?.dataIndex ?? 0
+        const a = sorted[idx]
+        if (!a) return ''
+        return `<b>${a.name} (${a.bearingDeg}°)</b><br/>左转 L: ${a.L} pcu/h<br/>直行 T: ${a.T} pcu/h<br/>右转 R: ${a.R} pcu/h<br/>Σ ${a.L + a.T + a.R} pcu/h`
+      },
+    },
+    legend: {
+      data: ['直行 T', '左转 L', '右转 R'],
+      top: 0,
+      textStyle: { fontSize: 10 },
+    },
+    grid: { left: 60, right: 24, top: 36, bottom: 32 },
+    xAxis: {
+      type: 'category',
+      data: categories,
+      axisLabel: { fontSize: 9, interval: 0 },
+    },
+    yAxis: {
+      type: 'value',
+      name: 'pcu/h',
+      min: 0,
+    },
+    series: [
+      {
+        name: '左转 L',
+        type: 'bar',
+        stack: 'flow',
+        data: sorted.map((a) => a.L),
+        itemStyle: { color: '#0891b2' },
+        barMaxWidth: 28,
+      },
+      {
+        name: '直行 T',
+        type: 'bar',
+        stack: 'flow',
+        data: sorted.map((a) => a.T),
+        itemStyle: { color: '#2563eb' },
+        barMaxWidth: 28,
+      },
+      {
+        name: '右转 R',
+        type: 'bar',
+        stack: 'flow',
+        data: sorted.map((a) => a.R),
+        itemStyle: { color: '#7c3aed' },
+        barMaxWidth: 28,
+      },
+    ],
+    graphic: [
+      {
+        type: 'text',
+        right: 12,
+        top: 8,
+        style: {
+          text: `Σ = ${total} pcu/h · 最大转向 = ${maxV} pcu/h`,
+          fill: '#64748b',
+          fontSize: 10,
+        },
+      },
+    ],
+  }
+}
+
+/**
+ * Time-space diagram — green bands + progressive trajectory.
+ * Homology: timeSpaceDiagramSvg in professionalDiagrams.ts
+ */
+export function timeSpaceDiagramOption(
+  nodes: { name: string; distanceM: number; greenRatio: number; offsetSec: number; cycleSec: number }[],
+  speedKmh: number,
+): EChartsCoreOption {
+  if (nodes.length < 2) {
+    return {
+      backgroundColor: 'transparent',
+      graphic: [{ type: 'text', left: 'center', top: 'middle', style: { text: '至少 2 个路口', fill: '#64748b', fontSize: 14 } }],
+    }
+  }
+
+  const sorted = [...nodes].sort((a, b) => a.distanceM - b.distanceM)
+  const C = sorted[0].cycleSec || 90
+  const v = (speedKmh * 1000) / 3600 // m/s
+  const maxD = Math.max(...sorted.map((n) => n.distanceM), 1)
+
+  // Green band data as markArea for each node
+  const greenAreas: { name: string; data: [object, object][] }[] = []
+  for (const n of sorted) {
+    const g0 = ((n.offsetSec % C) + C) % C
+    const gSec = Math.max(0.5, n.greenRatio * C)
+    const segments: [number, number][] = []
+    if (g0 + gSec <= C) {
+      segments.push([g0, g0 + gSec])
+    } else {
+      segments.push([g0, C])
+      segments.push([0, g0 + gSec - C])
+    }
+    // Use markArea on the trajectory series for green bands
+    for (const [a, b] of segments) {
+      greenAreas.push({
+        name: n.name,
+        data: [[
+          { xAxis: n.distanceM - maxD * 0.015, yAxis: Math.min(a, b) },
+          { xAxis: n.distanceM + maxD * 0.015, yAxis: Math.max(a, b) },
+        ]],
+      })
+    }
+  }
+
+  // Progressive trajectory
+  let t = ((sorted[0].offsetSec % C) + C) % C
+  const trajectoryPoints: [number, number][] = []
+  for (let i = 0; i < sorted.length; i++) {
+    if (i > 0) {
+      const dist = sorted[i].distanceM - sorted[i - 1].distanceM
+      t = (t + dist / Math.max(0.1, v)) % C
+    }
+    trajectoryPoints.push([sorted[i].distanceM, t])
+  }
+
+  return {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'item',
+      formatter: (params: unknown) => {
+        const p = params as { seriesName?: string; data?: [number, number]; value?: [number, number] }
+        const d = p.data ?? p.value
+        if (!d || !Array.isArray(d)) return ''
+        const node = sorted.find((n) => Math.abs(n.distanceM - d[0]) < maxD * 0.02)
+        if (node) {
+          return `<b>${node.name}</b><br/>距离 ${node.distanceM}m<br/>绿信比 λ=${node.greenRatio.toFixed(2)}<br/>相位差 o=${node.offsetSec.toFixed(1)}s<br/>C=${node.cycleSec}s`
+        }
+        return `距离 ${d[0].toFixed(0)}m · t=${d[1].toFixed(1)}s`
+      },
+    },
+    legend: {
+      data: ['绿窗', '轨迹'],
+      top: 0,
+      textStyle: { fontSize: 10 },
+    },
+    grid: { left: 52, right: 24, top: 32, bottom: 48 },
+    xAxis: {
+      type: 'value',
+      name: '距离 (m)',
+      min: 0,
+      max: maxD,
+      splitLine: { lineStyle: { type: 'dashed', opacity: 0.3 } },
+    },
+    yAxis: {
+      type: 'value',
+      name: 't (s)',
+      min: 0,
+      max: C,
+      splitLine: { lineStyle: { type: 'dashed', opacity: 0.3 } },
+    },
+    series: [
+      // Green bands as scatter with large symbols
+      {
+        name: '绿窗',
+        type: 'custom',
+        renderItem: (params: unknown, api: unknown) => {
+          const apiTyped = api as { coord: (v: [number, number]) => [number, number]; size: (v: [number, number]) => [number, number] }
+          const d = (params as { data: { value: [number, number, number, number] } }).data
+          const x1 = apiTyped.coord([d.value[0], d.value[1]])[0]
+          const y1 = apiTyped.coord([d.value[0], d.value[1]])[1]
+          const x2 = apiTyped.coord([d.value[2], d.value[3]])[0]
+          const y2 = apiTyped.coord([d.value[2], d.value[3]])[1]
+          return {
+            type: 'rect',
+            shape: {
+              x: Math.min(x1, x2) - 8,
+              y: Math.min(y1, y2),
+              width: 16,
+              height: Math.abs(y2 - y1),
+            },
+            style: { fill: '#16a34a', opacity: 0.85 },
+          }
+        },
+        data: sorted.flatMap((n) => {
+          const g0 = ((n.offsetSec % C) + C) % C
+          const gSec = Math.max(0.5, n.greenRatio * C)
+          const segments: [number, number][] = []
+          if (g0 + gSec <= C) segments.push([g0, g0 + gSec])
+          else { segments.push([g0, C]); segments.push([0, g0 + gSec - C]) }
+          return segments.map(([a, b]) => [n.distanceM, Math.min(a, b), n.distanceM, Math.max(a, b)])
+        }),
+        tooltip: { show: false },
+        z: 1,
+      },
+      // Trajectory line
+      {
+        name: '轨迹',
+        type: 'line',
+        data: trajectoryPoints,
+        smooth: false,
+        symbol: 'circle',
+        symbolSize: 6,
+        lineStyle: { color: '#38bdf8', width: 2 },
+        itemStyle: { color: '#38bdf8' },
+        z: 2,
+      },
+      // Node labels at bottom
+      {
+        name: '路口',
+        type: 'scatter',
+        data: sorted.map((n) => [n.distanceM, -C * 0.04]),
+        symbolSize: 0,
+        label: {
+          show: true,
+          position: 'bottom',
+          fontSize: 9,
+          color: '#94a3b8',
+          formatter: (p: { dataIndex?: number }) => {
+            const idx = p.dataIndex ?? 0
+            const n = sorted[idx]
+            return n ? `${n.name}\n${n.distanceM}m` : ''
+          },
+        },
+        tooltip: { show: false },
+      },
+    ],
+    graphic: [
+      {
+        type: 'text',
+        right: 12,
+        top: 8,
+        style: {
+          text: `v=${speedKmh.toFixed(0)} km/h · C=${C}s`,
+          fill: '#64748b',
+          fontSize: 10,
+        },
+      },
+    ],
+  }
+}

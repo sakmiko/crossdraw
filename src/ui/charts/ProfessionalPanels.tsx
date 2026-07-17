@@ -1,13 +1,5 @@
 import { roadgeeFlowDiagramSvg, DEFAULT_ROADGEE_FLOW_STYLE, type RoadGeeFlowStyle } from './roadgeeFlowDiagram'
 import { useMemo, useState } from 'react'
-import {
-  controlMatrixSvg,
-  flowMovementDiagramSvg,
-  // classic kept; RoadGee panel uses roadgeeFlowDiagram
-  phaseFaceDiagramSvg,
-  signalTimingDiagramSvg,
-  timeSpaceDiagramSvg,
-} from './professionalDiagrams'
 import type { Approach, BandCorridor, FlowScheme, SignalScheme } from '@/domain/types'
 import { buildFlowAlignment, flowChartsAlignWithTable, type FlowDisplayMode } from '@/domain/flow/flowAlign'
 import { buildSignalTimingAlignment, signalChartsAlignWithTable } from '@/domain/signal/timingAlign'
@@ -16,25 +8,21 @@ import {
   controlMatrixChartInput,
   releaseMatrixAlignsWithPhases,
 } from '@/domain/signal/releaseAlign'
-import { useAppStore } from '@/state/store'
-import { chartColorsForTheme, themeSvg } from './chartTheme'
-
-function useChartColors() {
-  const theme = useAppStore((s) => s.theme)
-  return chartColorsForTheme(theme === 'light' ? 'light' : 'dark')
-}
+import { EChart } from '@/ui/charts/EChart'
+import {
+  signalTimingDiagramOption,
+  controlMatrixOption,
+  phaseFaceDiagramOption,
+  flowMovementDiagramOption,
+  timeSpaceDiagramOption,
+} from '@/ui/charts/interactiveBoards'
 
 export function SignalTimingPanel({ signal }: { signal: SignalScheme }) {
-  const colors = useChartColors()
   const align = useMemo(() => buildSignalTimingAlignment(signal), [signal])
   const check = useMemo(() => signalChartsAlignWithTable(signal), [signal])
-  const svg = useMemo(
-    () =>
-      themeSvg(
-        signalTimingDiagramSvg(align.chartPhases, align.cycleSec),
-        colors,
-      ),
-    [align, colors],
+  const option = useMemo(
+    () => signalTimingDiagramOption(align.chartPhases, align.cycleSec),
+    [align],
   )
   return (
     <div className="chart-card">
@@ -46,7 +34,7 @@ export function SignalTimingPanel({ signal }: { signal: SignalScheme }) {
           {check.ok ? ' · 表图对齐✓' : ' · 对齐异常'}
         </small>
       </div>
-      <div dangerouslySetInnerHTML={{ __html: svg }} />
+      <EChart option={option} style={{ height: 280 }} />
       <div className="table-wrap" style={{ marginTop: 8, maxHeight: 160 }}>
         <table className="table">
           <thead>
@@ -84,16 +72,12 @@ export function ControlMatrixPanel({
   signal: SignalScheme
   approaches: Approach[]
 }) {
-  const colors = useChartColors()
   const matrix = useMemo(() => buildReleaseMatrix(signal, approaches), [signal, approaches])
   const check = useMemo(() => releaseMatrixAlignsWithPhases(signal, approaches), [signal, approaches])
-  const svg = useMemo(() => {
+  const option = useMemo(() => {
     const input = controlMatrixChartInput(signal, approaches)
-    return themeSvg(
-      controlMatrixSvg(input.approaches, input.phases, input.approachIds),
-      colors,
-    )
-  }, [signal, approaches, colors])
+    return controlMatrixOption(input.approaches, input.phases, input.approachIds)
+  }, [signal, approaches])
   return (
     <div className="chart-card">
       <div className="chart-title">
@@ -103,7 +87,7 @@ export function ControlMatrixPanel({
           {check.ok ? '与 L/T/R 按钮对齐✓' : `错位 ${check.mismatches.length}`}
         </small>
       </div>
-      <div dangerouslySetInnerHTML={{ __html: svg }} />
+      <EChart option={option} style={{ height: 280 }} />
       <div className="table-wrap" style={{ marginTop: 8, maxHeight: 180 }}>
         <table className="table">
           <thead>
@@ -139,21 +123,16 @@ export function PhaseFacePanel({
   signal: SignalScheme
   approaches: Approach[]
 }) {
-  const colors = useChartColors()
   const phases = signal.phases
   const [idx, setIdx] = useState(0)
   const ph = phases[Math.min(idx, Math.max(0, phases.length - 1))] ?? phases[0]
-  const svg = useMemo(() => {
-    if (!ph) return ''
-    return themeSvg(
-      phaseFaceDiagramSvg(
-        approaches.map((a) => ({ name: a.name, bearingDeg: a.bearingDeg, id: a.id })),
-        { name: ph.name, releases: ph.releases },
-        { size: 300 },
-      ),
-      colors,
+  const option = useMemo(() => {
+    if (!ph) return {}
+    return phaseFaceDiagramOption(
+      approaches.map((a) => ({ name: a.name, bearingDeg: a.bearingDeg, id: a.id })),
+      { name: ph.name, releases: ph.releases },
     )
-  }, [ph, approaches, colors])
+  }, [ph, approaches])
   if (!phases.length) return null
   return (
     <div className="chart-card">
@@ -168,7 +147,7 @@ export function PhaseFacePanel({
           </button>
         ))}
       </div>
-      <div dangerouslySetInnerHTML={{ __html: svg }} />
+      <EChart option={option} style={{ height: 300 }} />
     </div>
   )
 }
@@ -182,7 +161,6 @@ export function FlowDirectionPanel({
   flow: FlowScheme
   mode?: FlowDisplayMode
 }) {
-  const colors = useChartColors()
   const [style, setStyle] = useState<RoadGeeFlowStyle>({ ...DEFAULT_ROADGEE_FLOW_STYLE })
   const align = useMemo(() => buildFlowAlignment(approaches, flow, mode), [approaches, flow, mode])
   const check = useMemo(() => flowChartsAlignWithTable(approaches, flow, mode), [approaches, flow, mode])
@@ -190,9 +168,9 @@ export function FlowDirectionPanel({
     () => roadgeeFlowDiagramSvg(approaches, flow, { size: 420, mode, style }),
     [approaches, flow, mode, style],
   )
-  const svgClassic = useMemo(
-    () => themeSvg(flowMovementDiagramSvg(align.diagramData, { size: 320 }), colors),
-    [align, colors],
+  const flowOption = useMemo(
+    () => flowMovementDiagramOption(align.diagramData),
+    [align],
   )
   const patch = (p: Partial<RoadGeeFlowStyle>) => setStyle((s) => ({ ...s, ...p }))
   return (
@@ -245,7 +223,9 @@ export function FlowDirectionPanel({
       <div className="chart-svg-host chart-svg-host--pro" dangerouslySetInnerHTML={{ __html: svgRoadgee }} />
       <details className="subpanel" style={{ marginTop: 8 }}>
         <summary className="subpanel-summary">经典流向（对照）</summary>
-        <div className="subpanel-body" dangerouslySetInnerHTML={{ __html: svgClassic }} />
+        <div className="subpanel-body">
+          <EChart option={flowOption} style={{ height: 320 }} />
+        </div>
       </details>
 
       <div className="table-wrap" style={{ marginTop: 8, maxHeight: 140 }}>
@@ -277,24 +257,19 @@ export function FlowDirectionPanel({
 }
 
 export function TimeSpacePanel({ corridor }: { corridor: BandCorridor }) {
-  const colors = useChartColors()
-  const svg = useMemo(
+  const option = useMemo(
     () =>
-      themeSvg(
-        timeSpaceDiagramSvg(
-          corridor.nodes.map((n) => ({
-            name: n.name,
-            distanceM: n.distanceM,
-            greenRatio: n.greenRatio,
-            offsetSec: n.offsetSec,
-            cycleSec: n.cycleSec,
-          })),
-          corridor.speedKmh,
-          { width: 340, height: 240 },
-        ),
-        colors,
+      timeSpaceDiagramOption(
+        corridor.nodes.map((n) => ({
+          name: n.name,
+          distanceM: n.distanceM,
+          greenRatio: n.greenRatio,
+          offsetSec: n.offsetSec,
+          cycleSec: n.cycleSec,
+        })),
+        corridor.speedKmh,
       ),
-    [corridor, colors],
+    [corridor],
   )
   return (
     <div className="chart-card">
@@ -302,7 +277,7 @@ export function TimeSpacePanel({ corridor }: { corridor: BandCorridor }) {
         <span>绿波时距图</span>
         <small>双向轨迹 · 教材图解</small>
       </div>
-      <div dangerouslySetInnerHTML={{ __html: svg }} />
+      <EChart option={option} style={{ height: 240 }} />
     </div>
   )
 }
