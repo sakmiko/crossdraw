@@ -18,7 +18,7 @@ async function openNav(page: Page, label: string) {
   await page.waitForTimeout(350)
 }
 
-test.describe('v0.5.138 command-palette + param-jump polish', () => {
+test.describe('v0.5.139 density + focus polish', () => {
   // docs/screenshots/00-shell.png
   // docs/screenshots/06-compare.png
   test('shell', async ({ page }) => {

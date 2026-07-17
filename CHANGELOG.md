@@ -1,3 +1,10 @@
+## 0.5.139 — Density, focus, stage chrome
+
+- Signal/params sticky section titles under param-jump; sticky table heads; denser stage download chip.
+- Focus-visible rings for keyboard users; stage empty contrast retained.
+- Band back control marked primary; analysis jump includes A4/VISSIM anchor.
+- Continues 20-round UX push (layout clarity, not new domain claims).
+
 ## 0.5.138 — Command palette, keyboard map, param-jump navigation
 
 - Command palette redesigned: DESIGN tokens, groups, ↑↓/Enter, footer shortcut legend; Ctrl+K / Ctrl+E.

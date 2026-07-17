@@ -109,6 +109,7 @@ export function AnalysisWorkspace({
   return (
     <div className="flat-params" style={{ marginTop: 12 }}>
       <nav className="param-jump" aria-label="参数分区">
+        <a href="#an-a4">A4/VISSIM</a>
         <a href="#an-eval">评价</a>
         <a href="#an-a4">A4</a>
         <a href="#an-queue">排队</a>

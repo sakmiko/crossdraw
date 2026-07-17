@@ -4543,3 +4543,83 @@ html { scroll-behavior: smooth; }
   color: var(--text);
   background: var(--input-bg);
 }
+
+/* v0.5.139 param-more + stage bar */
+.param-more {
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 4px;
+}
+.param-more-sum {
+  cursor: pointer;
+  list-style: none;
+  font-size: 11px;
+  font-weight: 650;
+  color: var(--text-secondary);
+  padding: 6px 2px;
+  user-select: none;
+}
+.param-more-sum::-webkit-details-marker { display: none; }
+.param-more-sum::before {
+  content: '▸ ';
+  color: var(--muted);
+  font-size: 10px;
+}
+.param-more[open] > .param-more-sum::before { content: '▾ '; }
+.param-more-body { padding-top: 2px; }
+.mode-stage-bar {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px !important;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  min-height: 32px;
+}
+.mode-stage-title b {
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--text);
+}
+.mode-stage-unit {
+  margin-left: 8px;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+}
+/* undo earlier hide of mode-stage-bar if any */
+.page-fill-stage .mode-stage-bar {
+  display: flex !important;
+}
+
+/* v0.5.139 density polish */
+.app.shell--signal .page-fill-params .rg-section-title {
+  position: sticky;
+  top: 28px; /* below param-jump */
+  z-index: 3;
+  background: var(--panel);
+  padding: 4px 0;
+}
+.app.shell--signal .param-jump { top: 0; }
+.page-fill-params .table-wrap {
+  max-height: min(280px, 40vh);
+}
+.page-fill-params .table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--table-head);
+  z-index: 1;
+}
+/* Keyboard focus visible */
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+input:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+/* Reduce stage bar chrome noise */
+.mode-stage-dl { font-size: 11px; height: 26px !important; min-height: 26px !important; padding: 0 8px !important; }

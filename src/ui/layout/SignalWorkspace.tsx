@@ -761,7 +761,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       )}
 
       <div className="flat-section">
-        <div className="rg-section-title">搭接相位审查 <span className="subpanel-tag">{collectOverlapRows(signal).length}</span></div>
+        <div className="rg-section-title" id="sig-review">搭接相位审查 <span className="subpanel-tag">{collectOverlapRows(signal).length}</span></div>
         <EChart option={overlapReviewOption(signal)} style={{ height: 200 }} />
         
       </div>

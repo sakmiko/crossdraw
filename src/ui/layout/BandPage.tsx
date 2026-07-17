@@ -161,7 +161,7 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
       <header className="band-page-bar">
         <div className="band-page-bar-row band-page-bar-row--main">
           <div className="band-page-bar-left">
-            <button type="button" className="ghost band-bar-btn" onClick={onBackToIntersection}>
+            <button type="button" className="primary band-bar-btn band-back" onClick={onBackToIntersection}>
               <Icon name="chevronLeft" size={16} /><span>交叉口</span>
             </button>
             <div className="band-page-title">
