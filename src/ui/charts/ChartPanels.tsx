@@ -13,7 +13,7 @@ import {
   timingCompareBarSvg,
   vcHeatColor,
 } from './svgCharts'
-import { barChartOption, losGaugeOption, radarChartOption } from '@/ui/charts/interactiveBoards'
+import { barChartOption, losGaugeOption, radarChartOption, ringBarrierOption, conflictMatrixOption, dualRingOption, pedPhaseStripOption, crossSectionBarOption, compareSchemesBarOption, timingCompareBarOption } from '@/ui/charts/interactiveBoards'
 import type {
   AnalysisResult,
   BandCorridor,
@@ -164,76 +164,26 @@ export function SignalCharts({
 }) {
   const colors = useChartColors()
   const phaseId = focusPhaseId ?? signal.phases[0]?.id ?? null
-  const ring = useMemo(
-    () =>
-      themeSvg(
-        ringBarrierSvg(
-          signal.phases.map((p) => ({
-            name: p.name,
-            greenSec: p.greenSec,
-            yellowSec: p.yellowSec,
-            allRedSec: p.allRedSec,
-            isOverlap: p.isOverlap,
-          })),
-          signal.cycleSec,
-          { height: 88 },
-        ),
-        colors,
-      ),
-    [signal, colors],
-  )
+  const ringOpt = useMemo(() => ringBarrierOption(signal.phases, signal.cycleSec), [signal])
 
   const report = useMemo(() => {
     if (!approaches?.length) return null
     return buildPhaseConflictReport(approaches, signal, phaseId)
   }, [approaches, signal, phaseId])
 
-  const pedStrip = useMemo(() => {
-    if (!approaches?.length) return ''
-    return themeSvg(pedestrianPhaseStripSvg(signal, approaches, { width: 360 }), colors)
-  }, [approaches, signal, colors])
+  const pedStripOpt = useMemo(() => pedPhaseStripOption(signal), [signal])
 
-  const pedRing = useMemo(() => {
-    if (!approaches?.length) return ''
-    return themeSvg(
-      pedestrianRingSvg(approaches, signal, {
-        width: 360,
-        height: 300,
-        focusPhaseId: phaseId,
-      }),
-      colors,
-    )
-  }, [approaches, signal, phaseId, colors])
+  // pedRing removed - redundant with pedStrip ECharts
 
-  const dualRing = useMemo(() => {
-    if (!isDualRingEnabled(signal)) return ''
-    return themeSvg(dualRingDiagramSvg(signal, { width: 360, height: 168 }), colors)
-  }, [signal, colors])
+  const dualRingOpt = useMemo(() => isDualRingEnabled(signal) ? dualRingOption(signal) : null, [signal])
 
-  const matrix = useMemo(() => {
-    if (!report) return ''
+  const matrixOpt = useMemo(() => {
+    if (!report) return null
     const levels = report.cells.map((row) => row.map((c) => c.level))
-    const hot = new Set(
-      report.activeHits.map((h) => [h.aKey, h.bKey].sort().join('|')),
-    )
-    const raw = conflictMatrixSvg(
-      report.keys.map((k) => k.label),
-      levels,
-      {
-        keys: report.keys.map((k) => `${k.approachId}:${k.movement}`),
-        active: report.activeKeys,
-        hotPairs: hot,
-        subtitle: phaseConflictSummaryText(report),
-      },
-    )
-    return themeSvg(raw, colors)
-  }, [report, colors])
+    return conflictMatrixOption(report.keys.map((k) => k.label), levels)
+  }, [report])
 
-  const diagram = useMemo(() => {
-    if (!approaches?.length) return ''
-    const model = buildConflictDiagram(approaches, signal, phaseId)
-    return themeSvg(conflictDiagramSvg(model, { width: 360, height: 300 }), colors)
-  }, [approaches, signal, phaseId, colors])
+  // diagram removed - redundant with conflict matrix ECharts
 
   const phaseOpt = useMemo(() => phaseTimingOption(signal), [signal])
 
@@ -248,35 +198,27 @@ export function SignalCharts({
         <span>环栏</span>
         <small>轴 = C</small>
       </div>
-      <div dangerouslySetInnerHTML={{ __html: ring }} />
-      {dualRing && (
+      <EChart option={ringOpt} style={{ height: 88 }} />
+      {dualRingOpt && (
         <>
           <div className="chart-title" style={{ marginTop: 12 }}>
             <span>双环栏</span>
             <small>R1 / R2</small>
           </div>
-          <div className="chart-svg-host chart-svg-host--pro" dangerouslySetInnerHTML={{ __html: dualRing }} />
+          {dualRingOpt && <EChart option={dualRingOpt} style={{ height: 168 }} />}
         </>
       )}
-      {pedStrip && (
+      {pedStripOpt && (
         <>
           <div className="chart-title" style={{ marginTop: 12 }}>
             <span>行人</span>
             <small>{countPedIntervals(signal)} 面</small>
           </div>
-          <div dangerouslySetInnerHTML={{ __html: pedStrip }} />
-          {pedRing && (
-            <>
-              <div className="chart-title" style={{ marginTop: 12 }}>
-                <span>行人环图</span>
-                <small>当前相位</small>
-              </div>
-              <div className="chart-svg-host chart-svg-host--pro" dangerouslySetInnerHTML={{ __html: pedRing }} />
-            </>
-          )}
+          <EChart option={pedStripOpt} style={{ height: 160 }} />
+
         </>
       )}
-      {matrix && report && (
+      {matrixOpt && report && (
         <>
           <div className="chart-title" style={{ marginTop: 12 }}>
             <span>冲突矩阵</span>
@@ -294,16 +236,8 @@ export function SignalCharts({
               </button>
             ))}
           </div>
-          <div dangerouslySetInnerHTML={{ __html: matrix }} />
-          {diagram && (
-            <>
-              <div className="chart-title" style={{ marginTop: 12 }}>
-                <span>冲突点</span>
-                <small>示意</small>
-              </div>
-              <div dangerouslySetInnerHTML={{ __html: diagram }} />
-            </>
-          )}
+          {matrixOpt && <EChart option={matrixOpt} style={{ height: 200 }} />}
+
           {report.activeHits.length > 0 ? (
             <div className="table-wrap" style={{ marginTop: 8, maxHeight: 140 }}>
               <table className="table">

@@ -1809,7 +1809,7 @@ export function ringBarrierOption(
 /** Conflict matrix heatmap (replaces conflictMatrixSvg). */
 export function conflictMatrixOption(
   labels: string[],
-  levels: ('ok' | 'warn' | 'block')[][],
+  levels: ('ok' | 'warn' | 'block' | 'same')[][],
 ): EChartsCoreOption {
   const data: [number, number, number][] = []
   for (let i = 0; i < levels.length; i++) {

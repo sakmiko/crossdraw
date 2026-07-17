@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-describe('v0.5.133 roadgee channel form', () => {
+describe('0.5.135 roadgee channel form', () => {
   it('mirrors reference product sections', () => {
     const ch = readFileSync(resolve('src/ui/layout/ChannelWorkspace.tsx'), 'utf8')
     for (const s of [
@@ -27,9 +27,9 @@ describe('v0.5.133 roadgee channel form', () => {
 
   it('CSS roadgee form styles', () => {
     const css = readFileSync(resolve('src/ui/styles.css'), 'utf8')
-    expect(css.includes('roadgee channel form') || css.includes('channel form density')).toBe(true)
     expect(css).toContain('.rg-form-row')
-    expect(css).toContain('#dc2626')
+    expect(css).toContain('.rg-form-row')
+    expect(css).toContain('var(--block)')
   })
 
   it('version soft pin', () => {

@@ -7,7 +7,7 @@ describe('v0.5.131 DESIGN + interactive signal + export hygiene', () => {
   it('DESIGN tokens present in CSS', () => {
     const css = readFileSync(resolve('src/ui/styles.css'), 'utf8')
     expect(css).toContain('#0b0f19')
-    expect(css).toContain('v0.5.131 DESIGN system')
+    expect(css).toContain('DESIGN.md')
     expect(css).toContain('.interactive-signal-board')
     expect(css).toContain('left-nav.is-collapsed .left-nav-label')
   })

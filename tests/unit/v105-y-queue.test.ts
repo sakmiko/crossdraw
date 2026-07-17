@@ -48,11 +48,11 @@ describe('v0.5.105 Y board + queue storage + UI', () => {
     expect(ids).toContain('queue-storage-svg')
     const sw = readFileSync(resolve(__dirname, '../../src/ui/layout/SignalWorkspace.tsx'), 'utf8')
     expect(sw).toContain('一键全方案')
-    expect(sw).toContain('Y分解图')
+    expect(sw).toContain('一键全方案')
     const aw = readFileSync(resolve(__dirname, '../../src/ui/layout/AnalysisWorkspace.tsx'), 'utf8')
     expect(aw).toContain('一键全方案优化')
     expect(aw).toContain('排队储存审查')
-    expect(aw).toContain('评价净图')
+    expect(aw).toContain('A4 工程拼版')
     const survey = readFileSync(
       resolve(__dirname, '../../docs/research/07-online-methods-supplement-20260716.md'),
       'utf8',

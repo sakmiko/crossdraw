@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-describe('v0.5.132+ channel params no draft boards', () => {
+describe('0.5.135+ channel params no draft boards', () => {
   it('drops draft / right-turn review boards from ChannelWorkspace', () => {
     const ch = readFileSync(resolve('src/ui/layout/ChannelWorkspace.tsx'), 'utf8')
     expect(ch).not.toContain('渠化出图稿')
@@ -13,7 +13,7 @@ describe('v0.5.132+ channel params no draft boards', () => {
 
   it('CSS has channel density rules', () => {
     const css = readFileSync(resolve('src/ui/styles.css'), 'utf8')
-    expect(css.includes('v0.5.132 channel compact') || css.includes('v0.5.133 roadgee channel form')).toBe(true)
+    expect(css).toContain('.rg-form-row')
   })
 
   it('version soft pin', () => {

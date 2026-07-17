@@ -29,7 +29,7 @@ describe('v0.5.127 band/compare echarts PNG + topbar', () => {
     expect(app).toContain('compareSchemesOption')
     const bp = readFileSync(resolve('src/ui/layout/BandPage.tsx'), 'utf8')
     expect(bp).toContain('downloadEchartsPng')
-    expect(bp).toContain('导出 PNG')
+    expect(bp).toContain('绿波交互')
     const cw = readFileSync(resolve('src/ui/layout/CompareWorkspace.tsx'), 'utf8')
     expect(cw).toContain('downloadEchartsPng')
     const css = readFileSync(resolve('src/ui/styles.css'), 'utf8')

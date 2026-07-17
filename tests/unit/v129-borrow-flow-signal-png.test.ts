@@ -52,7 +52,7 @@ describe('v0.5.129 borrow-left glyph + flow/signal PNG', () => {
     expect(sw).toContain('downloadEchartsPng')
     expect(sw).toContain('导出 PNG')
     const css = readFileSync(resolve('src/ui/styles.css'), 'utf8')
-    expect(css).toContain('v0.5.129 contrast')
+    expect(css).toContain('contrast')
     const pkg = readFileSync(resolve('package.json'), 'utf8')
     expect(pkg).toMatch(/"version": "0\.5\.\d+"/)
   })

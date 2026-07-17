@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { CATEGORY_LABEL, EXPORT_CATALOG } from '@/io/exportCatalog'
 
-describe('v0.5.131 canvas zoom + interactive export category', () => {
+describe('v0.5.135 canvas zoom + interactive export category', () => {
   it('CanvasHandle exposes zoom API', () => {
     const cv = readFileSync(resolve('src/canvas/CanvasView.tsx'), 'utf8')
     expect(cv).toContain('zoomBy')
@@ -22,7 +22,7 @@ describe('v0.5.131 canvas zoom + interactive export category', () => {
     expect(app).toContain('zoomIn')
     expect(app).toContain('zoomOut')
     const css = readFileSync(resolve('src/ui/styles.css'), 'utf8')
-    expect(css).toContain('v0.5.131 stage-zoom')
+    expect(css).toContain('stage-zoom')
     const pkg = readFileSync(resolve('package.json'), 'utf8')
     expect(pkg).toMatch(/"version": "0\.5\.\d+"/)
     const ec = readFileSync(resolve('src/ui/common/ExportCenter.tsx'), 'utf8')
