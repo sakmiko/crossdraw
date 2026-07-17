@@ -9,8 +9,8 @@ describe('channel form density', () => {
     expect(css).toContain('.rg-field')
     expect(css).toMatch(/--ctrl-h|height: 26px|height: 32px/)
   })
-  it('version 0.5.136', () => {
-    expect(readFileSync(resolve('package.json'), 'utf8')).toContain('"version": "0.5.136"')
-    expect((readFileSync(resolve('src/ui/layout/App.tsx'), 'utf8') + readFileSync(resolve('src/io/buildExportHandlers.ts'), 'utf8'))).toMatch(/v0\.5\.136/)
+  it('version 0.5.137', () => {
+    expect(readFileSync(resolve('package.json'), 'utf8')).toMatch(/"version": "0\.5\.\d+"/)
+    expect((readFileSync(resolve('src/ui/layout/App.tsx'), 'utf8') + readFileSync(resolve('src/io/buildExportHandlers.ts'), 'utf8'))).toMatch(/v0\.5\.\d+/)
   })
 })

@@ -1,193 +1,101 @@
 /**
- * ExportCenter handlers — extracted from App.tsx (v0.5.136).
- * Behavior is unchanged; App only supplies runtime deps.
+ * ExportCenter handlers — self-contained imports (v0.5.137).
+ * App only injects runtime project state + a few shell callbacks.
  */
-// @ts-nocheck — large handler map; deps validated at runtime by ExportCenter + audit_export_handlers.py
+// @ts-nocheck — large handler map; gated by audit_export_handlers.py + unit/e2e
 import type { ExportItemId } from '@/io/exportCatalog'
+import { analyzeIntersection } from '@/domain/analysis'
+import { measureCorridor } from '@/domain/analysis/corridor'
+import { cycleScanCsv, cycleScanMarkdown, scanCycleSensitivity } from '@/domain/analysis/cycleScan'
+import { buildMaxbandReport, maxbandReportCsv, maxbandReportMarkdown } from '@/domain/analysis/maxbandReport'
+import { queueTableMarkdown } from '@/domain/analysis/queueStorage'
+import { schemeDeltaMarkdown, schemeDeltas } from '@/domain/analysis/schemeDiff'
+import { analyzeUnsignalized, unsignalizedMarkdown } from '@/domain/analysis/unsignalized'
+import { professionalRightTurnBoardSvg, rightTurnBoardCsv, rightTurnBoardMarkdown } from '@/domain/channel/rightTurnReview'
+import { fullOptimizeMarkdown, runFullSchemeOptimize } from '@/domain/optimize/fullSchemeOptimize'
+import { computeSaturationKpi, optimizeDeltaMarkdown, previewOptimize, saturationKpiMarkdown } from '@/domain/signal/saturationKpi'
+import { buildCrossSection } from '@/domain/xsection/build'
+import { buildSectionReport, componentsForDiagram, sectionReportCsv, sectionReportMarkdown } from '@/domain/xsection/report'
+import { buildAnalysisReportSvg } from '@/io/analysisReportSvg'
+import { buildChannelDraftSheet, channelDraftMarkdown } from '@/io/channelDraftSheet'
+import { cleanAnalysisPlanSvg, cleanChannelPlanSvg, cleanCorridorNetworkSvg, cleanFlowDiagramSvg, cleanSignalTimingSvg, cleanTimeSpaceSvg } from '@/io/cleanDrawingPack'
+import { downloadText } from '@/io/download'
+import { collectEngineeringPrintPanels, engineeringPrintManifest } from '@/io/engineeringPrintPack'
+import { analysisMarkdown, bandMarkdown, exportJsonFile, exportSvgFile } from '@/io/exportCharts'
+import { downloadEchartsPng } from '@/io/exportEchartsPng'
+import { buildMultiPageReportHtml } from '@/io/multiPageReport'
+import { buildA4PrintSheet, printSheetHtml } from '@/io/printSheet'
+import { analysisToCsv, analysisToExcelHtml, collectCompareRows, compareSchemesCsv } from '@/io/report'
+import { exportVissimCsvBundle } from '@/io/vissimCsv'
+import { buildVissimInpxPack } from '@/io/vissimInpx'
+import { downloadVissimPack } from '@/io/vissimPackDownload'
+import { buildTimeSpaceExportSvg } from '@/ui/charts/InteractiveTimeSpace'
+import { collectCorridorKpis, corridorKpiCompareSvg, multiBandMarkdown } from '@/ui/charts/bandCorridorCompare'
+import { conflictDiagramExportSvg, conflictHitsMarkdown, conflictMatrixExportSvg } from '@/ui/charts/conflictExport'
+import { corridorNetworkPreviewSvg } from '@/ui/charts/corridorNetworkPreview'
+import { criticalApproachBoardSvg, criticalApproachCsv, criticalApproachMarkdown } from '@/ui/charts/criticalApproachBoard'
+import { criticalYBoardSvg, criticalYCsv, criticalYMarkdown } from '@/ui/charts/criticalYBoard'
+import { professionalCrossSectionSvg } from '@/ui/charts/crossSectionDiagram'
+import { cycleScanBoardSvg } from '@/ui/charts/cycleScanBoard'
+import { bandBandwidthOption, compareSchemesOption, cycleScanOption, flowLtrOption, phaseTimingOption, vcDelayOption, xsectionWidthOption } from '@/ui/charts/interactiveBoards'
+import { collectIntergreenRows, intergreenBoardSvg, intergreenCsv, intergreenMarkdown } from '@/ui/charts/intergreenBoard'
+import { lostTimeBoardSvg, lostTimeCsv, lostTimeMarkdown } from '@/ui/charts/lostTimeBoard'
+import { maxbandReportDiagramSvg } from '@/ui/charts/maxbandReportDiagram'
+import { linkMultiCorridorOffsets, multiCorridorLinkBoardSvg, multiCorridorLinkCsv, multiCorridorLinkMarkdown } from '@/ui/charts/multiCorridorLinkBoard'
+import { offsetScanBoardSvg, offsetScanCsv, offsetScanMarkdown, scanCorridorOffsets } from '@/ui/charts/offsetScanBoard'
+import { overlapReviewCsv, overlapReviewMarkdown, overlapReviewSvg } from '@/ui/charts/overlapReviewBoard'
+import { pedTimingOptBoardSvg, pedTimingOptCsv, pedTimingOptMarkdown } from '@/ui/charts/pedTimingOptBoard'
+import { pedestrianRingSvg } from '@/ui/charts/pedestrianRing'
+import { analysisPlanPackCsv, analysisPlanPackMarkdown, professionalAnalysisPlanPackSvg } from '@/ui/charts/professionalAnalysisPlanPack'
+import { capacityMatrixCsv, capacityMatrixMarkdown, professionalCapacityMatrixSvg } from '@/ui/charts/professionalCapacityMatrix'
+import { conflictBoardCsv, professionalConflictBoardSvg } from '@/ui/charts/professionalConflictBoard'
+import { controlMatrixSvg, flowMovementDiagramSvg, signalTimingDiagramSvg } from '@/ui/charts/professionalDiagrams'
+import { dualRingBoardCsv, dualRingBoardMarkdown, professionalDualRingBoardSvg } from '@/ui/charts/professionalDualRingBoard'
+import { flowOdReportCsv, flowOdReportMarkdown, professionalFlowReportSvg } from '@/ui/charts/professionalFlowReport'
+import { multiCorridorReportCsv, multiCorridorReportMarkdown, professionalMultiCorridorReportSvg } from '@/ui/charts/professionalMultiCorridorReport'
+import { pedestrianTimingCsv, pedestrianTimingMarkdown, professionalPedestrianBoardSvg } from '@/ui/charts/professionalPedestrianBoard'
+import { phaseNumberBoardMarkdown, professionalPhaseNumberBoardSvg } from '@/ui/charts/professionalPhaseNumberBoard'
+import { professionalRoundaboutPlanSvg, roundaboutLayoutMarkdown } from '@/ui/charts/professionalRoundaboutPlan'
+import { professionalTimeSpaceSvg, timeSpaceReportCsv, timeSpaceReportMarkdown } from '@/ui/charts/professionalTimeSpace'
+import { collectQueueStorageRows, queueStorageBoardSvg, queueStorageCsv } from '@/ui/charts/queueStorageBoard'
+import { roadgeeAnalysisPlanSvg } from '@/ui/charts/roadgeeAnalysisPlan'
+import { roadgeeFlowDiagramSvg } from '@/ui/charts/roadgeeFlowDiagram'
+import { roadgeeSignalBoardSvg } from '@/ui/charts/roadgeeSignalBoard'
+import { collectSchemeSnapshots, schemeMetricsCompareSvg, schemeTimingStripSvg } from '@/ui/charts/schemeCompareDiagrams'
+import { kpisFromCompareRows, schemeScorecardSvg } from '@/ui/charts/schemeScorecard'
+import { signalControlBoardSvg } from '@/ui/charts/signalControlBoard'
+import { scanCorridorSpeeds, speedScanBoardSvg, speedScanCsv, speedScanMarkdown } from '@/ui/charts/speedScanBoard'
+import { collectStorageCheckRows, storageCheckBoardSvg, storageCheckCsv, storageCheckMarkdown } from '@/ui/charts/storageCheckBoard'
+import { buildTimingCompareRows, timingCompareBoardSvg, timingCompareCsv, timingCompareMarkdown } from '@/ui/charts/timingCompareBoard'
+import { unsignalizedLegsCsv, unsignalizedPlanSvg } from '@/ui/charts/unsignalizedPlan'
 
 export type ExportHandlerDeps = Record<string, any>
 export type ExportHandlers = Partial<Record<ExportItemId | string, () => void | Promise<void>>>
 
 export function buildExportHandlers(deps: ExportHandlerDeps): ExportHandlers {
   const {
-    analysis,
-    analysisMarkdown,
-    analysisPlanPackCsv,
-    analysisPlanPackMarkdown,
-    analysisToCsv,
-    analysisToExcelHtml,
-    analyzeIntersection,
-    analyzeUnsignalized,
     applyFullSchemeOptimize,
+    analysis,
     band,
-    bandBandwidthOption,
-    bandMarkdown,
-    buildA4PrintSheet,
-    buildAnalysisReportSvg,
-    buildChannelDraftSheet,
-    buildCrossSection,
-    buildMaxbandReport,
-    buildMultiPageReportHtml,
-    buildSectionReport,
-    buildTimeSpaceExportSvg,
-    buildTimingCompareRows,
-    buildVissimInpxPack,
-    capacityMatrixCsv,
-    capacityMatrixMarkdown,
     channel,
-    channelDraftMarkdown,
-    cleanAnalysisPlanSvg,
-    cleanChannelPlanSvg,
-    cleanCorridorNetworkSvg,
-    cleanFlowDiagramSvg,
-    cleanSignalTimingSvg,
-    cleanTimeSpaceSvg,
-    collectCompareRows,
-    collectCorridorKpis,
-    collectEngineeringPrintPanels,
-    collectIntergreenRows,
-    collectQueueStorageRows,
-    collectSchemeSnapshots,
-    collectStorageCheckRows,
-    compareSchemesCsv,
-    compareSchemesOption,
-    componentsForDiagram,
-    computeSaturationKpi,
-    conflictBoardCsv,
-    conflictDiagramExportSvg,
-    conflictHitsMarkdown,
-    conflictMatrixExportSvg,
-    controlMatrixSvg,
-    corridorKpiCompareSvg,
-    corridorNetworkPreviewSvg,
-    criticalApproachBoardSvg,
-    criticalApproachCsv,
-    criticalApproachMarkdown,
-    criticalYBoardSvg,
-    criticalYCsv,
-    criticalYMarkdown,
-    cycleScanBoardSvg,
-    cycleScanCsv,
-    cycleScanMarkdown,
-    cycleScanOption,
     designStartLoss,
     designTargetVc,
-    downloadEchartsPng,
-    downloadText,
-    downloadVissimPack,
-    dualRingBoardCsv,
-    dualRingBoardMarkdown,
-    engineeringPrintManifest,
     exportDxf,
-    exportJsonFile,
     exportPng,
     exportProfessionalDiagrams,
     exportSvg,
-    exportSvgFile,
-    exportVissimCsvBundle,
     flow,
     flowDiagramStyle,
     flowDisplayMode,
-    flowLtrOption,
-    flowMovementDiagramSvg,
-    flowOdReportCsv,
-    flowOdReportMarkdown,
     focusPhaseId,
-    fullOptimizeMarkdown,
-    intergreenBoardSvg,
-    intergreenCsv,
-    intergreenMarkdown,
-    kpisFromCompareRows,
-    linkMultiCorridorOffsets,
-    lostTimeBoardSvg,
-    lostTimeCsv,
-    lostTimeMarkdown,
-    maxbandReportCsv,
-    maxbandReportDiagramSvg,
-    maxbandReportMarkdown,
-    measureCorridor,
     mesh,
-    multiBandMarkdown,
-    multiCorridorLinkBoardSvg,
-    multiCorridorLinkCsv,
-    multiCorridorLinkMarkdown,
-    multiCorridorReportCsv,
-    multiCorridorReportMarkdown,
-    offsetScanBoardSvg,
-    offsetScanCsv,
-    offsetScanMarkdown,
     openPrintPreview,
-    optimizeDeltaMarkdown,
-    overlapReviewCsv,
-    overlapReviewMarkdown,
-    overlapReviewSvg,
-    pedTimingOptBoardSvg,
-    pedTimingOptCsv,
-    pedTimingOptMarkdown,
-    pedestrianRingSvg,
-    pedestrianTimingCsv,
-    pedestrianTimingMarkdown,
-    phaseNumberBoardMarkdown,
-    phaseTimingOption,
-    previewOptimize,
-    printSheetHtml,
-    professionalAnalysisPlanPackSvg,
-    professionalCapacityMatrixSvg,
-    professionalConflictBoardSvg,
-    professionalCrossSectionSvg,
-    professionalDualRingBoardSvg,
-    professionalFlowReportSvg,
-    professionalMultiCorridorReportSvg,
-    professionalPedestrianBoardSvg,
-    professionalPhaseNumberBoardSvg,
-    professionalRightTurnBoardSvg,
-    professionalRoundaboutPlanSvg,
-    professionalTimeSpaceSvg,
     project,
-    queueStorageBoardSvg,
-    queueStorageCsv,
-    queueTableMarkdown,
-    rightTurnBoardCsv,
-    rightTurnBoardMarkdown,
-    roadgeeAnalysisPlanSvg,
-    roadgeeFlowDiagramSvg,
-    roadgeeSignalBoardSvg,
-    roundaboutLayoutMarkdown,
-    runFullSchemeOptimize,
-    saturationKpiMarkdown,
     saveRtp,
-    scanCorridorOffsets,
-    scanCorridorSpeeds,
-    scanCycleSensitivity,
-    schemeDeltaMarkdown,
-    schemeDeltas,
-    schemeMetricsCompareSvg,
-    schemeScorecardSvg,
-    schemeTimingStripSvg,
-    sectionReportCsv,
-    sectionReportMarkdown,
     selected,
     signal,
-    signalControlBoardSvg,
-    signalTimingDiagramSvg,
-    speedScanBoardSvg,
-    speedScanCsv,
-    speedScanMarkdown,
-    storageCheckBoardSvg,
-    storageCheckCsv,
-    storageCheckMarkdown,
     theme,
-    timeSpaceReportCsv,
-    timeSpaceReportMarkdown,
     timingCompare,
-    timingCompareBoardSvg,
-    timingCompareCsv,
-    timingCompareMarkdown,
-    unsignalizedLegsCsv,
-    unsignalizedMarkdown,
-    unsignalizedPlanSvg,
-    vcDelayOption,
-    xsectionWidthOption,
   } = deps
 
   return {
@@ -1296,6 +1204,5 @@ export function buildExportHandlers(deps: ExportHandlerDeps): ExportHandlers {
               }),
               'text/markdown',
             )
-          },
-  }
+          },  }
 }

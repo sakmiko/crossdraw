@@ -61,6 +61,16 @@ export const EChart = forwardRef<EChartHandle, ChartProps>(function EChart(
 
   useEffect(() => {
     chartRef.current?.setOption(withChartDefaults(option), { notMerge: true })
+  }, [option, theme])
+
+  // Re-paint when html[data-theme] flips (light/dark text contrast)
+  useEffect(() => {
+    if (typeof MutationObserver === 'undefined') return
+    const obs = new MutationObserver(() => {
+      chartRef.current?.setOption(withChartDefaults(option), { notMerge: true })
+    })
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+    return () => obs.disconnect()
   }, [option])
 
   const onResize = useCallback(() => {
@@ -81,7 +91,7 @@ export const EChart = forwardRef<EChartHandle, ChartProps>(function EChart(
       return c.getDataURL({
         type: opts?.type ?? 'png',
         pixelRatio: opts?.pixelRatio ?? 2,
-        backgroundColor: opts?.backgroundColor ?? '#0f172a',
+        backgroundColor: opts?.backgroundColor ?? (getComputedStyle(document.documentElement).getPropertyValue('--chart-bg').trim() || '#0f172a'),
       })
     },
     getInstance: () => chartRef.current,
@@ -113,7 +123,7 @@ export async function echartsOptionToPngDataUrl(
   const url = c.getDataURL({
     type: 'png',
     pixelRatio: size.pixelRatio ?? 2,
-    backgroundColor: size.backgroundColor ?? '#0f172a',
+    backgroundColor: size.backgroundColor ?? (typeof document !== 'undefined' ? (getComputedStyle(document.documentElement).getPropertyValue('--chart-bg').trim() || '#ffffff') : '#ffffff'),
   })
   c.dispose()
   el.remove()

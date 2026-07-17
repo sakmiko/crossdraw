@@ -1,3 +1,11 @@
+## 0.5.137 — Light theme readability + shell slim + empty states
+
+- **Critical**: light theme text was invisible (`--text: var(--bg)` from CSS bulk replace). Restored DESIGN tokens `--text/#0f172a`, `--chart-text`, `--panel-hover: #e2e8f0`; dark `--text-secondary: #cbd5e1`.
+- ECharts defaults theme-aware (CSS vars + data-theme observer).
+- Mode empty-state messages (flow/signal/analysis/xsection) when scheme missing; Suspense fallback uses theme tokens; restore `lazy` import.
+- App import slim: export handlers self-import static modules; App injects runtime state only (~971 LOC shell).
+- `applyFullSchemeOptimize` is store runtime dep for export handlers.
+
 ## 0.5.136 — Maintainability, performance, declutter (full ship)
 
 ### Architecture

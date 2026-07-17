@@ -11,7 +11,7 @@ html[data-theme='dark'] {
   --border: rgba(148, 163, 184, 0.1);
   --border-strong: rgba(148, 163, 184, 0.2);
   --text: #f8fafc;
-  --text-secondary: var(--muted);
+  --text-secondary: #cbd5e1;
   --muted: #94a3b8;
   --accent: #38bdf8;
   --accent-soft: rgba(56, 189, 248, 0.12);
@@ -68,10 +68,10 @@ html[data-theme='light'] {
   --bg-elevated: #f1f5f9;
   --panel: #ffffff;
   --panel-2: #f1f5f9;
-  --panel-hover: var(--border-strong);
+  --panel-hover: #e2e8f0;
   --border: rgba(15, 23, 42, 0.08);
   --border-strong: rgba(15, 23, 42, 0.16);
-  --text: var(--bg);
+  --text: #0f172a;
   --text-secondary: #475569;
   --muted: #64748b;
   --accent: #0284c7;
@@ -92,9 +92,9 @@ html[data-theme='light'] {
   --topbar-bg: rgba(255, 255, 255, 0.94);
   --status-bg: #e8ecf2;
   --chart-bg: #ffffff;
-  --chart-grid: var(--border-strong);
+  --chart-grid: #e2e8f0;
   --chart-label: #64748b;
-  --chart-text: var(--bg);
+  --chart-text: #0f172a;
   --table-head: #f1f5f9;
   --text-inverse: #ffffff;
   --los-e: #ea580c;
