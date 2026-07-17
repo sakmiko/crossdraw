@@ -419,9 +419,6 @@ export function FlowWorkspace({
               </tbody>
             </table>
           </div>
-          <p className="hint quiet">
-            行人 {mmSum.ped} · 非机 {mmSum.bike}（不并入机动车 v/c）
-          </p>
         </div>
       </div>
     </div>

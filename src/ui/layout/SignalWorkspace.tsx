@@ -386,13 +386,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         </div>
       </div>
 
-      {channel && (
-        <p className="hint quiet" style={{ marginTop: 4 }}>
-          {releaseHint.ok
-            ? '放行矩阵与各相位 L/T/R 按钮已逐格对齐'
-            : `放行对齐异常：${releaseHint.mismatches.slice(0, 2).join('；')}`}
-        </p>
-      )}
+
 
       <div className="flat-section ">
         <div className="rg-section-title">
@@ -1188,7 +1182,6 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
               </tbody>
             </table>
           </div>
-          <p className="hint">独占行人将冲突升为禁止；规则见 pedVehicleConflict。</p>
         </div>
       )}
 
@@ -1342,16 +1335,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       {channel && <ControlMatrixPanel signal={signal} approaches={channel.approaches} />}
       {channel && <PhaseFacePanel signal={signal} approaches={channel.approaches} />}
 
-      {timingNotes.length > 0 && (
-        <div className="flat-block" style={{ marginTop: 4 }}>
-          <div className="section-title">配时优化说明 · {TIMING_METHOD_LABELS[timingMethod]}</div>
-          <ul className="hint" style={{ margin: '6px 0 0', paddingLeft: 18 }}>
-            {timingNotes.map((n) => (
-              <li key={n}>{n}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+
 
       {channel && flow && (
         <div className="flat-block" style={{ marginTop: 4 }}>
@@ -1374,7 +1358,6 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
               ))}
             </tbody>
           </table>
-          <p className="hint">C₀=(1.5L+5)/(1−Y) · Webster 1958 · 见专业依据文档</p>
         </div>
       )}
     </div>

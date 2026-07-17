@@ -136,9 +136,6 @@ export function ChannelWorkspace({
   if (!ap || !channel) {
     return (
       <div className="rg-channel-form">
-        <p className="muted" style={{ fontSize: 12, margin: 8 }}>
-          请选择进口方向
-        </p>
       </div>
     )
   }

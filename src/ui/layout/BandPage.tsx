@@ -725,9 +725,6 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
                   导出 SVG/MD/CSV
                 </button>
               </div>
-              <p className="hint quiet" style={{ marginTop: 8 }}>
-                相位差固定 · 仅扫设计速度 · 蓝Σ 绿↑ 橙↓ · 红最优 · 紫当前
-              </p>
             </div>
           )}
           {tab === 'offset-scan' && (
@@ -778,9 +775,6 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
                   导出 SVG/MD/CSV
                 </button>
               </div>
-              <p className="hint quiet" style={{ marginTop: 8 }}>
-                蓝=上下行合计 · 绿=上行 · 橙=下行 · 红=最优 · 紫=当前 · 非 MIP
-              </p>
             </div>
           )}
           {tab === 'maxband' && (
@@ -860,10 +854,6 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
                   </tbody>
                 </table>
               </div>
-              <p className="hint quiet" style={{ marginTop: 8 }}>
-                b↑ {maxbandRep.forwardSec.toFixed(1)}s · b↓ {maxbandRep.backwardSec.toFixed(1)}s · 比{' '}
-                {(maxbandRep.bandwidthRatio * 100).toFixed(1)}% · {maxbandRep.honesty}
-              </p>
             </div>
           )}
 

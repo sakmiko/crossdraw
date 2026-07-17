@@ -267,7 +267,6 @@ export function XSectionWorkspace({
           </tbody>
         </table>
       </div>
-      <p className="hint quiet">{report.honesty}</p>
 
       <div className="rg-section" id="xsection-echarts">
         <div className="rg-section-title">

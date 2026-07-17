@@ -146,7 +146,6 @@ export function AnalysisWorkspace({
         >
           <div className="label">服务水平</div>
           <div className="value">{analysis.losFinal}</div>
-          <div className="sub">与图表/表格同源</div>
         </div>
       </div>
 
@@ -373,9 +372,7 @@ export function AnalysisWorkspace({
             启用无信号模式
           </label>
         </div>
-        {!signal?.unsignalized && (
-          <p className="hint quiet">勾选后按 TWSC 间隙接受 / 环形进口能力示意评价（非完整 HCM / SIDRA）。</p>
-        )}
+        {!signal?.unsignalized && null}
         {unsig && channel && (
           <>
             <div className="metric-grid">
@@ -447,7 +444,6 @@ export function AnalysisWorkspace({
                 CSV
               </button>
             </div>
-            <p className="hint quiet">{unsig.notes.join(' · ')}</p>
           </>
         )}
       </div>

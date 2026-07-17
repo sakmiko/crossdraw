@@ -99,43 +99,9 @@ export function ModeSideRail({
         </>
       )}
 
-      {mode === 'flow' && (
-        <div className="rail-hint-card">
-          <p className="rail-tip">
-            中心为<strong>流量流向图</strong>。右侧改进口 L/T/R 与 PHF，图即时更新。
-          </p>
-          <ul className="rail-list">
-            <li>自然 / 高峰显示可切换</li>
-            <li>可下载 SVG</li>
-          </ul>
-        </div>
-      )}
+      {mode === 'flow' && null}
 
-      {mode === 'signal' && (
-        <div className="rail-hint-card">
-          <p className="rail-tip">
-            本页为<strong>上下布局</strong>：上方灯态配时图，下方相位参数与放行芯片。
-          </p>
-          <ul className="rail-list">
-            <li>点 U/L/T/R/行人 切换放行</li>
-            <li>改 G/Y/C 图同步</li>
-          </ul>
-        </div>
-      )}
-
-      {mode === 'analysis' && (
-        <div className="rail-hint-card">
-          <p className="rail-tip">
-            中心切换<strong>服务水平 / 延误 / 排队 / 饱和度</strong>平面图；右侧为 KPI 与车道表。
-          </p>
-        </div>
-      )}
-
-      {mode === 'compare' && (
-        <div className="rail-hint-card">
-          <p className="rail-tip">中心为多方案指标图。用顶栏下拉切换当前渠化/流量/信号。</p>
-        </div>
-      )}
+      {mode === 'compare' && null}
     </aside>
   )
 }
