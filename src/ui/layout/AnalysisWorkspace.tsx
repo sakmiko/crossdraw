@@ -255,46 +255,7 @@ export function AnalysisWorkspace({
               style={{ marginTop: 4 }}
               dangerouslySetInnerHTML={{ __html: unsignalizedChartSvg(unsig, { width: 520 }) }}
             />
-            <div className="toolbar dense" style={{ marginTop: 4 }}>
-              <button
-                type="button"
-                className="ghost"
-                onClick={() =>
-                  exportSvgFile(
-                    `${project.name}-无信号平面.svg`,
-                    unsignalizedPlanSvg(channel.approaches, unsig, { size: 560 }),
-                  )
-                }
-              >
-                平面图
-              </button>
-              <button
-                type="button"
-                className="ghost"
-                onClick={() =>
-                  downloadText(
-                    `${project.name}-unsignalized.md`,
-                    unsignalizedMarkdown(project.name, unsig),
-                    'text/markdown',
-                  )
-                }
-              >
-                MD
-              </button>
-              <button
-                type="button"
-                className="ghost"
-                onClick={() =>
-                  downloadText(
-                    `${project.name}-unsignalized.csv`,
-                    unsignalizedLegsCsv(unsig),
-                    'text/csv',
-                  )
-                }
-              >
-                CSV
-              </button>
-            </div>
+
           </>
         )}
       </div>
@@ -302,19 +263,7 @@ export function AnalysisWorkspace({
       <div className="flat-section" id="analysis-echarts">
         <div className="rg-section-title">
           交互分析 · v/c · 延误
-          <button
-            type="button"
-            className="ghost"
-            style={{ marginLeft: 8 }}
-            onClick={() =>
-              void downloadEchartsPng(`${project.name}-交互分析-vc延误.png`, vcDelayOption(analysis), {
-                width: 960,
-                height: 420,
-              })
-            }
-          >
-            导出 PNG
-          </button>
+
         </div>
         <EChart option={vcDelayOption(analysis)} style={{ height: 300 }} />
       </div>
@@ -344,28 +293,7 @@ export function AnalysisWorkspace({
             }}
           />
           <div className="toolbar dense" style={{ marginTop: 6 }}>
-            <button
-              type="button"
-              className="ghost"
-              onClick={() => {
-                exportSvgFile(
-                  `${project.name}-关键进口.svg`,
-                  criticalApproachBoardSvg(channel.approaches, flow, signal, analysis, { width: 720 }),
-                )
-                downloadText(
-                  `${project.name}-关键进口.md`,
-                  criticalApproachMarkdown(project.name, channel.approaches, flow, signal, analysis),
-                  'text/markdown',
-                )
-                downloadText(
-                  `${project.name}-关键进口.csv`,
-                  criticalApproachCsv(analysis),
-                  'text/csv',
-                )
-              }}
-            >
-              关键进口导出
-            </button>
+
           </div>
           <div className="rg-section-title" style={{ marginTop: 4 }}>进口道储存校核</div>
           <div
@@ -376,29 +304,7 @@ export function AnalysisWorkspace({
             }}
           />
           <div className="toolbar dense" style={{ marginTop: 6 }}>
-            <button
-              type="button"
-              className="ghost"
-              onClick={() => {
-                const rows = collectStorageCheckRows(channel.approaches, signal, analysis)
-                exportSvgFile(
-                  `${project.name}-进口道储存校核.svg`,
-                  storageCheckBoardSvg(channel.approaches, signal, analysis, { width: 860 }),
-                )
-                downloadText(
-                  `${project.name}-进口道储存校核.md`,
-                  storageCheckMarkdown(project.name, rows),
-                  'text/markdown',
-                )
-                downloadText(
-                  `${project.name}-进口道储存校核.csv`,
-                  storageCheckCsv(rows),
-                  'text/csv',
-                )
-              }}
-            >
-              储存校核导出
-            </button>
+
           </div>
         </div>
       )}
