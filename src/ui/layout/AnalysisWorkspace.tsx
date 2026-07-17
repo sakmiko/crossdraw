@@ -22,7 +22,7 @@ import { unsignalizedChartSvg } from '@/ui/charts/unsignalizedChart'
 import { unsignalizedPlanSvg, unsignalizedLegsCsv } from '@/ui/charts/unsignalizedPlan'
 import { useMemo } from 'react'
 import { EChart } from '@/ui/charts/EChart'
-import { vcDelayOption } from '@/ui/charts/interactiveBoards'
+import { vcDelayOption, criticalApproachOption, storageCheckOption, queueStorageOption, lostTimeOption } from '@/ui/charts/interactiveBoards'
 import { AnalysisLaneTable } from '@/ui/layout/AnalysisLaneTable'
 import { collectCompareRows, compareSchemesCsv } from '@/io/report'
 import { exportVissimCsvBundle } from '@/io/vissimCsv'
@@ -279,30 +279,12 @@ export function AnalysisWorkspace({
       {channel && flow && signal && !signal.unsignalized && (
         <div className="flat-section">
           <div className="rg-section-title">关键进口</div>
-          <div
-            className="chart-svg-host"
-            style={{ overflow: 'auto' }}
-            dangerouslySetInnerHTML={{
-              __html: criticalApproachBoardSvg(
-                channel.approaches,
-                flow,
-                signal,
-                analysis,
-                { width: 700 },
-              ),
-            }}
-          />
+          <EChart option={criticalApproachOption(channel.approaches, flow, signal, analysis)} style={{ height: 280 }} />
           <div className="toolbar dense" style={{ marginTop: 6 }}>
 
           </div>
           <div className="rg-section-title" style={{ marginTop: 4 }}>进口道储存校核</div>
-          <div
-            className="chart-svg-host"
-            style={{ overflow: 'auto' }}
-            dangerouslySetInnerHTML={{
-              __html: storageCheckBoardSvg(channel.approaches, signal, analysis, { width: 800 }),
-            }}
-          />
+          <EChart option={storageCheckOption(channel.approaches, signal, analysis)} style={{ height: 200 }} />
           <div className="toolbar dense" style={{ marginTop: 6 }}>
 
           </div>
@@ -311,16 +293,7 @@ export function AnalysisWorkspace({
       {channel && signal && !signal.unsignalized && (
         <div className="flat-section">
           <div className="rg-section-title">排队储存审查</div>
-          <div
-            className="chart-svg-host"
-            style={{ overflow: 'auto' }}
-            dangerouslySetInnerHTML={{
-              __html: queueStorageBoardSvg(
-                collectQueueStorageRows(channel.approaches, signal, analysis),
-                { width: 720 },
-              ),
-            }}
-          />
+          <EChart option={queueStorageOption(collectQueueStorageRows(channel.approaches, signal, analysis))} style={{ height: 200 }} />
           <div className="toolbar dense" style={{ marginTop: 6 }}>
             <button
               type="button"
@@ -339,11 +312,7 @@ export function AnalysisWorkspace({
       <div className="flat-section ">
         <div className="rg-section-title">转向能力 · 排队 · 损失时间</div>
         {signal && (
-          <div
-            className="chart-svg-host"
-            style={{ overflow: 'auto', marginBottom: 8 }}
-            dangerouslySetInnerHTML={{ __html: lostTimeBoardSvg(signal, { width: 680 }) }}
-          />
+          <EChart option={lostTimeOption(signal)} style={{ height: 200 }} />
         )}
         {signal && (
           <div className="toolbar dense">
