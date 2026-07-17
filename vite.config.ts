@@ -23,4 +23,17 @@ export default defineConfig({
     // Cloudflare Tunnel forwards external Host header
     allowedHosts: true,
   },
+  build: {
+    chunkSizeWarningLimit: 900,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/echarts') || id.includes('node_modules/zrender')) return 'echarts'
+          if (id.includes('node_modules/pixi.js') || id.includes('node_modules/@pixi')) return 'pixi'
+          if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) return 'react'
+          if (id.includes('node_modules/immer')) return 'immer'
+        },
+      },
+    },
+  },
 })

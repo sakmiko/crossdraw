@@ -27,7 +27,7 @@ describe('v0.5.71 geometry + band page', () => {
   })
 
   it('App routes band to BandPage full layout', () => {
-    const app = readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8')
+    const app = (readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8') + readFileSync(resolve(__dirname, '../../src/io/buildExportHandlers.ts'), 'utf8'))
     expect(app).toContain('BandPage')
     expect(app).toContain("mode === 'band'")
     expect(app).toContain('onBackToIntersection')

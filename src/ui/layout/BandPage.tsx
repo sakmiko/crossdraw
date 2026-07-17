@@ -22,8 +22,6 @@ import {
 } from '@/ui/charts/professionalMultiCorridorReport' 
 import { corridorMapSvg } from '@/ui/charts/corridorMap'
 import { corridorNetworkPreviewSvg } from '@/ui/charts/corridorNetworkPreview'
-import { exportSvgFile } from '@/io/exportCharts'
-import { downloadText } from '@/io/download'
 import { downloadEchartsPng } from '@/io/exportEchartsPng'
 import { corridorSegments } from '@/domain/analysis/corridor'
 import { Icon } from '@/ui/icons/Icons'
@@ -550,53 +548,10 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
               <div className="panel-header">
                 <h2 style={{ margin: 0 }}>时距图</h2>
                 <div className="panel-header-meta" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  <button
-                    type="button"
-                    className="primary"
-                    onClick={() =>
-                      exportSvgFile(`${project.name}-timespace-hires.svg`, hiResTimeSpace)
-                    }
-                  >
-                    高分辨率 SVG
-                  </button>
-                  <button
-                    type="button"
-                    className="ghost"
-                    onClick={() => {
-                      exportSvgFile(
-                        `${project.name}-timespace.svg`,
-                        buildTimeSpaceExportSvg(corridor, band, theme),
-                      )
-                    }}
-                  >
-                    交互尺寸 SVG
-                  </button>
-                  <button
-                    type="button"
-                    className="ghost"
-                    onClick={() =>
-                      downloadText(
-                        `${project.name}-timespace.md`,
-                        timeSpaceReportMarkdown(project.name, corridor, band),
-                        'text/markdown',
-                      )
-                    }
-                  >
-                    报表 MD
-                  </button>
-                  <button
-                    type="button"
-                    className="ghost"
-                    onClick={() =>
-                      downloadText(
-                        `${project.name}-timespace.csv`,
-                        timeSpaceReportCsv(corridor, band),
-                        'text/csv',
-                      )
-                    }
-                  >
-                    数据 CSV
-                  </button>
+                  
+                  
+                  
+                  
                 </div>
               </div>
               <div
@@ -618,13 +573,7 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
               <div className="panel-header">
                 <h2 style={{ margin: 0 }}>路网预览</h2>
                 <div className="panel-header-meta">
-                  <button
-                    type="button"
-                    className="ghost"
-                    onClick={() => exportSvgFile(`${project.name}-corridor-network.svg`, networkSvg)}
-                  >
-                    高分辨率 SVG
-                  </button>
+                  
                 </div>
               </div>
               <div
@@ -672,33 +621,7 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
                 >
                   应用最优速度
                 </button>
-                <button
-                  type="button"
-                  className="ghost"
-                  onClick={() => {
-                    const scan = scanCorridorSpeeds(corridor, {
-                      minKmh: 30,
-                      maxKmh: 80,
-                      stepKmh: 2,
-                    })
-                    exportSvgFile(
-                      `${project.name}-速度敏感性.svg`,
-                      speedScanBoardSvg(corridor, { width: 900, height: 300, scan }),
-                    )
-                    downloadText(
-                      `${project.name}-速度敏感性.md`,
-                      speedScanMarkdown(project.name, corridor.name, scan),
-                      'text/markdown',
-                    )
-                    downloadText(
-                      `${project.name}-速度敏感性.csv`,
-                      speedScanCsv(scan),
-                      'text/csv',
-                    )
-                  }}
-                >
-                  导出 SVG/MD/CSV
-                </button>
+                
               </div>
             </div>
           )}
@@ -726,29 +649,7 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
                 >
                   应用最优相位差
                 </button>
-                <button
-                  type="button"
-                  className="ghost"
-                  onClick={() => {
-                    const scan = scanCorridorOffsets(corridor, { stepSec: 2 })
-                    exportSvgFile(
-                      `${project.name}-相位差扫描.svg`,
-                      offsetScanBoardSvg(corridor, { width: 900, height: 300, scan }),
-                    )
-                    downloadText(
-                      `${project.name}-相位差扫描.md`,
-                      offsetScanMarkdown(project.name, corridor.name, scan),
-                      'text/markdown',
-                    )
-                    downloadText(
-                      `${project.name}-相位差扫描.csv`,
-                      offsetScanCsv(scan),
-                      'text/csv',
-                    )
-                  }}
-                >
-                  导出 SVG/MD/CSV
-                </button>
+                
               </div>
             </div>
           )}
@@ -758,35 +659,9 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
                 <h2 style={{ margin: 0 }}>MAXBAND 报告</h2>
                 <div className="panel-header-meta">
                   <span className="subpanel-tag">{maxbandRep.method}</span>
-                  <button
-                    type="button"
-                    className="ghost"
-                    onClick={() => exportSvgFile(`${project.name}-maxband.svg`, maxbandSvg)}
-                  >
-                    图 SVG
-                  </button>
-                  <button
-                    type="button"
-                    className="ghost"
-                    onClick={() =>
-                      downloadText(
-                        `${project.name}-maxband.md`,
-                        maxbandReportMarkdown(project.name, maxbandRep),
-                        'text/markdown',
-                      )
-                    }
-                  >
-                    MD
-                  </button>
-                  <button
-                    type="button"
-                    className="ghost"
-                    onClick={() =>
-                      downloadText(`${project.name}-maxband.csv`, maxbandReportCsv(maxbandRep), 'text/csv')
-                    }
-                  >
-                    CSV
-                  </button>
+                  
+                  
+                  
                   <button title="a0=v·C/2；a±100m 步长10m"
                     type="button"
                     className="primary"
@@ -836,64 +711,7 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
             <div className="flat-block band-pane flat-block">
               <div className="panel-header">
                 <h2 style={{ margin: 0 }}>多走廊对比</h2>
-                <div className="toolbar dense">
-                  <button
-                    type="button"
-                    className="primary"
-                    onClick={() => {
-                      exportSvgFile(
-                        `${project.name}-多走廊报告.svg`,
-                        professionalMultiCorridorReportSvg(corridors, {
-                          width: 1000,
-                          projectName: project.name,
-                        }),
-                      )
-                    }}
-                  >
-                    多走廊报告 SVG
-                  </button>
-                  <button
-                    type="button"
-                    className="ghost"
-                    onClick={() => {
-                      downloadText(
-                        `${project.name}-多走廊报告.md`,
-                        multiCorridorReportMarkdown(project.name, corridors),
-                        'text/markdown',
-                      )
-                    }}
-                  >
-                    报告 MD
-                  </button>
-                  <button
-                    type="button"
-                    className="ghost"
-                    onClick={() => {
-                      downloadText(
-                        `${project.name}-多走廊报告.csv`,
-                        multiCorridorReportCsv(corridors),
-                        'text/csv',
-                      )
-                    }}
-                  >
-                    报告 CSV
-                  </button>
-                  <button
-                    type="button"
-                    className="ghost"
-                    onClick={() => {
-                      const kpis = collectCorridorKpis(corridors)
-                      exportSvgFile(`${project.name}-band-compare.svg`, corridorKpiCompareSvg(kpis))
-                      downloadText(
-                        `${project.name}-band-multi.md`,
-                        multiBandMarkdown(project.name, kpis),
-                        'text/markdown',
-                      )
-                    }}
-                  >
-                    简图导出
-                  </button>
-                </div>
+                
               </div>
               <div
                 className="chart-svg-host chart-svg-host--pro"
@@ -907,71 +725,7 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
               />
               <div className="flat-section" style={{ marginBottom: 12 }}>
                 <div className="rg-section-title">多走廊相位差联动</div>
-                <div className="toolbar dense" style={{ marginBottom: 8 }}>
-                  <button
-                    type="button"
-                    className="primary"
-                    onClick={() => {
-                      const r = linkAllCorridorOffsets?.('progressive')
-                      if (r) {
-                        setLinkResult(r)
-                        setBatchNote(`联动${r.improvedCount}/${r.rows.length}`)
-                      }
-                    }}
-                  >
-                    全走廊连续相位差
-                  </button>
-                  <button
-                    type="button"
-                    className="ghost"
-                    onClick={() => {
-                      const r = linkAllCorridorOffsets?.('progressive-reverse')
-                      if (r) {
-                        setLinkResult(r)
-                        setBatchNote(`反联${r.improvedCount}/${r.rows.length}`)
-                      }
-                    }}
-                  >
-                    反向连续
-                  </button>
-                  <button
-                    type="button"
-                    className="ghost"
-                    onClick={() => {
-                      const r = linkAllCorridorOffsets?.('offset-scan')
-                      if (r) {
-                        setLinkResult(r)
-                        setBatchNote(`扫联${r.improvedCount}/${r.rows.length}`)
-                      }
-                    }}
-                  >
-                    全走廊相位差扫描
-                  </button>
-                  {linkResult && (
-                    <button
-                      type="button"
-                      className="ghost"
-                      onClick={() => {
-                        exportSvgFile(
-                          `${project.name}-多走廊联动.svg`,
-                          multiCorridorLinkBoardSvg(linkResult, { width: 860 }),
-                        )
-                        downloadText(
-                          `${project.name}-多走廊联动.md`,
-                          multiCorridorLinkMarkdown(project.name, linkResult),
-                          'text/markdown',
-                        )
-                        downloadText(
-                          `${project.name}-多走廊联动.csv`,
-                          multiCorridorLinkCsv(linkResult),
-                          'text/csv',
-                        )
-                      }}
-                    >
-                      联动结果导出
-                    </button>
-                  )}
-                </div>
+                
                 {linkResult && (
                   <div
                     className="chart-svg-host"

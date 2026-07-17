@@ -42,7 +42,7 @@ describe('v0.5.92 analysis plan pack', () => {
     const aw = readFileSync(resolve(__dirname, '../../src/ui/layout/AnalysisWorkspace.tsx'), 'utf8')
     expect(aw).toContain('A4 工程拼版')
     expect(aw).toContain('professionalAnalysisPlanPackSvg')
-    const app = readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8')
+    const app = (readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8') + readFileSync(resolve(__dirname, '../../src/io/buildExportHandlers.ts'), 'utf8'))
     expect(app).toContain('analysis-plan-pack-svg')
   })
 })

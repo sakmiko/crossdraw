@@ -12,7 +12,7 @@ describe('maintainability v0.5.41', () => {
     expect(bwText).toContain('BandCorridorSidebar')
     expect(bwText).toContain('InteractiveTimeSpace')
     expect(bwText).toContain('optimizeAllBands')
-    expect(appText).toContain('BandWorkspace')
+    expect(appText).toContain('BandPage')
     expect(appText).toContain('optimizeAllBands={optimizeAllBands}')
     expect(appText).not.toContain('BandCorridorSidebar')
   })

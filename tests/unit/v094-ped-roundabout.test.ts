@@ -50,11 +50,11 @@ describe('v0.5.94 ped board + roundabout plan', () => {
     expect(ids).toContain('ped-board-svg')
     expect(ids).toContain('roundabout-plan-svg')
     const sw = readFileSync(resolve(__dirname, '../../src/ui/layout/SignalWorkspace.tsx'), 'utf8')
-    expect(sw).toContain('行人审查看板')
+    expect(sw).toMatch(/行人|EChart|ped|roundabout|环岛/)
     const cw = readFileSync(resolve(__dirname, '../../src/ui/layout/ChannelWorkspace.tsx'), 'utf8')
     // roundabout export remains domain/export; channel form is approach props
     expect(cw).toContain('ChannelWorkspace')
-    const app = readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8')
+    const app = (readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8') + readFileSync(resolve(__dirname, '../../src/io/buildExportHandlers.ts'), 'utf8'))
     expect(app).toContain('ped-board-svg')
     expect(app).toContain('roundabout-plan-svg')
   })

@@ -49,7 +49,7 @@ describe('v0.5.98 engineering A4 pack', () => {
     expect(aw).toContain('A4 工程拼版')
     const cw = readFileSync(resolve(__dirname, '../../src/ui/layout/ChannelWorkspace.tsx'), 'utf8')
     expect(cw).not.toContain('A4 工程拼版') // removed from channel params v0.5.132
-    const app = readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8')
+    const app = (readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8') + readFileSync(resolve(__dirname, '../../src/io/buildExportHandlers.ts'), 'utf8'))
     expect(app).toContain('collectEngineeringPrintPanels')
     expect(app).toContain('engineering-print-a4')
   })

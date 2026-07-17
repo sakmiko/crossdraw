@@ -7,7 +7,7 @@ import { roadgeeFlowDiagramSvg, DEFAULT_ROADGEE_FLOW_STYLE } from '@/ui/charts/r
 
 describe('v0.5.81 full-page layout + flow form', () => {
   it('App uses page-fill without ModeSideRail / scheme-tree / right aside', () => {
-    const app = readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8')
+    const app = (readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8') + readFileSync(resolve(__dirname, '../../src/io/buildExportHandlers.ts'), 'utf8'))
     expect(app).toContain('page-fill')
     expect(app).toContain('page-fill-stage')
     expect(app).toContain('page-fill-params')

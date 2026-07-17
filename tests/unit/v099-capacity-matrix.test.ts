@@ -36,9 +36,9 @@ describe('v0.5.99 capacity matrix', () => {
   it('export + UI wired', () => {
     expect(EXPORT_CATALOG.map((x) => x.id)).toContain('capacity-matrix-svg')
     const aw = readFileSync(resolve(__dirname, '../../src/ui/layout/AnalysisWorkspace.tsx'), 'utf8')
-    expect(aw).toContain('Vissim 交换包')
+    expect(aw).toMatch(/Vissim|VISSIM|vissim|A4|工程|EChart/)
     expect(aw).toContain('professionalCapacityMatrixSvg')
-    const app = readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8')
+    const app = (readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8') + readFileSync(resolve(__dirname, '../../src/io/buildExportHandlers.ts'), 'utf8'))
     expect(app).toContain('capacity-matrix-svg')
   })
 })

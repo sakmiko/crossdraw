@@ -52,7 +52,7 @@ describe('v0.5.114 intergreen review', () => {
     const st = readFileSync(resolve(__dirname, '../../src/state/store.ts'), 'utf8')
     expect(st).toContain('applyIntergreenRecs')
     expect(st).toContain('applyIntergreenRecommendations')
-    const app = readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8')
+    const app = (readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8') + readFileSync(resolve(__dirname, '../../src/io/buildExportHandlers.ts'), 'utf8'))
     expect(app).toMatch(/v0\.5\.\d+/)
   })
 })

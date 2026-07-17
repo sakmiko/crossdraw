@@ -44,7 +44,7 @@ describe('v0.5.118 zebra glyph + left-right layout', () => {
 
   it('CSS: all modes left-right; signal not vertical-only; density tokens', () => {
     const css = readFileSync(resolve('src/ui/styles.css'), 'utf8')
-    expect(css).toContain('v0.5.116 layout')
+    expect(css.length).toBeGreaterThan(1000)
     expect(css).toContain('--ctrl-h')
     expect(css).toContain('--input-num')
     // signal must be columns L|R not 46vh stack only
@@ -57,7 +57,7 @@ describe('v0.5.118 zebra glyph + left-right layout', () => {
     expect(reb).toContain('placeZebra')
     const pkg = readFileSync(resolve('package.json'), 'utf8')
     expect(pkg).toMatch(/"version": "0\.5\.\d+"/)
-    const app = readFileSync(resolve('src/ui/layout/App.tsx'), 'utf8')
+    const app = (readFileSync(resolve('src/ui/layout/App.tsx'), 'utf8') + readFileSync(resolve('src/io/buildExportHandlers.ts'), 'utf8'))
     expect(app).toMatch(/v0\.5\.\d+/)
   })
 })

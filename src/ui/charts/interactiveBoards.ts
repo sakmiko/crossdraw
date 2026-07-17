@@ -46,6 +46,7 @@ import type { CorridorKpiRow } from './bandCorridorCompare'
 import type { SchemeSnapshot } from './schemeCompareDiagrams'
 import type { ConflictDiagramModel } from '@/domain/signal/conflictDiagram'
 import type { EChartsCoreOption } from 'echarts/core'
+import { withChartDefaults } from '@/ui/charts/chartDefaults'
 
 const LOS_COLORS: Record<string, string> = {
   A: '#22c55e', B: '#84cc16', C: '#eab308', D: '#f97316', E: '#ef4444', F: '#991b1b',

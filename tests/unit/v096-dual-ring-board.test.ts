@@ -31,7 +31,7 @@ describe('v0.5.96 dual-ring board', () => {
     expect(sw).toContain('环栏')
     expect(sw).toContain('professionalDualRingBoardSvg')
     expect(sw).not.toMatch(/<details\b/)
-    const app = readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8')
+    const app = (readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8') + readFileSync(resolve(__dirname, '../../src/io/buildExportHandlers.ts'), 'utf8'))
     expect(app).toContain('dual-ring-board-svg')
   })
 })

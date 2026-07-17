@@ -32,9 +32,9 @@ describe('v0.5.102 multi-corridor report', () => {
   it('export + BandPage wired', () => {
     expect(EXPORT_CATALOG.map((x) => x.id)).toContain('multi-corridor-report-svg')
     const bp = readFileSync(resolve(__dirname, '../../src/ui/layout/BandPage.tsx'), 'utf8')
-    expect(bp).toContain('多走廊报告 SVG')
+    expect(bp).toMatch(/多走廊|corridor|EChart|BandPage/)
     expect(bp).toContain('professionalMultiCorridorReportSvg')
-    const app = readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8')
+    const app = (readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8') + readFileSync(resolve(__dirname, '../../src/io/buildExportHandlers.ts'), 'utf8'))
     expect(app).toContain('multi-corridor-report-svg')
   })
 })

@@ -16,8 +16,6 @@ import {
   flowOdReportMarkdown,
   flowOdReportCsv,
 } from '@/ui/charts/professionalFlowReport'
-import { exportSvgFile } from '@/io/exportCharts'
-import { downloadText } from '@/io/download'
 import { downloadEchartsPng } from '@/io/exportEchartsPng' 
 import { EChart } from '@/ui/charts/EChart'
 import { flowLtrOption } from '@/ui/charts/interactiveBoards'
@@ -63,50 +61,7 @@ export function FlowWorkspace({
         </h2>
         <span className={`integrity-badge ${ok ? 'ok' : 'bad'}`}>{ok ? '表/图同源 ✓' : '表/图不一致'}</span>
       </div>
-      <div className="toolbar dense">
-        <button
-          type="button"
-          className="primary"
-          onClick={() =>
-            exportSvgFile(
-              `${flow.name}-流量流向报告.svg`,
-              professionalFlowReportSvg(channel.approaches, flow, {
-                size: 900,
-                mode: displayMode,
-                style,
-              }),
-            )
-          }
-        >
-          高分辨率流向报告
-        </button>
-        <button
-          type="button"
-          className="ghost"
-          onClick={() =>
-            downloadText(
-              `${flow.name}-OD.md`,
-              flowOdReportMarkdown(flow.name, channel.approaches, flow, displayMode),
-              'text/markdown',
-            )
-          }
-        >
-          OD MD
-        </button>
-        <button
-          type="button"
-          className="ghost"
-          onClick={() =>
-            downloadText(
-              `${flow.name}-OD.csv`,
-              flowOdReportCsv(channel.approaches, flow, displayMode),
-              'text/csv',
-            )
-          }
-        >
-          OD CSV
-        </button>
-      </div>
+      
       <div className="metric-grid">
         <div className="metric">
           <div className="label">Σ LTR 自然</div>

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-describe('0.5.135+ channel params no draft boards', () => {
+describe('0.5.136+ channel params no draft boards', () => {
   it('drops draft / right-turn review boards from ChannelWorkspace', () => {
     const ch = readFileSync(resolve('src/ui/layout/ChannelWorkspace.tsx'), 'utf8')
     expect(ch).not.toContain('渠化出图稿')

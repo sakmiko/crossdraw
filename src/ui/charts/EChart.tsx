@@ -5,6 +5,7 @@
 import { useEffect, useRef, useCallback, useImperativeHandle, forwardRef } from 'react'
 import * as echarts from 'echarts/core'
 import type { EChartsCoreOption } from 'echarts/core'
+import { withChartDefaults } from '@/ui/charts/chartDefaults'
 import { BarChart, LineChart, ScatterChart, RadarChart, PieChart, HeatmapChart, GaugeChart, CustomChart } from 'echarts/charts'
 import {
   TitleComponent,
@@ -59,7 +60,7 @@ export const EChart = forwardRef<EChartHandle, ChartProps>(function EChart(
   }, [theme])
 
   useEffect(() => {
-    chartRef.current?.setOption(option, { notMerge: true })
+    chartRef.current?.setOption(withChartDefaults(option), { notMerge: true })
   }, [option])
 
   const onResize = useCallback(() => {
@@ -106,7 +107,7 @@ export async function echartsOptionToPngDataUrl(
   el.style.cssText = `width:${width}px;height:${height}px;position:fixed;left:-9999px;top:0;`
   document.body.appendChild(el)
   const c = echarts.init(el, undefined, { renderer: 'canvas', width, height })
-  c.setOption(option, { notMerge: true })
+  c.setOption(withChartDefaults(option), { notMerge: true })
   // allow layout
   await new Promise((r) => requestAnimationFrame(() => r(null)))
   const url = c.getDataURL({

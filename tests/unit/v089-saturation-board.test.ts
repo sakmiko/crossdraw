@@ -38,7 +38,7 @@ describe('v0.5.89 saturation KPI + control board', () => {
     expect(sw).toContain('一键优化配时')
     expect(sw).toContain('饱和度 / 延误 KPI')
     expect(sw).toContain('signalControlBoardSvg')
-    const app = readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8')
+    const app = (readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8') + readFileSync(resolve(__dirname, '../../src/io/buildExportHandlers.ts'), 'utf8'))
     expect(app).toContain('signal-control-board')
   })
 })

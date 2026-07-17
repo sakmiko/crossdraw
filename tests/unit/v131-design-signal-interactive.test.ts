@@ -18,7 +18,7 @@ describe('v0.5.131 DESIGN + interactive signal + export hygiene', () => {
     expect(board).toContain('greenSec')
     const mcs = readFileSync(resolve('src/ui/layout/ModeCenterStage.tsx'), 'utf8')
     expect(mcs).toContain('InteractiveSignalBoard')
-    const app = readFileSync(resolve('src/ui/layout/App.tsx'), 'utf8')
+    const app = ((readFileSync(resolve('src/ui/layout/App.tsx'), 'utf8') + readFileSync(resolve('src/io/buildExportHandlers.ts'), 'utf8')))
     expect(app).toContain('onUpdatePhaseTiming={updatePhaseTiming}')
     expect(app).toMatch(/v0\.5\.\d+/)
   })
@@ -45,7 +45,7 @@ describe('v0.5.131 DESIGN + interactive signal + export hygiene', () => {
         }),
       ).toBe(true)
     }
-    const app = readFileSync(resolve('src/ui/layout/App.tsx'), 'utf8')
+    const app = ((readFileSync(resolve('src/ui/layout/App.tsx'), 'utf8') + readFileSync(resolve('src/io/buildExportHandlers.ts'), 'utf8')))
     expect(app).toContain("'intergreen-svg'")
     expect(app).toContain("'cycle-scan-csv'")
   })

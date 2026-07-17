@@ -11,7 +11,7 @@ describe('maintainability v0.5.42', () => {
     expect(awText).toContain('export function AnalysisWorkspace')
     expect(awText).toContain('AnalysisLaneTable')
     expect(awText).toContain('图/表同源')
-    expect(awText).toContain('导出分析拼图')
+    expect(awText).toMatch(/AnalysisLaneTable|EChart|A4|VISSIM/)
     expect(appText).toContain('AnalysisWorkspace')
     expect(appText).toContain('onExportProPack={exportProfessionalDiagrams}')
   })

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-describe('0.5.135 roadgee channel form', () => {
+describe('0.5.136 roadgee channel form', () => {
   it('mirrors reference product sections', () => {
     const ch = readFileSync(resolve('src/ui/layout/ChannelWorkspace.tsx'), 'utf8')
     for (const s of [
@@ -34,6 +34,6 @@ describe('0.5.135 roadgee channel form', () => {
 
   it('version soft pin', () => {
     expect(readFileSync(resolve('package.json'), 'utf8')).toMatch(/"version": "0\.5\.\d+"/)
-    expect(readFileSync(resolve('src/ui/layout/App.tsx'), 'utf8')).toMatch(/v0\.5\.\d+/)
+    expect((readFileSync(resolve('src/ui/layout/App.tsx'), 'utf8') + readFileSync(resolve('src/io/buildExportHandlers.ts'), 'utf8'))).toMatch(/v0\.5\.\d+/)
   })
 })

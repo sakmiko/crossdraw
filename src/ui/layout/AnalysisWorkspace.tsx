@@ -30,7 +30,7 @@ import { buildVissimImportPack } from '@/io/vissimInpxSkeleton'
 import { buildVissimInpxPack } from '@/io/vissimInpx'
 import { downloadVissimPack, vissimPackSummaryMarkdown } from '@/io/vissimPackDownload' 
 import { buildMultiPageReportHtml } from '@/io/multiPageReport'
-import { analysisMarkdown, exportSvgFile } from '@/io/exportCharts'
+import { analysisMarkdown } from '@/io/exportCharts'
 import { buildAnalysisReportSvg } from '@/io/analysisReportSvg'
 import { downloadText } from '@/io/download'
 import { downloadEchartsPng } from '@/io/exportEchartsPng'
@@ -280,33 +280,17 @@ export function AnalysisWorkspace({
         <div className="flat-section">
           <div className="rg-section-title">关键进口</div>
           <EChart option={criticalApproachOption(channel.approaches, flow, signal, analysis)} style={{ height: 280 }} />
-          <div className="toolbar dense" style={{ marginTop: 6 }}>
-
-          </div>
+          
           <div className="rg-section-title" style={{ marginTop: 4 }}>进口道储存校核</div>
           <EChart option={storageCheckOption(channel.approaches, signal, analysis)} style={{ height: 200 }} />
-          <div className="toolbar dense" style={{ marginTop: 6 }}>
-
-          </div>
+          
         </div>
       )}
       {channel && signal && !signal.unsignalized && (
         <div className="flat-section">
           <div className="rg-section-title">排队储存审查</div>
           <EChart option={queueStorageOption(collectQueueStorageRows(channel.approaches, signal, analysis))} style={{ height: 200 }} />
-          <div className="toolbar dense" style={{ marginTop: 6 }}>
-            <button
-              type="button"
-              className="ghost"
-              onClick={() => {
-                const rows = collectQueueStorageRows(channel.approaches, signal, analysis)
-                downloadText(`${project.name}-排队储存.md`, queueTableMarkdown(project.name, rows), 'text/markdown')
-                downloadText(`${project.name}-排队储存.csv`, queueStorageCsv(rows), 'text/csv')
-              }}
-            >
-              排队 MD/CSV
-            </button>
-          </div>
+          
         </div>
       )}
       <div className="flat-section ">
@@ -314,24 +298,7 @@ export function AnalysisWorkspace({
         {signal && (
           <EChart option={lostTimeOption(signal)} style={{ height: 200 }} />
         )}
-        {signal && (
-          <div className="toolbar dense">
-            <button
-              type="button"
-              className="ghost"
-              onClick={() => {
-                exportSvgFile(`${project.name}-损失时间L.svg`, lostTimeBoardSvg(signal, { width: 720 }))
-                downloadText(
-                  `${project.name}-损失时间L.md`,
-                  lostTimeMarkdown(project.name, signal),
-                  'text/markdown',
-                )
-              }}
-            >
-              损失 L 导出
-            </button>
-          </div>
-        )}
+        
         <div className="flat-body">
           {flow && channel && (
             <table className="table table-dense">
@@ -365,77 +332,7 @@ export function AnalysisWorkspace({
       </div>
 <div className="flat-section ">
         <div className="rg-section-title">导出与报告</div>
-        <div className="toolbar dense">
-        <button
-          type="button"
-          onClick={() => {
-            downloadText(`${project.name}-compare.csv`, compareSchemesCsv(compareRows), 'text/csv')
-          }}
-        >
-          对比 CSV
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            if (!channel || !flow || !signal) return
-            downloadVissimPack(project.name, channel.approaches, flow, signal)
-          }}
-        >
-          Vissim 交换包
-        </button>
-        <button
-          type="button"
-          className="primary"
-          onClick={() => {
-            if (!channel || !flow || !signal) return
-            const html = buildMultiPageReportHtml({
-              project,
-              channel,
-              flow,
-              signal,
-              analysis,
-              bandCorridor: project.bandCorridor,
-            })
-            downloadText(`${project.name}-report.html`, html, 'text/html')
-          }}
-        >
-          多页工程报告 PDF
-        </button>
-        <button type="button" className="primary" onClick={onExportProPack}>
-          导出专业图件包
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            if (!channel || !flow || !signal) return
-            const svg = buildAnalysisReportSvg({
-              projectName: project.name,
-              channelName: channel.name,
-              signalName: signal.name,
-              approaches: channel.approaches as Approach[],
-              flow,
-              signal,
-              analysis,
-              theme,
-            })
-            exportSvgFile(`${project.name}-analysis-board.svg`, svg)
-            downloadText(
-              `${project.name}-report.md`,
-              analysisMarkdown(project.name, {
-                avgVc: analysis.avgVc,
-                avgDelay: analysis.avgDelay,
-                avgQueueM: analysis.avgQueueM,
-                losFinal: analysis.losFinal,
-                cycleSec: signal.cycleSec,
-                notes: ['分析拼图 SVG 已同步导出'],
-              }),
-              'text/markdown',
-            )
-          }}
-        >
-          导出分析拼图
-        </button>
-        </div>
+        
       </div>
       <div className="toolbar dense" style={{ marginTop: 4 }}>
         <button type="button" className="primary" onClick={onOpenCompare}>

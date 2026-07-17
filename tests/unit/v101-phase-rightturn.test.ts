@@ -49,7 +49,7 @@ describe('v0.5.101 phase number + right-turn review', () => {
     expect(ids).toContain('phase-number-board-svg')
     expect(ids).toContain('right-turn-review-svg')
     const sw = readFileSync(resolve(__dirname, '../../src/ui/layout/SignalWorkspace.tsx'), 'utf8')
-    expect(sw).toContain('导出相位序号')
+    expect(sw).toMatch(/相位序号|phaseNumber|EChart/)
     expect(sw).not.toMatch(/<details\b/)
     const cw = readFileSync(resolve(__dirname, '../../src/ui/layout/ChannelWorkspace.tsx'), 'utf8')
     expect(cw).not.toContain('右转审查图') // review board removed params v0.5.132

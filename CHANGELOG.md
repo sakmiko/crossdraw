@@ -1,3 +1,27 @@
+## 0.5.136 — Maintainability, performance, declutter (full ship)
+
+### Architecture
+- Extract ExportCenter handlers → `src/io/buildExportHandlers.ts` (App shell ~2200→~1274 LOC).
+- Lazy-load `BandPage` via React.lazy + Suspense.
+- Drop unused `BandWorkspace` import from App (green wave is BandPage-only).
+- Export audit script also scans `buildExportHandlers.ts`.
+
+### Charts / UX
+- Central ECharts interaction chrome: `src/ui/charts/chartDefaults.ts` applied in `EChart` (tooltip, legend, auto dataZoom, toolbox saveAsImage, emphasis).
+- Strip scattered per-board SVG/MD/CSV export buttons from Signal / Band / Compare / Flow params; keep ExportCenter (131 ids, handlers 0 missing) + ECharts PNG where wired + Analysis A4/VISSIM.
+
+### CSS / build
+- CSS parse fix after density cleanup; version-marker strip; `!important` ~251→148.
+- Vite `manualChunks`: echarts / pixi / react / immer; BandPage separate chunk.
+- Main index JS ~1.86MB → ~613KB + vendor chunks.
+
+### Tests
+- Unit 326/326, E2E 8/8; tests updated for handler extract + declutter (no behavior pin on removed UI strings).
+
+### Honesty
+- Domain methods unchanged (Webster/HCM approx, discrete green wave, open VISSIM pack). Schematic engineering tool.
+
+
 ## 0.5.134 — Channel form density
 
 - Horizontal label|control rows; 22px inputs; tighter section gaps.

@@ -11,7 +11,7 @@ describe('v0.5.73 left nav', () => {
   })
 
   it('App wires LeftNav and drops right mode-rail', () => {
-    const app = readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8')
+    const app = (readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8') + readFileSync(resolve(__dirname, '../../src/io/buildExportHandlers.ts'), 'utf8'))
     expect(app).toContain('LeftNav')
     expect(app).toContain('navCollapsed')
     expect(app).toContain('page-fill')

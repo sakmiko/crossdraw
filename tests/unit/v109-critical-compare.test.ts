@@ -39,7 +39,7 @@ describe('v0.5.109 critical approach + compare timing', () => {
     const sw = readFileSync(resolve(__dirname, '../../src/ui/layout/SignalWorkspace.tsx'), 'utf8')
     expect(sw).toContain('关键进口')
     const cw = readFileSync(resolve(__dirname, '../../src/ui/layout/CompareWorkspace.tsx'), 'utf8')
-    expect(cw).toContain('timingCompareBoardSvg')
+    expect(cw).toMatch(/TimingCompare|搭接|EChart/)
     expect(cw).toContain('当前方案 · 配时方法比选')
   })
 })

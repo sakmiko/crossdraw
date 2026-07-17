@@ -76,8 +76,6 @@ import { SignalTimingPanel, ControlMatrixPanel, PhaseFacePanel } from '@/ui/char
 import { vcHeatColor } from '@/ui/charts/svgCharts'
 import { conflictHitsMarkdown, conflictMatrixExportSvg, conflictDiagramExportSvg } from '@/ui/charts/conflictExport'
 import { professionalConflictBoardSvg, conflictBoardCsv } from '@/ui/charts/professionalConflictBoard' 
-import { exportSvgFile } from '@/io/exportCharts'
-import { downloadText } from '@/io/download'
 import { PhaseReleaseEditor } from '@/ui/layout/PhaseReleaseEditor'
 import {
   computeSaturationKpi,
@@ -91,7 +89,6 @@ import {
   pedestrianTimingMarkdown,
   pedestrianTimingCsv,
 } from '@/ui/charts/professionalPedestrianBoard' 
-
 
 export type SignalWorkspaceProps = {
   projectName: string
@@ -230,7 +227,6 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       signal.cycleSec,
     )
   }, [cycleScanLive, signal.cycleSec])
-
 
   const kpi = useMemo(() => {
     if (!channel || !flow) return null
@@ -385,8 +381,6 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       </div>
         </div>
       </div>
-
-
 
       <div className="flat-section ">
         <div className="rg-section-title">
@@ -588,33 +582,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
             >
               应用最小maxVC C
             </button>
-            <button
-              type="button"
-              className="ghost"
-              onClick={() => {
-                const r = scanCycleSensitivity(channel.approaches, flow, signal, {
-                  minCycle: 50,
-                  maxCycle: 150,
-                  stepSec: 5,
-                })
-                exportSvgFile(
-                  `${projectName}-周期敏感性.svg`,
-                  cycleScanBoardSvg(channel.approaches, flow, signal, { width: 900, scan: r }),
-                )
-                downloadText(
-                  `${projectName}-周期敏感性.md`,
-                  cycleScanMarkdown(projectName, r),
-                  'text/markdown',
-                )
-                downloadText(
-                  `${projectName}-周期敏感性.csv`,
-                  cycleScanCsv(r),
-                  'text/csv',
-                )
-              }}
-            >
-              周期扫描导出
-            </button>
+            
           </div>
         </div>
       )}
@@ -629,49 +597,14 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
             <div className={`metric los-${kpi.los}`}><div className="label">LOS</div><div className="value">{kpi.los}</div></div>
             <div className="metric"><div className="label">C / 相位</div><div className="value" style={{ fontSize: 16 }}>{kpi.cycleSec}s · {kpi.phaseCount}</div></div>
           </div>
-          {optPreview && (
-            <p className="hint quiet" style={{ marginTop: 6 }}>
-              一键优化预览（{optPreview.method}）：C→{optPreview.cycleSec}s · 均v/c {optPreview.after.avgVc.toFixed(3)}（Δ{(optPreview.after.avgVc - optPreview.before.avgVc) >= 0 ? '+' : ''}{(optPreview.after.avgVc - optPreview.before.avgVc).toFixed(3)}）· 延误 {optPreview.after.avgDelay.toFixed(1)}s（Δ{(optPreview.after.avgDelay - optPreview.before.avgDelay) >= 0 ? '+' : ''}{(optPreview.after.avgDelay - optPreview.before.avgDelay).toFixed(1)}）
-            </p>
-          )}
+          
           <div className="toolbar dense" style={{ marginTop: 6 }}>
             <button type="button" className="primary" onClick={onRunOptimize}>
               <Icon name="optimize" size={14} /><span>一键优化配时</span>
             </button>
-            <button
-              type="button"
-              className="ghost"
-              onClick={() => {
-                if (!kpi) return
-                downloadText(`${projectName}-饱和度KPI.md`, saturationKpiMarkdown(projectName, kpi), 'text/markdown')
-              }}
-            >
-              KPI MD
-            </button>
-            {optPreview && (
-              <button
-                type="button"
-                className="ghost"
-                onClick={() =>
-                  downloadText(
-                    `${projectName}-优化预览.md`,
-                    optimizeDeltaMarkdown(projectName, optPreview),
-                    'text/markdown',
-                  )
-                }
-              >
-                预览 MD
-              </button>
-            )}
-            {controlBoardSvg && (
-              <button
-                type="button"
-                className="ghost"
-                onClick={() => exportSvgFile(`${projectName}-管控看板.svg`, controlBoardSvg)}
-              >
-                管控看板 SVG
-              </button>
-            )}
+            
+            
+            
           </div>
           {controlBoardSvg && (
             <EChart option={signalControlBoardOption(signal)} style={{ height: 120 }} />
@@ -682,39 +615,11 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       
       <div className="rg-section">
         <div className="rg-section-title">相位序号图</div>
-        <div className="toolbar dense">
-          <button
-            type="button"
-            className="primary"
-            onClick={() =>
-              exportSvgFile(
-                `${projectName}-相位序号图.svg`,
-                professionalPhaseNumberBoardSvg(signal, channel?.approaches ?? [], {
-                  width: 900,
-                  projectName,
-                }),
-              )
-            }
-          >
-            导出相位序号
-          </button>
-          <button
-            type="button"
-            className="ghost"
-            onClick={() =>
-              downloadText(
-                `${projectName}-相位序号.md`,
-                phaseNumberBoardMarkdown(projectName, signal),
-                'text/markdown',
-              )
-            }
-          >
-            序号 MD
-          </button>
-        </div>
+        
         <EChart option={phaseNumberOption(signal)} style={{ height: 200 }} />
       </div>
-<div className="rg-section">
+
+      <div className="rg-section">
           <div className="rg-section-title">自动配时设计参数</div>
           <div className="field-row">
             <label>
@@ -783,30 +688,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         <div className="flat-section">
           <div className="rg-section-title">配时方法比选</div>
           <EChart option={phaseNumberOption(signal)} style={{ height: 200 }} />
-          <div className="toolbar dense">
-            <button
-              type="button"
-              className="ghost"
-              onClick={() => {
-                exportSvgFile(
-                  `${projectName}-配时方法比选.svg`,
-                  timingCompareBoardSvg(timingCompare, { width: 880 }),
-                )
-                downloadText(
-                  `${projectName}-配时方法比选.md`,
-                  timingCompareMarkdown(projectName, timingCompare),
-                  'text/markdown',
-                )
-                downloadText(
-                  `${projectName}-配时方法比选.csv`,
-                  timingCompareCsv(timingCompare),
-                  'text/csv',
-                )
-              }}
-            >
-              比选 SVG/MD/CSV
-            </button>
-          </div>
+          
           <div className="panel-header">
             <h2 style={{ margin: 0, fontSize: 15 }}>配时方法比选表</h2>
             <span className="hint">同渠化·同流量 · 点击应用</span>
@@ -872,46 +754,14 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       <div className="flat-section">
         <div className="rg-section-title">搭接相位审查 <span className="subpanel-tag">{collectOverlapRows(signal).length}</span></div>
         <EChart option={overlapReviewOption(signal)} style={{ height: 200 }} />
-        <div className="toolbar dense" style={{ marginTop: 6 }}>
-          <button
-            type="button"
-            className="ghost"
-            onClick={() => {
-              exportSvgFile(`${projectName}-搭接审查.svg`, overlapReviewSvg(signal, { width: 760 }))
-              downloadText(
-                `${projectName}-搭接审查.md`,
-                overlapReviewMarkdown(projectName, signal),
-                'text/markdown',
-              )
-              downloadText(
-                `${projectName}-搭接审查.csv`,
-                overlapReviewCsv(signal),
-                'text/csv',
-              )
-            }}
-          >
-            搭接 SVG/MD/CSV
-          </button>
-        </div>
+        
       </div>
 
       
       <div className="flat-section">
         <div className="rg-section-title">损失时间 L · Webster</div>
         <EChart option={lostTimeOption(signal)} style={{ height: 200 }} />
-        <div className="toolbar dense" style={{ marginTop: 6 }}>
-          <button
-            type="button"
-            className="ghost"
-            onClick={() => {
-              exportSvgFile(`${projectName}-损失时间L.svg`, lostTimeBoardSvg(signal, { width: 720 }))
-              downloadText(`${projectName}-损失时间L.md`, lostTimeMarkdown(projectName, signal), 'text/markdown')
-              downloadText(`${projectName}-损失时间L.csv`, lostTimeCsv(signal), 'text/csv')
-            }}
-          >
-            L SVG/MD/CSV
-          </button>
-        </div>
+        
       </div>
 
       {channel && (
@@ -927,28 +777,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
                 应用 Walk/FDW
               </button>
             )}
-            <button
-              type="button"
-              className="ghost"
-              onClick={() => {
-                exportSvgFile(
-                  `${projectName}-行人WalkFDW.svg`,
-                  pedTimingOptBoardSvg(signal, channel.approaches, { width: 800 }),
-                )
-                downloadText(
-                  `${projectName}-行人WalkFDW.md`,
-                  pedTimingOptMarkdown(projectName, signal, channel.approaches),
-                  'text/markdown',
-                )
-                downloadText(
-                  `${projectName}-行人WalkFDW.csv`,
-                  pedTimingOptCsv(signal, channel.approaches),
-                  'text/csv',
-                )
-              }}
-            >
-              行人优化导出
-            </button>
+            
           </div>
         </div>
       )}
@@ -1017,70 +846,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       {channel && (
         <div className="rg-section">
           <div className="rg-section-title">相位冲突审查</div>
-          <div className="toolbar dense">
-            <button
-              type="button"
-              className="primary"
-              onClick={() =>
-                exportSvgFile(
-                  `${projectName}-冲突审查看板.svg`,
-                  professionalConflictBoardSvg(channel.approaches, signal, {
-                    phaseId: focusPhaseId ?? signal.phases[0]?.id,
-                    projectName,
-                    width: 1000,
-                  }),
-                )
-              }
-            >
-              冲突审查看板
-            </button>
-            <button
-              type="button"
-              className="ghost"
-              onClick={() => {
-                exportSvgFile(
-                  `${projectName}-conflict.svg`,
-                  conflictMatrixExportSvg(channel.approaches, signal, focusPhaseId ?? signal.phases[0]?.id),
-                )
-                downloadText(
-                  `${projectName}-conflict.md`,
-                  conflictHitsMarkdown(projectName, channel.approaches, signal),
-                  'text/markdown',
-                )
-              }}
-            >
-              导出冲突矩阵
-            </button>
-            <button
-              type="button"
-              className="ghost"
-              onClick={() => {
-                exportSvgFile(
-                  `${projectName}-conflict-points.svg`,
-                  conflictDiagramExportSvg(
-                    channel.approaches,
-                    signal,
-                    focusPhaseId ?? signal.phases[0]?.id,
-                  ),
-                )
-              }}
-            >
-              导出冲突点图
-            </button>
-            <button
-              type="button"
-              className="ghost"
-              onClick={() =>
-                downloadText(
-                  `${projectName}-conflict.csv`,
-                  conflictBoardCsv(channel.approaches, signal),
-                  'text/csv',
-                )
-              }
-            >
-              冲突 CSV
-            </button>
-          </div>
+          
           <EChart option={professionalConflictBoardOption(channel.approaches, signal)} style={{ height: 300 }} />
         </div>
       )}
@@ -1089,48 +855,9 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         <div className="rg-section">
           <div className="rg-section-title">行人过街 · Walk/FDW</div>
           <div className="toolbar dense">
-            <button
-              type="button"
-              className="primary"
-              onClick={() =>
-                exportSvgFile(
-                  `${projectName}-行人审查看板.svg`,
-                  professionalPedestrianBoardSvg(channel.approaches, signal, {
-                    focusPhaseId: focusPhaseId,
-                    projectName,
-                    width: 960,
-                  }),
-                )
-              }
-            >
-              行人审查看板
-            </button>
-            <button
-              type="button"
-              className="ghost"
-              onClick={() =>
-                downloadText(
-                  `${projectName}-行人配时.md`,
-                  pedestrianTimingMarkdown(projectName, channel.approaches, signal),
-                  'text/markdown',
-                )
-              }
-            >
-              行人配时 MD
-            </button>
-            <button
-              type="button"
-              className="ghost"
-              onClick={() =>
-                downloadText(
-                  `${projectName}-行人配时.csv`,
-                  pedestrianTimingCsv(channel.approaches, signal),
-                  'text/csv',
-                )
-              }
-            >
-              行人 CSV
-            </button>
+            
+            
+            
             {onApplyPedTiming && (
               <button type="button" className="ghost" onClick={() => onApplyPedTiming()}>
                 应用 Walk/FDW 推算
@@ -1143,8 +870,6 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       <SignalTimingPanel signal={signal} />
       {channel && <ControlMatrixPanel signal={signal} approaches={channel.approaches} />}
       {channel && <PhaseFacePanel signal={signal} approaches={channel.approaches} />}
-
-
 
       {channel && flow && (
         <div className="flat-block" style={{ marginTop: 4 }}>

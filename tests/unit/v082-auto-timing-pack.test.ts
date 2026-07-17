@@ -62,7 +62,7 @@ describe('v0.5.82 deep auto-timing pack', () => {
     expect(sw).toContain('清空方案')
     expect(sw).toContain('设计目标VC')
     expect(sw).toContain('启动损失')
-    const app = readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8')
+    const app = (readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8') + readFileSync(resolve(__dirname, '../../src/io/buildExportHandlers.ts'), 'utf8'))
     expect(app).toContain('onGenerateScheme')
     expect(app).toContain('runAutoTimingPack')
     expect(app).toContain('replaceSignalScheme')

@@ -40,7 +40,7 @@ describe('v0.5.80 phase release editor', () => {
 
 describe('v0.5.80 layout shell', () => {
   it('App uses SchemeSwitcher and ModeSideRail, signal stack', () => {
-    const app = readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8')
+    const app = (readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8') + readFileSync(resolve(__dirname, '../../src/io/buildExportHandlers.ts'), 'utf8'))
     expect(app).toContain('SchemeSwitcher')
     expect(app).toContain('page-fill')
     expect(app).toContain('page-fill-params')

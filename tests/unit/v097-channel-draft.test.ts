@@ -35,7 +35,7 @@ describe('v0.5.97 channel draft sheet', () => {
     expect(cw).not.toContain('渠化出图稿') // draft removed from params v0.5.132
     expect(cw).not.toContain('buildChannelDraftSheet')
     expect(cw).not.toMatch(/<details\b/)
-    const app = readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8')
+    const app = (readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8') + readFileSync(resolve(__dirname, '../../src/io/buildExportHandlers.ts'), 'utf8'))
     expect(app).toContain('channel-draft-svg')
   })
 })

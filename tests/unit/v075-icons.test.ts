@@ -25,7 +25,7 @@ describe('v0.5.75 vector icons', () => {
     const nav = readFileSync(resolve(__dirname, '../../src/ui/layout/LeftNav.tsx'), 'utf8')
     expect(nav).toContain('<Icon')
     expect(nav).not.toMatch(/icon: '[路量信]/)
-    const app = readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8')
+    const app = (readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8') + readFileSync(resolve(__dirname, '../../src/io/buildExportHandlers.ts'), 'utf8'))
     expect(app).toContain('Icon name="save"')
     expect(app).toContain('Icon name="undo"')
   })

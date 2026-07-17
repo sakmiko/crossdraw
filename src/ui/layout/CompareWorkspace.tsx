@@ -16,8 +16,7 @@ import {
   recommendBestLabel,
 } from '@/ui/charts/schemeScorecard'
 import { schemeDeltas, schemeDeltaMarkdown } from '@/domain/analysis/schemeDiff' 
-import { exportJsonFile, exportSvgFile } from '@/io/exportCharts'
-import { downloadText } from '@/io/download'
+import { exportJsonFile } from '@/io/exportCharts'
 import { downloadEchartsPng } from '@/io/exportEchartsPng'
 import {
   buildTimingCompareRows,
@@ -122,30 +121,7 @@ export function CompareWorkspace({ project, theme, onActivateScheme }: CompareWo
             {recTiming ? <span className="subpanel-tag">推荐 {recTiming.label}</span> : null}
           </div>
           <EChart option={compareSchemesOption(activeTimingRows.map(r => ({ label: r.method, avgVc: r.avgVc, avgDelay: r.avgDelay, los: r.los })))} style={{ height: 200 }} />
-          <div className="toolbar dense" style={{ marginTop: 6 }}>
-            <button
-              type="button"
-              className="ghost"
-              onClick={() => {
-                exportSvgFile(
-                  `${project.name}-配时方法比选.svg`,
-                  timingCompareBoardSvg(activeTimingRows, { width: 880 }),
-                )
-                downloadText(
-                  `${project.name}-配时方法比选.md`,
-                  timingCompareMarkdown(project.name, activeTimingRows),
-                  'text/markdown',
-                )
-                downloadText(
-                  `${project.name}-配时方法比选.csv`,
-                  timingCompareCsv(activeTimingRows),
-                  'text/csv',
-                )
-              }}
-            >
-              配时比选导出
-            </button>
-          </div>
+          
         </div>
       )}
       {deltas.length > 0 && (
@@ -240,14 +216,7 @@ export function CompareWorkspace({ project, theme, onActivateScheme }: CompareWo
         </table>
       </div>
       <div className="toolbar" style={{ marginTop: 8 }}>
-        <button
-          type="button"
-          onClick={() => {
-            downloadText(`${project.name}-compare.csv`, compareSchemesCsv(rows), 'text/csv')
-          }}
-        >
-          导出比选 CSV
-        </button>
+        
         <button
           type="button"
           onClick={() => {
@@ -256,28 +225,7 @@ export function CompareWorkspace({ project, theme, onActivateScheme }: CompareWo
         >
           导出比选 JSON
         </button>
-        <button
-          type="button"
-          className="primary"
-          onClick={() => {
-            exportSvgFile(`${project.name}-compare-timing.svg`, schemeTimingStripSvg(snaps, { max: 4, theme }))
-            exportSvgFile(
-              `${project.name}-compare-delay.svg`,
-              schemeMetricsCompareSvg(snaps, { metric: 'delay' }),
-            )
-            exportSvgFile(`${project.name}-compare-vc.svg`, schemeMetricsCompareSvg(snaps, { metric: 'vc' }))
-            exportSvgFile(`${project.name}-compare-scorecard.svg`, scoreSvg)
-            if (baseKpi) {
-              downloadText(
-                `${project.name}-compare-delta.md`,
-                schemeDeltaMarkdown(project.name, baseKpi, deltas),
-                'text/markdown',
-              )
-            }
-          }}
-        >
-          导出并排图/记分卡
-        </button>
+        
       </div>
       
     </div>

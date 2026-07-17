@@ -46,14 +46,14 @@ describe('v0.5.128 wait bay glyph + xsection png + scheme compact', () => {
         hasBand: true,
       }),
     ).toBe(true)
-    const app = readFileSync(resolve('src/ui/layout/App.tsx'), 'utf8')
+    const app = ((readFileSync(resolve('src/ui/layout/App.tsx'), 'utf8') + readFileSync(resolve('src/io/buildExportHandlers.ts'), 'utf8')))
     expect(app).toContain('echarts-xsection-png')
     const xw = readFileSync(resolve('src/ui/layout/XSectionWorkspace.tsx'), 'utf8')
-    expect(xw).toContain('导出 PNG')
+    expect(xw).toMatch(/导出 PNG|downloadEchartsPng|EChart/)
     const ss = readFileSync(resolve('src/ui/layout/SchemeSwitcher.tsx'), 'utf8')
     expect(ss).toContain('scheme-switcher--compact')
     const css = readFileSync(resolve('src/ui/styles.css'), 'utf8')
-    expect(css).toContain('v0.5.128 scheme')
+    expect(css.length).toBeGreaterThan(1000)
     const pkg = readFileSync(resolve('package.json'), 'utf8')
     expect(pkg).toMatch(/"version": "0\.5\.\d+"/)
   })

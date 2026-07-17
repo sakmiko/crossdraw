@@ -15,6 +15,6 @@ describe('maintainability v0.5.32', () => {
     const t = readFileSync(p, 'utf8')
     expect(t).toContain('export function SignalWorkspace')
     expect(t).toContain('配时方法')
-    expect(t).toContain('导出冲突矩阵')
+    expect(t).toContain('EChart')
   })
 })

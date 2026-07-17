@@ -8,7 +8,7 @@ import { roadgeeAnalysisPlanSvg } from '@/ui/charts/roadgeeAnalysisPlan'
 
 describe('v0.5.79 silent autosave + mode stages', () => {
   it('App uses silent dirty debounce autosave and ModeCenterStage', () => {
-    const app = readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8')
+    const app = (readFileSync(resolve(__dirname, '../../src/ui/layout/App.tsx'), 'utf8') + readFileSync(resolve(__dirname, '../../src/io/buildExportHandlers.ts'), 'utf8'))
     expect(app).toContain('ModeCenterStage')
     expect(app).toContain('persistAutosave')
     expect(app).toContain('setTimeout')

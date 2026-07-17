@@ -136,7 +136,6 @@ export function BandWorkspace({
                   <div className="value">{band.standardSpeedKmh.toFixed(1)}<small> km/h</small></div>
                 </div>
               </div>
-              <p className="hint">指标与下方时距图色带联动；优化相位差后自动刷新。</p>
               <div
                 className="chart-svg-host chart-svg-host--pro"
                 style={{ marginTop: 10 }}
@@ -253,7 +252,6 @@ export function BandWorkspace({
                   ))}
                 </tbody>
               </table>
-              <p className="hint">修改路段长度会移动下游桩号；多路口走廊支持添加/删除节点。</p>
               <div className="toolbar" style={{ marginTop: 8 }}>
                 <button type="button" onClick={() => addBandNode()}>
                   添加路口
@@ -316,8 +314,7 @@ export function BandWorkspace({
                   导出多走廊对比
                 </button>
               </div>
-              <p className="hint">时距图悬停显示 λ、相位差、路段长度、行程时间；数据写入 .rtp。</p>
-                </div>
+              </div>
               </div>
             </div>
   )
