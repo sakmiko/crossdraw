@@ -56,14 +56,14 @@ export function FlowWorkspace({
   const style = diagramStyle
 
   return (
-    <div className="flat-params rg-form flow-form" style={{ marginTop: 8 }}>
+    <div className="flat-params rg-form flow-form" style={{ marginTop: 4 }}>
       <div className="panel-header">
         <h2 className="rg-page-title" style={{ margin: 0 }}>
           流量 · {flow.name}
         </h2>
         <span className={`integrity-badge ${ok ? 'ok' : 'bad'}`}>{ok ? '表/图同源 ✓' : '表/图不一致'}</span>
       </div>
-      <div className="toolbar dense" style={{ marginBottom: 8 }}>
+      <div className="toolbar dense">
         <button
           type="button"
           className="primary"
@@ -107,7 +107,7 @@ export function FlowWorkspace({
           OD CSV
         </button>
       </div>
-      <div className="metric-grid" style={{ marginBottom: 8 }}>
+      <div className="metric-grid">
         <div className="metric">
           <div className="label">Σ LTR 自然</div>
           <div className="value">{Math.round(naturalAlign.totalLTR)}</div>

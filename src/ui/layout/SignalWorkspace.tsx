@@ -387,7 +387,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       </div>
 
       {channel && (
-        <p className="hint quiet" style={{ marginTop: 8 }}>
+        <p className="hint quiet" style={{ marginTop: 4 }}>
           {releaseHint.ok
             ? '放行矩阵与各相位 L/T/R 按钮已逐格对齐'
             : `放行对齐异常：${releaseHint.mismatches.slice(0, 2).join('；')}`}
@@ -466,7 +466,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
             </div>
             <div
               className="chart-svg-host chart-svg-host--pro"
-              style={{ marginTop: 8, overflow: 'auto', maxHeight: 380 }}
+              style={{ marginTop: 4, overflow: 'auto', maxHeight: 380 }}
               dangerouslySetInnerHTML={{
                 __html: professionalDualRingBoardSvg(signal, { width: 900, projectName }),
               }}
@@ -585,7 +585,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         </button>
         </div>
         {channel && flow && (
-          <div className="metric-grid" style={{ marginTop: 8 }}>
+          <div className="metric-grid" style={{ marginTop: 4 }}>
             <div className="metric">
               <div className="label">Y值</div>
               <div className="value">{ySum.toFixed(3)}</div>
@@ -601,7 +601,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
           </div>
         )}
       {channel && flow && !signal.unsignalized && (
-        <div className="flat-section" style={{ marginBottom: 10 }}>
+        <div className="flat-section">
           <div className="rg-section-title">关键进口</div>
           <div
             className="chart-svg-host"
@@ -619,7 +619,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         </div>
       )}
       {channel && !signal.unsignalized && (
-        <div className="flat-section" style={{ marginBottom: 10 }}>
+        <div className="flat-section">
           <div className="rg-section-title">清空间隔审查</div>
           <div
             className="chart-svg-host"
@@ -670,7 +670,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         </div>
       )}
       {channel && flow && !signal.unsignalized && (
-        <div className="flat-section" id="cycle-scan-echarts" style={{ marginBottom: 10 }}>
+        <div className="flat-section" id="cycle-scan-echarts">
           <div className="rg-section-title">
             周期 C 敏感性 · 交互
             {cycleScanChartOpt ? (
@@ -691,7 +691,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
           {cycleScanChartOpt ? (
             <EChart option={cycleScanChartOpt} style={{ height: 280 }} className="echart-host" />
           ) : null}
-          <div className="rg-section-title" style={{ marginTop: 8 }}>静态扫描图</div>
+          <div className="rg-section-title" style={{ marginTop: 4 }}>静态扫描图</div>
           <div
             className="chart-svg-host"
             style={{ overflow: 'auto' }}
@@ -765,7 +765,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         </div>
       )}
       {kpi && !signal.unsignalized && (
-        <div className="rg-section" style={{ marginBottom: 10 }}>
+        <div className="rg-section">
           <div className="rg-section-title">饱和度 / 延误 KPI（实时）</div>
           <div className="metric-grid">
             <div className="metric"><div className="label">Y</div><div className="value">{kpi.Y.toFixed(3)}</div></div>
@@ -822,7 +822,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
           {controlBoardSvg && (
             <div
               className="chart-svg-host chart-svg-host--pro"
-              style={{ marginTop: 8 }}
+              style={{ marginTop: 4 }}
               dangerouslySetInnerHTML={{ __html: controlBoardSvg }}
             />
           )}
@@ -864,7 +864,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         </div>
         <div
           className="chart-svg-host chart-svg-host--pro"
-          style={{ marginTop: 8, overflow: 'auto', maxHeight: 240 }}
+          style={{ marginTop: 4, overflow: 'auto', maxHeight: 240 }}
           dangerouslySetInnerHTML={{
             __html: professionalPhaseNumberBoardSvg(signal, channel?.approaches ?? [], {
               width: 860,
@@ -931,7 +931,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
             锁定设计周期（固定C分绿）
           </label>
           {yReportText && (
-            <pre className="y-report-pre" style={{ marginTop: 8, fontSize: 11, whiteSpace: 'pre-wrap' }}>
+            <pre className="y-report-pre" style={{ marginTop: 4, fontSize: 11, whiteSpace: 'pre-wrap' }}>
               {yReportText}
             </pre>
           )}
@@ -939,7 +939,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       </div>
 
       {timingCompare.length > 0 && (
-        <div className="flat-section" style={{ marginTop: 10 }}>
+        <div className="flat-section">
           <div className="rg-section-title">配时方法比选</div>
           <div
             className="chart-svg-host"
@@ -948,7 +948,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
               __html: timingCompareBoardSvg(timingCompare, { width: 860 }),
             }}
           />
-          <div className="toolbar dense" style={{ marginBottom: 8 }}>
+          <div className="toolbar dense">
             <button
               type="button"
               className="ghost"
@@ -1034,7 +1034,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         </div>
       )}
 
-      <div className="flat-section" style={{ marginTop: 10 }}>
+      <div className="flat-section">
         <div className="rg-section-title">搭接相位审查 <span className="subpanel-tag">{collectOverlapRows(signal).length}</span></div>
         <div
           className="chart-svg-host"
@@ -1065,7 +1065,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       </div>
 
       
-      <div className="flat-section" style={{ marginTop: 10 }}>
+      <div className="flat-section">
         <div className="rg-section-title">损失时间 L · Webster</div>
         <div
           className="chart-svg-host"
@@ -1088,7 +1088,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       </div>
 
       {channel && (
-        <div className="flat-section" style={{ marginTop: 10 }}>
+        <div className="flat-section">
           <div className="rg-section-title">
             行人 Walk/FDW 优化{' '}
             <span className="subpanel-tag">{collectPedOptRows(signal, channel.approaches).length}</span>
@@ -1133,7 +1133,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       )}
 
       {signal.dualRing?.enabled && (
-          <div className="chart-svg-host chart-svg-host--pro" style={{ marginTop: 8 }}
+          <div className="chart-svg-host chart-svg-host--pro" style={{ marginTop: 4 }}
             dangerouslySetInnerHTML={{ __html: dualRingPhaseNumberSvg(signal, 360) }}
           />
         )}
@@ -1163,7 +1163,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       />
 
       {channel && pedVeh.hits.length > 0 && (
-        <div className="flat-block" style={{ marginTop: 10 }}>
+        <div className="flat-block">
           <div className="section-title">人车冲突明细</div>
           <div className="table-wrap" style={{ maxHeight: 160 }}>
             <table className="table">
@@ -1197,7 +1197,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       )}
 
       {channel && (
-        <div className="rg-section" style={{ marginTop: 10 }}>
+        <div className="rg-section">
           <div className="rg-section-title">相位冲突审查</div>
           <div className="toolbar dense">
             <button
@@ -1265,7 +1265,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
           </div>
           <div
             className="chart-svg-host chart-svg-host--pro"
-            style={{ marginTop: 8, overflow: 'auto', maxHeight: 420 }}
+            style={{ marginTop: 4, overflow: 'auto', maxHeight: 420 }}
             dangerouslySetInnerHTML={{
               __html: professionalConflictBoardSvg(channel.approaches, signal, {
                 phaseId: focusPhaseId ?? signal.phases[0]?.id,
@@ -1278,7 +1278,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       )}
 
       {channel && (
-        <div className="rg-section" style={{ marginTop: 10 }}>
+        <div className="rg-section">
           <div className="rg-section-title">行人过街 · Walk/FDW</div>
           <div className="toolbar dense">
             <button
@@ -1331,7 +1331,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
           </div>
           <div
             className="chart-svg-host chart-svg-host--pro"
-            style={{ marginTop: 8, overflow: 'auto', maxHeight: 400 }}
+            style={{ marginTop: 4, overflow: 'auto', maxHeight: 400 }}
             dangerouslySetInnerHTML={{
               __html: professionalPedestrianBoardSvg(channel.approaches, signal, {
                 focusPhaseId: focusPhaseId,
@@ -1347,7 +1347,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       {channel && <PhaseFacePanel signal={signal} approaches={channel.approaches} />}
 
       {timingNotes.length > 0 && (
-        <div className="flat-block" style={{ marginTop: 8 }}>
+        <div className="flat-block" style={{ marginTop: 4 }}>
           <div className="section-title">配时优化说明 · {TIMING_METHOD_LABELS[timingMethod]}</div>
           <ul className="hint" style={{ margin: '6px 0 0', paddingLeft: 18 }}>
             {timingNotes.map((n) => (
@@ -1358,7 +1358,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       )}
 
       {channel && flow && (
-        <div className="flat-block" style={{ marginTop: 8 }}>
+        <div className="flat-block" style={{ marginTop: 4 }}>
           <div className="section-title">关键流量比 y（Webster）</div>
           <table className="table">
             <thead>

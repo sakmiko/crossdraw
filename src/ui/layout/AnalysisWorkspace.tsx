@@ -378,7 +378,7 @@ export function AnalysisWorkspace({
         )}
         {unsig && channel && (
           <>
-            <div className="metric-grid" style={{ marginBottom: 8 }}>
+            <div className="metric-grid">
               <div className="metric">
                 <div className="label">模式</div>
                 <div className="value" style={{ fontSize: 16 }}>{unsig.mode}</div>
@@ -404,10 +404,10 @@ export function AnalysisWorkspace({
             />
             <div
               className="chart-svg-host chart-svg-host--pro"
-              style={{ marginTop: 8 }}
+              style={{ marginTop: 4 }}
               dangerouslySetInnerHTML={{ __html: unsignalizedChartSvg(unsig, { width: 520 }) }}
             />
-            <div className="toolbar dense" style={{ marginTop: 8 }}>
+            <div className="toolbar dense" style={{ marginTop: 4 }}>
               <button
                 type="button"
                 className="ghost"
@@ -597,7 +597,7 @@ export function AnalysisWorkspace({
           />
         )}
         {signal && (
-          <div className="toolbar dense" style={{ marginBottom: 8 }}>
+          <div className="toolbar dense">
             <button
               type="button"
               className="ghost"
@@ -630,7 +630,7 @@ export function AnalysisWorkspace({
             </table>
           )}
           {signal && (
-            <div className="metric-grid" style={{ marginTop: 8 }}>
+            <div className="metric-grid" style={{ marginTop: 4 }}>
               <div className="metric">
                 <div className="label">损失 L</div>
                 <div className="value">{websterLostTime({ mainPhaseCount: signal.phases.filter((p) => !p.isOverlap).length }).L}<small>s</small></div>
@@ -719,7 +719,7 @@ export function AnalysisWorkspace({
         </button>
         </div>
       </div>
-      <div className="toolbar dense" style={{ marginTop: 8 }}>
+      <div className="toolbar dense" style={{ marginTop: 4 }}>
         <button type="button" className="primary" onClick={onOpenCompare}>
           方案比选
         </button>
