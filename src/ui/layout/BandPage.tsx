@@ -259,20 +259,6 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
                 </button>
               </>
             )}
-            <button
-              type="button"
-              className="ghost band-bar-btn"
-              onClick={() => {
-                const md = [
-                  `# ${project.name} · ${corridor.name}`,
-                  `- 方法 ${band.method} · 带宽比 ${(band.bandwidthRatio * 100).toFixed(1)}%`,
-                  `- b↑ ${(band.forwardBandwidthSec ?? band.bandwidthSec).toFixed(1)}s · b↓ ${(band.backwardBandwidthSec ?? 0).toFixed(1)}s`,
-                ].join('\n')
-                downloadText(`${project.name}-band.md`, md, 'text/markdown')
-              }}
-            >
-              导出
-            </button>
           </div>
         </div>
         <div className="band-page-bar-row band-page-bar-row--tabs">
@@ -343,18 +329,7 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
       <div id="band-echarts" className="band-echarts-host" aria-label="绿波交互指标">
         <div className="rg-section-title" style={{ padding: '0 4px 4px' }}>
           绿波交互 · 相位差 / 带宽
-          <button
-            type="button"
-            className="ghost"
-            onClick={() =>
-              void downloadEchartsPng(`${project.name}-绿波带宽.png`, bandBandwidthOption(corridor, band), {
-                width: 1000,
-                height: 400,
-              })
-            }
-          >
-            导出 PNG
-          </button>
+
         </div>
         <EChart option={bandBandwidthOption(corridor, band)} style={{ height: 260 }} className="echart-host" />
       </div>
