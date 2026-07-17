@@ -277,52 +277,41 @@ export function SignalCharts({
 
 export function BandCharts({ corridor }: { corridor: BandCorridor }) {
   const colors = useChartColors()
-  const space = useMemo(
-    () =>
-      themeSvg(
-        stackedBandSvg(
-          corridor.nodes.map((n) => ({
-            name: n.name,
-            distanceM: n.distanceM,
-            greenRatio: n.greenRatio,
-            offsetSec: n.offsetSec,
-          })),
-          corridor.nodes[0]?.cycleSec ?? 90,
-          { height: 150 },
-        ),
-        colors,
-      ),
-    [corridor, colors],
-  )
-  const offsets = useMemo(
-    () =>
-      themeSvg(
-        lineChartSvg(
-          [
-            {
-              name: '相位差',
-              color: '#3b9eff',
-              points: corridor.nodes.map((n) => ({ x: n.distanceM, y: n.offsetSec })),
-            },
-          ],
-          { height: 130, xLabel: '距离 (m)' },
-        ),
-        colors,
-      ),
-    [corridor, colors],
-  )
+  const spaceOpt = useMemo(() => {
+    const fwd = corridor.nodes.map(n => [n.distanceM, n.offsetSec])
+    const bwd = corridor.nodes.map(n => [n.distanceM, n.offsetSec - n.greenRatio * n.cycleSec])
+    return {
+      grid: { left: 50, right: 16, top: 16, bottom: 32 },
+      tooltip: { trigger: 'axis' },
+      xAxis: { type: 'value', name: '距离(m)', axisLabel: { fontSize: 9 } },
+      yAxis: { type: 'value', name: '时间(s)', axisLabel: { fontSize: 9 } },
+      series: [
+        { name: '上行', type: 'line', data: fwd, smooth: true, itemStyle: { color: '#38bdf8' } },
+        { name: '下行', type: 'line', data: bwd, smooth: true, itemStyle: { color: '#a78bfa' } },
+      ],
+    }
+  }, [corridor])
+  const offsetsOpt = useMemo(() => {
+    return {
+      grid: { left: 50, right: 16, top: 16, bottom: 32 },
+    tooltip: { trigger: 'axis' },
+    xAxis: { type: 'value', name: '距离(m)', axisLabel: { fontSize: 9 } },
+    yAxis: { type: 'value', name: '相位差(s)', axisLabel: { fontSize: 9 } },
+    series: [{ name: '相位差', type: 'line', data: corridor.nodes.map(n => [n.distanceM, n.offsetSec]), smooth: true, itemStyle: { color: '#3b9eff' }, areaStyle: { opacity: 0.1 } }],
+    }
+  }, [corridor])
   return (
     <div className="chart-card">
       <div className="chart-title">
         <span>时空图</span>
         <small>绿波带 · 数据联动</small>
       </div>
-      <div dangerouslySetInnerHTML={{ __html: space }} />
+      <EChart option={spaceOpt} style={{ height: 160 }} />
       <div className="chart-title" style={{ marginTop: 12 }}>
         <span>相位差沿途</span>
         <small>s</small>
       </div>
-      <div dangerouslySetInnerHTML={{ __html: offsets }} />
+      <EChart option={offsetsOpt} style={{ height: 130 }} />
     </div>
   )
 }
@@ -340,7 +329,7 @@ export function CrossSectionCharts({
     if (!approach) return null
     return professionalCrossSectionSvg(section, approach, { theme: theme as 'dark' | 'light' })
   }, [section, approach, theme])
-  const share = useMemo(() => themeSvg(crossSectionShareSvg(section), colors), [section, colors])
+  const shareOpt = useMemo(() => crossSectionBarOption(section.components.map(c => ({ label: c.label, widthM: c.widthM, color: c.color }))), [section])
   const svg = useMemo(() => {
     const raw = crossSectionBarSvg(
       section.components.map((c) => ({ label: c.label, widthM: c.widthM, color: c.color })),
@@ -367,7 +356,7 @@ export function CrossSectionCharts({
       <div className="chart-title" style={{ marginTop: 10 }}>
         <span>类型占比</span>
       </div>
-      <div dangerouslySetInnerHTML={{ __html: share }} />
+      <EChart option={shareOpt} style={{ height: 120 }} />
       <div className="table-wrap" style={{ maxHeight: 160, marginTop: 8 }}>
         <table className="table">
           <thead>
