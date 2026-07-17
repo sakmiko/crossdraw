@@ -4163,6 +4163,7 @@ html[data-theme='dark'] .rg-sec-toggle {
   font-size: 12px;
 }
 .rg-info {
+  display: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -4285,6 +4286,7 @@ html[data-theme='dark'] .rg-sec-toggle {
   padding: 0 1px !important;
 }
 .rg-info {
+  display: none;
   width: 12px !important;
   height: 12px !important;
   font-size: 9px !important;
