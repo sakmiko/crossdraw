@@ -176,7 +176,7 @@ label {
 .topbar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   padding: 0 14px;
   border-bottom: 1px solid var(--border);
   background: var(--topbar-bg);
@@ -1646,7 +1646,8 @@ tr.row-hot td { background: rgba(56, 189, 248, 0.08); }
 }
 .menu-group { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .topbar-actions { display: flex; align-items: center; gap: 4px; }
-.topbar-actions .ghost { padding: 5px 9px; font-size: 12px; }
+.topbar-actions .ghost { padding: 4px 6px; font-size: 12px; }
+.topbar-actions .ghost span { display: none; } /* hide text labels, keep icons */
 
 .menu-dropdown { position: relative; }
 .menu-dropdown > summary {
@@ -2441,10 +2442,7 @@ button.primary .cd-icon {
   overflow: hidden;
 }
 .mode-stage-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  display: none !important; /* v0.5.135: remove redundant canvas title */
   padding: 8px 12px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
@@ -2711,8 +2709,7 @@ button.primary .cd-icon {
   background: var(--panel);
 }
 .page-fill-head .breadcrumb {
-  margin: 0 0 4px;
-  font-size: 12px;
+  display: none;
 }
 .approach-strip {
   display: flex;
@@ -3207,13 +3204,7 @@ button,
   overflow: hidden;
 }
 .page-fill-stage .mode-stage-bar {
-  min-height: var(--ctrl-h, 32px);
-  padding: 4px 10px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ctrl-gap, 8px);
+  display: none !important; /* v0.5.135: remove redundant canvas title */
 }
 .approach-strip {
   display: flex;
@@ -4041,6 +4032,29 @@ html[data-theme='light'] .app.shell--channel .page-fill-params {
   padding-bottom: 4px;
   border-bottom: 1px solid var(--border);
 }
+
+/* v0.5.135: compact top info bar */
+.rg-top-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.rg-top-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.rg-top-meta {
+  font-size: 11px;
+  color: var(--muted);
+  padding: 1px 6px;
+  background: var(--panel-2);
+  border-radius: 3px;
+}
+
 .rg-sec {
   margin-top: 8px;
   padding-top: 2px;

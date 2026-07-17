@@ -157,66 +157,12 @@ export function ChannelWorkspace({
 
   return (
     <div className="rg-channel-form">
-      {/* 顶栏 */}
+      {/* 顶部信息栏 - 精简 */}
       <div className="rg-form-top">
-        <Row
-          left={
-            <Field label="方向:">
-              <select
-                className="rg-select"
-                value={ap.id}
-                onChange={(e) => onSelectApproach?.(e.target.value)}
-              >
-                {approaches.map((a, i) => (
-                  <option key={a.id} value={a.id}>
-                    方向{i + 1}
-                    {a.name && a.name !== `方向${i + 1}` ? ` · ${a.name}` : ''}
-                  </option>
-                ))}
-              </select>
-            </Field>
-          }
-          right={
-            <Field label="非机动车道:">
-              <span className="rg-btn-pair">
-                <button
-                  type="button"
-                  className={`rg-btn-accent ${bikeOn ? 'is-on' : ''}`}
-                  onClick={() =>
-                    updateApproach(id, {
-                      bikeEnabled: true,
-                      bikeWidthM: Math.max(ap.bikeWidthM || 2, 2),
-                    })
-                  }
-                >
-                  设置
-                </button>
-                <button
-                  type="button"
-                  className="rg-btn-muted"
-                  onClick={() => updateApproach(id, { bikeEnabled: false })}
-                >
-                  取消
-                </button>
-              </span>
-            </Field>
-          }
-        />
-        <Row
-          left={
-            <Field label="交叉口大小:">
-              <NumInput value={ixSize} min={1} max={20} step={0.5} onChange={setIxSize} />
-            </Field>
-          }
-          right={
-            <Field label="右转曲度:">
-              <span className="rg-inline">
-                <NumInput value={rtCurve} min={0.1} max={2} step={0.1} onChange={setRtCurve} />
-                <ResetLink onClick={() => setRtCurve(0.5)} />
-              </span>
-            </Field>
-          }
-        />
+        <div className="rg-top-info">
+          <span className="rg-top-label">{ap.name}</span>
+          <span className="rg-top-meta">{ap.entryLanes.length}进/{ap.exitLanes.length}出</span>
+        </div>
       </div>
 
       {/* 道路属性 */}
