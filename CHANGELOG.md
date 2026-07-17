@@ -1,3 +1,9 @@
+## 0.5.140 — Export PNG on boards + lazy params workspaces
+
+- Analysis / Compare workspace「导出 PNG」on primary ECharts hosts (ExportCenter still canonical).
+- Lazy-load Analysis/Compare/XSection workspaces under params Suspense (faster first paint).
+- Continues UX 20-round: discoverability + performance, no new domain methods.
+
 ## 0.5.139 — Density, focus, stage chrome
 
 - Signal/params sticky section titles under param-jump; sticky table heads; denser stage download chip.

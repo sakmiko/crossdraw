@@ -36,9 +36,15 @@ import { LeftNav, NAV_ITEMS } from '@/ui/layout/LeftNav'
 import { ModeCenterStage } from '@/ui/layout/ModeCenterStage'
 import { SchemeSwitcher } from '@/ui/layout/SchemeSwitcher'
 import { Icon } from '@/ui/icons/Icons'
-import { AnalysisWorkspace } from '@/ui/layout/AnalysisWorkspace'
-import { CompareWorkspace } from '@/ui/layout/CompareWorkspace'
-import { XSectionWorkspace } from '@/ui/layout/XSectionWorkspace'
+const AnalysisWorkspace = lazy(() =>
+  import('@/ui/layout/AnalysisWorkspace').then((m) => ({ default: m.AnalysisWorkspace })),
+)
+const CompareWorkspace = lazy(() =>
+  import('@/ui/layout/CompareWorkspace').then((m) => ({ default: m.CompareWorkspace })),
+)
+const XSectionWorkspace = lazy(() =>
+  import('@/ui/layout/XSectionWorkspace').then((m) => ({ default: m.XSectionWorkspace })),
+)
 import { PrintPreviewModal } from '@/ui/common/PrintPreview'
 import { type PrintPanel } from '@/io/printSheet'
 import { collectEngineeringPrintPanels, engineeringPrintManifest } from '@/io/engineeringPrintPack'
@@ -560,7 +566,7 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>v0.5.139 · 绿波专页</span>
+          <span>v0.5.140 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
@@ -582,7 +588,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.139</span>
+            <span className="brand-ver">v0.5.140</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -751,6 +757,7 @@ export default function App() {
               />
             </div>
             <div className="page-fill-params">
+              <Suspense fallback={<p style={{ padding: 12, color: 'var(--text)' }}>加载参数…</p>}>
               {mode === 'channel' && (
                 <ChannelWorkspace
                   project={project}
@@ -933,6 +940,7 @@ export default function App() {
               {mode === 'xsection' && !(xsection && selected) && (
                 <p style={{ color: 'var(--text)', padding: 12, fontSize: 13 }}>请选择进口以生成横断面。</p>
               )}
+              </Suspense>
             </div>
           </div>
         </main>
@@ -940,7 +948,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>v0.5.139</span>
+        <span>v0.5.140</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m

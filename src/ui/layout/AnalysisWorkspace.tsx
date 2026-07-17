@@ -271,6 +271,17 @@ export function AnalysisWorkspace({
           交互分析 · v/c · 延误
 
         </div>
+        <div className="rg-section-title" style={{ display: 'flex', alignItems: 'center' }}>
+          v/c · 延误
+          <button
+            type="button"
+            className="ghost"
+            style={{ marginLeft: 'auto' }}
+            onClick={() => void downloadEchartsPng('评价vc延误.png', vcDelayOption(analysis), { width: 900, height: 400 })}
+          >
+            导出 PNG
+          </button>
+        </div>
         <EChart option={vcDelayOption(analysis)} style={{ height: 300 }} />
       </div>
       <CompareCharts

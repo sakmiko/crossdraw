@@ -125,6 +125,17 @@ export function CompareWorkspace({ project, theme, onActivateScheme }: CompareWo
             当前方案 · 配时方法比选
             {recTiming ? <span className="subpanel-tag">推荐 {recTiming.label}</span> : null}
           </div>
+          <div className="rg-section-title" style={{ display: 'flex', alignItems: 'center' }}>
+            配时比选图
+            <button
+              type="button"
+              className="ghost"
+              style={{ marginLeft: 'auto' }}
+              onClick={() => void downloadEchartsPng('比选交互图.png', compareSchemesOption(activeTimingRows.map(r => ({ label: r.method, avgVc: r.avgVc, avgDelay: r.avgDelay, los: r.los }))), { width: 900, height: 400 })}
+            >
+              导出 PNG
+            </button>
+          </div>
           <EChart option={compareSchemesOption(activeTimingRows.map(r => ({ label: r.method, avgVc: r.avgVc, avgDelay: r.avgDelay, los: r.los })))} style={{ height: 200 }} />
           
         </div>

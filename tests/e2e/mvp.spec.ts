@@ -18,7 +18,7 @@ async function openNav(page: Page, label: string) {
   await page.waitForTimeout(350)
 }
 
-test.describe('v0.5.139 density + focus polish', () => {
+test.describe('v0.5.140 lazy params + png polish', () => {
   // docs/screenshots/00-shell.png
   // docs/screenshots/06-compare.png
   test('shell', async ({ page }) => {
