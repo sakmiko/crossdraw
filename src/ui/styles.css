@@ -2558,8 +2558,8 @@ button.primary .cd-icon {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 8px 10px;
-  margin: 0 8px;
+  gap: 4px 6px;
+  margin: 0 4px;
   flex: 1;
   min-width: 0;
   justify-content: center;
@@ -3433,9 +3433,9 @@ button,
 
 /* v0.5.127 topbar density */
 .topbar {
-  min-height: 44px;
-  padding: 4px 10px;
-  gap: 8px;
+  min-height: 40px;
+  padding: 3px 8px;
+  gap: 6px;
 }
 .topbar .brand {
   gap: 6px;
