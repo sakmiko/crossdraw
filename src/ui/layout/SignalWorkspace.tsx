@@ -419,44 +419,6 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
               <button type="button" className="primary" onClick={() => onCloseDualRingCycle?.()}>
                 闭合 C
               </button>
-              <button
-                type="button"
-                className="ghost"
-                onClick={() =>
-                  exportSvgFile(
-                    `${projectName}-双环审查看板.svg`,
-                    professionalDualRingBoardSvg(signal, { width: 960, projectName }),
-                  )
-                }
-              >
-                双环看板 SVG
-              </button>
-              <button
-                type="button"
-                className="ghost"
-                onClick={() =>
-                  downloadText(
-                    `${projectName}-双环.md`,
-                    dualRingBoardMarkdown(projectName, signal),
-                    'text/markdown',
-                  )
-                }
-              >
-                双环 MD
-              </button>
-              <button
-                type="button"
-                className="ghost"
-                onClick={() =>
-                  downloadText(
-                    `${projectName}-双环.csv`,
-                    dualRingBoardCsv(signal),
-                    'text/csv',
-                  )
-                }
-              >
-                双环 CSV
-              </button>
             </div>
             <div
               className="chart-svg-host chart-svg-host--pro"
@@ -536,29 +498,6 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         </button>
         <button
           type="button"
-          className="ghost"
-          title="导出 Y 分解看板"
-          onClick={() => {
-            if (onExportCriticalY) {
-              onExportCriticalY()
-              return
-            }
-            if (!channel || !flow) return
-            exportSvgFile(
-              `${projectName}-Y分解.svg`,
-              criticalYBoardSvg(channel.approaches, flow, signal, { width: 720 }),
-            )
-            downloadText(
-              `${projectName}-Y分解.md`,
-              criticalYMarkdown(projectName, channel.approaches, flow, signal),
-              'text/markdown',
-            )
-          }}
-        >
-          Y分解图
-        </button>
-        <button
-          type="button"
           className="primary"
           title="Webster + 连续相位差 + 多走廊"
           onClick={() => onApplyFullSchemeOptimize?.()}
@@ -570,9 +509,6 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         </button>
         <button type="button" className="ghost" onClick={() => onClearScheme?.()} title="清空绿灯（保留结构）">
           清空方案
-        </button>
-        <button type="button" className="ghost" onClick={() => onExportAutoTimingReport?.()}>
-          导出配时报告
         </button>
         <button type="button" onClick={onRunCompare}>
           多方法比选
@@ -633,29 +569,6 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
             >
               全部套用推荐
             </button>
-            <button
-              type="button"
-              className="ghost"
-              onClick={() => {
-                const rows = collectIntergreenRows(signal, channel.approaches)
-                exportSvgFile(
-                  `${projectName}-清空间隔.svg`,
-                  intergreenBoardSvg(signal, channel.approaches, { width: 860 }),
-                )
-                downloadText(
-                  `${projectName}-清空间隔.md`,
-                  intergreenMarkdown(projectName, rows),
-                  'text/markdown',
-                )
-                downloadText(
-                  `${projectName}-清空间隔.csv`,
-                  intergreenCsv(rows),
-                  'text/csv',
-                )
-              }}
-            >
-              清空导出
-            </button>
           </div>
         </div>
       )}
@@ -663,20 +576,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
         <div className="flat-section" id="cycle-scan-echarts">
           <div className="rg-section-title">
             周期 C 敏感性 · 交互
-            {cycleScanChartOpt ? (
-              <button
-                type="button"
-                className="ghost"
-                onClick={() =>
-                  void downloadEchartsPng(`周期敏感性.png`, cycleScanChartOpt, {
-                    width: 1000,
-                    height: 420,
-                  })
-                }
-              >
-                导出 PNG
-              </button>
-            ) : null}
+
           </div>
           {cycleScanChartOpt ? (
             <EChart option={cycleScanChartOpt} style={{ height: 280 }} className="echart-host" />
