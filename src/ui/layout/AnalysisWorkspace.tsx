@@ -161,94 +161,6 @@ export function AnalysisWorkspace({
         </button>
         <button
           type="button"
-          className="ghost"
-          disabled={!channel}
-          onClick={() => {
-            if (!channel) return
-            exportSvgFile(`${project.name}-渠化净图.svg`, cleanChannelPlanSvg(channel))
-          }}
-        >
-          渠化净图
-        </button>
-        <button
-          type="button"
-          className="ghost"
-          disabled={!channel || !flow}
-          onClick={() => {
-            if (!channel || !flow) return
-            exportSvgFile(`${project.name}-流向净图.svg`, cleanFlowDiagramSvg(channel.approaches, flow))
-          }}
-        >
-          流向净图
-        </button>
-        <button
-          type="button"
-          className="ghost"
-          disabled={!channel}
-          onClick={() => {
-            if (!channel) return
-            exportSvgFile(
-              `${project.name}-评价净图.svg`,
-              cleanAnalysisPlanSvg(channel.approaches, analysis, 'los'),
-            )
-          }}
-        >
-          评价净图
-        </button>
-        <button
-          type="button"
-          className="ghost"
-          disabled={!channel}
-          onClick={() => {
-            if (!channel) return
-            exportSvgFile(
-              `${project.name}-评价平面图合集.svg`,
-              professionalAnalysisPlanPackSvg(channel.approaches, analysis, {
-                cellSize: 440,
-                projectName: project.name,
-                channelName: channel.name,
-                signalName: signal?.name,
-              }),
-            )
-          }}
-        >
-          四指标平面合图
-        </button>
-        <button
-          type="button"
-          className="ghost"
-          disabled={!analysis}
-          onClick={() => {
-            if (!analysis) return
-            exportSvgFile(
-              `${project.name}-通行能力矩阵.svg`,
-              professionalCapacityMatrixSvg(
-                channel?.approaches ?? [],
-                analysis,
-                { width: 920, projectName: project.name, signalName: signal?.name },
-              ),
-            )
-          }}
-        >
-          通行能力矩阵
-        </button>
-        <button
-          type="button"
-          className="ghost"
-          disabled={!analysis}
-          onClick={() => {
-            if (!analysis) return
-            downloadText(
-              `${project.name}-通行能力.csv`,
-              capacityMatrixCsv(analysis),
-              'text/csv',
-            )
-          }}
-        >
-          能力 CSV
-        </button>
-        <button
-          type="button"
           className="primary"
           disabled={!channel || !flow || !signal}
           onClick={() => {
@@ -286,52 +198,6 @@ export function AnalysisWorkspace({
         </button>
         <button
           type="button"
-          className="ghost"
-          onClick={() =>
-            downloadText(
-              `${project.name}-评价合集.md`,
-              analysisPlanPackMarkdown(project.name, analysis, {
-                channel: channel?.name,
-                signal: signal?.name,
-              }),
-              'text/markdown',
-            )
-          }
-        >
-          合集 MD
-        </button>
-        <button
-          type="button"
-          className="ghost"
-          onClick={() =>
-            downloadText(`${project.name}-评价车道.csv`, analysisPlanPackCsv(analysis), 'text/csv')
-          }
-        >
-          车道 CSV
-        </button>
-        <button
-          type="button"
-          className="ghost"
-          onClick={() => {
-            if (!channel || !flow || !signal) return
-            downloadText(
-              `${project.name}-report.html`,
-              buildMultiPageReportHtml({
-                project,
-                channel,
-                flow,
-                signal,
-                analysis,
-                bandCorridor: project.bandCorridor,
-              }),
-              'text/html',
-            )
-          }}
-        >
-          多页工程报告
-        </button>
-        <button
-          type="button"
           className="primary"
           disabled={!channel || !flow || !signal}
           title="开放交换 XML+CSV，非 PTV 专有二进制"
@@ -341,21 +207,6 @@ export function AnalysisWorkspace({
           }}
         >
           一键 VISSIM 包
-        </button>
-        <button
-          type="button"
-          className="ghost"
-          disabled={!channel || !flow || !signal}
-          onClick={() => {
-            if (!channel || !flow || !signal) return
-            downloadText(
-              `${project.name}-vissim-说明.md`,
-              vissimPackSummaryMarkdown(project.name, channel.approaches, flow, signal),
-              'text/markdown',
-            )
-          }}
-        >
-          VISSIM 说明
         </button>
       </div>
 
