@@ -1782,3 +1782,148 @@ export function timeSpaceDiagramOption(
     ],
   }
 }
+
+/** Ring-barrier timeline (replaces ringBarrierSvg). */
+export function ringBarrierOption(
+  phases: { name: string; greenSec: number; yellowSec: number; allRedSec: number; isOverlap?: boolean }[],
+  cycleSec: number,
+): EChartsCoreOption {
+  const main = phases.filter(p => !p.isOverlap)
+  const names = main.map(p => p.name)
+  return {
+    grid: { left: 4, right: 4, top: 8, bottom: 20, containLabel: true },
+    xAxis: { type: 'value', max: cycleSec, axisLabel: { fontSize: 9 }, splitLine: { show: false } },
+    yAxis: { type: 'category', data: [''], axisLabel: { show: false }, splitLine: { show: false } },
+    tooltip: { trigger: 'axis', formatter: (params: unknown) => {
+      if (!Array.isArray(params)) return ''
+      return params.map((p: { seriesName: string; value: number }) => `${p.seriesName}: ${p.value}s`).join('<br/>')
+    }},
+    series: [
+      { name: '绿', type: 'bar', stack: 'ring', data: main.map(p => p.greenSec), itemStyle: { color: '#16a34a' }, barHeight: 28 },
+      { name: '黄', type: 'bar', stack: 'ring', data: main.map(p => p.yellowSec), itemStyle: { color: '#ca8a04' } },
+      { name: '全红', type: 'bar', stack: 'ring', data: main.map(p => p.allRedSec), itemStyle: { color: '#7f1d1d' } },
+    ],
+  }
+}
+
+/** Conflict matrix heatmap (replaces conflictMatrixSvg). */
+export function conflictMatrixOption(
+  labels: string[],
+  levels: ('ok' | 'warn' | 'block')[][],
+): EChartsCoreOption {
+  const data: [number, number, number][] = []
+  for (let i = 0; i < levels.length; i++) {
+    for (let j = 0; j < levels[i].length; j++) {
+      const val = levels[i][j] === 'block' ? 2 : levels[i][j] === 'warn' ? 1 : 0
+      data.push([j, i, val])
+    }
+  }
+  return {
+    tooltip: { formatter: (p: { value: [number, number, number] }) => `${labels[p.value[1]]} × ${labels[p.value[0]]}: ${['通过', '警告', '禁止'][p.value[2]]}` },
+    grid: { left: 60, right: 16, top: 16, bottom: 40 },
+    xAxis: { type: 'category', data: labels, axisLabel: { fontSize: 9, rotate: 30 }, splitArea: { show: true } },
+    yAxis: { type: 'category', data: labels, axisLabel: { fontSize: 9 }, splitArea: { show: true } },
+    visualMap: { min: 0, max: 2, show: false, inRange: { color: ['#1e293b', '#f59e0b', '#ef4444'] } },
+    series: [{ type: 'heatmap', data, emphasis: { itemStyle: { shadowBlur: 4, shadowColor: 'rgba(0,0,0,0.3)' } } }],
+  }
+}
+
+/** Dual-ring diagram (replaces dualRingDiagramSvg). Simplified as stacked bar showing R1/R2. */
+export function dualRingOption(
+  signal: SignalScheme,
+): EChartsCoreOption {
+  const r1 = signal.phases.filter(p => !p.isOverlap).slice(0, Math.ceil(signal.phases.filter(p => !p.isOverlap).length / 2))
+  const r2 = signal.phases.filter(p => !p.isOverlap).slice(Math.ceil(signal.phases.filter(p => !p.isOverlap).length / 2))
+  return {
+    grid: { left: 60, right: 16, top: 24, bottom: 24 },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { data: ['R1 绿', 'R1 黄', 'R2 绿', 'R2 黄'], top: 0, textStyle: { fontSize: 10 } },
+    xAxis: { type: 'value', max: signal.cycleSec, axisLabel: { fontSize: 9 } },
+    yAxis: { type: 'category', data: ['R2', 'R1'], axisLabel: { fontSize: 10 } },
+    series: [
+      { name: 'R1 绿', type: 'bar', stack: 'r1', data: [0, r1.reduce((s, p) => s + p.greenSec, 0)], itemStyle: { color: '#16a34a' } },
+      { name: 'R1 黄', type: 'bar', stack: 'r1', data: [0, r1.reduce((s, p) => s + p.yellowSec, 0)], itemStyle: { color: '#ca8a04' } },
+      { name: 'R2 绿', type: 'bar', stack: 'r2', data: [r2.reduce((s, p) => s + p.greenSec, 0), 0], itemStyle: { color: '#22c55e' } },
+      { name: 'R2 黄', type: 'bar', stack: 'r2', data: [r2.reduce((s, p) => s + p.yellowSec, 0), 0], itemStyle: { color: '#eab308' } },
+    ],
+  }
+}
+
+/** Pedestrian phase strip (replaces pedestrianPhaseStripSvg). */
+export function pedPhaseStripOption(
+  signal: SignalScheme,
+): EChartsCoreOption {
+  const pedPhases = signal.phases.map(p => {
+    const hasPed = p.greenSec > 0
+    return { name: p.name, walk: hasPed ? Math.round(p.greenSec * 0.4) : 0, fdw: hasPed ? Math.round(p.greenSec * 0.15) : 0 }
+  }).filter(p => p.walk > 0)
+  return {
+    grid: { left: 80, right: 16, top: 8, bottom: 24 },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    xAxis: { type: 'value', axisLabel: { fontSize: 9 } },
+    yAxis: { type: 'category', data: pedPhases.map(p => p.name), axisLabel: { fontSize: 10 }, inverse: true },
+    series: [
+      { name: 'Walk', type: 'bar', stack: 'ped', data: pedPhases.map(p => p.walk), itemStyle: { color: '#22c55e' }, barHeight: 16 },
+      { name: 'FDW', type: 'bar', stack: 'ped', data: pedPhases.map(p => p.fdw), itemStyle: { color: '#f59e0b' } },
+    ],
+  }
+}
+
+/** Cross-section bar (replaces crossSectionBarSvg). */
+export function crossSectionBarOption(
+  components: { label: string; widthM: number; color: string }[],
+): EChartsCoreOption {
+  const total = components.reduce((s, c) => s + c.widthM, 0)
+  return {
+    grid: { left: 16, right: 16, top: 24, bottom: 32 },
+    tooltip: { trigger: 'item', formatter: (p: { name: string; value: number }) => `${p.name}: ${p.value.toFixed(1)}m (${((p.value / total) * 100).toFixed(1)}%)` },
+    xAxis: { type: 'value', max: total, axisLabel: { fontSize: 9, formatter: (v: number) => `${v}m` } },
+    yAxis: { type: 'category', data: [''], show: false },
+    series: components.map(c => ({
+      name: c.label, type: 'bar', stack: 'xsec', data: [c.widthM],
+      itemStyle: { color: c.color }, barHeight: 36,
+      label: { show: c.widthM / total > 0.08, position: 'inside', fontSize: 10, formatter: c.label },
+    })),
+  }
+}
+
+/** Compare schemes bar (replaces compareSchemesBarSvg). */
+export function compareSchemesBarOption(
+  rows: { label: string; avgVc: number; avgDelay: number; los: string }[],
+): EChartsCoreOption {
+  return {
+    grid: { left: 60, right: 40, top: 24, bottom: 24 },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { data: ['v/c', '延误(s)'], top: 0, textStyle: { fontSize: 10 } },
+    xAxis: { type: 'category', data: rows.map(r => r.label), axisLabel: { fontSize: 10 } },
+    yAxis: [
+      { type: 'value', name: 'v/c', axisLabel: { fontSize: 9 } },
+      { type: 'value', name: '延误(s)', axisLabel: { fontSize: 9 } },
+    ],
+    series: [
+      { name: 'v/c', type: 'bar', data: rows.map(r => r.avgVc), itemStyle: { color: '#38bdf8' }, barMaxWidth: 24 },
+      { name: '延误(s)', type: 'line', yAxisIndex: 1, data: rows.map(r => r.avgDelay), itemStyle: { color: '#f59e0b' }, lineStyle: { width: 2 } },
+    ],
+  }
+}
+
+/** Timing compare bar (replaces timingCompareBarSvg). */
+export function timingCompareBarOption(
+  methods: { method: string; cycleSec: number; avgVc: number; avgDelay: number }[],
+): EChartsCoreOption {
+  return {
+    grid: { left: 60, right: 40, top: 24, bottom: 24 },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { data: ['周期(s)', 'v/c', '延误(s)'], top: 0, textStyle: { fontSize: 10 } },
+    xAxis: { type: 'category', data: methods.map(m => m.method), axisLabel: { fontSize: 10 } },
+    yAxis: [
+      { type: 'value', name: '周期/v/c', axisLabel: { fontSize: 9 } },
+      { type: 'value', name: '延误(s)', axisLabel: { fontSize: 9 } },
+    ],
+    series: [
+      { name: '周期(s)', type: 'bar', data: methods.map(m => m.cycleSec), itemStyle: { color: '#6366f1' }, barMaxWidth: 20 },
+      { name: 'v/c', type: 'bar', data: methods.map(m => m.avgVc), itemStyle: { color: '#38bdf8' }, barMaxWidth: 20 },
+      { name: '延误(s)', type: 'line', yAxisIndex: 1, data: methods.map(m => m.avgDelay), itemStyle: { color: '#f59e0b' } },
+    ],
+  }
+}

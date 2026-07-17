@@ -147,25 +147,6 @@ export function FlowCharts({
         </small>
       </div>
       <EChart option={liveOpt} style={{ height: 260 }} className="echart-host" />
-      <div className="chart-title" style={{ marginTop: 10 }}>
-        <span>静态条形</span>
-        <small>导出同源</small>
-      </div>
-      <div dangerouslySetInnerHTML={{ __html: svg }} />
-      <div className="legend">
-        <span className="legend-item">
-          <span className="legend-swatch" style={{ background: '#0891b2' }} />
-          左转
-        </span>
-        <span className="legend-item">
-          <span className="legend-swatch" style={{ background: '#2563eb' }} />
-          直行
-        </span>
-        <span className="legend-item">
-          <span className="legend-swatch" style={{ background: '#7c3aed' }} />
-          右转
-        </span>
-      </div>
     </div>
   )
 }
