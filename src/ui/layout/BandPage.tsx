@@ -153,6 +153,11 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
 
   return (
     <div className="band-page" data-theme={theme}>
+      <nav className="param-jump" aria-label="参数分区">
+        <a href="#band-nodes">节点</a>
+        <a href="#band-ts">时距</a>
+        <a href="#band-opt">优化</a>
+      </nav>
       <header className="band-page-bar">
         <div className="band-page-bar-row band-page-bar-row--main">
           <div className="band-page-bar-left">
@@ -325,7 +330,7 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
         )}
       </div>
       <div id="band-echarts" className="band-echarts-host" aria-label="绿波交互指标">
-        <div className="rg-section-title" style={{ padding: '0 4px 4px' }}>
+        <div className="rg-section-title" id="band-nodes" style={{ padding: '0 4px 4px' }}>
           绿波交互 · 相位差 / 带宽
 
         </div>
@@ -560,7 +565,7 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
                 dangerouslySetInnerHTML={{ __html: hiResTimeSpace }}
               />
               <div className="flat-section ">
-                <div className="rg-section-title">交互时距图（悬停）</div>
+                <div className="rg-section-title" id="band-ts">交互时距图（悬停）</div>
                 <InteractiveTimeSpace corridor={corridor} result={band} />
               </div>
               <TimeSpacePanel corridor={corridor} />
@@ -582,7 +587,7 @@ const maxbandRep = useMemo(() => buildMaxbandReport(corridor), [corridor, band])
                 dangerouslySetInnerHTML={{ __html: networkSvg }}
               />
               <div className="flat-section " style={{ marginTop: 8 }}>
-                <div className="rg-section-title">链式简图</div>
+                <div className="rg-section-title" id="band-opt">链式简图</div>
                 <div
                   className="chart-svg-host chart-svg-host--pro"
                   dangerouslySetInnerHTML={{ __html: mapSvg }}

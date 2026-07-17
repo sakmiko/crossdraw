@@ -261,6 +261,15 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
 
   return (
     <div className="flat-params" style={{ marginTop: 12 }}>
+      <nav className="param-jump" aria-label="参数分区">
+        <a href="#sig-phases">相位</a>
+        <a href="#sig-timing">配时</a>
+        <a href="#sig-scan">扫描</a>
+        <a href="#sig-kpi">KPI</a>
+        <a href="#sig-design">设计</a>
+        <a href="#sig-compare">比选</a>
+        <a href="#sig-ped">行人</a>
+      </nav>
       <div className="panel-header">
         <h2 style={{ margin: 0 }}>信号 · {signal.name}</h2>
         <label className="check-inline" style={{ marginLeft: 'auto', fontSize: 12 }}>
@@ -286,7 +295,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       
 
       <div className="flat-section ">
-        <div className="rg-section-title">相位表 <span className="subpanel-tag">{signal.phases.length} 相 · C={signal.cycleSec}s</span></div>
+        <div className="rg-section-title" id="sig-phases">相位表 <span className="subpanel-tag">{signal.phases.length} 相 · C={signal.cycleSec}s</span></div>
         <div className="flat-body">
       <label className="field-inline">
         周期 C (s)
@@ -588,7 +597,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
       )}
       {kpi && !signal.unsignalized && (
         <div className="rg-section">
-          <div className="rg-section-title">饱和度 / 延误 KPI（实时）</div>
+          <div className="rg-section-title" id="sig-kpi">饱和度 / 延误 KPI</div>
           <div className="metric-grid">
             <div className="metric"><div className="label">Y</div><div className="value">{kpi.Y.toFixed(3)}</div></div>
             <div className="metric"><div className="label">均 v/c</div><div className="value" style={{ color: kpi.avgVc > 0.9 ? 'var(--block)' : undefined }}>{kpi.avgVc.toFixed(3)}</div></div>
@@ -614,13 +623,13 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
 
       
       <div className="rg-section">
-        <div className="rg-section-title">相位序号图</div>
+        <div className="rg-section-title" id="sig-timing">相位序号图</div>
         
         <EChart option={phaseNumberOption(signal)} style={{ height: 200 }} />
       </div>
 
       <div className="rg-section">
-          <div className="rg-section-title">自动配时设计参数</div>
+          <div className="rg-section-title" id="sig-design">自动配时设计</div>
           <div className="field-row">
             <label>
               设计目标VC
@@ -686,7 +695,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
 
       {timingCompare.length > 0 && (
         <div className="flat-section">
-          <div className="rg-section-title">配时方法比选</div>
+          <div className="rg-section-title" id="sig-compare">配时方法比选</div>
           <EChart option={phaseNumberOption(signal)} style={{ height: 200 }} />
           
           <div className="panel-header">
@@ -853,7 +862,7 @@ export function SignalWorkspace(props: SignalWorkspaceProps) {
 
       {channel && (
         <div className="rg-section">
-          <div className="rg-section-title">行人过街 · Walk/FDW</div>
+          <div className="rg-section-title" id="sig-ped">行人过街 · Walk/FDW</div>
           <div className="toolbar dense">
             
             

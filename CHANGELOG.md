@@ -1,3 +1,12 @@
+## 0.5.138 — Command palette, keyboard map, param-jump navigation
+
+- Command palette redesigned: DESIGN tokens, groups, ↑↓/Enter, footer shortcut legend; Ctrl+K / Ctrl+E.
+- LeftNav shows keys 1–7; number keys switch modes (skip when typing in inputs); 7 = 绿波.
+- Sticky **param-jump** chips on Signal/Flow/Analysis/Compare/XSection/Band/Channel for long params.
+- Mode head: short mode title + scheme name (breadcrumb hidden).
+- Topbar menus: token styling + outside-click/Esc close; stage empty hints force-visible.
+- Light-theme readability remains (0.5.137 tokens).
+
 ## 0.5.137 — Light theme readability + shell slim + empty states
 
 - **Critical**: light theme text was invisible (`--text: var(--bg)` from CSS bulk replace). Restored DESIGN tokens `--text/#0f172a`, `--chart-text`, `--panel-hover: #e2e8f0`; dark `--text-secondary: #cbd5e1`.

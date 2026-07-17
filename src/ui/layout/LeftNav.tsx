@@ -50,7 +50,7 @@ export function LeftNav({ mode, collapsed, onToggleCollapsed, onSelect }: LeftNa
         </button>
       </div>
       <div className="left-nav-list" role="tablist" aria-orientation="vertical">
-        {NAV_ITEMS.map((item) => {
+        {NAV_ITEMS.map((item, idx) => {
           const active = mode === item.id
           const iconName = MODE_ICONS[item.id] ?? item.icon
           return (
@@ -68,6 +68,11 @@ export function LeftNav({ mode, collapsed, onToggleCollapsed, onSelect }: LeftNa
                 <Icon name={iconName} size={18} />
               </span>
               {!collapsed && <span className="left-nav-label">{item.label}</span>}
+              {!collapsed && (
+                <span className="left-nav-key" aria-hidden>
+                  {idx + 1}
+                </span>
+              )}
             </button>
           )
         })}

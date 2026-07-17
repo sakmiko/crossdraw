@@ -136,6 +136,12 @@ export function ChannelWorkspace({
   if (!ap || !channel) {
     return (
       <div className="rg-channel-form">
+      <nav className="param-jump" aria-label="参数分区">
+        <a href="#ch-road">道路</a>
+        <a href="#ch-entry">进口</a>
+        <a href="#ch-exit">出口</a>
+        <a href="#ch-lanes">车道</a>
+      </nav>
       </div>
     )
   }
@@ -164,7 +170,7 @@ export function ChannelWorkspace({
 
       {/* 道路属性 */}
       <section className="rg-sec">
-        <h3 className="rg-sec-title">道路属性</h3>
+        <h3 className="rg-sec-title" id="ch-road">道路属性</h3>
         <Row
           left={
             <Field label="路名:">
@@ -383,7 +389,7 @@ export function ChannelWorkspace({
 
       {/* 进口属性 */}
       <section className="rg-sec">
-        <h3 className="rg-sec-title">进口属性</h3>
+        <h3 className="rg-sec-title" id="ch-entry">进口属性</h3>
         <Row
           left={
             <Field label="进口车道:" unit="个">
@@ -489,7 +495,7 @@ export function ChannelWorkspace({
 
       {/* 出口属性 */}
       <section className="rg-sec">
-        <h3 className="rg-sec-title">出口属性</h3>
+        <h3 className="rg-sec-title" id="ch-exit">出口属性</h3>
         <Row
           left={
             <Field label="出口车道:" unit="个">
@@ -920,7 +926,7 @@ export function ChannelWorkspace({
 
       {/* 分车道明细 — 原版侧栏后的工程明细，紧凑保留 */}
       <section className="rg-sec">
-        <h3 className="rg-sec-title">分车道明细</h3>
+        <h3 className="rg-sec-title" id="ch-lanes">分车道明细</h3>
         <table className="table table-dense rg-lane-table">
           <thead>
             <tr>

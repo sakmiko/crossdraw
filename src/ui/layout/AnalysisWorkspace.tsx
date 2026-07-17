@@ -108,6 +108,11 @@ export function AnalysisWorkspace({
 
   return (
     <div className="flat-params" style={{ marginTop: 12 }}>
+      <nav className="param-jump" aria-label="参数分区">
+        <a href="#an-eval">评价</a>
+        <a href="#an-a4">A4</a>
+        <a href="#an-queue">排队</a>
+      </nav>
       <div className="panel-header">
         <h2 style={{ margin: 0 }}>评价分析</h2>
         <span className={`integrity-badge ${analysisIntegrity.ok ? 'ok' : 'bad'}`}>
@@ -261,7 +266,7 @@ export function AnalysisWorkspace({
       </div>
       <AnalysisLaneTable analysis={analysis} projectName={project.name} />
       <div className="flat-section" id="analysis-echarts">
-        <div className="rg-section-title">
+        <div className="rg-section-title" id="an-eval">
           交互分析 · v/c · 延误
 
         </div>
@@ -288,7 +293,7 @@ export function AnalysisWorkspace({
       )}
       {channel && signal && !signal.unsignalized && (
         <div className="flat-section">
-          <div className="rg-section-title">排队储存审查</div>
+          <div className="rg-section-title" id="an-queue">排队储存审查</div>
           <EChart option={queueStorageOption(collectQueueStorageRows(channel.approaches, signal, analysis))} style={{ height: 200 }} />
           
         </div>

@@ -83,6 +83,11 @@ export function CompareWorkspace({ project, theme, onActivateScheme }: CompareWo
 
   return (
     <div className="flat-params" style={{ marginTop: 12 }}>
+      <nav className="param-jump" aria-label="参数分区">
+        <a href="#cmp-table">比选表</a>
+        <a href="#cmp-kpi">指标</a>
+        <a href="#cmp-timing">配时</a>
+      </nav>
       <div className="panel-header">
         <h2 style={{ margin: 0 }}>方案比选</h2>
         <span className="hint">渠化 × 流量 × 信号 组合评价</span>
@@ -116,7 +121,7 @@ export function CompareWorkspace({ project, theme, onActivateScheme }: CompareWo
       />
       {activeTimingRows.length > 0 && (
         <div className="flat-section" style={{ marginBottom: 10 }}>
-          <div className="rg-section-title">
+          <div className="rg-section-title" id="cmp-table">
             当前方案 · 配时方法比选
             {recTiming ? <span className="subpanel-tag">推荐 {recTiming.label}</span> : null}
           </div>
@@ -149,7 +154,7 @@ export function CompareWorkspace({ project, theme, onActivateScheme }: CompareWo
         </div>
       )}
       <div className="rg-section" id="compare-echarts">
-        <div className="rg-section-title">
+        <div className="rg-section-title" id="cmp-kpi">
           交互比选 · 延误 / v/c
         </div>
         <EChart

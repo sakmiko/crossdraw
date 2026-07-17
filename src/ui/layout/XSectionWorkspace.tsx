@@ -109,6 +109,10 @@ export function XSectionWorkspace({
 
   return (
     <div className="flat-params xsection-workspace" style={{ marginTop: 12 }}>
+      <nav className="param-jump" aria-label="参数分区">
+        <a href="#xs-main">断面</a>
+        <a href="#xs-comp">构件</a>
+      </nav>
       <div className="panel-header">
         <h2 style={{ margin: 0 }}>横断面 · {selected.name}</h2>
         <span className={`integrity-badge ${align.ok && !stale ? 'ok' : 'bad'}`}>
@@ -270,7 +274,7 @@ export function XSectionWorkspace({
       </div>
 
       <div className="rg-section" id="xsection-echarts">
-        <div className="rg-section-title">
+        <div className="rg-section-title" id="xs-main">
           交互断面 · 构件宽度 / 类型占比
           <button
             type="button"

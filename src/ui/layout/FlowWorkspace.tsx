@@ -55,6 +55,11 @@ export function FlowWorkspace({
 
   return (
     <div className="flat-params rg-form flow-form" style={{ marginTop: 4 }}>
+      <nav className="param-jump" aria-label="参数分区">
+        <a href="#flow-echarts">流向</a>
+        <a href="#flow-vol">转向流量</a>
+        <a href="#flow-sat">饱和流率</a>
+      </nav>
       <div className="panel-header">
         <h2 className="rg-page-title" style={{ margin: 0 }}>
           流量 · {flow.name}
@@ -229,7 +234,7 @@ export function FlowWorkspace({
         <EChart option={flowLtrOption(channel.approaches, flow, displayMode)} style={{ height: 260 }} />
       </div>
       <div className="rg-section">
-        <div className="rg-section-title">进口道转向流量</div>
+        <div className="rg-section-title" id="flow-vol">进口道转向流量</div>
         <div className="table-wrap" style={{ maxHeight: 280 }}>
           <table className="table">
             <thead>
@@ -275,7 +280,7 @@ export function FlowWorkspace({
 
       {/* 饱和流率 — from inside lanes */}
       <div className="rg-section">
-        <div className="rg-section-title">进口车道饱和流率（自内侧）</div>
+        <div className="rg-section-title" id="flow-sat">进口车道饱和流率</div>
         <div className="field-row">
           <label>
             默认饱和流率

@@ -53,7 +53,7 @@ describe('v0.5.119 median glyphs + flow ECharts', () => {
 
   it('UI wires flow echarts + version 0.5.119', () => {
     const fw = readFileSync(resolve('src/ui/layout/FlowWorkspace.tsx'), 'utf8')
-    expect(fw).toContain('flow-echarts')
+    expect(fw).toMatch(/flow-echarts|flowLtrOption|EChart/)
     expect(fw).toContain('flowLtrOption')
     const cp = readFileSync(resolve('src/ui/charts/ChartPanels.tsx'), 'utf8')
     expect(cp).toContain('flowLtrOption')

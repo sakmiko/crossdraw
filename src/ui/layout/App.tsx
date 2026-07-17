@@ -230,7 +230,22 @@ export default function App() {
         e.preventDefault()
         redo()
       }
-      if (!e.ctrlKey && ['1', '2', '3', '4', '5', '6'].includes(e.key)) {
+      if (e.ctrlKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault()
+        setExportOpen(true)
+      }
+      if (e.ctrlKey && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setPaletteOpen(true)
+      }
+      const t = e.target as HTMLElement | null
+      const typing =
+        t &&
+        (t.tagName === 'INPUT' ||
+          t.tagName === 'TEXTAREA' ||
+          t.tagName === 'SELECT' ||
+          t.isContentEditable)
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && !typing && ['1', '2', '3', '4', '5', '6', '7'].includes(e.key)) {
         const map: EditorMode[] = ['channel', 'flow', 'signal', 'xsection', 'analysis', 'compare', 'band']
         setMode(map[Number(e.key) - 1])
       }
@@ -238,6 +253,23 @@ export default function App() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [setMode])
+
+  // Close topbar details menus on outside click / Escape
+  useEffect(() => {
+    const close = (e: MouseEvent | KeyboardEvent) => {
+      if (e instanceof KeyboardEvent && e.key !== 'Escape') return
+      document.querySelectorAll('details.menu-dropdown[open]').forEach((d) => {
+        if (e instanceof MouseEvent && d.contains(e.target as Node)) return
+        ;(d as HTMLDetailsElement).open = false
+      })
+    }
+    document.addEventListener('click', close)
+    document.addEventListener('keydown', close)
+    return () => {
+      document.removeEventListener('click', close)
+      document.removeEventListener('keydown', close)
+    }
+  }, [])
 
   const mesh = useMemo(() => {
     if (!channel)
@@ -528,12 +560,12 @@ export default function App() {
         </div>
         </div>
         <footer className="status">
-          <span>Crossdraw v0.5.137 · 绿波专页</span>
+          <span>v0.5.138 · 绿波专页</span>
           <span>{project.bandCorridor.name}</span>
           <span>带宽比 {(band.bandwidthRatio * 100).toFixed(1)}%</span>
           <span style={{ marginLeft: 'auto' }}>← 交叉口设计 返回单点编辑</span>
         </footer>
-        <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+        <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} onOpenExport={() => setExportOpen(true)} />
       </div>
     )
   }
@@ -550,7 +582,7 @@ export default function App() {
           <div className="brand-badge" aria-hidden />
           <div className="brand-text">
             <span className="brand-name">Crossdraw</span>
-            <span className="brand-ver">v0.5.137</span>
+            <span className="brand-ver">v0.5.138</span>
           </div>
         </div>
         <div className="topbar-divider" />
@@ -590,7 +622,7 @@ export default function App() {
               </div>
             </details>
             <details className="menu-dropdown">
-              <summary><Icon name="export" size={15} /><span>导出</span></summary>
+              <summary><Icon name="export" size={15} /><span>导出</span><span className="kbd-hint" style={{marginLeft:4,fontSize:10,color:'var(--muted)'}}>E</span></summary>
               <div className="menu-panel" role="menu">
                 <button type="button" role="menuitem" className="primary" onClick={() => setExportOpen(true)}><Icon name="export" size={15} /><span>导出中心…</span></button>
                 <button type="button" role="menuitem" onClick={() => openPrintPreview()}><Icon name="print" size={15} /><span>打印拼版</span></button>
@@ -614,9 +646,9 @@ export default function App() {
             onAddSignal={() => addSignalScheme()}
           />
           <div className="topbar-actions">
-            <button type="button" className="ghost" onClick={() => undo()} title="撤销"><Icon name="undo" size={16} /><span>撤销</span></button>
-            <button type="button" className="ghost" onClick={() => redo()} title="重做"><Icon name="redo" size={16} /><span>重做</span></button>
-            <button type="button" className="ghost" onClick={() => setPaletteOpen(true)} title="命令面板"><Icon name="command" size={16} /><span>⌘K</span></button>
+            <button type="button" className="ghost" onClick={() => undo()} title="撤销 Ctrl+Z"><Icon name="undo" size={16} /><span>撤销</span></button>
+            <button type="button" className="ghost" onClick={() => redo()} title="重做 Ctrl+Y"><Icon name="redo" size={16} /><span>重做</span></button>
+            <button type="button" className="ghost" onClick={() => setPaletteOpen(true)} title="命令面板 Ctrl+K"><Icon name="command" size={16} /><span>⌘K</span></button>
           </div>
         </div>
         <div className="topbar-end">
@@ -636,11 +668,9 @@ export default function App() {
         />
         <main className="center center--mode page-fill">
           <div className="page-fill-head">
-            <div className="breadcrumb">
-              <b>项目</b><span className="sep">/</span>
-              <span>{project.name}</span><span className="sep">/</span>
-              <span>{channel?.name ?? '—'}</span><span className="sep">/</span>
-              <span>{MODES.find((m) => m.id === mode)?.label}</span>
+            <div className="mode-title">
+              {MODES.find((m) => m.id === mode)?.label ?? mode}
+              <small>{channel?.name ?? project.name}</small>
             </div>
             {(mode === 'channel' || mode === 'xsection') && channel && (
               <div className="approach-strip" role="tablist" aria-label="进口道">
@@ -910,7 +940,7 @@ export default function App() {
       </div>
 
       <footer className="status">
-        <span>Crossdraw v0.5.137</span>
+        <span>v0.5.138</span>
         <span>Mesh {mesh.polygons.length}p/{mesh.polylines.length}l</span>
         <span>
           bbox {(mesh.bbox.maxX - mesh.bbox.minX) | 0}×{(mesh.bbox.maxY - mesh.bbox.minY) | 0} m
@@ -926,7 +956,7 @@ export default function App() {
         )}
         <span style={{ marginLeft: 'auto' }}>sakmiko/crossdraw · GPLv3</span>
       </footer>
-      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} onOpenExport={() => setExportOpen(true)} />
       <PrintPreviewModal
         open={printOpen}
         onClose={() => setPrintOpen(false)}
