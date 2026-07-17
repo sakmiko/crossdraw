@@ -383,11 +383,12 @@ label {
 }
 
 .card {
-  background: var(--panel-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 11px;
-  margin-bottom: 10px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 4px 0;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
 }
 .card h2, .card h3 {
   margin: 0 0 8px;
@@ -1060,7 +1061,7 @@ tr.row-locked td {
   background: color-mix(in srgb, #16a34a 12%, transparent);
 }
 .integrity-badge.bad {
-  color: #dc2626;
+  color: var(--muted);
   background: color-mix(in srgb, #dc2626 12%, transparent);
 }
 
@@ -2375,12 +2376,12 @@ button.primary .cd-icon {
   font-weight: 700;
 }
 .rg-section {
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px solid var(--border);
+  margin-top: 8px;
+  padding-top: 4px;
+  border-top: none;
 }
 .rg-section-title {
-  color: #dc2626;
+  color: var(--muted);
   font-size: 13px;
   font-weight: 700;
   margin: 0 0 8px;
@@ -2512,7 +2513,7 @@ button.primary .cd-icon {
 .release-editor-head {
   font-size: 11px;
   font-weight: 700;
-  color: #dc2626;
+  color: var(--muted);
   margin-bottom: 6px;
 }
 .release-row {
@@ -2876,9 +2877,9 @@ button.primary .cd-icon {
   border-radius: 0 !important;
 }
 .page-fill-params .rg-section {
-  margin-top: 14px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
+  margin-top: 8px;
+  padding-top: 4px;
+  border-top: none;
 }
 .page-fill-params .rg-section:first-child,
 .page-fill-params .panel-header + .rg-section {
@@ -2887,9 +2888,9 @@ button.primary .cd-icon {
   border-top: none;
 }
 .page-fill-params .rg-section-title {
-  margin-bottom: 8px;
-  font-size: 12px;
-  font-weight: 700;
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--text-secondary);
   text-transform: none;
@@ -3762,9 +3763,9 @@ html[data-theme='light'] .page-fill-stage,
 }
 .page-fill-params .rg-section,
 .page-fill-params .flat-section {
-  margin-top: 8px !important;
-  padding-top: 6px !important;
-  border-top: 1px solid var(--border);
+  margin-top: 6px !important;
+  padding-top: 2px !important;
+  border-top: none !important;
 }
 .page-fill-params .rg-section-title,
 .page-fill-params .flat-section-title {
@@ -4060,11 +4061,11 @@ html[data-theme='light'] .app.shell--channel .page-fill-params {
   padding-top: 2px;
 }
 .rg-sec-title {
-  margin: 0 0 6px;
+  margin: 0 0 4px;
   padding: 0;
-  font-size: 13px;
-  font-weight: 700;
-  color: #dc2626;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
   letter-spacing: 0.02em;
 }
 .rg-sec-toggle {
@@ -4089,7 +4090,7 @@ html[data-theme='light'] .app.shell--channel .page-fill-params {
 }
 .rg-caret {
   font-size: 10px;
-  color: #dc2626;
+  color: var(--muted);
 }
 .rg-form-row {
   display: grid;
@@ -4159,7 +4160,7 @@ html[data-theme='dark'] .rg-select:disabled {
 }
 html[data-theme='dark'] .rg-sec-title,
 html[data-theme='dark'] .rg-sec-toggle {
-  color: #f87171 !important;
+  color: var(--muted) !important;
 }
 .rg-select {
   appearance: none;
