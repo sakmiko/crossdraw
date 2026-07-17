@@ -47,7 +47,7 @@ html[data-theme='dark'] {
   --shell-right: 300px;
   --shell-top: 50px;
   --shell-bottom: 28px;
-  --ctrl-h: 28px;
+  --ctrl-h: 32px;
   --ctrl-gap: 6px;
   --input-num: 5.5rem;
   --type-sm: 12px;
@@ -264,7 +264,7 @@ label {
   grid-template-columns: var(--shell-nav) minmax(0, 1fr);
   min-height: 0;
   min-width: 0;
-  transition: grid-template-columns 0.18s ease;
+  transition: grid-template-columns 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .app.nav-collapsed .main {
   grid-template-columns: var(--shell-nav-collapsed) minmax(0, 1fr);
@@ -438,7 +438,7 @@ label {
 .xsection {
   display: flex;
   height: 72px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   overflow: hidden;
   border: 1px solid var(--border);
   margin: 8px 0;
@@ -447,7 +447,7 @@ label {
   display: grid;
   place-items: center;
   font-size: 10px;
-  color: #0f172a;
+  color: var(--text);
   font-weight: 600;
   white-space: pre-line;
   text-align: center;
@@ -467,7 +467,7 @@ label {
   width: 100%;
   height: auto;
   display: block;
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--chart-bg);
   border: 1px solid var(--border);
 }
@@ -579,7 +579,7 @@ label {
 .cell-warm { color: var(--warn); font-weight: 600; }
 .topbar .toolbar-secondary { display: flex; gap: 6px; }
 .los-F .value, .metric.danger .value { color: var(--block); }
-.los-E .value { color: #ea580c; }
+.los-E .value { color: var(--block); }
 .los-D .value { color: var(--warn); }
 .los-A .value, .los-B .value, .los-C .value { color: var(--ok); }
 
@@ -726,7 +726,7 @@ label {
 .right::-webkit-scrollbar-thumb,
 .table-wrap::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--muted) 35%, transparent);
-  border-radius: 8px;
+  border-radius: var(--radius);
 }
 
 .layer-toggles { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
@@ -780,8 +780,8 @@ label {
   display: inline-block;
   min-width: 3.2em;
   padding: 2px 6px;
-  border-radius: 6px;
-  color: #0b1020;
+  border-radius: var(--radius-sm);
+  color: var(--text);
   font-weight: 700;
   font-size: 11px;
   text-align: center;
@@ -792,16 +792,16 @@ label {
   justify-content: center;
   width: 1.6em;
   height: 1.6em;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-weight: 800;
   font-size: 12px;
   background: var(--panel-2);
   border: 1px solid var(--border);
 }
-.los-A, .los-B { color: #22c55e; }
-.los-C { color: #eab308; }
-.los-D { color: #f97316; }
-.los-E, .los-F { color: #ef4444; }
+.los-A, .los-B { color: var(--ok); }
+.los-C { color: var(--warn); }
+.los-D { color: var(--warn); }
+.los-E, .los-F { color: var(--block); }
 tr.row-recommend td {
   background: color-mix(in srgb, var(--accent) 14%, transparent);
 }
@@ -892,11 +892,11 @@ tr.row-recommend td {
 .xsection {
   display: flex;
   height: 36px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   border: 1px solid var(--border);
   font-size: 10px;
-  color: #0f172a;
+  color: var(--text);
   font-weight: 600;
 }
 .xsection > div {
@@ -982,7 +982,7 @@ tr.row-recommend td {
 }
 .export-item-miss {
   font-size: 10px;
-  color: #f97316;
+  color: var(--warn);
   margin-top: auto;
 }
 .export-log {
@@ -1012,7 +1012,7 @@ tr.row-recommend td {
   z-index: 2;
   font-size: 10px;
   padding: 4px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: rgba(15, 23, 42, 0.72);
   color: #cbd5e1;
   pointer-events: none;
@@ -1475,7 +1475,7 @@ html[data-theme='light'] .print-stage {
 }
 .band-corridor-sidebar {
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius);
   padding: 10px;
   background: color-mix(in srgb, var(--panel) 92%, var(--bg));
   max-height: min(70vh, 640px);
@@ -1490,7 +1490,7 @@ html[data-theme='light'] .print-stage {
   text-align: left;
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 8px 10px;
   background: transparent;
   color: inherit;
@@ -1535,16 +1535,16 @@ html[data-theme='light'] .print-stage {
 
 /* v0.5.52+ status */
 .status-issues { font-variant-numeric: tabular-nums; opacity: 0.9; }
-.xsection { display: flex; height: 36px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
+.xsection { display: flex; height: 36px; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); }
 .xsection > div {
   display: flex; align-items: center; justify-content: center;
-  font-size: 9px; color: #0f172a; overflow: hidden; white-space: nowrap;
+  font-size: 9px; color: var(--text); overflow: hidden; white-space: nowrap;
 }
 .check-inline { display: inline-flex; align-items: center; gap: 2px; margin-left: 4px; }
 
 /* —— v0.5.65 professional panels —— */
 .chart-svg-host--pro {
-  border-radius: 10px;
+  border-radius: var(--radius);
   overflow: hidden;
   border: 1px solid var(--border, #1e293b);
   background: var(--panel-2, #0b1220);
@@ -1553,7 +1553,7 @@ html[data-theme='light'] .print-stage {
 .xsection--interactive {
   display: flex;
   height: 48px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   overflow: hidden;
   border: 1px solid var(--border, #334155);
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
@@ -1574,7 +1574,7 @@ html[data-theme='light'] .print-stage {
 .xs-seg-label {
   font-size: 9px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text);
   text-shadow: 0 1px 0 rgba(255,255,255,0.35);
   display: flex;
   flex-direction: column;
@@ -1628,7 +1628,7 @@ tr.row-hot td { background: rgba(56, 189, 248, 0.08); }
   cursor: pointer;
   user-select: none;
   padding: 6px 11px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   border: 1px solid transparent;
   font-size: 12px;
   font-weight: 600;
@@ -1654,7 +1654,7 @@ tr.row-hot td { background: rgba(56, 189, 248, 0.08); }
   left: 0;
   min-width: 168px;
   padding: 6px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid var(--border-strong);
   background: var(--panel);
   box-shadow: 0 12px 32px rgba(0,0,0,.35);
@@ -1708,7 +1708,7 @@ tr.row-hot td { background: rgba(56, 189, 248, 0.08); }
 /* collapsible inspector sections */
 .subpanel {
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: var(--panel-2);
   margin-top: 10px;
   overflow: hidden;
@@ -1880,7 +1880,7 @@ tr.row-hot td { background: rgba(56, 189, 248, 0.08); }
   gap: 4px;
   margin-left: 0;
   padding: 4px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: var(--panel-2);
   border: 1px solid var(--border);
   width: 100%;
@@ -1891,7 +1891,7 @@ tr.row-hot td { background: rgba(56, 189, 248, 0.08); }
   background: transparent;
   color: var(--muted);
   padding: 7px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   font-size: 12px;
   font-weight: 600;
   display: inline-flex;
@@ -2081,7 +2081,7 @@ tr.row-hot td { background: rgba(56, 189, 248, 0.08); }
   width: 28px;
   height: 28px;
   padding: 0;
-  border-radius: 8px;
+  border-radius: var(--radius);
   border: 1px solid var(--border);
   background: var(--panel-2);
   color: var(--text-secondary);
@@ -2110,7 +2110,7 @@ tr.row-hot td { background: rgba(56, 189, 248, 0.08); }
   border: none;
   background: transparent;
   color: var(--text-secondary);
-  border-radius: 10px;
+  border-radius: var(--radius);
   padding: 8px 10px;
   font-size: 13px;
   font-weight: 600;
@@ -2129,7 +2129,7 @@ tr.row-hot td { background: rgba(56, 189, 248, 0.08); }
 .left-nav-icon {
   width: 28px;
   height: 28px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   display: grid;
   place-items: center;
   font-size: 13px;
@@ -2404,7 +2404,7 @@ button.primary .cd-icon {
   min-height: 0;
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius);
   margin: 0 8px 8px;
   overflow: hidden;
 }
@@ -2508,7 +2508,7 @@ button.primary .cd-icon {
   align-items: center;
   gap: 3px;
   padding: 3px 7px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   border: 1px solid var(--border);
   background: var(--panel-2, var(--panel));
   color: var(--text-secondary);
@@ -2943,7 +2943,7 @@ button.primary .cd-icon {
 .y-report-pre {
   margin: 0;
   padding: 8px 10px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--panel-2);
   border: 1px solid var(--border);
   color: var(--text-secondary);
@@ -3076,7 +3076,7 @@ button.primary .cd-icon {
 .echart-host {
   width: 100%;
   min-height: 240px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   border: 1px solid var(--border, #e2e8f0);
   background: var(--panel, #fff);
 }
@@ -3159,7 +3159,7 @@ button,
 }
 .page-fill-stage .mode-stage {
   margin: 8px 10px !important;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid var(--border);
   background: var(--canvas-stage, var(--panel));
   overflow: hidden;
@@ -3399,7 +3399,7 @@ button,
 }
 .echart-host {
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: color-mix(in srgb, var(--panel) 92%, transparent);
 }
 
@@ -3427,7 +3427,7 @@ button,
 }
 .echart-host {
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: color-mix(in srgb, var(--panel) 92%, transparent);
 }
 
@@ -3585,7 +3585,7 @@ html[data-theme='light'] .echart-host,
 /* v0.5.131 stage border + canvas zoom bar + export interactive */
 .page-fill-stage {
   border: 1px solid var(--border) !important;
-  border-radius: 10px;
+  border-radius: var(--radius);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 40%, transparent);
   background: var(--canvas-stage, var(--panel));
   min-height: 280px;
@@ -3601,7 +3601,7 @@ html[data-theme='light'] .page-fill-stage,
   gap: 4px;
   padding: 2px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: color-mix(in srgb, var(--panel) 90%, transparent);
 }
 .canvas-zoom-bar .approach-chip-tool {
@@ -3618,7 +3618,7 @@ html[data-theme='light'] .page-fill-stage,
 /* v0.5.131 stage-zoom */
 .page-fill-stage {
   border: 1px solid var(--border) !important;
-  border-radius: 10px;
+  border-radius: var(--radius);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 40%, transparent);
   background: var(--canvas-stage, var(--panel));
   min-height: 280px;
@@ -3629,7 +3629,7 @@ html[data-theme='light'] .page-fill-stage,
   gap: 4px;
   padding: 2px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: color-mix(in srgb, var(--panel) 90%, transparent);
 }
 .main {
@@ -3794,7 +3794,7 @@ html[data-theme='light'] .page-fill-stage,
   background: var(--accent-soft);
 }
 .isb-face-svg {
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   background: #fff;
 }
@@ -4076,7 +4076,7 @@ html[data-theme='light'] .app.shell--channel .page-fill-params {
 }
 .rg-input.is-highlight {
   background: #fef9c3 !important;
-  border-color: #eab308;
+  border-color: var(--warn);
 }
 .rg-field.is-disabled .rg-input,
 .rg-field.is-disabled .rg-select,
