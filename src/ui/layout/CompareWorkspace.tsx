@@ -121,13 +121,7 @@ export function CompareWorkspace({ project, theme, onActivateScheme }: CompareWo
             当前方案 · 配时方法比选
             {recTiming ? <span className="subpanel-tag">推荐 {recTiming.label}</span> : null}
           </div>
-          <div
-            className="chart-svg-host"
-            style={{ overflow: 'auto' }}
-            dangerouslySetInnerHTML={{
-              __html: timingCompareBoardSvg(activeTimingRows, { width: 720 }),
-            }}
-          />
+          <EChart option={compareSchemesOption(activeTimingRows.map(r => ({ label: r.method, avgVc: r.avgVc, avgDelay: r.avgDelay, los: r.los })))} style={{ height: 200 }} />
           <div className="toolbar dense" style={{ marginTop: 6 }}>
             <button
               type="button"
