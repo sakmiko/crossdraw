@@ -1817,8 +1817,8 @@ tr.row-hot td { background: rgba(56, 189, 248, 0.08); }
 
 /* phase cards cleaner */
 .phase {
-  min-width: 120px;
-  max-width: 180px;
+  min-width: 110px;
+  max-width: 160px;
 }
 .ring { gap: 10px; padding-bottom: 2px; }
 
@@ -3763,14 +3763,14 @@ html[data-theme='light'] .page-fill-stage,
 }
 .page-fill-params .rg-section,
 .page-fill-params .flat-section {
-  margin-top: 6px !important;
-  padding-top: 2px !important;
+  margin-top: 4px !important;
+  padding-top: 1px !important;
   border-top: none !important;
 }
 .page-fill-params .rg-section-title,
 .page-fill-params .flat-section-title {
-  font-size: 11px !important;
-  margin-bottom: 3px !important;
+  font-size: 10px !important;
+  margin-bottom: 2px !important;
   gap: 6px;
 }
 .page-fill-params table.table td,
@@ -4325,8 +4325,8 @@ html[data-theme='dark'] .rg-sec-toggle {
 }
 .rg-input,
 .rg-select {
-  height: 28px !important;
-  min-height: 28px !important;
+  height: 26px !important;
+  min-height: 26px !important;
   padding: 0 4px !important;
   font-size: 11px !important;
   border-radius: 2px !important;
